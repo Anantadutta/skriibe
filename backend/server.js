@@ -11,10 +11,13 @@ const app = express();
 
 // Middleware
 app.use(cors({
-  origin: "https://skriibe-dahl.vercel.app/",
-  methods: ["GET", "POST", "PUT", "DELETE"],
+  origin: "https://skriibe-dahl.vercel.app",
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true
 }));
+
+app.options('*', cors());
 app.use(express.json());
 
 // Database Connection - Serverless friendly
