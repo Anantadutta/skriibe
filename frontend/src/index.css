@@ -1,0 +1,155 @@
+@import "tailwindcss";
+
+@theme {
+  --color-skriibe-blue: #3BA8D8;
+  --color-skriibe-blue2: #2d8ab8;
+  --color-skriibe-blue3: #1a6a9a;
+  --color-skriibe-dark: #080808;
+  --color-skriibe-d2: #0f0f0f;
+  --color-skriibe-d3: #161616;
+  --color-skriibe-d4: #1e1e1e;
+  --color-skriibe-d5: #2a2a2a;
+  --color-skriibe-d6: #363636;
+  
+  --font-syne: Syne, sans-serif;
+  --font-garet: Garet, sans-serif;
+  --font-roboto: Roboto, sans-serif;
+  --font-dm: DM Sans, sans-serif;
+
+  --animate-fade-up: fadeUp 0.7s ease both;
+  --animate-pulse-slow: pulse 2s ease infinite;
+  --animate-float: floatEl 6s ease-in-out infinite;
+  --animate-marquee: marquee 35s linear infinite;
+  --animate-vibrate: shake 0.2s linear infinite;
+
+  @keyframes fadeUp {
+    0% { opacity: 0; transform: translateY(20px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes floatEl {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+  @keyframes shake {
+    0% { transform: translate(0,0); }
+    25% { transform: translate(1px, 1px); }
+    50% { transform: translate(-1px, -1px); }
+    75% { transform: translate(1px, -1px); }
+    100% { transform: translate(-1px, 1px); }
+  }
+}
+
+@layer base {
+  :root {
+    --black: #000;
+    --white: #fff;
+    --blue: #3BA8D8;
+    --red: #ef4444;
+    --bg-main: #000;
+    --text-main: #fff;
+    --text-muted: #94A3B8; /* gray-400 */
+    --bg-secondary: #0f0f0f; /* skriibe-d2 */
+    --border-color: rgba(255, 255, 255, 0.05);
+  }
+
+  .light {
+    --bg-main: #ffffff;
+    --text-main: #000000;
+    --text-muted: #4B5563; /* gray-600 */
+    --bg-secondary: #f9fafb; /* gray-50 */
+    --border-color: rgba(0, 0, 0, 0.1);
+  }
+
+  body {
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    @apply font-dm overflow-x-hidden;
+    transition: background-color 0.3s, color 0.3s;
+  }
+
+  /* Global Overrides for Light Mode - Using !important to override hardcoded utilities */
+  .light .text-white, .light [class*="text-white"] {
+    color: var(--text-main) !important;
+  }
+  
+  .light .text-gray-400, .light .text-gray-300 {
+    color: var(--text-muted) !important;
+  }
+
+  /* REVERT for .dark-box - Elements inside dark boxes MUST stay white/gray */
+  .dark-box .text-white, .dark-box [class*="text-white"] {
+    color: #ffffff !important;
+  }
+  .dark-box .text-gray-400 {
+    color: #9ca3af !important; /* gray-400 */
+  }
+  .dark-box .text-gray-300 {
+    color: #d1d5db !important; /* gray-300 */
+  }
+
+  /* Specific override for elements that NEED to flip even inside dark-box */
+  .light .force-light-text {
+    color: #000000 !important;
+  }
+  
+  .light .force-light-bg {
+    background-color: rgba(0, 0, 0, 0.1) !important;
+  }
+  .light .bg-skriibe-d2 {
+    background-color: var(--bg-secondary) !important;
+  }
+  .light .border-white\/5, .light .border-skriibe-d4, .light .border-skriibe-d5 {
+    border-color: var(--border-color) !important;
+  }
+  .light .bg-skriibe-d3 {
+    background-color: #f3f4f6 !important; /* gray-100 */
+  }
+  .light .text-glow {
+    text-shadow: 0 0 10px rgba(0, 0, 0, 0.1) !important;
+  }
+  .light .bg-\[\#0a0a0a\] {
+    background-color: var(--bg-main) !important;
+  }
+}
+
+/* Noise effect */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.025'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 9999;
+  opacity: .5;
+}
+
+@layer utilities {
+  .text-glow {
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.4), 0 0 20px rgba(59, 168, 216, 0.4);
+  }
+
+  .red-strike {
+    position: relative;
+    display: inline-block;
+  }
+
+  .red-strike::after {
+    content: '';
+    position: absolute;
+    left: -2px;
+    right: -2px;
+    top: 50%;
+    height: 3px;
+    background: #FF0000;
+    transform: translateY(-50%);
+    box-shadow: 0 0 8px rgba(255, 0, 0, 0.4);
+  }
+
+  .bg-radial-gradient {
+    background: radial-gradient(ellipse at center, var(--tw-gradient-from) 0%, var(--tw-gradient-to) 70%);
+  }
+}
