@@ -38,7 +38,9 @@ const waitlistSchema = z.object({
   email: z.string().email(),
   whatsappNumber: z.string().regex(/^\d+$/, "Phone number must only contain numbers").max(10, "Phone number cannot be longer than 10 digits"),
   expertise: z.string(),
-  followerCount: z.string()
+  followerCount: z.string(),
+  otherExpertise: z.string().optional(),
+
 });
 
 const questionSchema = z.object({
