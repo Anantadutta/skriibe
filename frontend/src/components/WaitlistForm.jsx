@@ -9,6 +9,7 @@ const WaitlistForm = () => {
         email: '',
         whatsappNumber: '',
         expertise: '',
+        otherExpertise: '',
         followerCount: ''
     });
     const [status, setStatus] = useState('idle'); // idle, loading, success, error
@@ -24,7 +25,11 @@ const WaitlistForm = () => {
         }
 
         try {
-            const response = await api.post('/waitlist', formData);
+            const payload = { ...formData };
+            if (payload.expertise === 'Others') {
+                payload.expertise = payload.otherExpertise || 'Others';
+            }
+            const response = await api.post('/waitlist', payload);
             setWaitlistNum(response.data.waitlistNumber);
             setStatus('success');
         } catch (err) {
@@ -88,8 +93,23 @@ const WaitlistForm = () => {
                         value={formData.expertise} onChange={(e) => setFormData({ ...formData, expertise: e.target.value })}
                     >
                         <option value="" disabled>Your field of expertise</option>
-                        <option>Personal Finance</option><option>Business</option><option>Career</option><option>Fitness</option><option>Coding</option><option>Other</option>
+                        <option>Career & Finance</option>
+                        <option>Health & Fitness</option>
+                        <option>Tech & Skills</option>
+                        <option>Fashion & Lifestyle</option>
+                        <option>Daily Vlogs & Entertainment</option>
+                        <option>Education</option>
+                        <option>Business & Entrepreneurship</option>
+                        <option>Relationships & Life</option>
+                        <option>Spirituality</option>
+                        <option>Others</option>
                     </select>
+                    {formData.expertise === 'Others' && (
+                        <input
+                            required className="w-full bg-skriibe-d3 border border-skriibe-d5 rounded-xl px-5 py-4 text-sm focus:border-skriibe-blue outline-none transition-all animate-fade-up"
+                            placeholder="Please specify your category" value={formData.otherExpertise} onChange={(e) => setFormData({ ...formData, otherExpertise: e.target.value })}
+                        />
+                    )}
                     <select
                         required className="w-full bg-skriibe-d3 border border-skriibe-d5 rounded-xl px-5 py-4 text-sm focus:border-skriibe-blue outline-none transition-all"
                         value={formData.followerCount} onChange={(e) => setFormData({ ...formData, followerCount: e.target.value })}
