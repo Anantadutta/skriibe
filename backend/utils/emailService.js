@@ -119,9 +119,10 @@ const sendWelcomeEmail = async (userEmail, userName) => {
     </table>
 
     <div style="padding: 20px 24px; background-color: #f5f0e8;">
-      <a href="https://skriibe.com" style="display: inline-block; background-color: #1a1a1a; color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 6px; font-size: 15px; font-weight: 600;">Visit skriibe.com →</a>
+      <a href="https://skriibe-dahl.vercel.app" style="display: inline-block; background-color: #1a1a1a; color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 6px; font-size: 15px; font-weight: 600;">Visit skriibe.com →</a>
     </div>
   </div>
+
 
   <div class="footer-box">
     <p style="margin: 0 0 6px 0; color: #666;">You\'re receiving this because you joined the skriibe waitlist.</p>
