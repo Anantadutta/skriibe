@@ -35,7 +35,7 @@ function App() {
       <Navbar theme={theme} toggleTheme={toggleTheme} />
       <Hero />
       <DMCounter />
-      <StorySteps />
+      <StorySteps theme={theme} />
       <FlowGraphic />
       <Calculator />
       <WaitlistForm />

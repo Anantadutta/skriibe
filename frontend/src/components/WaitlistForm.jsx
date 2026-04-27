@@ -58,7 +58,7 @@ const WaitlistForm = () => {
     }
 
     return (
-        <section className="py-24 px-6 relative overflow-hidden" id="waitlist">
+        <section className="pt-12 pb-24 px-6 relative overflow-hidden" id="waitlist">
             <div className="absolute inset-0 bg-radial-gradient from-skriibe-blue/5 to-transparent pointer-events-none opacity-50" />
             <div className="max-w-[620px] mx-auto text-center relative z-10">
                 <div className="text-xs text-skriibe-blue font-bold tracking-[0.2em] uppercase mb-4">Creator waitlist</div>
@@ -128,19 +128,16 @@ const WaitlistForm = () => {
                     </button>
                 </form>
 
-                <div className="flex flex-wrap justify-center gap-6 mt-8">
-                    <div className="flex items-center gap-2 text-xs text-gray-500 font-medium">
-                        <Check className="text-green-500" size={15} /> 0% commission for first 100
+                <div className="flex flex-col items-start w-fit mx-auto gap-4 mt-8">
+                    <div className="flex items-center gap-3 text-xs text-gray-500 font-medium text-left">
+                        <Check className="text-green-500 shrink-0" size={16} /> 0% commission for first 100
                     </div>
-                    <div className="flex items-center gap-2 text-xs text-gray-500 font-medium">
-                        <Check className="text-green-500" size={15} /> Early access before public launch
+                    <div className="flex items-center gap-3 text-xs text-gray-500 font-medium text-left">
+                        <Check className="text-green-500 shrink-0" size={16} /> Early access before public launch
                     </div>
-                    <br></br>
-                    <div className="flex items-center gap-2 text-xs text-gray-500 font-medium ml-6">
-                        <Check className="text-green-500" size={15} /> WhatsApp onboarding Support
+                    <div className="flex items-center gap-3 text-xs text-gray-500 font-medium text-left">
+                        <Check className="text-green-500 shrink-0" size={16} /> WhatsApp onboarding Support
                     </div>
-
-
                 </div>
 
 
