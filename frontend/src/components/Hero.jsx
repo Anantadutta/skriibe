@@ -65,7 +65,7 @@ const Hero = () => {
   }, []);
 
   return (
-    <section className="relative min-h-screen flex flex-col items-center justify-center text-center px-6 pt-32 pb-20 overflow-hidden">
+    <section className="relative min-h-screen flex flex-col items-center justify-center text-center px-6 pt-16 pb-20 overflow-hidden">
       {/* Background Effects */}
       <div className="absolute top-[-10%] left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-radial-gradient from-skriibe-blue/10 to-transparent pointer-events-none opacity-50 dark:opacity-100" />
       <div
@@ -81,7 +81,7 @@ const Hero = () => {
         className="absolute inset-0 w-full h-full pointer-events-none opacity-50"
       />
 
-      <div className="animate-fade-up inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-skriibe-d3 border border-skriibe-d5 text-xs font-semibold text-gray-400 tracking-wider uppercase mb-9">
+      <div className="animate-fade-up inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-skriibe-d3 border border-skriibe-d5 text-[13px] font-semibold text-gray-400 tracking-wider uppercase mb-1">
         <div className="w-1.5 h-1.5 rounded-full bg-skriibe-blue animate-pulse" />
         Creator waitlist now open
       </div>
@@ -112,7 +112,7 @@ const Hero = () => {
         </button>
       </div>
 
-      <div className="animate-fade-up [animation-delay:400ms] flex flex-wrap justify-center gap-12 text-center">
+      <div className="animate-fade-up [animation-delay:400ms] grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-0 max-w-[480px] mx-auto w-full text-center">
         <div className="flex flex-col">
           <span className="font-garet text-3xl font-garet text-white">Rs.99</span>
           <span className="text-xs text-gray-500 font-medium mt-1">per question</span>

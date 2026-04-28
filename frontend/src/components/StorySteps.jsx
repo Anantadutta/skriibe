@@ -192,7 +192,7 @@ const StepTwo = () => {
                 </div>
             </div>
             <div className="absolute -bottom-4 -left-6 px-3.5 py-2 bg-skriibe-blue/10 border border-skriibe-blue/30 text-skriibe-blue text-[11px] font-bold rounded-lg animate-float [animation-delay:1s]">
-                skriibe.in/@yourhandle
+                skriibe.com/@yourhandle
             </div>
         </div>
 
@@ -224,10 +224,29 @@ const StepThree = ({ theme = 'dark' }) => {
     });
 
     const handlePayment = () => {
+        if (paid) return;
         setPaid(true);
         setIsExploding(true);
-        setTimeout(() => setIsExploding(false), 2000); // Particle cleanup duration
+        setTimeout(() => setIsExploding(false), 2000); 
     };
+
+    // Auto-trigger Walkthrough Logic
+    useEffect(() => {
+        const observer = new IntersectionObserver((entries) => {
+            if (entries[0].isIntersecting && !paid) {
+                // Short delay for "processing" feel
+                setTimeout(() => {
+                    handlePayment();
+                }, 800);
+            }
+        }, { threshold: 0.7 });
+
+        if (containerRef.current) {
+            observer.observe(containerRef.current);
+        }
+
+        return () => observer.disconnect();
+    }, [paid]);
 
     // Parallax Offsets
     const yBg = useTransform(scrollYProgress, [0, 1], [0, -100]);
@@ -371,9 +390,28 @@ const StepThree = ({ theme = 'dark' }) => {
 
 const StepFour = () => {
     const [sent, setSent] = useState(false);
+    const containerRef = useRef(null);
+
+    // Auto-trigger Walkthrough Logic
+    useEffect(() => {
+        const observer = new IntersectionObserver((entries) => {
+            if (entries[0].isIntersecting && !sent) {
+                // Short delay for the user to read the question before auto-replying
+                setTimeout(() => {
+                    setSent(true);
+                }, 1200);
+            }
+        }, { threshold: 0.7 });
+
+        if (containerRef.current) {
+            observer.observe(containerRef.current);
+        }
+
+        return () => observer.disconnect();
+    }, [sent]);
 
     return (
-        <div className="grid md:grid-cols-2 gap-20 items-center pt-24 pb-8">
+        <div ref={containerRef} className="grid md:grid-cols-2 gap-20 items-center pt-24 pb-8">
             <div className="relative flex justify-center scale-[1.05] md:scale-110 md:order-2">
                 <div className="dark-box w-[260px] bg-black border-[1.5px] border-skriibe-d5 rounded-[2.5rem] overflow-hidden shadow-2xl relative">
                     <div className="h-8 bg-black flex items-end justify-between px-6 pb-1">
@@ -405,7 +443,7 @@ const StepFour = () => {
                             )}
                             <button
                                 onClick={() => setSent(true)}
-                                className={`w-full py-3 rounded-lg font-bold text-xs transition-all ${sent ? 'bg-green-500/10 text-green-500' : 'bg-skriibe-blue text-black'}`}
+                                className={`w-full py-3 rounded-lg font-bold text-xs transition-all ${sent ? 'bg-green-500/20 text-green-500 border border-green-500/30' : 'bg-skriibe-blue text-black'}`}
                             >
                                 {sent ? '✓ Reply Sent' : 'Send reply'}
                             </button>

@@ -37,7 +37,6 @@ function App() {
       <DMCounter />
       <StorySteps theme={theme} />
       <FlowGraphic />
-      <Calculator />
       <WaitlistForm />
       <Footer theme={theme} />
     </div>

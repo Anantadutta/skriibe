@@ -14,7 +14,7 @@ const FlowGraphic = () => {
     <div className="pt-12 pb-32 px-6 bg-[#0a0a0a] border-t border-white/5 overflow-hidden">
       <div className="max-w-[1200px] mx-auto">
         <div className="text-center mb-16 md:mb-24">
-          <div className="text-xs text-skriibe-blue font-bold tracking-[0.2em] uppercase mb-4">The Flow</div>
+          <div className="text-[14px] text-skriibe-blue font-bold tracking-[0.2em] uppercase mb-4">The Flow</div>
           <h2 className="font-garet text-[clamp(28px,5vw,56px)] font-garet leading-tight tracking-tight text-white light:text-black mb-6">
             Instagram brings the audience.<br className="hidden md:block" />
             skriibe brings the money.

@@ -61,12 +61,12 @@ const WaitlistForm = () => {
         <section className="pt-12 pb-24 px-6 relative overflow-hidden" id="waitlist">
             <div className="absolute inset-0 bg-radial-gradient from-skriibe-blue/5 to-transparent pointer-events-none opacity-50" />
             <div className="max-w-[620px] mx-auto text-center relative z-10">
-                <div className="text-xs text-skriibe-blue font-bold tracking-[0.2em] uppercase mb-4">Creator waitlist</div>
+                <div className="text-[14px] text-skriibe-blue font-bold tracking-[0.2em] uppercase mb-4">Creator waitlist</div>
                 <h2 className="font-garet text-[clamp(36px,5vw,60px)] font-garet leading-[1.05] tracking-tight mb-6">
                     Be one of the<br /><span className="text-skriibe-blue">first 100 creators.</span>
                 </h2>
                 <p className="font-roboto text-lg text-gray-400 leading-relaxed mb-12">
-                    First 100 creators get 0% commission forever. Not for 3 months. <strong>Forever.</strong>
+                    First 100 creators get 0% commission for first month. <strong></strong>
                 </p>
 
                 <form onSubmit={handleSubmit} className="flex flex-col gap-3 max-w-[480px] mx-auto">

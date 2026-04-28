@@ -76,7 +76,7 @@ app.post('/api/waitlist', async (req, res) => {
     res.status(201).json({
       success: true,
       message: 'Successfully joined waitlist',
-      waitlistNumber: Math.floor(Math.random() * 1000) + 100
+      waitlistNumber: Math.floor(Math.random() * 499) + 1
     });
   } catch (error) {
     console.error('Waitlist registration error:', error);

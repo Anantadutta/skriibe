@@ -1,89 +1,80 @@
 import React, { useState } from 'react';
 
 const Calculator = () => {
-    const [followers, setFollowers] = useState(29000);
-    const [conversion, setConversion] = useState(1);
-    const [price, setPrice] = useState(99);
+    const [dms, setDms] = useState(45);
+    const PRICE_PER_DM = 99;
+    const loss = dms * PRICE_PER_DM;
 
-    const monthly = Math.round(followers * (conversion / 100) * price);
-    
-    // Gradient calculation for sliders
+    // Gradient calculation for slider progress
     const getTrackBg = (val, min, max) => {
         const perc = ((val - min) / (max - min)) * 100;
         return `linear-gradient(to right, #00A3FF ${perc}%, #27272A ${perc}%)`;
     };
 
     return (
-        <section className="pt-12 pb-12 px-6 max-w-[900px] mx-auto text-center" id="calculator">
-            <div className="text-xs text-skriibe-blue font-bold tracking-[0.3em] uppercase mb-8">EARNINGS CALCUATOR</div>
+        <section className="py-24 px-6 max-w-[900px] mx-auto text-center" id="calculator">
+            {/* Title Line */}
+            <div className="text-[13px] text-gray-500 font-bold tracking-[0.25em] uppercase mb-12">
+                UNANSWERED DMS THIS WEEK — MOVE THE SLIDER
+            </div>
             
-            <div className="dark-box bg-black border border-white/5 rounded-[2.5rem] p-10 md:p-12 shadow-2xl relative overflow-hidden">
-                {/* Decorative subtle background glow */}
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-skriibe-blue/5 blur-[120px] pointer-events-none" />
-
-                <div className="space-y-8 relative z-10">
-                    {/* Followers Slider */}
-                    <div className="flex flex-col md:flex-row items-center gap-8">
-                        <span className="text-[15px] text-gray-400 font-semibold md:min-w-[140px] text-left">Followers</span>
-                        <input 
-                            type="range" min="1000" max="100000" step="1000" 
-                            value={followers} onChange={(e) => setFollowers(parseInt(e.target.value))}
-                            className="flex-1 h-2 rounded-full appearance-none cursor-pointer accent-white"
-                            style={{ 
-                                background: getTrackBg(followers, 1000, 100000),
-                                WebkitAppearance: 'none'
-                            }}
-                        />
-                        <span className="font-garet text-2xl font-black min-w-[100px] text-right text-gray-400">{(followers/1000).toFixed(0)}K</span>
-                    </div>
-
-                    {/* Conversion Slider */}
-                    <div className="flex flex-col md:flex-row items-center gap-8">
-                        <span className="text-[15px] text-gray-400 font-semibold md:min-w-[140px] text-left">% who will pay</span>
-                        <input 
-                            type="range" min="0.1" max="5" step="0.1" 
-                            value={conversion} onChange={(e) => setConversion(parseFloat(e.target.value))}
-                            className="flex-1 h-2 rounded-full appearance-none cursor-pointer accent-white"
-                            style={{ 
-                                background: getTrackBg(conversion, 0.1, 5),
-                                WebkitAppearance: 'none'
-                            }}
-                        />
-                        <span className="font-garet text-2xl font-black min-w-[100px] text-right text-gray-400">{conversion}%</span>
-                    </div>
-
-                    {/* Price Slider */}
-                    <div className="flex flex-col md:flex-row items-center gap-8">
-                        <span className="text-[15px] text-gray-400 font-semibold md:min-w-[140px] text-left">Your price</span>
-                        <input 
-                            type="range" min="49" max="499" step="50" 
-                            value={price} onChange={(e) => setPrice(parseInt(e.target.value))}
-                            className="flex-1 h-2 rounded-full appearance-none cursor-pointer accent-white"
-                            style={{ 
-                                background: getTrackBg(price, 49, 499),
-                                WebkitAppearance: 'none'
-                            }}
-                        />
-                        <span className="font-garet text-2xl font-black min-w-[100px] text-right text-gray-400">Rs.{price}</span>
-                    </div>
+            <div className="flex flex-col items-center">
+                {/* Big Number */}
+                <div className="font-garet text-[160px] md:text-[220px] font-black text-[#F84444] leading-[0.8] mb-8 tracking-tighter">
+                    {dms}
                 </div>
 
-                <div className="h-px bg-white/5 my-8" />
-
-                <div className="relative inline-block">
-                    <div className="font-garet text-[clamp(56px,12vw,96px)] font-black text-[#00A3FF] tracking-tighter leading-none mb-6">
-                        Rs.{monthly.toLocaleString('en-IN')}
-                    </div>
+                {/* Rupees Line */}
+                <div className="text-[20px] md:text-[24px] text-gray-400 font-medium mb-16">
+                    That's <span className="text-white font-bold">Rs. {loss.toLocaleString('en-IN')}</span> you left in your DMs this week.
                 </div>
-                
-                <div className="text-[12px] text-gray-500 font-bold uppercase tracking-[0.4em] mb-4">Estimated Monthly Earnings</div>
-                
-                <div className="text-[17px] text-gray-400 font-medium">
-                    Rs.{(monthly * 12).toLocaleString('en-IN')} / year — from answering questions you already know
+
+                {/* Slider in the end */}
+                <div className="w-full max-w-[700px] px-4">
+                    <input 
+                        type="range" 
+                        min="0" 
+                        max="200" 
+                        step="1" 
+                        value={dms} 
+                        onChange={(e) => setDms(parseInt(e.target.value))}
+                        className="w-full h-2 rounded-full appearance-none cursor-pointer"
+                        style={{ 
+                            background: getTrackBg(dms, 0, 200),
+                            WebkitAppearance: 'none'
+                        }}
+                    />
+                    {/* Range Labels */}
+                    <div className="flex justify-between mt-4 text-[13px] text-gray-600 font-bold">
+                        <span>0 DMs</span>
+                        <span>200 DMs</span>
+                    </div>
                 </div>
             </div>
+
+            <style jsx>{`
+                input[type='range']::-webkit-slider-thumb {
+                    -webkit-appearance: none;
+                    height: 20px;
+                    width: 20px;
+                    border-radius: 50%;
+                    background: #00A3FF;
+                    cursor: pointer;
+                    box-shadow: 0 0 10px rgba(0, 163, 255, 0.4);
+                }
+                input[type='range']::-moz-range-thumb {
+                    height: 20px;
+                    width: 20px;
+                    border-radius: 50%;
+                    background: #00A3FF;
+                    cursor: pointer;
+                    border: none;
+                    box-shadow: 0 0 10px rgba(0, 163, 255, 0.4);
+                }
+            `}</style>
         </section>
     );
 };
 
 export default Calculator;
+
