@@ -2,8 +2,8 @@ import React from 'react';
 
 const Footer = ({ theme }) => {
     return (
-        <footer className="px-6 md:px-12 py-10 border-t border-skriibe-d4 flex flex-col md:flex-row items-center justify-between gap-6 bg-black text-white dark-box">
-            <div className="flex items-center">
+        <footer className="px-6 md:px-12 py-10 border-t border-skriibe-d4 flex flex-col items-center justify-center md:flex-row md:justify-between gap-6 bg-black text-white dark-box">
+            <div className="flex items-center justify-center">
                 <svg 
                   xmlns="http://www.w3.org/2000/svg" 
                   viewBox="0 0 2800 520.97" 

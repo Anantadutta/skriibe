@@ -49,7 +49,7 @@ const WaitlistForm = () => {
                     <h2 className="font-garet text-4xl font-extrabold mb-4">You're on the list!</h2>
                     <p className="font-roboto text-gray-400 text-lg leading-relaxed mb-8">
                         We'll WhatsApp you when skriibe launches.<br />
-                        You're in the first 100 — <strong className="text-skriibe-blue">0% commission forever.</strong>
+                        You're in the first 100 — <strong className="text-skriibe-blue">0% commission for first month.</strong>
                     </p>
                     
                 </div>
