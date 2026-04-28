@@ -124,7 +124,7 @@ const WaitlistForm = () => {
                         type="submit" disabled={status === 'loading'}
                         className="w-full bg-skriibe-blue text-black py-5 rounded-xl font-extrabold text-[15px] mt-2 hover:bg-skriibe-blue2 transform hover:-translate-y-1 hover:shadow-2xl transition-all flex items-center justify-center gap-2"
                     >
-                        {status === 'loading' ? <Loader2 className="animate-spin" size={20} /> : "Join the waitlist — free forever"}
+                        {status === 'loading' ? <Loader2 className="animate-spin" size={20} /> : "Join the waitlist"}
                     </button>
                 </form>
 
