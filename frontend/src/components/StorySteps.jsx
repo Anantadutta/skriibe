@@ -509,7 +509,7 @@ const StepFour = () => {
                         className="absolute -right-4 top-1/2 -translate-y-1/2 bg-[#0A0A0A] border-2 border-skriibe-blue rounded-2xl p-6 text-center shadow-[0_30px_60px_rgba(0,0,0,0.8)] z-30 min-w-[200px]"
                     >
                         <div className="font-garet text-5xl font-black text-skriibe-blue mb-2">Rs.99</div>
-                        <div className="text-[11px] text-white/50 uppercase font-black tracking-[0.2em]">earned · payout Mon</div>
+                        <div className="text-[11px] text-white/50 uppercase font-black tracking-[0.2em]">earned · payout Tue</div>
                     </motion.div>
                 )}
             </div>
