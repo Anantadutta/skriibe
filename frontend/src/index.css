@@ -64,11 +64,13 @@
     --border-color: rgba(0, 0, 0, 0.1);
   }
 
-  body {
+  html, body {
     background-color: var(--bg-main);
     color: var(--text-main);
     @apply font-dm overflow-x-hidden;
     transition: background-color 0.3s, color 0.3s;
+    width: 100%;
+    position: relative;
   }
 
   /* Global Overrides for Light Mode - Using !important to override hardcoded utilities */

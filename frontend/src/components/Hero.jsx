@@ -81,16 +81,15 @@ const Hero = () => {
         className="absolute inset-0 w-full h-full pointer-events-none opacity-50"
       />
 
-      <div className="animate-fade-up inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-skriibe-d3 border border-skriibe-d5 text-[13px] font-semibold text-gray-400 tracking-wider uppercase mb-1">
+      <div className="animate-fade-up inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-skriibe-d3 border border-skriibe-d5 text-[13px] font-semibold text-gray-400 tracking-wider uppercase mb-6">
         <div className="w-1.5 h-1.5 rounded-full bg-skriibe-blue animate-pulse" />
         Creator waitlist now open
       </div>
 
-      <h1 className="animate-fade-up [animation-delay:100ms] font-garet text-[clamp(44px,8vw,96px)] font-extrabold leading-[1] tracking-tight mb-6 text-white">
+      <h1 className="animate-fade-up [animation-delay:100ms] font-garet text-[clamp(44px,8vw,96px)] font-extrabold leading-[1.1] tracking-tight mb-8 text-white">
         Stop answering DMs<br />
         for <span className="red-strike text-[#666666]">free</span>.<br />
         Start <span className="text-skriibe-blue">earning.</span>
-
       </h1>
 
       <p className="animate-fade-up [animation-delay:200ms] font-roboto text-[clamp(16px,2.5vw,20px)] text-gray-400 leading-relaxed max-w-[520px] mx-auto mb-11">
@@ -102,7 +101,7 @@ const Hero = () => {
           onClick={() => document.getElementById('waitlist').scrollIntoView({ behavior: 'smooth' })}
           className="bg-skriibe-blue text-black px-10 py-5 rounded-xl font-bold text-lg hover:bg-skriibe-blue2 transform hover:-translate-y-1 hover:shadow-[0_16px_40px_rgba(59,168,216,0.3)] transition-all"
         >
-          Join the waitlist — it's free
+          Join the waitlist
         </button>
         <button
           onClick={() => document.getElementById('story').scrollIntoView({ behavior: 'smooth' })}
