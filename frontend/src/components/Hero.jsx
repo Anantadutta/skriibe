@@ -86,10 +86,10 @@ const Hero = () => {
         Creator waitlist now open
       </div>
 
-      <h1 className="animate-fade-up [animation-delay:100ms] font-garet text-[clamp(44px,8vw,96px)] font-extrabold leading-[1.1] tracking-tight mb-8 text-white">
+      <h1 className="animate-fade-up [animation-delay:100ms] font-libre text-[clamp(40px,7vw,84px)] font-bold leading-[1.15] mb-8 text-white">
         Stop answering DMs<br />
-        for <span className="red-strike text-[#666666]">free</span>.<br />
-        Start <span className="text-skriibe-blue">earning.</span>
+        for <span className="red-strike italic text-skriibe-blue">free.</span><br />
+        Start <span className="italic text-skriibe-blue">earning.</span>
       </h1>
 
       <p className="animate-fade-up [animation-delay:200ms] font-roboto text-[clamp(16px,2.5vw,20px)] text-gray-400 leading-relaxed max-w-[520px] mx-auto mb-11">
@@ -113,15 +113,15 @@ const Hero = () => {
 
       <div className="animate-fade-up [animation-delay:400ms] grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-0 max-w-[480px] mx-auto w-full text-center">
         <div className="flex flex-col">
-          <span className="font-garet text-3xl font-garet text-white">Rs.99</span>
+          <span className="font-libre text-3xl font-libre text-white">Rs.99</span>
           <span className="text-xs text-gray-500 font-medium mt-1">per question</span>
         </div>
         <div className="flex flex-col">
-          <span className="font-garet text-3xl font-garet text-white">24hr</span>
+          <span className="font-libre text-3xl font-libre text-white">24hr</span>
           <span className="text-xs text-gray-500 font-medium mt-1">reply window</span>
         </div>
         <div className="flex flex-col">
-          <span className="font-garet text-3xl font-garet text-white">0%</span>
+          <span className="font-libre text-3xl font-libre text-white">0%</span>
           <span className="text-xs text-gray-500 font-medium mt-1">commission for first 100</span>
         </div>
       </div>

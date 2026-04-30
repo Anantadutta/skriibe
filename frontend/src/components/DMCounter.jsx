@@ -19,7 +19,7 @@ const DMCounter = () => {
           once: true
         },
         duration: 1.5,
-        onUpdate: function() {
+        onUpdate: function () {
           const progress = this.progress();
           // Animate from 0 to 47 (average)
           const newVal = Math.round(progress * 47);
@@ -52,34 +52,43 @@ const DMCounter = () => {
     <div ref={sectionRef} className="pt-32 pb-24 px-6 bg-skriibe-d2 border-y border-skriibe-d4 overflow-hidden">
       <div className="max-w-[1000px] mx-auto text-center">
         {/* 1. Combined Title Line */}
-        <p className="font-garet text-gray-500 tracking-[0.25em] uppercase text-[13px] font-bold mb-12">
-          Unanswered DMs this week — <span className="text-white">Move the slider</span>
+        <p className="font-dm uppercase text-[15px] tracking-[0.14em] font-medium mb-12" style={{ color: 'rgba(255,255,255,0.35)' }}>
+          Unanswered DMs this week — <span style={{ color: 'rgba(255,255,255,0.7)' }}>MOVE THE SLIDER</span>
         </p>
-
         {/* 2. Big Number */}
-        <div className="relative mb-10">
-            <div className={`font-garet text-[clamp(160px,22vw,260px)] font-black leading-none transition-colors duration-500 tracking-tighter ${dms > 0 ? 'text-[#F84444]' : 'text-gray-800'}`}>
-              {dms}
-            </div>
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-red-500/5 blur-[120px] pointer-events-none rounded-full" />
+        <div className="relative mb-8 text-center">
+          <div
+            className={`text-[clamp(180px,25vw,320px)] leading-[0.8] transition-colors duration-500 ${dms > 0 ? 'text-[#FF4D4D]' : 'text-gray-800'}`}
+            style={{
+              fontFamily: "'Oswald', sans-serif",
+              fontWeight: 700,
+              letterSpacing: '-0.02em',
+              display: 'inline-block',
+              fontSize: 'clamp(120px,18vw,220px)',
+              transform: 'scaleX(1.3)'
+
+            }}
+          >
+            {dms}
+          </div>
         </div>
 
         {/* 3. Rupees Line */}
-        <div className="text-[20px] md:text-[24px] text-gray-400 font-medium max-w-[700px] mx-auto leading-tight mb-12">
-          That's <span className="text-white font-bold">Rs.{(dms * 99).toLocaleString('en-IN')}</span> you left in your DMs this week.
+        <div className="font-dm text-[20px] md:text-[24px] leading-[1.75] font-light max-w-[800px] mx-auto mb-16" style={{ color: 'rgba(255,255,255,0.75)' }}>
+          That's <span className="text-white font-medium">Rs.{(dms * 99).toLocaleString('en-IN')}</span> you left in your DMs this week.
         </div>
 
         {/* 4. Slider (Now at the end) */}
         <div className="max-w-[600px] mx-auto relative px-4">
-          <input 
+          <input
             ref={sliderRef}
-            type="range" 
-            min="0" 
-            max="200" 
-            value={dms} 
+            type="range"
+            min="0"
+            max="200"
+            value={dms}
             onChange={(e) => setDms(parseInt(e.target.value))}
             className="w-full h-2 rounded-full appearance-none cursor-pointer"
-            style={{ 
+            style={{
               background: sliderBackground,
               WebkitAppearance: 'none'
             }}

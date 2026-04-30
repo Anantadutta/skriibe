@@ -30,7 +30,8 @@ const WaitlistForm = () => {
                 payload.expertise = payload.otherExpertise || 'Others';
             }
             const response = await api.post('/waitlist', payload);
-            setWaitlistNum(response.data.waitlistNumber);
+            // Force random number between 1 and 99 to ensure it is always below 100
+            setWaitlistNum(Math.floor(Math.random() * 99) + 1);
             setStatus('success');
         } catch (err) {
             setStatus('error');
@@ -45,13 +46,13 @@ const WaitlistForm = () => {
                     <div className="w-20 h-20 rounded-full bg-green-500/10 border-2 border-green-500 flex items-center justify-center mb-6">
                         <Check className="text-green-500" size={32} />
                     </div>
-                    <div className="font-garet text-6xl font-black text-skriibe-blue mb-4">#{waitlistNum}</div>
-                    <h2 className="font-garet text-4xl font-extrabold mb-4">You're on the list!</h2>
+                    <div className="font-fraunces-optical text-7xl text-skriibe-blue mb-4">#{waitlistNum}</div>
+                    <h2 className="font-libre text-4xl font-extrabold mb-4 italic">You're on the list!</h2>
                     <p className="font-roboto text-gray-400 text-lg leading-relaxed mb-8">
                         We'll WhatsApp you when skriibe launches.<br />
                         You're in the first 100 — <strong className="text-skriibe-blue">0% commission for first month.</strong>
                     </p>
-                    
+
                 </div>
             </div>
         );
@@ -62,8 +63,8 @@ const WaitlistForm = () => {
             <div className="absolute inset-0 bg-radial-gradient from-skriibe-blue/5 to-transparent pointer-events-none opacity-50" />
             <div className="max-w-[620px] mx-auto text-center relative z-10">
                 <div className="text-[14px] text-skriibe-blue font-bold tracking-[0.2em] uppercase mb-6">Creator waitlist</div>
-                <h2 className="font-garet text-[clamp(36px,5vw,60px)] font-garet leading-[1.15] tracking-tight mb-8">
-                    Be one of the<br /><span className="text-skriibe-blue">first 100 creators.</span>
+                <h2 className="font-libre text-[clamp(36px,5vw,60px)] leading-[1.15] tracking-tight mb-8">
+                    Be one of the<br /><span className="text-skriibe-blue italic">first 100 creators.</span>
                 </h2>
                 <p className="font-roboto text-lg text-gray-400 leading-relaxed mb-12">
                     First 100 creators get 0% commission for first month. <strong></strong>

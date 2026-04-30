@@ -22,8 +22,8 @@ const StepOne = () => (
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-skriibe-blue/10 border border-skriibe-blue/20 text-[11px] font-bold text-skriibe-blue tracking-wider uppercase mb-5">
                 Step 01 · The problem
             </div>
-            <h3 className="font-garet text-[clamp(26px,3.5vw,42px)] font-garet leading-[1.1] mb-4">
-                Your DM inbox is overflowing.<br />You're earning Rs.0.
+            <h3 className="font-libre text-[clamp(26px,3.5vw,42px)] leading-[1.1] mb-4">
+                Your DM inbox is overflowing.<br /><span className="italic text-skriibe-blue">You're earning <span className="text-white">Rs.0.</span></span>
             </h3>
             <p className="font-roboto text-gray-400 text-base leading-relaxed mb-6">
                 You created content. You built expertise. You attracted thousands of followers. And now they flood your DMs with questions — every single day. Finance. Fitness. Career. Business. Real questions from people who genuinely need help.
@@ -113,8 +113,8 @@ const StepTwo = () => {
             <div className="inline-flex w-fit items-center gap-2 px-3.5 py-1.5 rounded-full bg-skriibe-blue/10 border border-skriibe-blue/20 text-[11px] font-bold text-skriibe-blue tracking-wider uppercase mb-5">
                 Step 02 · 5-minute setup
             </div>
-            <h3 className="font-garet text-[clamp(32px,4vw,48px)] font-garet leading-[1.1] mb-6 text-white">
-                Your skriibe page.<br />One link. That's it.
+            <h3 className="font-libre text-[clamp(32px,4vw,48px)] leading-[1.1] mb-6 text-white">
+                Your skriibe page.<br /><span className="italic text-skriibe-blue">One link. That's it.</span>
             </h3>
             <p className="font-roboto text-gray-400 text-lg leading-relaxed mb-8">
                 Sign up with your phone number. Enter your expertise. Choose your price. Your page goes live at <span className="text-skriibe-blue font-semibold">skriibe.com/@yourhandle</span>. Drop it in your Instagram bio. You're done.
@@ -171,7 +171,7 @@ const StepTwo = () => {
                     {!isFormOpen ? (
                         <div className="bg-[#0f172a] border border-skriibe-blue/20 rounded-2xl p-6 text-center shadow-inner">
                             <div className="text-[11px] text-gray-400 mb-2 font-medium">Ask me anything</div>
-                            <div className="font-garet text-4xl font-black text-white mb-2">Rs. 99</div>
+                            <div className="font-libre text-4xl font-black text-white mb-2">Rs. 99</div>
                             <div className="text-[10px] text-gray-500 mb-6">Reply within 24 hours · guaranteed</div>
                             <button 
                                 onClick={() => setIsFormOpen(true)} 
@@ -290,8 +290,8 @@ const StepThree = ({ theme = 'dark' }) => {
                 <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-skriibe-blue/10 border border-skriibe-blue/20 text-[11px] font-bold text-skriibe-blue tracking-wider uppercase mb-5">
                     Step 03 · Follower pays
                 </div>
-                <h3 className="font-garet text-[clamp(26px,3.5vw,42px)] font-garet leading-[1.1] mb-4">
-                    They pay Rs.99.<br />You get a WhatsApp ping.
+                <h3 className="font-libre text-[clamp(26px,3.5vw,42px)] leading-[1.1] mb-4">
+                    They pay Rs.99.<br /><span className="italic text-skriibe-blue">You get a WhatsApp ping.</span>
                 </h3>
                 <p className="font-roboto text-gray-400 text-base leading-relaxed mb-6">
                     Your follower lands on your skriibe page, types their question, and pays via UPI in 3 taps. No account needed. No friction. You get a WhatsApp notification the moment payment clears.
@@ -314,7 +314,7 @@ const StepThree = ({ theme = 'dark' }) => {
                         <div className="w-[60px] h-[18px] bg-black rounded-b-xl" />
                     </div>
                     <div className="bg-skriibe-d2 p-4 border-b border-white/5 flex items-center justify-center">
-                        <span className="font-garet text-[11px] font-bold text-white/50 force-light-text">Pay Rs.99</span>
+                        <span className="font-libre text-[11px] font-bold text-white/50 force-light-text">Pay Rs.99</span>
                     </div>
                     <div className="p-5 space-y-4">
                         <div className="text-center relative">
@@ -327,7 +327,7 @@ const StepThree = ({ theme = 'dark' }) => {
                             <motion.div 
                                 animate={isExploding ? { scale: [1, 1.5, 1] } : { scale: 1 }}
                                 transition={{ duration: 0.3 }}
-                                className="font-garet text-4xl font-black text-skriibe-blue relative"
+                                className="font-libre text-4xl font-black text-skriibe-blue relative"
                             >
                                 Rs.99
                             </motion.div>
@@ -440,8 +440,8 @@ const StepFour = () => {
                 <div className="inline-flex w-fit items-center gap-2 px-3.5 py-1.5 rounded-full bg-skriibe-blue/10 border border-skriibe-blue/20 text-[11px] font-bold text-skriibe-blue tracking-wider uppercase mb-5">
                     Step 04 · Reply. Earn.
                 </div>
-                <h3 className="font-garet text-[clamp(32px,4vw,48px)] font-garet leading-[1.1] mb-6 text-white">
-                    Answer in your dashboard.<br />Earn Rs.99 per reply.
+                <h3 className="font-libre text-[clamp(32px,4vw,48px)] leading-[1.1] mb-6 text-white">
+                    Answer in your dashboard.<br /><span className="italic text-skriibe-blue">Earn <span className="text-white">Rs.99</span> per reply.</span>
                 </h3>
                 <p className="font-roboto text-gray-400 text-lg leading-relaxed mb-8">
                     Open your skriibe dashboard. See the question. Type your reply — minimum 100 characters, so every answer is real. Hit send. The follower gets your answer instantly via WhatsApp and email.
@@ -508,7 +508,7 @@ const StepFour = () => {
                         animate={{ opacity: 1, scale: 1, x: 0, y: 0 }}
                         className="absolute -right-4 top-1/2 -translate-y-1/2 bg-[#0A0A0A] border-2 border-skriibe-blue rounded-2xl p-6 text-center shadow-[0_30px_60px_rgba(0,0,0,0.8)] z-30 min-w-[200px]"
                     >
-                        <div className="font-garet text-5xl font-black text-skriibe-blue mb-2">Rs.99</div>
+                        <div className="font-libre text-5xl font-black text-skriibe-blue mb-2">Rs.99</div>
                         <div className="text-[11px] text-white/50 uppercase font-black tracking-[0.2em]">earned · payout Tue</div>
                     </motion.div>
                 )}

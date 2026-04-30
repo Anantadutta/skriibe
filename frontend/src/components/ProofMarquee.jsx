@@ -15,7 +15,7 @@ const ProofMarquee = () => {
         <section className="py-24 bg-skriibe-d2 border-t border-skriibe-d4 overflow-hidden">
             <div className="max-w-[1160px] mx-auto text-center px-6 mb-12">
                 <div className="text-xs text-skriibe-blue font-bold tracking-[0.2em] uppercase mb-4">Built for Indian creators</div>
-                <h2 className="font-syne text-[clamp(28px,4vw,48px)] font-extrabold leading-tight">Creators like you are waiting for this</h2>
+                <h2 className="font-libre text-[clamp(28px,4vw,48px)] font-bold leading-tight italic">Creators like you are waiting for this</h2>
             </div>
 
             <div className="flex gap-4 animate-marquee whitespace-nowrap min-w-full">

@@ -1,5 +1,13 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,WONK@0,9..144,900,0&family=DM+Sans:wght@300;400;500;700&family=Archivo:ital,wght@1,900&display=swap');
 
+@font-face {
+  font-family: 'Fraunces';
+  font-style: normal;
+  font-weight: 900;
+  font-variation-settings: 'ital' 0, 'opsz' 144;
+}
 @theme {
   --color-skriibe-blue: #3BA8D8;
   --color-skriibe-blue2: #2d8ab8;
@@ -10,11 +18,14 @@
   --color-skriibe-d4: #1e1e1e;
   --color-skriibe-d5: #2a2a2a;
   --color-skriibe-d6: #363636;
-  
+
   --font-syne: Syne, sans-serif;
   --font-garet: Garet, sans-serif;
   --font-roboto: Roboto, sans-serif;
   --font-dm: DM Sans, sans-serif;
+  --font-libre: "Libre Baskerville", serif;
+  --font-fraunces: "Fraunces", serif;
+  --font-integral: "Archivo", sans-serif;
 
   --animate-fade-up: fadeUp 0.7s ease both;
   --animate-pulse-slow: pulse 2s ease infinite;
@@ -23,23 +34,59 @@
   --animate-vibrate: shake 0.2s linear infinite;
 
   @keyframes fadeUp {
-    0% { opacity: 0; transform: translateY(20px); }
-    100% { opacity: 1; transform: translateY(0); }
+    0% {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
+
   @keyframes floatEl {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-10px); }
+
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+
+    50% {
+      transform: translateY(-10px);
+    }
   }
+
   @keyframes marquee {
-    from { transform: translateX(0); }
-    to { transform: translateX(-50%); }
+    from {
+      transform: translateX(0);
+    }
+
+    to {
+      transform: translateX(-50%);
+    }
   }
+
   @keyframes shake {
-    0% { transform: translate(0,0); }
-    25% { transform: translate(1px, 1px); }
-    50% { transform: translate(-1px, -1px); }
-    75% { transform: translate(1px, -1px); }
-    100% { transform: translate(-1px, 1px); }
+    0% {
+      transform: translate(0, 0);
+    }
+
+    25% {
+      transform: translate(1px, 1px);
+    }
+
+    50% {
+      transform: translate(-1px, -1px);
+    }
+
+    75% {
+      transform: translate(1px, -1px);
+    }
+
+    100% {
+      transform: translate(-1px, 1px);
+    }
   }
 }
 
@@ -51,20 +98,25 @@
     --red: #ef4444;
     --bg-main: #000;
     --text-main: #fff;
-    --text-muted: #94A3B8; /* gray-400 */
-    --bg-secondary: #0f0f0f; /* skriibe-d2 */
+    --text-muted: #94A3B8;
+    /* gray-400 */
+    --bg-secondary: #0f0f0f;
+    /* skriibe-d2 */
     --border-color: rgba(255, 255, 255, 0.05);
   }
 
   .light {
     --bg-main: #ffffff;
     --text-main: #000000;
-    --text-muted: #4B5563; /* gray-600 */
-    --bg-secondary: #f9fafb; /* gray-50 */
+    --text-muted: #4B5563;
+    /* gray-600 */
+    --bg-secondary: #f9fafb;
+    /* gray-50 */
     --border-color: rgba(0, 0, 0, 0.1);
   }
 
-  html, body {
+  html,
+  body {
     background-color: var(--bg-main);
     color: var(--text-main);
     @apply font-dm overflow-x-hidden;
@@ -74,45 +126,60 @@
   }
 
   /* Global Overrides for Light Mode - Using !important to override hardcoded utilities */
-  .light .text-white, .light [class*="text-white"] {
+  .light .text-white,
+  .light [class*="text-white"] {
     color: var(--text-main) !important;
   }
-  
-  .light .text-gray-400, .light .text-gray-300 {
+
+  .light .text-gray-400,
+  .light .text-gray-300 {
     color: var(--text-muted) !important;
   }
 
   /* REVERT for .dark-box - Elements inside dark boxes MUST stay white/gray */
-  .dark-box .text-white, .dark-box [class*="text-white"] {
+  .dark-box .text-white,
+  .dark-box [class*="text-white"] {
     color: #ffffff !important;
   }
+
   .dark-box .text-gray-400 {
-    color: #9ca3af !important; /* gray-400 */
+    color: #9ca3af !important;
+    /* gray-400 */
   }
+
   .dark-box .text-gray-300 {
-    color: #d1d5db !important; /* gray-300 */
+    color: #d1d5db !important;
+    /* gray-300 */
   }
 
   /* Specific override for elements that NEED to flip even inside dark-box */
   .light .force-light-text {
     color: #000000 !important;
   }
-  
+
   .light .force-light-bg {
     background-color: rgba(0, 0, 0, 0.1) !important;
   }
+
   .light .bg-skriibe-d2 {
     background-color: var(--bg-secondary) !important;
   }
-  .light .border-white\/5, .light .border-skriibe-d4, .light .border-skriibe-d5 {
+
+  .light .border-white\/5,
+  .light .border-skriibe-d4,
+  .light .border-skriibe-d5 {
     border-color: var(--border-color) !important;
   }
+
   .light .bg-skriibe-d3 {
-    background-color: #f3f4f6 !important; /* gray-100 */
+    background-color: #f3f4f6 !important;
+    /* gray-100 */
   }
+
   .light .text-glow {
     text-shadow: 0 0 10px rgba(0, 0, 0, 0.1) !important;
   }
+
   .light .bg-\[\#0a0a0a\] {
     background-color: var(--bg-main) !important;
   }
@@ -153,5 +220,12 @@ body::after {
 
   .bg-radial-gradient {
     background: radial-gradient(ellipse at center, var(--tw-gradient-from) 0%, var(--tw-gradient-to) 70%);
+  }
+
+  .font-fraunces-optical {
+    font-family: 'Fraunces', serif !important;
+    font-weight: 900 !important;
+    font-style: normal !important;
+    font-variation-settings: "opsz" 144, "wght" 900, "ital" 0, "WONK" 0 !important;
   }
 }

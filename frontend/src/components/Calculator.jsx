@@ -17,10 +17,17 @@ const Calculator = () => {
             <div className="text-[13px] text-gray-500 font-bold tracking-[0.25em] uppercase mb-12">
                 UNANSWERED DMS THIS WEEK — MOVE THE SLIDER
             </div>
-            
+
             <div className="flex flex-col items-center">
                 {/* Big Number */}
-                <div className="font-garet text-[160px] md:text-[220px] font-black text-[#F84444] leading-[0.8] mb-8 tracking-tighter">
+                <div
+                    className="font-integral text-[160px] md:text-[220px] font-black text-[#FF4D4D] leading-[0.8] italic mb-8"
+                    style={{
+                        letterSpacing: '-0.04em',
+                        transform: 'scaleX(1.1)',
+                        display: 'inline-block'
+                    }}
+                >
                     {dms}
                 </div>
 
@@ -31,15 +38,15 @@ const Calculator = () => {
 
                 {/* Slider in the end */}
                 <div className="w-full max-w-[700px] px-4">
-                    <input 
-                        type="range" 
-                        min="0" 
-                        max="200" 
-                        step="1" 
-                        value={dms} 
+                    <input
+                        type="range"
+                        min="0"
+                        max="200"
+                        step="1"
+                        value={dms}
                         onChange={(e) => setDms(parseInt(e.target.value))}
                         className="w-full h-2 rounded-full appearance-none cursor-pointer"
-                        style={{ 
+                        style={{
                             background: getTrackBg(dms, 0, 200),
                             WebkitAppearance: 'none'
                         }}

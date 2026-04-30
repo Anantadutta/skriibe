@@ -15,9 +15,9 @@ const FlowGraphic = () => {
       <div className="max-w-[1200px] mx-auto">
         <div className="text-center mb-16 md:mb-24">
           <div className="text-[14px] text-skriibe-blue font-bold tracking-[0.2em] uppercase mb-4">The Flow</div>
-          <h2 className="font-garet text-[clamp(28px,5vw,56px)] font-garet leading-tight tracking-tight text-white light:text-black mb-6">
-            Instagram brings the audience.<br className="hidden md:block" />
-            skriibe brings the money.
+          <h2 className="font-libre text-[clamp(32px,5.5vw,64px)] leading-[1.1] tracking-tight text-white mb-6">
+            Instagram brings the audience.<br />
+            <span className="text-skriibe-blue">skriibe brings the money.</span>
           </h2>
         </div>
 
@@ -47,7 +47,7 @@ const FlowGraphic = () => {
                       cursor: 'pointer'
                     }}
                   >
-                    <span className="font-garet text-3xl md:text-4xl font-black text-white" style={{ textShadow: `0 0 15px ${node.color}66` }}>
+                    <span className="font-libre text-3xl md:text-4xl font-black text-white" style={{ textShadow: `0 0 15px ${node.color}66` }}>
                       {node.initial}
                     </span>
                   </div>
