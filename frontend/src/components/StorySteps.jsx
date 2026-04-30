@@ -8,7 +8,7 @@ const StorySteps = ({ theme = 'dark' }) => {
         <section className="px-6 pb-8 overflow-hidden" id="story">
             <div className="max-w-[1160px] mx-auto">
                 <StepOne />
-                <StepTwo />
+                <StepTwo theme={theme} />
                 <StepThree theme={theme} />
                 <StepFour />
             </div>
@@ -58,7 +58,7 @@ const StepOne = () => (
                         { name: 'Rahul N.', msg: 'Nifty 50 vs Nifty Next 50 for long term SIP?', initial: 'R', color: '#14532d' }
                     ].map((item, i) => (
                         <div key={i} className="flex items-center gap-4 px-4 py-3 hover:bg-white/5 transition-all rounded-2xl group border border-transparent hover:border-white/5">
-                            <div 
+                            <div
                                 className="w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center text-[13px] font-bold text-white/90 border border-white/10"
                                 style={{ backgroundColor: item.color }}
                             >
@@ -81,7 +81,7 @@ const StepOne = () => (
     </div>
 );
 
-const StepTwo = () => {
+const StepTwo = ({ theme }) => {
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [status, setStatus] = useState('idle');
     const [formData, setFormData] = useState({ guestEmail: '', questionText: '' });
@@ -107,134 +107,134 @@ const StepTwo = () => {
     };
 
     return (
-    <div className="grid md:grid-cols-2 gap-12 md:gap-20 items-center py-20 md:py-24 border-b border-skriibe-d4">
-        {/* 1. Text Material - Comes first on mobile and desktop */}
-        <div className="flex flex-col">
-            <div className="inline-flex w-fit items-center gap-2 px-3.5 py-1.5 rounded-full bg-skriibe-blue/10 border border-skriibe-blue/20 text-[11px] font-bold text-skriibe-blue tracking-wider uppercase mb-5">
-                Step 02 · 5-minute setup
-            </div>
-            <h3 className="font-libre text-[clamp(32px,4vw,48px)] leading-[1.1] mb-6 text-white">
-                Your skriibe page.<br /><span className="italic text-skriibe-blue">One link. That's it.</span>
-            </h3>
-            <p className="font-roboto text-gray-400 text-lg leading-relaxed mb-8">
-                Sign up with your phone number. Enter your expertise. Choose your price. Your page goes live at <span className="text-skriibe-blue font-semibold">skriibe.com/@yourhandle</span>. Drop it in your Instagram bio. You're done.
-            </p>
-            
-            <div className="font-roboto p-6 bg-skriibe-d3 rounded-2xl border-l-[4px] border-skriibe-blue text-sm md:text-base text-gray-400 leading-relaxed mb-10">
-                No complex integration. No tech skills needed. If you can post on <strong>Instagram/LinkedIn/YouTube/WhatsApp</strong>, you can set up skriibe. Takes less time than writing a caption.
-            </div>
-        </div>
-
-        {/* 2. Mockup Column */}
-        <div className="flex flex-col items-center gap-10">
-            <div className="dark-box w-full max-w-[320px] bg-[#0A0A0A] border-[1.5px] border-skriibe-d5 rounded-[3rem] overflow-hidden shadow-2xl relative">
-                {/* iPhone Style Top Bar */}
-                <div className="h-10 bg-black flex items-end justify-between px-8 pb-1.5">
-                    <span className="text-[10px] text-gray-500 font-bold">9:41</span>
-                    <span className="text-[10px] text-gray-600">skriibe.com/@rahul</span>
+        <div className="grid md:grid-cols-2 gap-12 md:gap-20 items-center py-20 md:py-24 border-b border-skriibe-d4">
+            {/* 1. Text Material - Comes first on mobile and desktop */}
+            <div className="flex flex-col">
+                <div className="inline-flex w-fit items-center gap-2 px-3.5 py-1.5 rounded-full bg-skriibe-blue/10 border border-skriibe-blue/20 text-[11px] font-bold text-skriibe-blue tracking-wider uppercase mb-5">
+                    Step 02 · 5-minute setup
                 </div>
+                <h3 className="font-libre text-[clamp(32px,4vw,48px)] leading-[1.1] mb-6 text-white">
+                    Your skriibe page.<br /><span className="italic text-skriibe-blue">One link. That's it.</span>
+                </h3>
+                <p className="font-roboto text-gray-400 text-lg leading-relaxed mb-8">
+                    Sign up with your phone number. Enter your expertise. Choose your price. Your page goes live at <span className="text-skriibe-blue font-semibold">skriibe.com/@yourhandle</span>. Drop it in your Instagram bio. You're done.
+                </p>
 
-                {/* Profile Header */}
-                <div className="p-6 pb-8 border-b border-white/5">
-                    <div className="flex items-center gap-4 mb-6">
-                        <div className="w-16 h-16 rounded-full bg-[#3BA8D8] flex items-center justify-center font-black text-2xl text-white shadow-lg shadow-skriibe-blue/20">RF</div>
-                        <div>
-                            <div className="flex items-center gap-1.5">
-                                <span className="text-lg font-extrabold text-white">Rahul Finance</span>
-                                <div className="w-4 h-4 bg-[#00FF85] rounded-sm flex items-center justify-center">
-                                    <Check size={11} strokeWidth={4} className="text-black" />
+                <div className="font-roboto p-6 bg-skriibe-d3 rounded-2xl border-l-[4px] border-skriibe-blue text-sm md:text-base text-gray-400 leading-relaxed mb-10">
+                    No complex integration. No tech skills needed. If you can post on <strong>Instagram/LinkedIn/YouTube/WhatsApp</strong>, you can set up skriibe. Takes less time than writing a caption.
+                </div>
+            </div>
+
+            {/* 2. Mockup Column */}
+            <div className="flex flex-col items-center gap-10">
+                <div className="dark-box w-full max-w-[320px] bg-[#0A0A0A] border-[1.5px] border-skriibe-d5 rounded-[3rem] overflow-hidden shadow-2xl relative">
+                    {/* iPhone Style Top Bar */}
+                    <div className="h-10 bg-black flex items-end justify-between px-8 pb-1.5">
+                        <span className="text-[10px] text-gray-500 font-bold">9:41</span>
+                        <span className="text-[10px] text-gray-600">skriibe.com/@rahul</span>
+                    </div>
+
+                    {/* Profile Header */}
+                    <div className="p-6 pb-8 border-b border-white/5">
+                        <div className="flex items-center gap-4 mb-6">
+                            <div className="w-16 h-16 rounded-full bg-[#3BA8D8] flex items-center justify-center font-black text-2xl text-white shadow-lg shadow-skriibe-blue/20">RF</div>
+                            <div>
+                                <div className="flex items-center gap-1.5">
+                                    <span className="text-lg font-extrabold text-white">Rahul Finance</span>
+                                    <div className="w-4 h-4 bg-[#00FF85] rounded-sm flex items-center justify-center">
+                                        <Check size={11} strokeWidth={4} className="text-black" />
+                                    </div>
                                 </div>
+                                <div className="text-[11px] text-gray-500">@rahulfinance · Finance</div>
                             </div>
-                            <div className="text-[11px] text-gray-500">@rahulfinance · Finance</div>
+                        </div>
+
+                        {/* Stats Grid */}
+                        <div className="grid grid-cols-3 gap-2">
+    <div className="bg-skriibe-d3 p-3 rounded-xl text-center border border-white/5">
+        <div className={`text-sm font-black ${theme === 'light' ? 'text-black' : 'text-white'}`}>94%</div>
+        <div className="text-[7px] text-gray-600 uppercase font-bold tracking-wider">reply rate</div>
+    </div>
+    <div className="bg-skriibe-d3 p-3 rounded-xl text-center border border-white/5">
+        <div className={`text-sm font-black ${theme === 'light' ? 'text-black' : 'text-white'}`}>3.2h</div>
+        <div className="text-[7px] text-gray-600 uppercase font-bold tracking-wider">avg reply</div>
+    </div>
+    <div className="bg-skriibe-d3 p-3 rounded-xl text-center border border-white/5">
+        <div className={`text-sm font-black ${theme === 'light' ? 'text-black' : 'text-white'}`}>189</div>
+        <div className="text-[7px] text-gray-600 uppercase font-bold tracking-wider">answered</div>
+    </div>
+</div>
+                    </div>
+
+                    {/* Content Area */}
+                    <div className="p-5 pb-8 min-h-[240px]">
+                        {!isFormOpen ? (
+                            <div className="bg-[#0f172a] border border-skriibe-blue/20 rounded-2xl p-6 text-center shadow-inner">
+                                <div className="text-[11px] text-gray-400 mb-2 font-medium">Ask me anything</div>
+                                <div className="font-libre text-4xl font-black text-white mb-2">Rs. 99</div>
+                                <div className="text-[10px] text-gray-500 mb-6">Reply within 24 hours · guaranteed</div>
+                                <button
+                                    onClick={() => setIsFormOpen(true)}
+                                    className="w-full bg-skriibe-blue text-black py-3.5 rounded-xl font-black text-sm hover:bg-skriibe-blue2 transition-all shadow-xl"
+                                >
+                                    Ask Now
+                                </button>
+                            </div>
+                        ) : status === 'success' ? (
+                            <div className="bg-green-500/10 border border-green-500/30 rounded-2xl p-6 text-center flex flex-col items-center justify-center animate-fade-up">
+                                <div className="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center mb-4">
+                                    <Check className="text-green-500" size={24} />
+                                </div>
+                                <div className="text-sm font-bold text-white mb-2">Question Sent!</div>
+                                <div className="text-[10px] text-gray-400 mb-6 leading-relaxed">
+                                    You will be notified via email when Rahul replies.
+                                </div>
+                                <button
+                                    onClick={() => { setIsFormOpen(false); setStatus('idle'); setFormData({ guestEmail: '', questionText: '' }); }}
+                                    className="text-[10px] text-gray-500 hover:text-white underline font-medium"
+                                >
+                                    Send another
+                                </button>
+                            </div>
+                        ) : (
+                            <form onSubmit={handleSubmit} className="bg-skriibe-d3 border border-skriibe-d4 rounded-2xl p-4 flex flex-col gap-3">
+                                <div className="text-xs font-bold text-white flex justify-between items-center mb-1">
+                                    <span>Ask Rahul Finance</span>
+                                    <button type="button" onClick={() => setIsFormOpen(false)} className="text-gray-500 hover:text-white">✕</button>
+                                </div>
+                                <textarea
+                                    required placeholder="Type your question..."
+                                    className="w-full bg-black/50 border border-skriibe-d5 rounded-lg p-3 text-[12px] text-white focus:border-skriibe-blue outline-none resize-none h-24"
+                                    value={formData.questionText} onChange={e => setFormData({ ...formData, questionText: e.target.value })}
+                                />
+                                <input
+                                    required type="email" placeholder="Your email (for reply)"
+                                    className="w-full bg-black/50 border border-skriibe-d5 rounded-lg p-3 text-[12px] text-white focus:border-skriibe-blue outline-none"
+                                    value={formData.guestEmail} onChange={e => setFormData({ ...formData, guestEmail: e.target.value })}
+                                />
+                                <button
+                                    type="submit" disabled={status === 'loading'}
+                                    className="w-full bg-skriibe-blue text-black py-3.5 rounded-xl font-black text-sm mt-1 flex items-center justify-center gap-2"
+                                >
+                                    {status === 'loading' ? <Loader2 size={16} className="animate-spin" /> : 'Pay Rs. 99 & Send'}
+                                </button>
+                            </form>
+                        )}
+
+                        {/* Footer Info */}
+                        <div className="mt-6 flex items-center justify-center gap-1.5 text-[9px] text-gray-600 uppercase font-bold tracking-wider text-center">
+                            <Lock size={10} /> secured by razorpay, 100% refund guarantee
                         </div>
                     </div>
 
-                    {/* Stats Grid */}
-                    <div className="grid grid-cols-3 gap-2">
-                        <div className="bg-skriibe-d3 p-3 rounded-xl text-center border border-white/5">
-                            <div className="text-sm font-black text-white">94%</div>
-                            <div className="text-[7px] text-gray-600 uppercase font-bold tracking-wider">reply rate</div>
-                        </div>
-                        <div className="bg-skriibe-d3 p-3 rounded-xl text-center border border-white/5">
-                            <div className="text-sm font-black text-white">3.2h</div>
-                            <div className="text-[7px] text-gray-600 uppercase font-bold tracking-wider">avg reply</div>
-                        </div>
-                        <div className="bg-skriibe-d3 p-3 rounded-xl text-center border border-white/5">
-                            <div className="text-sm font-black text-white">189</div>
-                            <div className="text-[7px] text-gray-600 uppercase font-bold tracking-wider">answered</div>
-                        </div>
+                    {/* iPhone Bottom Bar */}
+                    <div className="h-8 bg-black flex items-center justify-center">
+                        <div className="w-20 h-1 bg-white/10 rounded-full" />
                     </div>
-                </div>
-
-                {/* Content Area */}
-                <div className="p-5 pb-8 min-h-[240px]">
-                    {!isFormOpen ? (
-                        <div className="bg-[#0f172a] border border-skriibe-blue/20 rounded-2xl p-6 text-center shadow-inner">
-                            <div className="text-[11px] text-gray-400 mb-2 font-medium">Ask me anything</div>
-                            <div className="font-libre text-4xl font-black text-white mb-2">Rs. 99</div>
-                            <div className="text-[10px] text-gray-500 mb-6">Reply within 24 hours · guaranteed</div>
-                            <button 
-                                onClick={() => setIsFormOpen(true)} 
-                                className="w-full bg-skriibe-blue text-black py-3.5 rounded-xl font-black text-sm hover:bg-skriibe-blue2 transition-all shadow-xl"
-                            >
-                                Ask Now
-                            </button>
-                        </div>
-                    ) : status === 'success' ? (
-                        <div className="bg-green-500/10 border border-green-500/30 rounded-2xl p-6 text-center flex flex-col items-center justify-center animate-fade-up">
-                            <div className="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center mb-4">
-                                <Check className="text-green-500" size={24} />
-                            </div>
-                            <div className="text-sm font-bold text-white mb-2">Question Sent!</div>
-                            <div className="text-[10px] text-gray-400 mb-6 leading-relaxed">
-                                You will be notified via email when Rahul replies.
-                            </div>
-                            <button 
-                                onClick={() => { setIsFormOpen(false); setStatus('idle'); setFormData({ guestEmail: '', questionText: '' }); }} 
-                                className="text-[10px] text-gray-500 hover:text-white underline font-medium"
-                            >
-                                Send another
-                            </button>
-                        </div>
-                    ) : (
-                        <form onSubmit={handleSubmit} className="bg-skriibe-d3 border border-skriibe-d4 rounded-2xl p-4 flex flex-col gap-3">
-                            <div className="text-xs font-bold text-white flex justify-between items-center mb-1">
-                                <span>Ask Rahul Finance</span>
-                                <button type="button" onClick={() => setIsFormOpen(false)} className="text-gray-500 hover:text-white">✕</button>
-                            </div>
-                            <textarea 
-                                required placeholder="Type your question..."
-                                className="w-full bg-black/50 border border-skriibe-d5 rounded-lg p-3 text-[12px] text-white focus:border-skriibe-blue outline-none resize-none h-24"
-                                value={formData.questionText} onChange={e => setFormData({...formData, questionText: e.target.value})}
-                            />
-                            <input 
-                                required type="email" placeholder="Your email (for reply)"
-                                className="w-full bg-black/50 border border-skriibe-d5 rounded-lg p-3 text-[12px] text-white focus:border-skriibe-blue outline-none"
-                                value={formData.guestEmail} onChange={e => setFormData({...formData, guestEmail: e.target.value})}
-                            />
-                            <button 
-                                type="submit" disabled={status === 'loading'}
-                                className="w-full bg-skriibe-blue text-black py-3.5 rounded-xl font-black text-sm mt-1 flex items-center justify-center gap-2"
-                            >
-                                {status === 'loading' ? <Loader2 size={16} className="animate-spin" /> : 'Pay Rs. 99 & Send'}
-                            </button>
-                        </form>
-                    )}
-                    
-                    {/* Footer Info */}
-                    <div className="mt-6 flex items-center justify-center gap-1.5 text-[9px] text-gray-600 uppercase font-bold tracking-wider text-center">
-                        <Lock size={10} /> secured by razorpay, 100% refund guarantee
-                    </div>
-                </div>
-
-                {/* iPhone Bottom Bar */}
-                <div className="h-8 bg-black flex items-center justify-center">
-                    <div className="w-20 h-1 bg-white/10 rounded-full" />
                 </div>
             </div>
         </div>
-    </div>
-  );
+    );
 };
 
 const StepThree = ({ theme = 'dark' }) => {
@@ -250,7 +250,7 @@ const StepThree = ({ theme = 'dark' }) => {
         if (paid) return;
         setPaid(true);
         setIsExploding(true);
-        setTimeout(() => setIsExploding(false), 2000); 
+        setTimeout(() => setIsExploding(false), 2000);
     };
 
     // Auto-trigger Walkthrough Logic
@@ -300,10 +300,10 @@ const StepThree = ({ theme = 'dark' }) => {
                     Only serious people pay. No more 100 DMs where 90 are "hey bro please help." Every paid question is from someone who genuinely wants your advice.
                 </div>
             </motion.div>
-            
+
             <div className="flex flex-col items-center gap-6 relative group">
                 {/* Mobile Phone Mockup */}
-                <motion.div 
+                <motion.div
                     style={{ scale: scaleScroll, opacity: opacityScroll, willChange: 'transform' }}
                     animate={isExploding ? { y: -20 } : { y: 0 }}
                     initial={{ y: 40, opacity: 0 }}
@@ -320,11 +320,11 @@ const StepThree = ({ theme = 'dark' }) => {
                         <div className="text-center relative">
                             <div className="text-[9px] text-gray-600 mb-2">Paying to @rahulfinance</div>
                             {/* Blue Glow Behind Price */}
-                            <motion.div 
+                            <motion.div
                                 animate={isExploding ? { opacity: [0.3, 1, 0.3], scale: [1, 2, 1] } : { opacity: 0.3 }}
-                                className="absolute inset-0 bg-skriibe-blue/20 blur-2xl rounded-full translate-y-2 scale-150" 
+                                className="absolute inset-0 bg-skriibe-blue/20 blur-2xl rounded-full translate-y-2 scale-150"
                             />
-                            <motion.div 
+                            <motion.div
                                 animate={isExploding ? { scale: [1, 1.5, 1] } : { scale: 1 }}
                                 transition={{ duration: 0.3 }}
                                 className="font-libre text-4xl font-black text-skriibe-blue relative"
@@ -332,12 +332,12 @@ const StepThree = ({ theme = 'dark' }) => {
                                 Rs.99
                             </motion.div>
                         </div>
-                        
+
                         {/* Segmented Control */}
                         <div className="flex items-center justify-between bg-skriibe-d3 rounded-xl p-1 border border-white/5">
                             <div className="flex-1 text-center py-2 bg-[#2a2a2a] rounded-lg text-[10px] font-bold text-white shadow-sm">UPI</div>
                             <div className="flex-1 text-center py-2 text-[10px] text-gray-500 font-bold">Card</div>
-                            <div className="flex-1 text-center py-1.5 text-[10px] text-gray-500 font-bold leading-tight">Net<br/>Banking</div>
+                            <div className="flex-1 text-center py-1.5 text-[10px] text-gray-500 font-bold leading-tight">Net<br />Banking</div>
                         </div>
 
                         {/* UPI ID Box */}
@@ -365,7 +365,7 @@ const StepThree = ({ theme = 'dark' }) => {
                                 <motion.span
                                     key={p.id}
                                     initial={{ opacity: 1, x: 0, y: 0, scale: 0.5 }}
-                                    animate={{ 
+                                    animate={{
                                         opacity: 0,
                                         x: Math.cos(p.angle * Math.PI / 180) * p.distance,
                                         y: Math.sin(p.angle * Math.PI / 180) * p.distance,
@@ -379,7 +379,7 @@ const StepThree = ({ theme = 'dark' }) => {
                                 </motion.span>
                             ))}
                         </button>
-                        
+
                         <div className="text-center text-[8px] text-gray-600 font-bold tracking-wider pt-2">
                             GPay · PhonePe · Paytm · BHIM
                         </div>

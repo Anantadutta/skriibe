@@ -34,7 +34,7 @@ function App() {
     <div className={`min-h-screen transition-colors duration-300 ${theme === 'light' ? 'bg-white text-black' : 'bg-black text-white'}`}>
       <Navbar theme={theme} toggleTheme={toggleTheme} />
       <Hero />
-      <DMCounter />
+      <DMCounter theme={theme} />
       <StorySteps theme={theme} />
       <FlowGraphic />
       <WaitlistForm />

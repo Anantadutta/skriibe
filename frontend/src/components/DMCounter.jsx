@@ -4,7 +4,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 gsap.registerPlugin(ScrollTrigger);
 
-const DMCounter = () => {
+const DMCounter = ({ theme }) => {
   const [dms, setDms] = useState(0);
   const sectionRef = useRef(null);
   const sliderRef = useRef(null);
@@ -52,8 +52,8 @@ const DMCounter = () => {
     <div ref={sectionRef} className="pt-32 pb-24 px-6 bg-skriibe-d2 border-y border-skriibe-d4 overflow-hidden">
       <div className="max-w-[1000px] mx-auto text-center">
         {/* 1. Combined Title Line */}
-        <p className="font-dm uppercase text-[15px] tracking-[0.14em] font-medium mb-12" style={{ color: 'rgba(255,255,255,0.35)' }}>
-          Unanswered DMs this week — <span style={{ color: 'rgba(255,255,255,0.7)' }}>MOVE THE SLIDER</span>
+        <p className="font-dm uppercase text-[15px] tracking-[0.14em] font-medium mb-12" style={{ color: theme === 'light' ? 'rgba(0,0,0,0.4)' : 'rgba(255,255,255,0.35)' }}>
+          Unanswered DMs this week — <span style={{ color: theme === 'light' ? 'rgba(0,0,0,0.8)' : 'rgba(255,255,255,0.7)' }}>MOVE THE SLIDER</span>
         </p>
         {/* 2. Big Number */}
         <div className="relative mb-8 text-center">
@@ -74,8 +74,8 @@ const DMCounter = () => {
         </div>
 
         {/* 3. Rupees Line */}
-        <div className="font-dm text-[20px] md:text-[24px] leading-[1.75] font-light max-w-[800px] mx-auto mb-16" style={{ color: 'rgba(255,255,255,0.75)' }}>
-          That's <span className="text-white font-medium">Rs.{(dms * 99).toLocaleString('en-IN')}</span> you left in your DMs this week.
+        <div className="font-dm text-[20px] md:text-[24px] leading-[1.75] font-light max-w-[800px] mx-auto mb-16" style={{ color: theme === 'light' ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.75)' }}>
+          That's <span className="font-medium" style={{ color: theme === 'light' ? '#000' : '#fff' }}>Rs.{(dms * 99).toLocaleString('en-IN')}</span> you left in your DMs this week.
         </div>
 
         {/* 4. Slider (Now at the end) */}
