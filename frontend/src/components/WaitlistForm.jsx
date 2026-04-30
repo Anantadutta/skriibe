@@ -30,8 +30,8 @@ const WaitlistForm = () => {
                 payload.expertise = payload.otherExpertise || 'Others';
             }
             const response = await api.post('/waitlist', payload);
-            // Force random number between 1 and 99 to ensure it is always below 100
-            setWaitlistNum(Math.floor(Math.random() * 99) + 1);
+            // Force serial wise number
+            setWaitlistNum(response.data.waitlistNumber);
             setStatus('success');
         } catch (err) {
             setStatus('error');
