@@ -10,7 +10,7 @@ const StorySteps = ({ theme = 'dark' }) => {
                 <StepOne />
                 <StepTwo theme={theme} />
                 <StepThree theme={theme} />
-                <StepFour />
+                <StepFour theme={theme} />
             </div>
         </section>
     );
@@ -411,7 +411,7 @@ const StepThree = ({ theme = 'dark' }) => {
     );
 };
 
-const StepFour = () => {
+const StepFour = ({ theme }) => {
     const [sent, setSent] = useState(false);
     const containerRef = useRef(null);
 
@@ -458,7 +458,7 @@ const StepFour = () => {
                         <span className="text-[10px] text-gray-500 font-bold">9:41</span>
                     </div>
                     <div className="bg-skriibe-d2 p-4 border-b border-skriibe-d4 flex items-center justify-center">
-                        <span className="text-sm font-bold text-white">Reply to Amit</span>
+                        <span className={`text-sm font-bold ${theme === 'light' ? 'text-black' : 'text-white'}`}>Reply to Amit</span>
                     </div>
                     <div className="p-6 space-y-4">
                         {/* SLA Badge */}
@@ -469,14 +469,14 @@ const StepFour = () => {
 
                         {/* Question Box */}
                         <div className="bg-skriibe-d3 rounded-xl p-4 border border-white/5">
-                            <div className="text-[9px] text-gray-600 font-bold mb-2 uppercase tracking-wider">Amit Kumar · Rs.99 paid</div>
-                            <div className="text-[12px] text-gray-300 leading-relaxed font-medium">
+                            <div className={`text-[9px] font-bold mb-2 uppercase tracking-wider ${theme === 'light' ? 'text-black' : 'text-gray-600'}`}>Amit Kumar · Rs.99 paid</div>
+                            <div className={`text-[12px] leading-relaxed font-medium ${theme === 'light' ? 'text-black' : 'text-gray-300'}`}>
                                 "I earn Rs.30K/month. How do I build a 3-month emergency fund and start SIP?"
                             </div>
                         </div>
 
                         {/* Answer Box */}
-                        <div className="bg-skriibe-d3 border border-skriibe-blue/30 rounded-xl p-4 min-h-[120px] text-[12px] text-gray-400 leading-relaxed shadow-inner">
+                        <div className={`bg-skriibe-d3 border border-skriibe-blue/30 rounded-xl p-4 min-h-[120px] text-[12px] leading-relaxed shadow-inner ${theme === 'light' ? 'text-black' : 'text-gray-400'}`}>
                             {sent ? (
                                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                                     Start with the 50-30-20 rule. Build 3-month emergency fund in liquid fund first, then SIP Rs.2,000 in Nifty 50...
