@@ -11,9 +11,10 @@ const getTransporter = () => {
   }
   transporter = nodemailer.createTransport({
     host: 'smtpout.secureserver.net',
-    port: 465,
-    secure: true,
+    port: 587,
+    secure: false,
     auth: { user, pass },
+    connectionTimeout: 8000,
   });
   return transporter;
 };
