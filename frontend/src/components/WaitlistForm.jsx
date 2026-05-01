@@ -24,6 +24,8 @@ const WaitlistForm = () => {
             return;
         }
 
+        setStatus('loading');
+
         try {
             const payload = { ...formData };
             if (payload.expertise === 'Others') {

@@ -62,11 +62,10 @@ const questionSchema = z.object({
 
 // API Routes
 app.post('/api/waitlist', async (req, res) => {
-  console.log('Received waitlist entry request:', req.body);
+  console.log('Received waitlist entry request for email:', req.body?.email);
   try {
     await connectDB();
     const validatedData = waitlistSchema.parse(req.body);
-    console.log('Data validated successfully');
 
     const existingEntry = await Waitlist.findOne({ email: validatedData.email });
     if (existingEntry) {
@@ -75,7 +74,7 @@ app.post('/api/waitlist', async (req, res) => {
 
     const newWaitlistEntry = new Waitlist(validatedData);
     const savedEntry = await newWaitlistEntry.save();
-    console.log('Waitlist entry saved:', savedEntry);
+    console.log('Waitlist entry saved for email:', savedEntry.email);
 
     try {
       await sendWelcomeEmail(savedEntry.email, savedEntry.name);
