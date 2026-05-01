@@ -10,7 +10,7 @@ const getTransporter = () => {
     return null;
   }
   transporter = nodemailer.createTransport({
-    host: 'smtp.titan.email',
+    host: 'smtpout.secureserver.net',
     port: 465,
     secure: true,
     auth: { user, pass },
@@ -28,7 +28,7 @@ const sendWelcomeEmail = async (userEmail, userName) => {
   }
 
   const mailOptions = {
-    from: `"Skriibe Team" <founder@skriibe.com>`,
+    from: `"Skriibe Team" <${process.env.MAIL_USER}>`,
     to: userEmail,
     subject: "Before skriibe opens to everyone - you\'re first. Welcome!",
     html: `
