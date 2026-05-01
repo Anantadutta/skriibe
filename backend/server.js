@@ -78,9 +78,12 @@ app.post('/api/waitlist', async (req, res) => {
     console.log('Waitlist entry saved for:', savedEntry.email);
 
     // Await email to ensure it sends in serverless environment (Vercel)
-    await sendWelcomeEmail(savedEntry.email, savedEntry.name).catch(emailError => {
+    try {
+      await sendWelcomeEmail(savedEntry.email, savedEntry.name);
+    } catch (emailError) {
       console.error('Failed to send welcome email:', emailError);
-    });
+      return res.status(500).json({ message: 'Email failed: ' + (emailError.message || emailError.toString()) });
+    }
 
     const position = await Waitlist.countDocuments();
    res.status(201).json({
