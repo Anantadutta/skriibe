@@ -77,8 +77,8 @@ app.post('/api/waitlist', async (req, res) => {
     const savedEntry = await newWaitlistEntry.save();
     console.log('Waitlist entry saved for:', savedEntry.email);
 
-    // Send email asynchronously in the background to avoid blocking the response
-    sendWelcomeEmail(savedEntry.email, savedEntry.name).catch(emailError => {
+    // Await email to ensure it sends in serverless environment (Vercel)
+    await sendWelcomeEmail(savedEntry.email, savedEntry.name).catch(emailError => {
       console.error('Failed to send welcome email:', emailError);
     });
 
