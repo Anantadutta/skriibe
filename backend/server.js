@@ -10,14 +10,24 @@ const { sendWelcomeEmail } = require('./utils/emailService');
 const app = express();
 
 // Middleware
+// Middleware
+const allowedOrigins = ["https://www.skriibe.com", "https://skriibe.com","http://localhost:5173"];
+
 app.use(cors({
-  origin: ["https://skriibe-dahl.vercel.app", "http://localhost:5173"],
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-  credentials: true
+  credentials: true,
+  allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
-app.options('/{*path}', cors());
+// Required to handle the "preflight" error from your screenshot
+app.options('/*splat', cors());
 app.use(express.json());
 
 // Database Connection - Serverless friendly
