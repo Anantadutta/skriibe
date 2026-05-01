@@ -3,9 +3,9 @@ const nodemailer = require('nodemailer');
 let transporter = null;
 
 const getTransporter = () => {
-  if (transporter) return transporter;
-  const user = process.env.EMAIL_USER;
-  const pass = process.env.EMAIL_PASS;
+ const user = process.env.MAIL_USER;
+const pass = process.env.MAIL_PASS;
+if (!user || !pass || user.includes('founder@skriibe.com') || pass.includes('Harleen@5555')) {
   if (!user || !pass || user.includes('your-email') || pass.includes('your-app-password')) {
     console.error('CRITICAL: Email credentials missing or still placeholders in .env:', {
       user: user ? 'Present' : 'Missing',
@@ -13,13 +13,12 @@ const getTransporter = () => {
     });
     return null;
   }
-  console.log(`Initializing email transporter for: ${user}`);
   transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 465,
-    secure: true,
-    auth: { user, pass },
-  });
+  host: 'smtp.titan.email',
+  port: 465,
+  secure: true,
+  auth: { user, pass },
+});
   return transporter;
 };
 
@@ -34,7 +33,7 @@ const sendWelcomeEmail = async (userEmail, userName) => {
   }
 
   const mailOptions = {
-    from: `"Skriibe Team" <${process.env.EMAIL_USER}>`,
+    from: `"Skriibe Team" <founder@skriibe.com>`,
     to: userEmail,
     subject: "Before skriibe opens to everyone - you\'re first. Welcome!",
     html: `
@@ -170,5 +169,5 @@ const sendWelcomeEmail = async (userEmail, userName) => {
     throw error;
   }
 };
-
-module.exports = { sendWelcomeEmail };
+}
+module.exports = { sendWelcomeEmail }
