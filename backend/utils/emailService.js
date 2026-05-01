@@ -10,10 +10,11 @@ const getTransporter = () => {
     return null;
   }
   transporter = nodemailer.createTransport({
-    host: 'smtp.titan.email',
-    port: 465,
-    secure: true,
+    host: 'smtpout.secureserver.net',
+    port: 587,
+    secure: false,
     auth: { user, pass },
+    connectionTimeout: 8000,
   });
   return transporter;
 };
