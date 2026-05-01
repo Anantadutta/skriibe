@@ -127,25 +127,27 @@ const sendWelcomeEmail = async (userEmail, userName) => {
       to: [userEmail],
       subject: "Before skriibe opens to everyone - you're first. Welcome!",
       html: htmlContent,
-      attachments: [
+            attachments: [
         {
-          filename: 'logo_stamp.png',
-          content: Buffer.from(LOGO_STAMP_BASE64, 'base64'),
-          contentId: 'logoStampImage',
+          filename: 'logo_stamp.jpeg',
+          content: LOGO_STAMP_BASE64,
+          inlineContentId: 'logoStampImage',
+          contentType: 'image/jpeg'
         },
         {
-          filename: 'stamp.png',
-          content: Buffer.from(STAMP_BASE64, 'base64'),
-          contentId: 'stampImage',
+          filename: 'stamp.jpeg',
+          content: STAMP_BASE64,
+          inlineContentId: 'stampImage',
+          contentType: 'image/jpeg'
         },
         {
           filename: 'founder.jpeg',
-          content: Buffer.from(FOUNDER_BASE64, 'base64'),
-          contentId: 'founderImage',
+          content: FOUNDER_BASE64,
+          inlineContentId: 'founderImage',
+          contentType: 'image/jpeg'
         }
       ]
     });
-
     if (error) {
       console.error('Error sending welcome email with Resend:', error);
       throw error;
