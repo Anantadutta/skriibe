@@ -25,6 +25,7 @@ const WaitlistForm = () => {
         }
 
         setStatus('loading');
+        setError(null);
 
         try {
             const payload = { ...formData };
