@@ -131,17 +131,17 @@ const sendWelcomeEmail = async (userEmail, userName) => {
         {
           filename: 'logo_stamp.png',
           content: Buffer.from(LOGO_STAMP_BASE64, 'base64'),
-          content_id: 'logoStampImage',
+          contentId: 'logoStampImage',
         },
         {
           filename: 'stamp.png',
           content: Buffer.from(STAMP_BASE64, 'base64'),
-          content_id: 'stampImage',
+          contentId: 'stampImage',
         },
         {
           filename: 'founder.jpeg',
           content: Buffer.from(FOUNDER_BASE64, 'base64'),
-          content_id: 'founderImage',
+          contentId: 'founderImage',
         }
       ]
     });
