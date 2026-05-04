@@ -49,8 +49,7 @@ const WaitlistForm = () => {
                     <div className="w-20 h-20 rounded-full bg-green-500/10 border-2 border-green-500 flex items-center justify-center mb-6">
                         <Check className="text-green-500" size={32} />
                     </div>
-                    <div className="font-fraunces-optical text-7xl text-skriibe-blue mb-4">#{waitlistNum}</div>
-                    <h2 className="font-libre text-4xl font-extrabold mb-4 italic">You're on the list!</h2>
+                    <h2 className="font-libre text-4xl font-extrabold mb-4 italic">You're in the top 100 !</h2>
                     <p className="font-roboto text-gray-400 text-lg leading-relaxed mb-8">
                         We'll WhatsApp you when skriibe launches.<br />
                         You're in the first 100 — <strong className="text-skriibe-blue">0% commission for first month.</strong>

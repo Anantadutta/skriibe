@@ -6,6 +6,30 @@ const { z } = require('zod');
 const Waitlist = require('./models/Waitlist');
 const Question = require('./models/Question');
 const { sendWelcomeEmail } = require('./utils/emailService');
+// WATI WhatsApp Message
+const sendWhatsAppMessage = async (phone, name) => {
+  const formattedPhone = '91' + phone;
+  const url = `${process.env.WATI_API_URL}/api/v1/sendTemplateMessage?whatsappNumber=${formattedPhone}`;
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Authorization': process.env.WATI_ACCESS_TOKEN,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      template_name: 'message_template',
+      broadcast_name: 'waitlist_onboarding',
+      parameters: [
+        { name: '1', value: name }
+      ]
+    })
+  });
+
+  const data = await response.json();
+  console.log('WATI response:', data);
+  return data;
+};
 
 const app = express();
 
@@ -81,6 +105,9 @@ app.post('/api/waitlist', async (req, res) => {
     await sendWelcomeEmail(savedEntry.email, savedEntry.name).catch(emailError => {
       console.error('Failed to send welcome email:', emailError);
     });
+    await sendWhatsAppMessage(savedEntry.whatsappNumber, savedEntry.name).catch(whatsappError => {
+  console.error('Failed to send WhatsApp message:', whatsappError);
+});
 
     const position = await Waitlist.countDocuments();
    res.status(201).json({
