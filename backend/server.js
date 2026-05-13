@@ -51,8 +51,11 @@ app.use(cors({
 }));
 
 // Required to handle the "preflight" error from your screenshot
+// Required to handle the "preflight" error from your screenshot
 app.options('/*splat', cors());
 app.use(express.json());
+const cookieParser = require('cookie-parser');
+app.use(cookieParser());
 
 // Database Connection - Serverless friendly
 let isConnected = false;
@@ -148,6 +151,9 @@ app.get('/health', async (req, res) => {
   await connectDB();
   res.json({ status: 'ok', dbConnected: isConnected });
 });
+
+const errorHandler = require('./middleware/errorHandler');
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

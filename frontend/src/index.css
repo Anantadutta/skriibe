@@ -229,3 +229,40 @@ body::after {
     font-variation-settings: "opsz" 144, "wght" 900, "ital" 0, "WONK" 0 !important;
   }
 }
+
+/* ─── SKRIIBE AMA DESIGN TOKENS ─────────────────────────────────── */
+:root {
+  --ink:   #06060A;
+  --ink2:  #0F0F16;
+  --ink3:  #1A1A24;
+  --ink4:  #252532;
+  --ink5:  #32323F;
+  --ink6:  #44444F;
+  --blue:  #3BA8D8;
+  --blue2: #2d8ab8;
+  --blue3: #1a6080;
+  --bdim:  rgba(59,168,216,.1);
+  --bglow: rgba(59,168,216,.2);
+  --white: #FAFAF8;
+  --g1:    #E0E0D8;
+  --g2:    #A8A8A0;
+  --g3:    #686860;
+  --g4:    #404040;
+  --green: #22C55E;
+  --gdim:  rgba(34,197,94,.1);
+  --red:   #EF4444;
+  --rdim:  rgba(239,68,68,.1);
+  --amber: #F59E0B;
+  --adim:  rgba(245,158,11,.1);
+  --purple:#A855F7;
+  --pdim:  rgba(168,85,247,.1);
+  --brd:   rgba(255,255,255,.06);
+  --brd2:  rgba(255,255,255,.10);
+  --font-heading: 'Syne', sans-serif;
+  --font-body:    'Instrument Sans', system-ui, sans-serif;
+  --font-mono:    'JetBrains Mono', monospace;
+  --radius-sm:  8px;
+  --radius-md:  14px;
+  --radius-lg:  22px;
+  --radius-xl:  48px;
+}

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, Outlet, Link } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import DMCounter from './components/DMCounter';
@@ -9,6 +10,97 @@ import WaitlistForm from './components/WaitlistForm';
 import Footer from './components/Footer';
 
 import ProofMarquee from './components/ProofMarquee';
+
+// AMA Placeholders and Pages
+import AMAPlaceholder from './pages/AMAPlaceholder';
+import ComponentShowcase from './pages/dev/ComponentShowcase';
+import UPIPayment from './pages/buyer/UPIPayment';
+import PaymentConfirmation from './pages/buyer/PaymentConfirmation';
+import BuyerAnswer from './pages/buyer/BuyerAnswer';
+import CreatorSignup from './pages/creator/CreatorSignup';
+import CreatorVerifyOTP from './pages/creator/CreatorVerifyOTP';
+import CreatorOnboardProfile from './pages/creator/CreatorOnboardProfile';
+import CreatorOnboardPricing from './pages/creator/CreatorOnboardPricing';
+import CreatorDashboard from './pages/creator/CreatorDashboard';
+import CreatorInbox from './pages/creator/CreatorInbox';
+import CreatorReply from './pages/creator/CreatorReply';
+import CreatorPayouts from './pages/creator/CreatorPayouts';
+import CreatorSettings from './pages/creator/CreatorSettings';
+import AdminLogin from './pages/admin/AdminLogin';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminCreators from './pages/admin/AdminCreators';
+import AdminDisputes from './pages/admin/AdminDisputes';
+import AdminAnalytics from './pages/admin/AdminAnalytics';
+
+const CreatorRoute = () => {
+  const [status, setStatus] = useState('checking');
+
+  useEffect(() => {
+    fetch('/api/creator/me')
+      .then(res => {
+        if (res.status === 401) setStatus('unauth');
+        else setStatus('auth');
+      })
+      .catch(() => setStatus('unauth'));
+  }, []);
+
+  if (status === 'checking') return <div style={{ color: 'white', padding: '20px' }}>Loading...</div>;
+  if (status === 'unauth') return <Navigate to="/creator/signup" replace />;
+  return <Outlet />;
+};
+
+const AdminRoute = () => {
+  const [status, setStatus] = useState('checking');
+
+  useEffect(() => {
+    fetch('/api/admin/me')
+      .then(res => {
+        if (res.status === 401) setStatus('unauth');
+        else setStatus('auth');
+      })
+      .catch(() => setStatus('unauth'));
+  }, []);
+
+  if (status === 'checking') return <div style={{ color: 'white', padding: '20px' }}>Loading...</div>;
+  if (status === 'unauth') return <Navigate to="/admin/login" replace />;
+  return <Outlet />;
+};
+
+function LandingPage({ theme, toggleTheme }) {
+  return (
+    <div className={`min-h-screen transition-colors duration-300 ${theme === 'light' ? 'bg-white text-black' : 'bg-black text-white'}`}>
+      <Navbar theme={theme} toggleTheme={toggleTheme} />
+      <div className="relative flex flex-col">
+        <Hero />
+        <div className="absolute bottom-6 w-full flex justify-center z-20">
+          <Link 
+            to="/creator/signup" 
+            style={{
+              background: 'transparent',
+              border: '1px solid rgba(255,255,255,0.2)',
+              color: 'var(--white)',
+              borderRadius: '8px',
+              padding: '12px 24px',
+              fontSize: '14px',
+              textDecoration: 'none',
+              transition: 'all 0.2s ease',
+              display: 'inline-block'
+            }}
+            onMouseEnter={(e) => { e.target.style.borderColor = 'var(--blue)'; e.target.style.color = 'var(--blue)'; }}
+            onMouseLeave={(e) => { e.target.style.borderColor = 'rgba(255,255,255,0.2)'; e.target.style.color = 'var(--white)'; }}
+          >
+            I'm a creator — ask me anything →
+          </Link>
+        </div>
+      </div>
+      <DMCounter theme={theme} />
+      <StorySteps theme={theme} />
+      <FlowGraphic />
+      <WaitlistForm />
+      <Footer theme={theme} />
+    </div>
+  );
+}
 
 function App() {
   const [theme, setTheme] = useState(() => {
@@ -31,15 +123,40 @@ function App() {
   };
 
   return (
-    <div className={`min-h-screen transition-colors duration-300 ${theme === 'light' ? 'bg-white text-black' : 'bg-black text-white'}`}>
-      <Navbar theme={theme} toggleTheme={toggleTheme} />
-      <Hero />
-      <DMCounter theme={theme} />
-      <StorySteps theme={theme} />
-      <FlowGraphic />
-      <WaitlistForm />
-      <Footer theme={theme} />
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<LandingPage theme={theme} toggleTheme={toggleTheme} />} />
+        <Route path="/ama" element={<AMAPlaceholder />} />
+        <Route path="/answer" element={<BuyerAnswer />} />
+        
+        <Route path="/creator/signup" element={<CreatorSignup />} />
+        <Route path="/creator/verify-otp" element={<CreatorVerifyOTP />} />
+        <Route path="/creator/onboarding/profile" element={<CreatorOnboardProfile />} />
+        <Route path="/creator/onboarding/pricing" element={<CreatorOnboardPricing />} />
+        
+        <Route element={<CreatorRoute />}>
+          <Route path="/creator/dashboard" element={<CreatorDashboard />} />
+          <Route path="/creator/inbox" element={<CreatorInbox />} />
+          <Route path="/creator/reply/:questionId" element={<CreatorReply />} />
+          <Route path="/creator/payouts" element={<CreatorPayouts />} />
+          <Route path="/creator/settings" element={<CreatorSettings />} />
+        </Route>
+
+        <Route path="/admin/login" element={<AdminLogin />} />
+        
+        <Route element={<AdminRoute />}>
+          <Route path="/admin/dashboard" element={<AdminDashboard />} />
+          <Route path="/admin/creators" element={<AdminCreators />} />
+          <Route path="/admin/disputes" element={<AdminDisputes />} />
+          <Route path="/admin/analytics" element={<AdminAnalytics />} />
+        </Route>
+
+        <Route path="/dev/components" element={<ComponentShowcase />} />
+
+        {/* MUST be last route */}
+        <Route path="/:handle" element={<AMAPlaceholder />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 
