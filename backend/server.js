@@ -152,6 +152,14 @@ app.get('/health', async (req, res) => {
   res.json({ status: 'ok', dbConnected: isConnected });
 });
 
+const { verifyAdminToken } = require('./middleware/auth');
+
+app.get('/api/admin/me', verifyAdminToken, (req, res) => {
+  res.json({ success: true, admin: req.admin });
+});
+
+app.use('/api/creators', require('./routes/creators'));
+
 const errorHandler = require('./middleware/errorHandler');
 app.use(errorHandler);
 

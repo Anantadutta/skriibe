@@ -36,15 +36,37 @@ const CreatorRoute = () => {
   const [status, setStatus] = useState('checking');
 
   useEffect(() => {
-    fetch('/api/creator/me')
+    fetch('http://localhost:5000/api/creators/me', {
+      credentials: 'include'
+    })
       .then(res => {
-        if (res.status === 401) setStatus('unauth');
-        else setStatus('auth');
+        if (res.status === 200) setStatus('auth');
+        else setStatus('unauth');
       })
       .catch(() => setStatus('unauth'));
   }, []);
 
-  if (status === 'checking') return <div style={{ color: 'white', padding: '20px' }}>Loading...</div>;
+  if (status === 'checking') {
+    return (
+      <div style={{ 
+        minHeight: '100vh', 
+        background: 'var(--ink)', 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center' 
+      }}>
+        <div style={{ 
+          width: 32, 
+          height: 32, 
+          borderRadius: '50%', 
+          border: '3px solid var(--ink5)', 
+          borderTopColor: 'var(--blue)', 
+          animation: 'spin 0.8s linear infinite' 
+        }} />
+      </div>
+    );
+  }
+
   if (status === 'unauth') return <Navigate to="/creator/signup" replace />;
   return <Outlet />;
 };
@@ -53,15 +75,37 @@ const AdminRoute = () => {
   const [status, setStatus] = useState('checking');
 
   useEffect(() => {
-    fetch('/api/admin/me')
+    fetch('http://localhost:5000/api/admin/me', {
+      credentials: 'include'
+    })
       .then(res => {
-        if (res.status === 401) setStatus('unauth');
-        else setStatus('auth');
+        if (res.status === 200) setStatus('auth');
+        else setStatus('unauth');
       })
       .catch(() => setStatus('unauth'));
   }, []);
 
-  if (status === 'checking') return <div style={{ color: 'white', padding: '20px' }}>Loading...</div>;
+  if (status === 'checking') {
+    return (
+      <div style={{ 
+        minHeight: '100vh', 
+        background: 'var(--ink)', 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center' 
+      }}>
+        <div style={{ 
+          width: 32, 
+          height: 32, 
+          borderRadius: '50%', 
+          border: '3px solid var(--ink5)', 
+          borderTopColor: 'var(--blue)', 
+          animation: 'spin 0.8s linear infinite' 
+        }} />
+      </div>
+    );
+  }
+
   if (status === 'unauth') return <Navigate to="/admin/login" replace />;
   return <Outlet />;
 };
