@@ -3,8 +3,9 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const { z } = require('zod');
+const passport = require('passport');
+const session = require('express-session');
 const Waitlist = require('./models/Waitlist');
-const Question = require('./models/Question');
 const { sendWelcomeEmail } = require('./utils/emailService');
 // WATI WhatsApp Message
 const sendWhatsAppMessage = async (phone, name) => {
@@ -57,6 +58,16 @@ app.use(express.json());
 const cookieParser = require('cookie-parser');
 app.use(cookieParser());
 
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'skriibe_session_secret',
+  resave: false,
+  saveUninitialized: false,
+  cookie: { secure: process.env.NODE_ENV === 'production' }
+}));
+
+app.use(passport.initialize());
+app.use(passport.session());
+
 // Database Connection - Serverless friendly
 let isConnected = false;
 const connectDB = async () => {
@@ -80,12 +91,7 @@ const waitlistSchema = z.object({
 
 });
 
-const questionSchema = z.object({
-  creatorId: z.string().min(1, "Creator ID is required"),
-  guestEmail: z.string().email("Invalid email address"),
-  questionText: z.string().min(5, "Question must be at least 5 characters long"),
-  priceCharged: z.number().positive("Price must be positive")
-});
+
 
 // API Routes
 app.post('/api/waitlist', async (req, res) => {
@@ -127,25 +133,6 @@ app.post('/api/waitlist', async (req, res) => {
   }
 });
 
-app.post('/api/questions', async (req, res) => {
-  try {
-    await connectDB();
-    const validatedData = questionSchema.parse(req.body);
-    const newQuestion = new Question(validatedData);
-    const savedQuestion = await newQuestion.save();
-    res.status(201).json({
-      success: true,
-      message: 'Question submitted successfully',
-      questionId: savedQuestion._id
-    });
-  } catch (error) {
-    console.error('Question submission error:', error);
-    if (error instanceof z.ZodError) {
-      return res.status(400).json({ errors: error.errors });
-    }
-    res.status(500).json({ message: 'Internal Server Error' });
-  }
-});
 
 app.get('/health', async (req, res) => {
   await connectDB();
@@ -158,7 +145,10 @@ app.get('/api/admin/me', verifyAdminToken, (req, res) => {
   res.json({ success: true, admin: req.admin });
 });
 
-app.use('/api/creators', require('./routes/creators'));
+app.use('/api/auth', require('./routes/auth'));
+app.use('/api/creator', require('./routes/creator'));
+app.use('/api/public', require('./routes/public'));
+app.use('/api/buyers', require('./routes/buyers'));
 
 const errorHandler = require('./middleware/errorHandler');
 app.use(errorHandler);

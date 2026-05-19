@@ -10,6 +10,7 @@ import { Button } from '../../components/ama/ui/Button';
 import { Field } from '../../components/ama/ui/Field';
 import { Avatar } from '../../components/ama/ui/Avatar';
 import { CharCounter } from '../../components/ama/ui/CharCounter';
+import { useCreatorOnboarding } from '../../context/CreatorOnboardingContext';
 
 const debounce = (func, wait) => {
   let timeout;
@@ -24,16 +25,18 @@ const CreatorOnboardProfile = () => {
   const location = useLocation();
   const creatorData = location.state?.creator;
 
+  const { igData } = useCreatorOnboarding();
+
   const [form, setForm] = useState({
-    name: creatorData?.name || '',
-    handle: creatorData?.handle || '',
-    bio: creatorData?.bio || '',
+    name: creatorData?.name || igData?.name || '',
+    handle: creatorData?.handle || igData?.handle || '',
+    bio: creatorData?.bio || igData?.bio || '',
     expertise: creatorData?.expertise || [],
-    instagramHandle: creatorData?.instagramHandle || ''
+    instagramHandle: creatorData?.instagramHandle || igData?.handle || ''
   });
 
   const [avatar, setAvatar] = useState(null);
-  const [avatarPreview, setAvatarPreview] = useState(creatorData?.avatarUrl || null);
+  const [avatarPreview, setAvatarPreview] = useState(creatorData?.avatarUrl || igData?.avatarUrl || null);
   const [handleStatus, setHandleStatus] = useState({ checking: false, available: null, error: '' });
   const [loading, setLoading] = useState(false);
   const [customExpertise, setCustomExpertise] = useState('');
@@ -135,7 +138,8 @@ const CreatorOnboardProfile = () => {
       background: 'var(--ink)',
       display: 'flex',
       justifyContent: 'center',
-      padding: '40px 20px'
+      padding: '40px 20px',
+      paddingBottom: '100px' // for sticky footer
     }}>
       <div style={{
         width: '100%',
@@ -287,13 +291,26 @@ const CreatorOnboardProfile = () => {
             </div>
           </div>
 
-          <div style={{ marginTop: '12px' }}>
-            <Button
-              disabled={!canContinue || loading}
-              onClick={handleContinue}
-            >
-              {loading ? 'Saving...' : 'Continue →'}
-            </Button>
+          <div style={{
+            position: 'fixed',
+            bottom: 0,
+            left: 0,
+            width: '100%',
+            padding: '20px',
+            background: 'var(--ink2)',
+            borderTop: '1px solid var(--ink5)',
+            display: 'flex',
+            justifyContent: 'center',
+            zIndex: 10
+          }}>
+            <div style={{ width: '100%', maxWidth: '480px' }}>
+              <Button
+                disabled={!canContinue || loading}
+                onClick={handleContinue}
+              >
+                {loading ? 'Saving...' : 'Continue →'}
+              </Button>
+            </div>
           </div>
         </div>
       </div>

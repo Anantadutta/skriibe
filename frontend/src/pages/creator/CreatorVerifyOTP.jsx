@@ -78,10 +78,10 @@ const CreatorVerifyOTP = () => {
     try {
       const res = await verifyOTP(phone, otpString);
       const { creator } = res.data;
-      if (creator.onboardingComplete) {
+      if (creator.ama_enabled) {
         navigate('/creator/dashboard', { state: { creator } });
       } else {
-        navigate('/creator/onboarding/profile', { state: { creator } });
+        navigate('/creator/connect-instagram', { state: { creator } });
       }
     } catch (err) {
       setError(err.response?.data?.message || 'Invalid OTP');

@@ -44,8 +44,8 @@ const CreatorOnboardPricing = () => {
   const handleActivate = async () => {
     setLoading(true);
     try {
-      await savePricing({ price, dailyCap });
-      navigate('/creator/dashboard', { state: { message: 'Page activated successfully!' } });
+      const res = await savePricing({ price, dailyCap });
+      navigate('/creator/share', { state: { creator: res.data.creator } });
     } catch (err) {
       alert('Failed to activate page');
     } finally {

@@ -157,4 +157,46 @@ const sendWelcomeEmail = async (userEmail, userName) => {
     throw error;
   }
 };
-module.exports = { sendWelcomeEmail };
+
+const sendCreatorWelcomeEmail = async (email, name, handle) => {
+  const resend = getResendClient();
+  if (!resend) return;
+
+  try {
+    const { data, error } = await resend.emails.send({
+      from: 'hello@skriibe.com',
+      to: [email],
+      subject: "You're on skriibe 🎉",
+      html: `
+        <div style="font-family: 'Instrument Sans', sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff; color: #1A1A1A;">
+          <div style="text-align: center; margin-bottom: 30px;">
+            <h2 style="font-family: 'Syne', sans-serif; color: #1A1A1A; margin: 0; font-size: 24px; font-weight: 800;">skr<span style="color: #3BA8D8;">ii</span>be</h2>
+          </div>
+          <h1 style="font-family: 'Syne', sans-serif; color: #1A1A1A; font-size: 22px; font-weight: 700; margin-bottom: 16px;">Welcome to skriibe, ${name}!</h1>
+          <p style="font-size: 16px; line-height: 1.5; color: #1A1A1A; margin-bottom: 30px;">
+            Your creator page is almost ready. Complete your setup to go live at skriibe.com/@${handle}.
+          </p>
+          <div style="text-align: center; margin-bottom: 40px;">
+            <a href="https://skriibe.com/creator/onboarding/pricing" style="display: inline-block; background-color: #3BA8D8; color: #ffffff; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-weight: 600; font-size: 16px;">Complete Setup</a>
+          </div>
+          <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #eeeeee;">
+            <p style="font-size: 12px; color: #888888; margin: 0;">skriibe · Made for creators</p>
+          </div>
+        </div>
+      `
+    });
+
+    if (error) {
+      console.error('Error sending creator welcome email with Resend:', error);
+      throw error;
+    }
+
+    console.log('Creator welcome email sent successfully:', data);
+    return data;
+  } catch (error) {
+    console.error('Error sending creator welcome email:', error);
+    throw error;
+  }
+};
+
+module.exports = { sendWelcomeEmail, sendCreatorWelcomeEmail };

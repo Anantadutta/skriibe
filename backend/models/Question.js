@@ -1,12 +1,43 @@
+/**
+ * @module Question — Paid question submitted by a buyer to a creator on skriibe
+ */
 const mongoose = require('mongoose');
 
-const QuestionSchema = new mongoose.Schema({
-  creatorId: { type: String, required: true },
-  guestEmail: { type: String, required: true },
-  questionText: { type: String, required: true },
-  priceCharged: { type: Number, required: true },
-  status: { type: String, enum: ['pending', 'answered'], default: 'pending' },
-  createdAt: { type: Date, default: Date.now }
-});
+const QuestionSchema = new mongoose.Schema(
+  {
+    creatorId: { type: mongoose.Schema.Types.ObjectId, ref: 'Creator', required: true },
+    handle: { type: String, required: true }, // denormalized for fast lookup
 
-module.exports = mongoose.model('Question', QuestionSchema);
+    // Buyer info
+    buyerName: { type: String, default: '' },
+    buyerPhone: { type: String, required: true }, // OTP-verified
+    buyerEmail: { type: String, default: '' },
+    isAnonymous: { type: Boolean, default: false },
+
+    // Question
+    questionText: { type: String, required: true, minlength: 20, maxlength: 500 },
+
+    // Payment
+    amountPaid: { type: Number, required: true }, // in INR
+    paymentStatus: {
+      type: String,
+      enum: ['pending', 'paid', 'refunded'],
+      default: 'pending',
+    },
+    razorpayOrderId: { type: String, default: '' },
+    razorpayPaymentId: { type: String, default: '' },
+
+    // Status
+    status: {
+      type: String,
+      enum: ['submitted', 'answered', 'expired', 'flagged'],
+      default: 'submitted',
+    },
+    answerText: { type: String, default: '' },
+    answeredAt: { type: Date },
+    expiresAt: { type: Date }, // SLA deadline — set on creation based on creator's responseTime
+  },
+  { timestamps: true }
+);
+
+module.exports = mongoose.models.Question || mongoose.model('Question', QuestionSchema);

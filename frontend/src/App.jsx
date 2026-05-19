@@ -5,22 +5,20 @@ import Hero from './components/Hero';
 import DMCounter from './components/DMCounter';
 import StorySteps from './components/StorySteps';
 import FlowGraphic from './components/FlowGraphic';
-import Calculator from './components/Calculator';
 import WaitlistForm from './components/WaitlistForm';
 import Footer from './components/Footer';
 
-import ProofMarquee from './components/ProofMarquee';
+// Context
+import { CreatorOnboardingProvider } from './context/CreatorOnboardingContext';
 
-// AMA Placeholders and Pages
-import AMAPlaceholder from './pages/AMAPlaceholder';
+// Pages
 import ComponentShowcase from './pages/dev/ComponentShowcase';
-import UPIPayment from './pages/buyer/UPIPayment';
-import PaymentConfirmation from './pages/buyer/PaymentConfirmation';
-import BuyerAnswer from './pages/buyer/BuyerAnswer';
 import CreatorSignup from './pages/creator/CreatorSignup';
 import CreatorVerifyOTP from './pages/creator/CreatorVerifyOTP';
+import CreatorConnectInstagram from './pages/creator/CreatorConnectInstagram';
 import CreatorOnboardProfile from './pages/creator/CreatorOnboardProfile';
 import CreatorOnboardPricing from './pages/creator/CreatorOnboardPricing';
+import CreatorShare from './pages/creator/CreatorShare';
 import CreatorDashboard from './pages/creator/CreatorDashboard';
 import CreatorInbox from './pages/creator/CreatorInbox';
 import CreatorReply from './pages/creator/CreatorReply';
@@ -31,12 +29,13 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminCreators from './pages/admin/AdminCreators';
 import AdminDisputes from './pages/admin/AdminDisputes';
 import AdminAnalytics from './pages/admin/AdminAnalytics';
+import CreatorPublicPage from './pages/buyer/CreatorPublicPage';
 
 const CreatorRoute = () => {
   const [status, setStatus] = useState('checking');
 
   useEffect(() => {
-    fetch('http://localhost:5000/api/creators/me', {
+    fetch('http://localhost:5000/api/creator/me', {
       credentials: 'include'
     })
       .then(res => {
@@ -167,40 +166,43 @@ function App() {
   };
 
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<LandingPage theme={theme} toggleTheme={toggleTheme} />} />
-        <Route path="/ama" element={<AMAPlaceholder />} />
-        <Route path="/answer" element={<BuyerAnswer />} />
-        
-        <Route path="/creator/signup" element={<CreatorSignup />} />
-        <Route path="/creator/verify-otp" element={<CreatorVerifyOTP />} />
-        <Route path="/creator/onboarding/profile" element={<CreatorOnboardProfile />} />
-        <Route path="/creator/onboarding/pricing" element={<CreatorOnboardPricing />} />
-        
-        <Route element={<CreatorRoute />}>
-          <Route path="/creator/dashboard" element={<CreatorDashboard />} />
-          <Route path="/creator/inbox" element={<CreatorInbox />} />
-          <Route path="/creator/reply/:questionId" element={<CreatorReply />} />
-          <Route path="/creator/payouts" element={<CreatorPayouts />} />
-          <Route path="/creator/settings" element={<CreatorSettings />} />
-        </Route>
+    <CreatorOnboardingProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<LandingPage theme={theme} toggleTheme={toggleTheme} />} />
+          
+          {/* Creator Onboarding */}
+          <Route path="/creator/signup" element={<CreatorSignup />} />
+          <Route path="/creator/verify-otp" element={<CreatorVerifyOTP />} />
+          <Route path="/creator/connect-instagram" element={<CreatorConnectInstagram />} />
+          <Route path="/creator/onboarding/profile" element={<CreatorOnboardProfile />} />
+          <Route path="/creator/onboarding/pricing" element={<CreatorOnboardPricing />} />
+          <Route path="/creator/share" element={<CreatorShare />} />
+          
+          <Route element={<CreatorRoute />}>
+            <Route path="/creator/dashboard" element={<CreatorDashboard />} />
+            <Route path="/creator/inbox" element={<CreatorInbox />} />
+            <Route path="/creator/reply/:questionId" element={<CreatorReply />} />
+            <Route path="/creator/payouts" element={<CreatorPayouts />} />
+            <Route path="/creator/settings" element={<CreatorSettings />} />
+          </Route>
 
-        <Route path="/admin/login" element={<AdminLogin />} />
-        
-        <Route element={<AdminRoute />}>
-          <Route path="/admin/dashboard" element={<AdminDashboard />} />
-          <Route path="/admin/creators" element={<AdminCreators />} />
-          <Route path="/admin/disputes" element={<AdminDisputes />} />
-          <Route path="/admin/analytics" element={<AdminAnalytics />} />
-        </Route>
+          <Route path="/admin/login" element={<AdminLogin />} />
+          
+          <Route element={<AdminRoute />}>
+            <Route path="/admin/dashboard" element={<AdminDashboard />} />
+            <Route path="/admin/creators" element={<AdminCreators />} />
+            <Route path="/admin/disputes" element={<AdminDisputes />} />
+            <Route path="/admin/analytics" element={<AdminAnalytics />} />
+          </Route>
 
-        <Route path="/dev/components" element={<ComponentShowcase />} />
+          <Route path="/dev/components" element={<ComponentShowcase />} />
 
-        {/* MUST be last route */}
-        <Route path="/:handle" element={<AMAPlaceholder />} />
-      </Routes>
-    </BrowserRouter>
+          {/* Buyer Flow (Catch-All) */}
+          <Route path="/:handle" element={<CreatorPublicPage />} />
+        </Routes>
+      </BrowserRouter>
+    </CreatorOnboardingProvider>
   );
 }
 
