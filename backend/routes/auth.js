@@ -31,7 +31,7 @@ passport.deserializeUser((user, done) => done(null, user));
 passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID || 'mock',
     clientSecret: process.env.GOOGLE_CLIENT_SECRET || 'mock',
-    callbackURL: "/api/auth/google/callback"
+    callbackURL: "http://localhost:5000/api/auth/google/callback"
   },
   async (accessToken, refreshToken, profile, done) => {
     try {
@@ -64,7 +64,19 @@ passport.use(new FacebookStrategy({
     try {
       await connectDB();
       const email = profile.emails?.[0]?.value;
-      if (!email) return done(new Error("No email found from Facebook"), null);
+      if (!email) {
+  const fallbackEmail = `fb_${profile.id}@temp.skriibe.com`;
+  let creator = await Creator.findOne({ email: fallbackEmail });
+  if (!creator) {
+    creator = new Creator({
+      email: fallbackEmail,
+      name: `${profile.name.givenName || ''} ${profile.name.familyName || ''}`.trim(),
+      avatarUrl: profile.photos?.[0]?.value || ''
+    });
+    await creator.save();
+  }
+  return done(null, creator);
+}
       let creator = await Creator.findOne({ email });
       if (!creator) {
         creator = new Creator({
@@ -180,49 +192,16 @@ router.post('/verify-otp', async (req, res) => {
 });
 
 // -- SOCIAL ROUTES --
-
-router.post('/google-auth', async (req, res) => {
-  try {
-    await connectDB();
-    const { access_token } = req.body;
-    if (!access_token) return res.status(400).json({ message: 'Access token required' });
-
-    // Fetch user profile from Google using the implicit access_token
-    const googleRes = await axios.get('https://www.googleapis.com/oauth2/v3/userinfo', {
-      headers: { Authorization: `Bearer ${access_token}` }
-    });
-    
-    const profile = googleRes.data;
-    if (!profile.email) return res.status(400).json({ message: 'No email returned from Google' });
-
-    let creator = await Creator.findOne({ email: profile.email });
-    if (!creator) {
-      creator = new Creator({
-        email: profile.email,
-        name: profile.name || '',
-        avatarUrl: profile.picture || ''
-      });
-      await creator.save();
-    }
-
-    issueToken(res, creator);
-    res.json({ success: true, creator });
-  } catch (err) {
-    console.error('Google Auth Error:', err.response?.data || err.message);
-    res.status(500).json({ message: 'Google Authentication failed' });
-  }
-});
-
-router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
+router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'], prompt: 'select_account' }));
 router.get('/google/callback', passport.authenticate('google', { failureRedirect: '/creator/signup' }), (req, res) => {
   issueToken(res, req.user);
-  res.redirect('http://localhost:5173/creator/connect-instagram');
+  res.redirect('http://localhost:5173/creator/onboarding/profile');
 });
 
-router.get('/facebook', passport.authenticate('facebook', { scope: ['email'] }));
+router.get('/facebook', passport.authenticate('facebook', { scope: ['email', 'public_profile'] }));
 router.get('/facebook/callback', passport.authenticate('facebook', { failureRedirect: '/creator/signup' }), (req, res) => {
   issueToken(res, req.user);
-  res.redirect('http://localhost:5173/creator/connect-instagram');
+  res.redirect('http://localhost:5173/creator/onboarding/profile');
 });
 
 // -- INSTAGRAM ROUTES --
@@ -286,6 +265,7 @@ router.get('/instagram/callback', async (req, res) => {
       await connectDB();
       await Creator.findByIdAndUpdate(decoded.creatorId, {
         instagramConnected: true,
+        instagramHandle: igData.handle,
         instagramFollowers: igData.followers,
         instagramAccessToken: encryptedToken
       });
@@ -297,7 +277,7 @@ router.get('/instagram/callback', async (req, res) => {
       bio: igData.bio,
       avatarUrl: igData.avatarUrl
     }));
-    res.redirect(`http://localhost:5173/creator/connect-instagram?igData=${dataString}`);
+    res.redirect(`http://localhost:5173/creator/onboarding/profile?igData=${dataString}`);
 
   } catch (err) {
     console.error(err);

@@ -6,40 +6,13 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { sendOTP } from '../../services/creatorApi';
-import api from '../../services/creatorApi'; // For custom axios calls
-import { useGoogleLogin } from '@react-oauth/google';
 import { Button } from '../../components/ama/ui/Button';
 
 const CreatorSignup = () => {
   const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [googleLoading, setGoogleLoading] = useState(false);
   const navigate = useNavigate();
-
-  const handleGoogleSuccess = async (tokenResponse) => {
-    try {
-      setGoogleLoading(true);
-      setError('');
-      // Send the access_token to the backend
-      const response = await api.post('/api/auth/google-auth', {
-        access_token: tokenResponse.access_token
-      });
-      if (response.data.success) {
-        navigate('/creator/connect-instagram');
-      }
-    } catch (err) {
-      console.error(err);
-      setError('Google Login failed. Please try again.');
-    } finally {
-      setGoogleLoading(false);
-    }
-  };
-
-  const loginWithGoogle = useGoogleLogin({
-    onSuccess: handleGoogleSuccess,
-    onError: (error) => setError('Google Login was cancelled or failed.')
-  });
 
   const handleSendOTP = async () => {
     if (!/^[6-9]\d{9}$/.test(phone)) {
@@ -62,22 +35,55 @@ const CreatorSignup = () => {
   const isInvalid = phone.length !== 10 || !/^[6-9]/.test(phone);
 
   return (
-    <div style={{
+    <div className="creator-theme" style={{
       minHeight: '100vh',
-      background: 'var(--ink)',
+      background: '#0a0a0f',
       display: 'flex',
       justifyContent: 'center',
-      padding: '40px 20px'
+      alignItems: 'center',
+      padding: '40px 20px',
+      position: 'relative',
+      overflow: 'hidden'
     }}>
+      {/* Decorative Background Blobs */}
       <div style={{
+        position: 'absolute',
+        top: '15%',
+        left: '10%',
+        width: '250px',
+        height: '250px',
+        borderRadius: '50%',
+        background: '#3DD9FF',
+        filter: 'blur(50px)',
+        opacity: 0.15,
+        pointerEvents: 'none',
+        zIndex: 0
+      }} />
+      <div style={{
+        position: 'absolute',
+        bottom: '15%',
+        right: '10%',
+        width: '280px',
+        height: '280px',
+        borderRadius: '50%',
+        background: '#7c3aed',
+        filter: 'blur(50px)',
+        opacity: 0.15,
+        pointerEvents: 'none',
+        zIndex: 0
+      }} />
+
+      <div className="card-redesign" style={{
         width: '100%',
         maxWidth: '480px',
-        background: 'var(--ink2)',
-        borderRadius: 'var(--radius-lg)',
-        border: '1px solid var(--ink5)',
+        background: '#141420',
+        borderRadius: '14px',
+        border: '1px solid #2a2a3e',
         padding: '32px',
         display: 'flex',
-        flexDirection: 'column'
+        flexDirection: 'column',
+        position: 'relative',
+        zIndex: 1
       }}>
         {/* HEADER */}
         <div style={{
@@ -117,10 +123,10 @@ const CreatorSignup = () => {
               <svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2000 520.97">
                 <defs>
                   <style>
-                    {`.cls-1{font-size:566.36px;fill:var(--white);font-family:Garet-Book, Garet;}.cls-2{fill:var(--blue);}.cls-3{letter-spacing:-0.02em;}`}
+                    {`.cls-1{font-size:566.36px;fill:var(--white);font-family:Syne;font-weight:700;}.cls-2{fill:#3DD9FF;}.cls-3{letter-spacing:-0.02em;}`}
                   </style>
                 </defs>
-                <text class="cls-1" transform="translate(33.52 457.72)">skr<tspan class="cls-2" x="885.21" y="0">ii</tspan><tspan x="1184.24" y="0">b</tspan><tspan class="cls-3" x="1581.82" y="0">e</tspan></text>
+                <text className="cls-1" transform="translate(33.52 457.72)">skr<tspan className="cls-2" x="885.21" y="0">ii</tspan><tspan x="1184.24" y="0">b</tspan><tspan className="cls-3" x="1581.82" y="0">e</tspan></text>
               </svg>
             </div>
             <div style={{ color: 'var(--g2)', fontSize: '14px' }}>
@@ -143,10 +149,10 @@ const CreatorSignup = () => {
 
             <div style={{ display: 'flex' }}>
               <div style={{
-                background: 'var(--ink3)',
-                border: '1px solid var(--ink5)',
+                background: '#141420',
+                border: '1px solid #2a2a3e',
                 borderRight: 'none',
-                borderRadius: 'var(--radius-md) 0 0 var(--radius-md)',
+                borderRadius: '12px 0 0 12px',
                 padding: '15px',
                 fontFamily: 'var(--font-mono)',
                 color: 'var(--g2)',
@@ -166,17 +172,17 @@ const CreatorSignup = () => {
                 }}
                 style={{
                   flex: 1,
-                  background: 'var(--ink3)',
-                  border: '1px solid var(--ink5)',
-                  borderRadius: '0 var(--radius-md) var(--radius-md) 0',
+                  background: '#141420',
+                  border: '1px solid #2a2a3e',
+                  borderRadius: '0 12px 12px 0',
                   padding: '15px',
                   fontSize: '16px',
                   color: 'var(--white)',
                   outline: 'none',
                   transition: 'border-color 0.15s ease'
                 }}
-                onFocus={(e) => e.target.style.borderColor = 'var(--blue)'}
-                onBlur={(e) => e.target.style.borderColor = 'var(--ink5)'}
+                onFocus={(e) => e.target.style.borderColor = '#3DD9FF'}
+                onBlur={(e) => e.target.style.borderColor = '#2a2a3e'}
               />
             </div>
 
@@ -231,7 +237,7 @@ const CreatorSignup = () => {
             <div style={{ textAlign: 'center', color: 'var(--g3)', fontSize: '12px', marginBottom: '8px' }}>
               or continue with
             </div>
-            <button onClick={() => loginWithGoogle()} disabled={googleLoading} style={{
+            <a href="http://localhost:5000/api/auth/google" style={{
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -244,11 +250,10 @@ const CreatorSignup = () => {
               textDecoration: 'none',
               fontSize: '14px',
               fontWeight: '500',
-              transition: 'background 0.2s',
-              cursor: googleLoading ? 'wait' : 'pointer'
+              transition: 'background 0.2s'
             }}
-            onMouseEnter={(e) => { if (!googleLoading) e.currentTarget.style.background = 'var(--ink4)'; }}
-            onMouseLeave={(e) => { if (!googleLoading) e.currentTarget.style.background = 'var(--ink3)'; }}
+            onMouseEnter={(e) => e.currentTarget.style.background = 'var(--ink4)'}
+            onMouseLeave={(e) => e.currentTarget.style.background = 'var(--ink3)'}
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -256,8 +261,8 @@ const CreatorSignup = () => {
                 <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.16C1.43 8.55 1 10.22 1 12s.43 3.45 1.16 4.93l3.68-2.84z" fill="#FBBC05"/>
                 <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.16 7.07l3.68 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
               </svg>
-              {googleLoading ? 'Connecting...' : 'Continue with Google'}
-            </button>
+              Continue with Google
+            </a>
             <a href="http://localhost:5000/api/auth/facebook" style={{
               display: 'flex',
               alignItems: 'center',

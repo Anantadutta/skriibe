@@ -6,7 +6,7 @@ const { z } = require('zod');
 const passport = require('passport');
 const session = require('express-session');
 const Waitlist = require('./models/Waitlist');
-const { sendWelcomeEmail } = require('./utils/emailService');
+const { sendWaitlistWelcomeEmail } = require('./utils/emailService');
 // WATI WhatsApp Message
 const sendWhatsAppMessage = async (phone, name) => {
   const formattedPhone = '91' + phone;
@@ -111,7 +111,7 @@ app.post('/api/waitlist', async (req, res) => {
     console.log('Waitlist entry saved for:', savedEntry.email);
 
     // Await email to ensure it sends in serverless environment (Vercel)
-    await sendWelcomeEmail(savedEntry.email, savedEntry.name).catch(emailError => {
+    await sendWaitlistWelcomeEmail(savedEntry.email, savedEntry.name).catch(emailError => {
       console.error('Failed to send welcome email:', emailError);
     });
     await sendWhatsAppMessage(savedEntry.whatsappNumber, savedEntry.name).catch(whatsappError => {
@@ -149,6 +149,7 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/creator', require('./routes/creator'));
 app.use('/api/public', require('./routes/public'));
 app.use('/api/buyers', require('./routes/buyers'));
+app.use('/api/creators', require('./routes/creators'));
 
 const errorHandler = require('./middleware/errorHandler');
 app.use(errorHandler);

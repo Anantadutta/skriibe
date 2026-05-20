@@ -24,8 +24,9 @@ const QuestionSchema = new mongoose.Schema(
       enum: ['pending', 'paid', 'refunded'],
       default: 'pending',
     },
-    razorpayOrderId: { type: String, default: '' },
-    razorpayPaymentId: { type: String, default: '' },
+    razorpayOrderId: { type: String },
+    razorpayPaymentId: { type: String },
+    paid: { type: Boolean, default: false },
 
     // Status
     status: {

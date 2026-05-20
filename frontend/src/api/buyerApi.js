@@ -14,3 +14,6 @@ export const verifyBuyerOTP = (phone, otp) =>
 
 export const submitQuestion = (payload) =>
   api.post('/api/buyers/submit-question', payload).then((r) => r.data);
+
+export const createOrder = (payload) => api.post('/api/buyers/create-order', payload).then((r) => r.data);
+export const confirmPayment = (payload) => api.post('/api/buyers/confirm-payment', payload).then((r) => r.data);

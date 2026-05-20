@@ -5,8 +5,8 @@ import React from 'react';
  */
 export const Button = ({ variant = 'primary', disabled, onClick, children, ...props }) => {
   const baseStyle = {
-    borderRadius: 'var(--radius-md)',
-    padding: '15px',
+    borderRadius: '14px',
+    padding: '12px',
     fontSize: '14px',
     width: '100%',
     fontFamily: 'var(--font-body)',
@@ -21,10 +21,10 @@ export const Button = ({ variant = 'primary', disabled, onClick, children, ...pr
   };
 
   const variants = {
-    primary: { background: 'var(--blue)', color: 'var(--ink)', fontWeight: 700 },
-    secondary: { background: 'var(--ink3)', color: 'var(--white)', border: '1px solid var(--ink5)' },
-    danger: { background: 'var(--rdim)', color: 'var(--red)', border: '1px solid rgba(239,68,68,.2)' },
-    success: { background: 'var(--gdim)', color: 'var(--green)', border: '1px solid rgba(34,197,94,.2)' }
+    primary: { background: '#3DD9FF', color: '#000000', fontWeight: 500 },
+    secondary: { background: 'var(--ink3)', color: 'var(--white)', border: '1px solid var(--ink5)', padding: '12px' },
+    danger: { background: 'var(--rdim)', color: 'var(--red)', border: '1px solid rgba(239,68,68,.2)', padding: '12px' },
+    success: { background: 'var(--gdim)', color: 'var(--green)', border: '1px solid rgba(34,197,94,.2)', padding: '12px' }
   };
 
   const [hovered, setHovered] = React.useState(false);
@@ -32,8 +32,8 @@ export const Button = ({ variant = 'primary', disabled, onClick, children, ...pr
   const style = {
     ...baseStyle,
     ...variants[variant],
-    ...(hovered && !disabled && variant === 'primary' ? { background: 'var(--blue2)', transform: 'translateY(-1px)' } : {}),
-    ...(hovered && !disabled && variant === 'secondary' ? { borderColor: 'var(--blue)', color: 'var(--blue)' } : {})
+    ...(hovered && !disabled && variant === 'primary' ? { background: '#2bc8ee', transform: 'translateY(-1px)' } : {}),
+    ...(hovered && !disabled && variant === 'secondary' ? { borderColor: '#3DD9FF', color: '#3DD9FF' } : {})
   };
 
   return (

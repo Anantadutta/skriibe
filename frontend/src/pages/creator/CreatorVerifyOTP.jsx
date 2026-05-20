@@ -81,7 +81,7 @@ const CreatorVerifyOTP = () => {
       if (creator.ama_enabled) {
         navigate('/creator/dashboard', { state: { creator } });
       } else {
-        navigate('/creator/connect-instagram', { state: { creator } });
+        navigate('/onboard/profile', { state: { creator } });
       }
     } catch (err) {
       setError(err.response?.data?.message || 'Invalid OTP');
@@ -102,22 +102,55 @@ const CreatorVerifyOTP = () => {
   };
 
   return (
-    <div style={{
+    <div className="creator-theme" style={{
       minHeight: '100vh',
-      background: 'var(--ink)',
+      background: '#0a0a0f',
       display: 'flex',
       justifyContent: 'center',
-      padding: '40px 20px'
+      alignItems: 'center',
+      padding: '40px 20px',
+      position: 'relative',
+      overflow: 'hidden'
     }}>
+      {/* Decorative Background Blobs */}
       <div style={{
+        position: 'absolute',
+        top: '15%',
+        left: '10%',
+        width: '250px',
+        height: '250px',
+        borderRadius: '50%',
+        background: '#3DD9FF',
+        filter: 'blur(50px)',
+        opacity: 0.15,
+        pointerEvents: 'none',
+        zIndex: 0
+      }} />
+      <div style={{
+        position: 'absolute',
+        bottom: '15%',
+        right: '10%',
+        width: '280px',
+        height: '280px',
+        borderRadius: '50%',
+        background: '#7c3aed',
+        filter: 'blur(50px)',
+        opacity: 0.15,
+        pointerEvents: 'none',
+        zIndex: 0
+      }} />
+
+      <div className="card-redesign" style={{
         width: '100%',
         maxWidth: '480px',
-        background: 'var(--ink2)',
-        borderRadius: 'var(--radius-lg)',
-        border: '1px solid var(--ink5)',
+        background: '#141420',
+        borderRadius: '14px',
+        border: '1px solid #2a2a3e',
         padding: '32px',
         display: 'flex',
-        flexDirection: 'column'
+        flexDirection: 'column',
+        position: 'relative',
+        zIndex: 1
       }}>
         {/* HEADER */}
         <div style={{
@@ -173,19 +206,25 @@ const CreatorVerifyOTP = () => {
                 style={{
                   width: '44px',
                   height: '52px',
-                  background: 'var(--ink3)',
-                  border: `1px solid ${digit ? 'rgba(59,168,216,0.3)' : 'var(--ink5)'}`,
-                  borderRadius: 'var(--radius-md)',
+                  background: '#141420',
+                  border: `1px solid ${digit ? '#3DD9FF' : '#1e1e2e'}`,
+                  borderRadius: '12px',
                   textAlign: 'center',
-                  fontFamily: 'var(--font-mono)',
+                  fontFamily: 'var(--font-body)',
                   fontSize: '24px',
                   color: 'var(--white)',
                   outline: 'none',
                   transition: 'all 0.15s ease',
-                  ...(digit && { borderColor: 'var(--blue)' })
+                  boxShadow: digit ? '0 0 0 3px rgba(61, 217, 255, 0.2)' : 'none'
                 }}
-                onFocus={(e) => e.target.style.borderColor = 'var(--blue)'}
-                onBlur={(e) => e.target.style.borderColor = digit ? 'var(--blue)' : 'var(--ink5)'}
+                onFocus={(e) => {
+                  e.target.style.borderColor = '#3DD9FF';
+                  e.target.style.boxShadow = '0 0 0 3px rgba(61, 217, 255, 0.2)';
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = digit ? '#3DD9FF' : '#1e1e2e';
+                  e.target.style.boxShadow = digit ? '0 0 0 3px rgba(61, 217, 255, 0.2)' : 'none';
+                }}
               />
             ))}
           </div>
@@ -197,8 +236,19 @@ const CreatorVerifyOTP = () => {
           )}
 
           {error && (
-            <div style={{ color: 'var(--red)', fontSize: '12px', marginBottom: '16px' }}>
-              {error}
+            <div className="warning-pill" style={{
+              background: '#1a0f00',
+              border: '1px solid #3a2000',
+              color: '#f5a623',
+              borderRadius: '20px',
+              padding: '8px 16px',
+              display: 'inline-block',
+              fontSize: '12px',
+              marginBottom: '16px',
+              fontFamily: 'var(--font-body)',
+              textAlign: 'center'
+            }}>
+              ⚠️ {error}
             </div>
           )}
 

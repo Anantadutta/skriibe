@@ -1,68 +1,61 @@
 import React from 'react';
 
 /**
- * @component PhoneFrame — Mobile phone frame wrapper matching the skriibe prototype exactly.
+ * @component PhoneFrame — Refactored wrapper to render full-width responsive layout without mobile frames.
  */
 export const PhoneFrame = ({ children }) => {
   return (
-    <div style={{
-      width: '335px',
-      height: '680px',
-      background: 'var(--ink2)',
-      borderRadius: '48px',
-      border: '1.5px solid var(--ink5)',
+    <div className="creator-theme" style={{
+      width: '100%',
+      maxWidth: '1200px',
+      margin: '0 auto',
       position: 'relative',
-      overflow: 'hidden',
+      boxSizing: 'border-box',
       display: 'flex',
       flexDirection: 'column',
-      boxShadow: '0 48px 96px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04), inset 0 1px 0 rgba(255,255,255,0.06)'
+      minHeight: '100%',
+      background: 'transparent'
     }}>
+      {/* Decorative Background Blobs */}
       <div style={{
         position: 'absolute',
-        top: 0,
-        left: '50%',
-        transform: 'translateX(-50%)',
-        width: '110px',
-        height: '34px',
-        background: 'var(--ink2)',
-        borderRadius: '0 0 22px 22px',
-        zIndex: 10
+        top: '10%',
+        left: '-5%',
+        width: '280px',
+        height: '280px',
+        borderRadius: '50%',
+        background: '#3DD9FF',
+        filter: 'blur(100px)',
+        opacity: 0.15,
+        pointerEvents: 'none',
+        zIndex: 0
       }} />
       <div style={{
-        height: '44px',
-        padding: '0 22px 8px',
-        display: 'flex',
-        alignItems: 'flex-end',
-        justifyContent: 'space-between',
-        flexShrink: 0,
-        fontFamily: 'var(--font-mono)',
-        fontSize: '10px',
-        color: 'var(--g4)'
-      }}>
-        <span>9:41</span>
-        <span>skriibe</span>
-      </div>
+        position: 'absolute',
+        bottom: '20%',
+        right: '-5%',
+        width: '320px',
+        height: '320px',
+        borderRadius: '50%',
+        background: '#7c3aed',
+        filter: 'blur(100px)',
+        opacity: 0.15,
+        pointerEvents: 'none',
+        zIndex: 0
+      }} />
+
+      {/* Main Content Area */}
       <div style={{
+        position: 'relative',
+        zIndex: 1,
         flex: 1,
-        overflowY: 'auto',
-        position: 'relative'
+        width: '100%',
+        display: 'flex',
+        flexDirection: 'column'
       }}>
         {children}
-      </div>
-      <div style={{
-        height: '28px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        flexShrink: 0
-      }}>
-        <div style={{
-          width: '110px',
-          height: '4px',
-          background: 'var(--ink5)',
-          borderRadius: '2px'
-        }} />
       </div>
     </div>
   );
 };
+

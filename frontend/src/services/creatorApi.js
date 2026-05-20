@@ -21,8 +21,7 @@ export const checkHandle = (handle) =>
   api.post('/api/auth/check-handle', { handle });
 
 // Creator Routes
-export const getMe = () => 
-  api.get('/api/creator/me');
+export const getMe = () => api.get('/api/creators/me').then((res) => res.data);
 
 export const saveProfile = (data) => 
   api.post('/api/creator/profile', data);

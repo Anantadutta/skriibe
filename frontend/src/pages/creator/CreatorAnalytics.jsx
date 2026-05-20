@@ -1,13 +1,13 @@
 /**
- * @file CreatorSettings.jsx
- * @description Settings placeholder page.
+ * @file CreatorAnalytics.jsx
+ * @description Analytics placeholder page.
  */
 
 import React from 'react';
 import { PhoneFrame } from '../../components/ama/layout/PhoneFrame';
 import { BottomNav } from '../../components/ama/layout/BottomNav';
 
-const CreatorSettings = () => {
+const CreatorAnalytics = () => {
   return (
     <div style={{
       minHeight: '100vh',
@@ -28,7 +28,7 @@ const CreatorSettings = () => {
         textTransform: 'uppercase',
         fontWeight: 'bold'
       }}>
-        C11 — SETTINGS
+        C8 — ANALYTICS
       </div>
 
       <PhoneFrame>
@@ -43,19 +43,19 @@ const CreatorSettings = () => {
           boxSizing: 'border-box',
           position: 'relative'
         }}>
-          <span style={{ fontSize: '40px', marginBottom: '16px' }}>⚙️</span>
+          <span style={{ fontSize: '40px', marginBottom: '16px' }}>📊</span>
           <h2 style={{ color: '#ffffff', fontSize: '18px', fontWeight: 'bold', margin: '0 0 8px' }}>
-            Account Settings
+            Analytics & Insights
           </h2>
           <p style={{ color: 'var(--g3)', fontSize: '12px', margin: 0 }}>
-            Your settings management is coming soon
+            Your insights dashboard is coming soon
           </p>
 
-          <BottomNav activeTab="settings" />
+          <BottomNav activeTab="analytics" />
         </div>
       </PhoneFrame>
     </div>
   );
 };
 
-export default CreatorSettings;
+export default CreatorAnalytics;

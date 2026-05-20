@@ -1,125 +1,149 @@
 /**
  * @file CreatorOnboardProfile.jsx
- * @description Step 1 of onboarding: Profile setup.
+ * @description Step 1 of onboarding: Profile setup (C3).
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { checkHandle, saveProfile } from '../../services/creatorApi';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { saveProfile, getMe } from '../../services/creatorApi';
+import { PhoneFrame } from '../../components/ama/layout/PhoneFrame';
 import { Button } from '../../components/ama/ui/Button';
 import { Field } from '../../components/ama/ui/Field';
-import { Avatar } from '../../components/ama/ui/Avatar';
-import { CharCounter } from '../../components/ama/ui/CharCounter';
-import { useCreatorOnboarding } from '../../context/CreatorOnboardingContext';
-
-const debounce = (func, wait) => {
-  let timeout;
-  return (...args) => {
-    clearTimeout(timeout);
-    timeout = setTimeout(() => func(...args), wait);
-  };
-};
 
 const CreatorOnboardProfile = () => {
   const navigate = useNavigate();
-  const location = useLocation();
-  const creatorData = location.state?.creator;
-
-  const { igData } = useCreatorOnboarding();
 
   const [form, setForm] = useState({
-    name: creatorData?.name || igData?.name || '',
-    handle: creatorData?.handle || igData?.handle || '',
-    bio: creatorData?.bio || igData?.bio || '',
-    expertise: creatorData?.expertise || [],
-    instagramHandle: creatorData?.instagramHandle || igData?.handle || ''
+    name: '',
+    handle: '',
+    email: '',
+    bio: '',
+    expertise: [],
+    instagramHandle: '',
+    instagramConnected: false,
+    instagramFollowers: 0
   });
 
-  const [avatar, setAvatar] = useState(null);
-  const [avatarPreview, setAvatarPreview] = useState(creatorData?.avatarUrl || igData?.avatarUrl || null);
-  const [handleStatus, setHandleStatus] = useState({ checking: false, available: null, error: '' });
+  const [avatarPreview, setAvatarPreview] = useState(null);
+  const [avatarFile, setAvatarFile] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [customExpertise, setCustomExpertise] = useState('');
+  const [loadingCreator, setLoadingCreator] = useState(true);
 
-  const expertiseOptions = ['Finance', 'Fitness', 'UPSC', 'Career', 'Business', 'Nutrition', 'Tech'];
+  // List of standard expertise tag options
+  const expertiseOptions = [
+    'Personal Finance',
+    'SIP / Mutual Funds',
+    'Stock Trading',
+    'Career Coaching',
+    'Tax Planning',
+    'Real Estate',
+    'Tech & Coding',
+    'Fitness & Health'
+  ];
 
   useEffect(() => {
-    if (!creatorData) {
-      navigate('/creator/signup');
-    }
-  }, [creatorData, navigate]);
-
-  const validateHandle = useCallback(
-    debounce(async (handle) => {
-      if (handle.length < 3) {
-        setHandleStatus({ checking: false, available: null, error: '' });
-        return;
-      }
-      setHandleStatus({ checking: true, available: null, error: '' });
+    const loadCreator = async () => {
       try {
-        const res = await checkHandle(handle);
-        setHandleStatus({ checking: false, available: res.data.available, error: '' });
+        const res = await getMe();
+        if (res.success && res.creator) {
+          const creator = res.creator;
+          setForm(prev => ({
+            ...prev,
+            name: creator.name || '',
+            handle: creator.handle || '',
+            email: (creator.email && !creator.email.includes('@temp.skriibe.com')) ? creator.email : '',
+            bio: creator.bio || '',
+            expertise: creator.expertise ? (Array.isArray(creator.expertise) ? creator.expertise : creator.expertise.split(',').map(e => e.trim())) : [],
+            instagramHandle: creator.instagramHandle || '',
+            instagramConnected: creator.instagramConnected || false,
+            instagramFollowers: creator.instagramFollowers || 0
+          }));
+          if (creator.avatarUrl) {
+            setAvatarPreview(creator.avatarUrl);
+          }
+        }
       } catch (err) {
-        setHandleStatus({ checking: false, available: null, error: 'Check failed' });
+        console.error('Failed to fetch creator data:', err);
+      } finally {
+        setLoadingCreator(false);
       }
-    }, 500),
-    []
-  );
+    };
+
+    loadCreator();
+  }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const igData = params.get('igData');
+    if (igData) {
+      try {
+        const data = JSON.parse(decodeURIComponent(igData));
+        setForm(prev => ({
+          ...prev,
+          instagramHandle: data.handle || prev.instagramHandle,
+          instagramConnected: true,
+          name: data.name || prev.name,
+          bio: data.bio || prev.bio,
+        }));
+        if (data.avatarUrl) setAvatarPreview(data.avatarUrl);
+        window.history.replaceState({}, '', window.location.pathname);
+      } catch (e) {
+        console.error('Failed to parse igData', e);
+      }
+    }
+  }, []);
 
   const handleInputChange = (field, value) => {
     setForm(prev => ({ ...prev, [field]: value }));
-    if (field === 'handle') {
-      const sanitized = value.toLowerCase().replace(/[^a-z0-9_]/g, '');
-      setForm(prev => ({ ...prev, handle: sanitized }));
-      validateHandle(sanitized);
-    }
   };
 
-  const toggleExpertise = (item) => {
+  const handleInstagramConnect = () => {
+    window.location.href = 'http://localhost:5000/api/auth/instagram';
+  };
+  const handleToggleTag = (tag) => {
     setForm(prev => {
-      const exists = prev.expertise.includes(item);
-      if (exists) {
-        return { ...prev, expertise: prev.expertise.filter(e => e !== item) };
+      const isSelected = prev.expertise.includes(tag);
+      if (isSelected) {
+        return {
+          ...prev,
+          expertise: prev.expertise.filter(t => t !== tag)
+        };
       } else {
-        return { ...prev, expertise: [...prev.expertise, item] };
+        if (prev.expertise.length >= 3) return prev; // Limit to max 3 tags
+        return {
+          ...prev,
+          expertise: [...prev.expertise, tag]
+        };
       }
     });
-  };
-
-  const addCustomExpertise = (e) => {
-    if (e.key === 'Enter' || e.key === ',') {
-      e.preventDefault();
-      const val = customExpertise.trim();
-      if (val && !form.expertise.includes(val)) {
-        setForm(prev => ({ ...prev, expertise: [...prev.expertise, val] }));
-      }
-      setCustomExpertise('');
-    }
   };
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
-        alert('File too large (max 5MB)');
+        alert('File size too large (max 5MB)');
         return;
       }
-      if (!['image/jpeg', 'image/png'].includes(file.mimetype || file.type)) {
-        alert('Only JPG/PNG allowed');
-        return;
-      }
-      setAvatar(file);
+      setAvatarFile(file);
       setAvatarPreview(URL.createObjectURL(file));
     }
   };
 
   const handleContinue = async () => {
-    if (!form.name || !form.handle || handleStatus.available === false || form.expertise.length === 0) return;
-
+    if (!form.name || !form.email || form.expertise.length === 0) return;
+    
     setLoading(true);
     try {
-      await saveProfile(form);
-      navigate('/creator/onboarding/pricing', { state: { creator: { ...creatorData, ...form } } });
+      // If handle is not filled, default to formatted name or standard handle
+      const finalHandle = form.handle || form.name.toLowerCase().replace(/[^a-z0-9_]/g, '');
+      const res = await saveProfile({
+        ...form,
+        handle: finalHandle,
+        avatarUrl: typeof avatarPreview === 'string' && avatarPreview.startsWith('http') ? avatarPreview : null
+      });
+      
+      navigate('/onboard/pricing', { state: { creator: res.data.creator } });
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to save profile');
     } finally {
@@ -127,193 +151,469 @@ const CreatorOnboardProfile = () => {
     }
   };
 
-  const canContinue = form.name.length >= 2 &&
-    form.handle.length >= 3 &&
-    handleStatus.available === true &&
-    form.expertise.length > 0;
+  const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email);
+  const canContinue = form.name.trim().length >= 2 &&
+    isEmailValid &&
+    form.expertise.length >= 1 &&
+    form.expertise.length <= 3;
+
+  if (loadingCreator) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: '#0B0B10',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        color: '#ffffff'
+      }}>
+        <div style={{ fontFamily: 'var(--font-mono)', fontSize: '14px' }}>Loading profile...</div>
+      </div>
+    );
+  }
 
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'var(--ink)',
+      background: '#0B0B10',
       display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
       justifyContent: 'center',
-      padding: '40px 20px',
-      paddingBottom: '100px' // for sticky footer
+      padding: '40px 20px'
     }}>
+      {/* MONOSPACED LABEL OUTSIDE PHONE FRAME */}
       <div style={{
-        width: '100%',
-        maxWidth: '480px',
-        background: 'var(--ink2)',
-        borderRadius: 'var(--radius-lg)',
-        border: '1px solid var(--ink5)',
-        padding: '32px',
-        display: 'flex',
-        flexDirection: 'column'
+        fontFamily: 'var(--font-mono)',
+        fontSize: '13px',
+        color: 'var(--g3)',
+        letterSpacing: '0.1em',
+        marginBottom: '20px',
+        textTransform: 'uppercase',
+        fontWeight: 'bold'
       }}>
-        {/* HEADER */}
-        <div style={{ textAlign: 'center', padding: '0 0 24px' }}>
-          <h1 style={{ fontFamily: 'var(--font-heading)', fontSize: '20px', color: 'var(--white)', margin: '0 0 8px' }}>
-            Set up your profile
-          </h1>
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', alignItems: 'center' }}>
-            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--blue)' }} />
-            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--ink5)' }} />
-            <span style={{ color: 'var(--g3)', fontSize: '10px', fontFamily: 'var(--font-mono)', marginLeft: '4px' }}>STEP 1 OF 2</span>
-          </div>
-        </div>
+      </div>
 
-        {/* AVATAR UPLOAD */}
-        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+      <PhoneFrame>
+        <div style={{
+          padding: '16px 20px 80px',
+          display: 'flex',
+          flexDirection: 'column',
+          height: '100%',
+          boxSizing: 'border-box'
+        }}>
+          {/* HEADER WITH BACK CHEVRON */}
           <div style={{
-            width: '80px',
-            height: '80px',
-            margin: '0 auto 12px',
-            borderRadius: '50%',
-            border: avatarPreview ? 'none' : '2px dashed var(--ink5)',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
-            overflow: 'hidden',
-            position: 'relative'
+            position: 'relative',
+            height: '24px',
+            marginBottom: '10px'
           }}>
-            {avatarPreview ? (
-              <img src={avatarPreview} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            ) : (
-              <Avatar name={form.name || 'S'} size={80} />
-            )}
-          </div>
-          <label style={{ color: 'var(--blue)', fontSize: '12px', cursor: 'pointer', fontWeight: 500 }}>
-            Upload photo
-            <input type="file" hidden accept="image/jpeg,image/png" onChange={handleFileChange} />
-          </label>
-        </div>
-
-        {/* FORM */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-          <Field
-            label="FULL NAME"
-            value={form.name}
-            onChange={(e) => handleInputChange('name', e.target.value)}
-            placeholder="Your name"
-          />
-
-          <div>
-            <Field
-              label="CHOOSE HANDLE"
-              value={form.handle}
-              onChange={(e) => handleInputChange('handle', e.target.value)}
-              placeholder="e.g. yourname"
-            />
-            <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              {handleStatus.checking && <span style={{ color: 'var(--g3)', fontSize: '11px' }}>Checking...</span>}
-              {handleStatus.available === true && <span style={{ color: 'var(--green)', fontSize: '11px' }}>✓ Available</span>}
-              {handleStatus.available === false && <span style={{ color: 'var(--red)', fontSize: '11px' }}>✗ Already taken</span>}
-            </div>
-          </div>
-
-          <Field
-            label="INSTAGRAM HANDLE"
-            value={form.instagramHandle}
-            onChange={(e) => handleInputChange('instagramHandle', e.target.value.replace('@', ''))}
-            placeholder="username"
-          />
-
-          <div>
-            <label style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'var(--g3)', textTransform: 'uppercase', display: 'block', marginBottom: '12px' }}>
-              YOUR EXPERTISE
-            </label>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-              {expertiseOptions.map(opt => (
-                <button
-                  key={opt}
-                  onClick={() => toggleExpertise(opt)}
-                  style={{
-                    padding: '8px 16px',
-                    borderRadius: '20px',
-                    fontSize: '13px',
-                    fontFamily: 'var(--font-body)',
-                    cursor: 'pointer',
-                    transition: 'all 0.15s ease',
-                    background: form.expertise.includes(opt) ? 'var(--bdim)' : 'var(--ink3)',
-                    color: form.expertise.includes(opt) ? 'var(--blue)' : 'var(--g2)',
-                    border: `1px solid ${form.expertise.includes(opt) ? 'var(--blue)' : 'var(--ink5)'}`
-                  }}
-                >
-                  {opt}
-                </button>
-              ))}
-            </div>
-            <input
-              type="text"
-              placeholder="Add your own..."
-              value={customExpertise}
-              onChange={(e) => setCustomExpertise(e.target.value)}
-              onKeyDown={addCustomExpertise}
+            <button
+              onClick={() => navigate(-1)}
               style={{
-                background: 'transparent',
+                position: 'absolute',
+                left: 0,
+                background: 'none',
                 border: 'none',
-                borderBottom: '1px solid var(--ink5)',
                 color: 'var(--white)',
-                padding: '8px 0',
-                marginTop: '12px',
-                width: '100%',
-                fontSize: '13px',
-                outline: 'none'
+                fontSize: '18px',
+                cursor: 'pointer',
+                padding: 0
               }}
-            />
+            >
+              ←
+            </button>
+            <div style={{
+              margin: '0 auto',
+              fontFamily: 'var(--font-heading)',
+              fontSize: '15px',
+              fontWeight: 700,
+              color: 'var(--white)'
+            }}>
+              Connect & setup
+            </div>
           </div>
 
-          <div style={{ position: 'relative' }}>
-            <label style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'var(--g3)', textTransform: 'uppercase', display: 'block', marginBottom: '10px' }}>
-              BIO
-            </label>
-            <textarea
-              value={form.bio}
-              onChange={(e) => handleInputChange('bio', e.target.value.slice(0, 200))}
-              placeholder="Tell your followers what you know..."
-              rows={3}
-              style={{
-                width: '100%',
+          {/* PROGRESS BAR: STEP 1 ACTIVE */}
+          <div style={{
+            display: 'flex',
+            width: '100%',
+            height: '4px',
+            background: 'var(--ink5)',
+            borderRadius: '2px',
+            overflow: 'hidden',
+            marginBottom: '18px'
+          }}>
+            <div style={{ flex: 1, background: '#3DD9FF' }} />
+            <div style={{ flex: 1, background: 'var(--ink5)' }} />
+          </div>
+
+          {/* SCROLL CONTAINER FOR FORM */}
+          <div style={{
+            flex: 1,
+            overflowY: 'auto',
+            paddingRight: '4px',
+            marginBottom: '20px'
+          }}>
+            {/* INSTAGRAM CONNECT CARD */}
+            <div style={{
+              background: '#141420',
+              border: '1px solid #2a2a3e',
+              borderRadius: '14px',
+              padding: '16px',
+              marginBottom: '20px',
+              textAlign: 'center',
+              position: 'relative'
+            }}>
+              {!form.instagramConnected ? (
+                <>
+                  <div style={{
+                    width: '40px',
+                    height: '40px',
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    margin: '0 auto 12px',
+                    fontSize: '20px'
+                  }}>
+                    📸
+                  </div>
+                  <h3 style={{
+                    color: 'var(--white)',
+                    fontSize: '14px',
+                    fontWeight: 700,
+                    margin: '0 0 6px'
+                  }}>
+                    Connect Instagram
+                  </h3>
+                  <p style={{
+                    color: 'var(--g2)',
+                    fontSize: '11px',
+                    lineHeight: '1.4',
+                    margin: '0 0 16px',
+                    padding: '0 8px'
+                  }}>
+                    Your skriibe profile pulls your photo, handle, and follower count automatically. Builds instant trust with buyers.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleInstagramConnect}
+                    style={{
+                      width: '100%',
+                      padding: '12px',
+                      borderRadius: '14px',
+                      background: 'linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888)',
+                      color: '#ffffff',
+                      border: 'none',
+                      fontSize: '13px',
+                      fontWeight: '500',
+                      cursor: 'pointer',
+                      transition: 'opacity 0.2s'
+                    }}
+                    onMouseEnter={(e) => e.target.style.opacity = '0.9'}
+                    onMouseLeave={(e) => e.target.style.opacity = '1'}
+                  >
+                    Connect @instagram
+                  </button>
+                  <div style={{
+                    fontSize: '9px',
+                    color: 'var(--g3)',
+                    marginTop: '8px',
+                    fontFamily: 'var(--font-mono)'
+                  }}>
+                    Read-only access · We never post on your behalf
+                  </div>
+                </>
+              ) : (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', textAlign: 'left' }}>
+                  <div style={{ position: 'relative' }}>
+                    <div style={{
+                      width: '50px',
+                      height: '50px',
+                      borderRadius: '50%',
+                      background: 'linear-gradient(45deg, #3DD9FF, #7c3aed)',
+                      color: 'var(--white)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '18px',
+                      fontWeight: 'bold',
+                      boxShadow: '0 4px 10px rgba(61, 217, 255, 0.3)'
+                    }}>
+                      {avatarPreview === 'T' ? 'T' : '📸'}
+                    </div>
+                    <div style={{
+                      position: 'absolute',
+                      bottom: -2,
+                      right: -2,
+                      background: 'var(--ink2)',
+                      width: '18px',
+                      height: '18px',
+                      borderRadius: '50%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      border: '1px solid var(--ink5)'
+                    }}>
+                      <span style={{ fontSize: '10px', color: '#3DD9FF', fontWeight: 'bold' }}>+</span>
+                    </div>
+                  </div>
+                  <div>
+                    <span style={{
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: '8px',
+                      color: 'var(--g3)',
+                      letterSpacing: '0.05em',
+                      display: 'block'
+                    }}>
+                      INSTAGRAM CONNECTED AS
+                    </span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
+                      <span style={{ color: 'var(--white)', fontSize: '13px', fontWeight: 600 }}>
+                        @{form.instagramHandle}
+                      </span>
+                      <span style={{
+                        background: 'rgba(34,197,94,.1)',
+                        color: '#22C55E',
+                        fontSize: '9px',
+                        fontWeight: 'bold',
+                        padding: '2px 6px',
+                        borderRadius: '12px',
+                        fontFamily: 'var(--font-mono)'
+                      }}>
+                        ✓ linked
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* AVATAR UPLOAD CIRCLE */}
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
+              <label style={{ cursor: 'pointer', textAlign: 'center' }}>
+                <div style={{
+                  width: '70px',
+                  height: '70px',
+                  borderRadius: '50%',
+                  background: 'var(--ink3)',
+                  border: '1px dashed var(--ink5)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  overflow: 'hidden',
+                  position: 'relative'
+                }}>
+                  {avatarPreview ? (
+                    typeof avatarPreview === 'string' && avatarPreview.length === 1 ? (
+                      <span style={{ fontSize: '24px', fontWeight: 'bold', color: 'var(--white)' }}>{avatarPreview}</span>
+                    ) : (
+                      <img src={avatarPreview} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    )
+                  ) : (
+                    <span style={{ fontSize: '20px', color: 'var(--g3)' }}>+</span>
+                  )}
+                  <input type="file" hidden accept="image/*" onChange={handleFileChange} />
+                </div>
+                <span style={{
+                  display: 'block',
+                  fontSize: '9px',
+                  color: 'var(--blue)',
+                  fontFamily: 'var(--font-mono)',
+                  marginTop: '6px'
+                }}>
+                  UPLOAD PHOTO
+                </span>
+              </label>
+            </div>
+
+            {/* INPUTS CONTAINER */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <Field
+                label="FULL NAME *"
+                value={form.name}
+                onChange={(e) => handleInputChange('name', e.target.value)}
+                placeholder="Pre-filled from Instagram"
+                required
+              />
+
+              {/* FIELD OF EXPERTISE TAG SELECTOR */}
+              <div>
+                <label style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: '9px',
+                  color: 'var(--g3)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.07em',
+                  display: 'block',
+                  marginBottom: '8px'
+                }}>
+                  FIELD OF EXPERTISE * (1–3)
+                </label>
+
+                {/* Selected tags */}
+                {form.expertise.length > 0 && (
+                  <div style={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    gap: '6px',
+                    marginBottom: '10px',
+                    padding: '8px',
+                    background: 'var(--ink3)',
+                    borderRadius: '8px',
+                    border: '1px solid var(--ink5)'
+                  }}>
+                    {form.expertise.map(tag => (
+                      <span
+                        key={tag}
+                        onClick={() => handleToggleTag(tag)}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          background: 'rgba(61, 217, 255, 0.1)',
+                          color: '#3DD9FF',
+                          border: '1px solid rgba(61, 217, 255, 0.3)',
+                          padding: '4px 10px',
+                          borderRadius: '16px',
+                          fontSize: '11px',
+                          fontWeight: 500,
+                          cursor: 'pointer'
+                        }}
+                      >
+                        {tag} <span style={{ fontWeight: 'bold' }}>×</span>
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {/* Tag options */}
+                <div style={{
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  gap: '6px'
+                }}>
+                  {expertiseOptions.map(opt => {
+                    const isSelected = form.expertise.includes(opt);
+                    return (
+                      <button
+                        key={opt}
+                        type="button"
+                        onClick={() => handleToggleTag(opt)}
+                        style={{
+                          padding: '6px 12px',
+                          borderRadius: '16px',
+                          fontSize: '11px',
+                          fontFamily: 'var(--font-body)',
+                          cursor: 'pointer',
+                          background: isSelected ? 'rgba(61, 217, 255, 0.05)' : '#141420',
+                          color: isSelected ? '#3DD9FF' : 'var(--g2)',
+                          border: `1px solid ${isSelected ? '#3DD9FF' : '#2a2a3e'}`,
+                          transition: 'all 0.15s ease'
+                        }}
+                      >
+                        {opt}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <Field
+                label="EMAIL *"
+                type="email"
+                value={form.email}
+                onChange={(e) => handleInputChange('email', e.target.value)}
+                placeholder="you@example.com"
+                required
+              />
+
+              {/* BIO TEXTAREA */}
+              <div style={{
                 background: 'var(--ink3)',
                 border: '1px solid var(--ink5)',
                 borderRadius: 'var(--radius-md)',
                 padding: '14px 16px',
-                color: 'var(--white)',
-                fontSize: '14px',
-                fontFamily: 'var(--font-body)',
-                resize: 'none',
-                outline: 'none'
-              }}
-            />
-            <div style={{ marginTop: '8px' }}>
-              <CharCounter current={form.bio.length} limit={200} />
+                position: 'relative'
+              }}>
+                <label style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: '9px',
+                  color: 'var(--g3)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.07em',
+                  marginBottom: '6px',
+                  display: 'block'
+                }}>
+                  BIO (OPTIONAL, MAX 200 CHARS)
+                </label>
+                <textarea
+                  value={form.bio}
+                  onChange={(e) => handleInputChange('bio', e.target.value.slice(0, 200))}
+                  placeholder="Helping India save smarter…"
+                  rows={2}
+                  style={{
+                    width: '100%',
+                    background: 'transparent',
+                    border: 'none',
+                    outline: 'none',
+                    color: 'var(--white)',
+                    fontSize: '13px',
+                    fontFamily: 'var(--font-body)',
+                    resize: 'none'
+                  }}
+                />
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'flex-end',
+                  marginTop: '4px',
+                  fontSize: '9px',
+                  fontFamily: 'var(--font-mono)',
+                  color: form.bio.length >= 180 ? 'var(--red)' : 'var(--g3)'
+                }}>
+                  {form.bio.length}/200
+                </div>
+              </div>
             </div>
           </div>
 
+          {/* BOTTOM CTA: STICKY TO PHONE BOTTOM */}
           <div style={{
-            position: 'fixed',
-            bottom: 0,
-            left: 0,
-            width: '100%',
-            padding: '20px',
-            background: 'var(--ink2)',
-            borderTop: '1px solid var(--ink5)',
-            display: 'flex',
-            justifyContent: 'center',
+            position: 'absolute',
+            bottom: '12px',
+            left: '20px',
+            right: '20px',
             zIndex: 10
           }}>
-            <div style={{ width: '100%', maxWidth: '480px' }}>
-              <Button
-                disabled={!canContinue || loading}
-                onClick={handleContinue}
-              >
-                {loading ? 'Saving...' : 'Continue →'}
-              </Button>
-            </div>
+            <button
+              onClick={handleContinue}
+              disabled={!canContinue || loading}
+              style={{
+                width: '100%',
+                padding: '12px',
+                borderRadius: '14px',
+                background: canContinue ? '#3DD9FF' : 'rgba(255, 255, 255, 0.05)',
+                color: canContinue ? '#000000' : 'var(--g3)',
+                fontWeight: 500,
+                fontSize: '14px',
+                border: 'none',
+                cursor: canContinue ? 'pointer' : 'not-allowed',
+                transition: 'all 0.2s',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: 'none'
+              }}
+            >
+              {loading ? 'Saving...' : 'Continue →'}
+            </button>
           </div>
         </div>
-      </div>
+      </PhoneFrame>
     </div>
   );
 };

@@ -118,4 +118,13 @@ router.post('/submit-question', async (req, res) => {
   }
 });
 
+// POST /api/buyers/create-order
+// Body: { questionId, amount, buyerToken }
+// buyerToken — JWT from verify-otp, proves phone was verified
+router.post('/create-order', async (req, res) => {
+  const { questionId, amount, buyerToken } = req.body;
+  const order = await createOrder(amount, 'INR', `question_${questionId}`);
+  res.json({ orderId: order.id });
+});
+
 module.exports = router;

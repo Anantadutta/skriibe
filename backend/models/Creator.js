@@ -12,7 +12,7 @@ const CreatorSchema = new mongoose.Schema({
   handle: { type: String, unique: true, sparse: true, lowercase: true },
   bio: { type: String, default: '' },
   avatarUrl: { type: String, default: '' },
-  expertise: { type: String, default: '' },
+  expertise: [{ type: String }],
   price: { type: Number, default: 99 },
   pricePerQuestion: { type: Number, default: 99 }, // From Phase 3 prompt
   responseTime: { type: String, default: '48 hours' }, // From Phase 3 prompt
@@ -21,9 +21,10 @@ const CreatorSchema = new mongoose.Schema({
   ama_enabled: { type: Boolean, default: false },
   verified: { type: Boolean, default: false },
   bankLinked: { type: Boolean, default: false },
-  instagramConnected: { type: Boolean, default: false },
-  instagramFollowers: { type: Number, default: 0 },
-  instagramAccessToken: { type: String, default: '' }, // encrypted
+  instagramLinked: { type: Boolean, default: false },
+  instagramHandle: { type: String },
+  instagramFollowers: { type: Number },
+  instagramAccessToken: { type: String }, // encrypted
   stats: {
     totalAnswered: { type: Number, default: 0 },
     replyRate: { type: Number, default: 0 },

@@ -12,6 +12,7 @@ const mongoose = require('mongoose');
 const Creator = require('../models/Creator');
 const otpStore = require('../utils/otpStore');
 const { verifyCreatorToken } = require('../middleware/auth');
+const { sendWelcomeEmail } = require('../utils/emailService');
 
 // Multer setup for avatar uploads (in-memory for now or local uploads folder)
 const storage = multer.diskStorage({
@@ -185,25 +186,35 @@ router.post('/check-handle', async (req, res) => {
  * @desc Save profile data
  */
 router.post('/onboarding/profile', verifyCreatorToken, async (req, res) => {
-  const { name, handle, bio, expertise, instagramHandle } = req.body;
+  const { name, handle, email, bio, expertise, instagramHandle } = req.body;
 
   // Validation
   if (!name || name.length < 2 || name.length > 60) return res.status(400).json({ message: 'Invalid name' });
   if (!handle || !/^[a-z0-9_]{3,30}$/.test(handle)) return res.status(400).json({ message: 'Invalid handle' });
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ message: 'Invalid email address' });
   if (bio && bio.length > 200) return res.status(400).json({ message: 'Bio too long' });
   if (!Array.isArray(expertise) || expertise.length === 0) return res.status(400).json({ message: 'Expertise required' });
 
   await connectDB();
   
   // Check handle uniqueness excluding current creator
-  const existing = await Creator.findOne({ handle, _id: { $ne: req.creator.creatorId } });
-  if (existing) return res.status(400).json({ message: 'Handle already taken' });
+  const existingHandle = await Creator.findOne({ handle, _id: { $ne: req.creator.creatorId } });
+  if (existingHandle) return res.status(400).json({ message: 'Handle already taken' });
+
+  // Check email uniqueness excluding current creator
+  const existingEmail = await Creator.findOne({ email, _id: { $ne: req.creator.creatorId } });
+  if (existingEmail) return res.status(400).json({ message: 'Email already in use' });
 
   const updatedCreator = await Creator.findByIdAndUpdate(
     req.creator.creatorId,
-    { name, handle, bio, expertise, instagramHandle },
+    { name, handle, email, bio, expertise, instagramHandle },
     { new: true }
   );
+
+  // Send Welcome Email asynchronously (don't block the response)
+  sendWelcomeEmail(email, name, handle).catch(err => {
+    console.error('Failed to send onboarding welcome email:', err);
+  });
 
   res.json({ success: true, creator: updatedCreator });
 });
@@ -239,6 +250,13 @@ router.post('/onboarding/pricing', verifyCreatorToken, async (req, res) => {
 router.post('/logout', (req, res) => {
   res.clearCookie('creator_token');
   res.json({ success: true });
+});
+
+// Instagram OAuth routes
+router.get('/connect-instagram', (req, res) => {
+  const redirectUri = `${process.env.INSTAGRAM_REDIRECT_URI}`;
+  const url = `https://api.instagram.com/oauth/authorize?client_id=${process.env.INSTAGRAM_CLIENT_ID}&redirect_uri=${redirectUri}&scope=user_profile&response_type=code`;
+  res.json({ url });
 });
 
 module.exports = router;

@@ -111,6 +111,21 @@ const CreatorPublicPage = () => {
     }
   };
 
+  const handlePayAndSubmit = async () => {
+    const qId = await handleSubmitQuestion();
+    const orderRes = await createOrder({ questionId: qId, amount: creator.pricePerQuestion });
+    const rzp = new window.Razorpay({
+      key: orderRes.keyId,
+      amount: orderRes.amount,
+      order_id: orderRes.orderId,
+      handler: async (response) => {
+        await confirmPayment({ questionId: qId, ...response });
+        setStep(4);
+      }
+    });
+    rzp.open();
+  };
+
   if (loading) {
     return (
       <div style={{ minHeight: '100vh', background: 'var(--ink)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -357,7 +372,7 @@ const CreatorPublicPage = () => {
         {error && <div style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: '#EF4444', marginBottom: 16 }}>{error}</div>}
 
         <button 
-          onClick={handleSubmitQuestion}
+          onClick={handlePayAndSubmit}
           disabled={submitting}
           style={{ width: '100%', background: 'var(--blue)', color: 'var(--ink1)', border: 'none', borderRadius: 'var(--radius-md)', padding: '14px', fontSize: 14, fontWeight: 700, fontFamily: 'var(--font-body)', cursor: 'pointer', opacity: submitting ? 0.7 : 1 }}
         >

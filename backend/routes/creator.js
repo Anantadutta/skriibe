@@ -9,7 +9,7 @@ const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 
 const Creator = require('../models/Creator');
-const { sendCreatorWelcomeEmail } = require('../utils/emailService');
+const { sendWelcomeEmail, sendProfileSubmittedEmail } = require('../utils/emailService');
 
 // Middleware to verify creator JWT
 const verifyCreatorToken = (req, res, next) => {
@@ -50,7 +50,7 @@ const issueToken = (res, creator) => {
  */
 router.post('/profile', verifyCreatorToken, async (req, res) => {
   try {
-    const { name, handle, email, bio, expertise, avatarUrl } = req.body;
+    const { name, handle, email, bio, expertise, avatarUrl, instagramHandle, instagramConnected, instagramFollowers } = req.body;
 
     if (!name || !handle || !email) {
       return res.status(400).json({ message: 'Name, handle, and email are required.' });
@@ -64,14 +64,27 @@ router.post('/profile', verifyCreatorToken, async (req, res) => {
       return res.status(400).json({ message: 'Handle is already taken.' });
     }
 
+    // Check if email is taken by someone else
+    const existingEmail = await Creator.findOne({ email, _id: { $ne: req.creator.creatorId } });
+    if (existingEmail) {
+      return res.status(400).json({ message: 'Email is already in use.' });
+    }
+
+    const updateFields = { name, handle, email, bio, expertise, avatarUrl };
+    if (instagramHandle !== undefined) updateFields.instagramHandle = instagramHandle;
+    if (instagramConnected !== undefined) updateFields.instagramConnected = instagramConnected;
+    if (instagramFollowers !== undefined) updateFields.instagramFollowers = instagramFollowers;
+
     const updatedCreator = await Creator.findByIdAndUpdate(
       req.creator.creatorId,
-      { name, handle, email, bio, expertise, avatarUrl },
+      updateFields,
       { new: true }
     );
 
+    sendProfileSubmittedEmail(updatedCreator.email, updatedCreator.name).catch(e => console.error("Failed to send profile email", e));
+
     // Send Welcome Email
-    await sendCreatorWelcomeEmail(updatedCreator.email, updatedCreator.name, updatedCreator.handle).catch(e => console.error("Failed to send welcome email", e));
+    sendWelcomeEmail(updatedCreator.email, updatedCreator.name, updatedCreator.handle).catch(e => console.error("Failed to send welcome email", e));
 
     res.json({ success: true, creator: updatedCreator });
   } catch (err) {

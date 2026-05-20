@@ -18,12 +18,14 @@ import CreatorVerifyOTP from './pages/creator/CreatorVerifyOTP';
 import CreatorConnectInstagram from './pages/creator/CreatorConnectInstagram';
 import CreatorOnboardProfile from './pages/creator/CreatorOnboardProfile';
 import CreatorOnboardPricing from './pages/creator/CreatorOnboardPricing';
-import CreatorShare from './pages/creator/CreatorShare';
+import CreatorGoLive from './pages/creator/CreatorGoLive';
 import CreatorDashboard from './pages/creator/CreatorDashboard';
 import CreatorInbox from './pages/creator/CreatorInbox';
 import CreatorReply from './pages/creator/CreatorReply';
 import CreatorPayouts from './pages/creator/CreatorPayouts';
 import CreatorSettings from './pages/creator/CreatorSettings';
+import CreatorSharePage from './pages/creator/CreatorSharePage';
+import CreatorAnalytics from './pages/creator/CreatorAnalytics';
 import AdminLogin from './pages/admin/AdminLogin';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminCreators from './pages/admin/AdminCreators';
@@ -176,15 +178,17 @@ function App() {
           <Route path="/creator/verify-otp" element={<CreatorVerifyOTP />} />
           <Route path="/creator/connect-instagram" element={<CreatorConnectInstagram />} />
           <Route path="/creator/onboarding/profile" element={<CreatorOnboardProfile />} />
-          <Route path="/creator/onboarding/pricing" element={<CreatorOnboardPricing />} />
-          <Route path="/creator/share" element={<CreatorShare />} />
+          <Route path="/onboard/pricing" element={<CreatorOnboardPricing />} />
+          <Route path="/onboard/live" element={<CreatorGoLive />} />
           
           <Route element={<CreatorRoute />}>
-            <Route path="/creator/dashboard" element={<CreatorDashboard />} />
-            <Route path="/creator/inbox" element={<CreatorInbox />} />
+            <Route path="/dashboard" element={<CreatorDashboard />} />
+            <Route path="/dashboard/share" element={<CreatorSharePage />} />
+            <Route path="/inbox" element={<CreatorInbox />} />
+            <Route path="/analytics" element={<CreatorAnalytics />} />
+            <Route path="/payouts" element={<CreatorPayouts />} />
+            <Route path="/settings" element={<CreatorSettings />} />
             <Route path="/creator/reply/:questionId" element={<CreatorReply />} />
-            <Route path="/creator/payouts" element={<CreatorPayouts />} />
-            <Route path="/creator/settings" element={<CreatorSettings />} />
           </Route>
 
           <Route path="/admin/login" element={<AdminLogin />} />
