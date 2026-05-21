@@ -9,21 +9,26 @@ export const Field = ({ label, value, placeholder, onChange, type = 'text', requ
   return (
     <div 
       style={{
-        background: 'var(--ink3)',
-        border: `1px solid ${isFocused ? 'var(--blue)' : 'var(--ink5)'}`,
-        borderRadius: 'var(--radius-md)',
+        background: '#0f0f1a',
+        border: `1px solid ${isFocused ? '#7c3aed' : 'rgba(255, 255, 255, 0.08)'}`,
+        borderRadius: '12px',
         padding: '14px 16px',
-        transition: 'border-color 0.15s ease'
+        transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+        boxShadow: isFocused ? '0 0 10px rgba(124, 58, 237, 0.3)' : 'inset 0 2px 4px rgba(0,0,0,0.4)',
+        boxSizing: 'border-box',
+        width: '100%'
       }}
     >
       <label style={{
-        fontFamily: 'var(--font-mono)',
-        fontSize: '9px',
-        color: 'var(--g3)',
+        fontFamily: 'monospace, var(--font-mono)',
+        fontSize: '10px',
+        color: '#06b6d4',
         textTransform: 'uppercase',
-        letterSpacing: '0.07em',
+        letterSpacing: '0.08em',
         marginBottom: '6px',
-        display: 'block'
+        display: 'block',
+        fontWeight: 700,
+        textAlign: 'left'
       }}>
         {label}
       </label>
@@ -35,9 +40,10 @@ export const Field = ({ label, value, placeholder, onChange, type = 'text', requ
           required={required}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
+          placeholder={placeholder}
           style={{
             fontSize: '14px',
-            color: 'var(--white)',
+            color: '#ffffff',
             fontWeight: 500,
             background: 'transparent',
             border: 'none',
@@ -49,14 +55,15 @@ export const Field = ({ label, value, placeholder, onChange, type = 'text', requ
       ) : (
         <div style={{
             fontSize: '14px',
-            color: placeholder ? 'var(--g4)' : 'var(--white)',
+            color: placeholder ? '#94a3b8' : '#ffffff',
             fontWeight: 500,
             background: 'transparent',
             border: 'none',
             outline: 'none',
             width: '100%',
             fontStyle: placeholder ? 'italic' : 'normal',
-            fontFamily: 'var(--font-body)'
+            fontFamily: 'var(--font-body)',
+            textAlign: 'left'
         }}>
             {value}
         </div>

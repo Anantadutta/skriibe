@@ -45,6 +45,9 @@ const CreatorOnboardPricing = () => {
 
   // Monthly Earnings = Price * 100 questions (1% of 10k followers) * 0.9 (excluding 10% platform commission)
   const estimatedEarnings = Math.round(price * 100 * 0.9);
+  const selectedPrice = price;
+  const min = 10;
+  const max = 100;
 
   return (
     <div style={{
@@ -54,307 +57,431 @@ const CreatorOnboardPricing = () => {
       flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
-      padding: '40px 20px'
+      position: 'relative',
+      overflowX: 'hidden'
     }}>
-      {/* MONOSPACED LABEL OUTSIDE PHONE FRAME */}
+      {/* Background Shader & Noise */}
       <div style={{
-        fontFamily: 'var(--font-mono)',
-        fontSize: '13px',
-        color: 'var(--g3)',
-        letterSpacing: '0.1em',
-        marginBottom: '20px',
-        textTransform: 'uppercase',
-        fontWeight: 'bold'
+        position: 'fixed',
+        inset: 0,
+        zIndex: 0,
+        background: '#0a0a0f',
+        overflow: 'hidden',
+        pointerEvents: 'none'
       }}>
-        
+        {/* Aurora purple, deep violet, electric blue waves */}
+        <div style={{
+          position: 'absolute',
+          width: '180%',
+          height: '180%',
+          top: '-40%',
+          left: '-40%',
+          background: 'radial-gradient(circle at 30% 20%, rgba(124, 58, 237, 0.18) 0%, transparent 40%), radial-gradient(circle at 70% 80%, rgba(6, 182, 212, 0.18) 0%, transparent 40%), radial-gradient(circle at 50% 50%, rgba(147, 51, 234, 0.15) 0%, transparent 50%), radial-gradient(circle at 10% 80%, rgba(59, 130, 246, 0.15) 0%, transparent 45%)',
+          filter: 'blur(90px)',
+          animation: 'aurora-flow 25s infinite alternate ease-in-out'
+        }} />
+        {/* Subtle noise/grain texture overlay */}
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
+          opacity: 0.035,
+          mixBlendMode: 'overlay',
+          pointerEvents: 'none'
+        }} />
+        {/* Sparkle dots scattered */}
+        <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
+          <div className="sparkle" style={{ top: '10%', left: '15%', animationDelay: '0s' }} />
+          <div className="sparkle" style={{ top: '30%', left: '82%', animationDelay: '1.8s' }} />
+          <div className="sparkle" style={{ top: '55%', left: '5%', animationDelay: '3.2s' }} />
+          <div className="sparkle" style={{ top: '78%', left: '88%', animationDelay: '1s' }} />
+          <div className="sparkle" style={{ top: '90%', left: '20%', animationDelay: '2.5s' }} />
+        </div>
       </div>
 
-      <PhoneFrame>
-        <div style={{
-          padding: '16px 20px 80px',
-          display: 'flex',
-          flexDirection: 'column',
-          height: '100%',
-          boxSizing: 'border-box'
-        }}>
-          {/* HEADER WITH BACK CHEVRON */}
+      {/* CSS Keyframes and Animation */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes aurora-flow {
+          0% { transform: translate(0px, 0px) rotate(0deg) scale(1); }
+          33% { transform: translate(20px, -30px) rotate(120deg) scale(1.05); }
+          66% { transform: translate(-15px, 15px) rotate(240deg) scale(0.98); }
+          100% { transform: translate(0px, 0px) rotate(360deg) scale(1); }
+        }
+        @keyframes sparkle-pulse {
+          0%, 100% { opacity: 0.2; transform: scale(0.8); }
+          50% { opacity: 1; transform: scale(1.2) rotate(45deg); }
+        }
+        .sparkle {
+          position: absolute;
+          width: 3px;
+          height: 3px;
+          background: #ffffff;
+          border-radius: 50%;
+          box-shadow: 0 0 6px #06b6d4, 0 0 10px #7c3aed;
+          animation: sparkle-pulse 4s infinite ease-in-out;
+        }
+        .gradient-title {
+          font-family: var(--font-heading);
+          font-size: 20px;
+          font-weight: 800;
+          background: linear-gradient(90deg, #7c3aed 0%, #06b6d4 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+        }
+        .activate-btn {
+          width: 100%;
+          max-width: 280px;
+          padding: 14px 28px;
+          border-radius: 9999px;
+          background: linear-gradient(90deg, #7c3aed 0%, #06b6d4 100%);
+          color: #ffffff;
+          font-weight: 700;
+          font-size: 14px;
+          border: none;
+          cursor: pointer;
+          transition: all 0.25s ease;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin: 0 auto;
+          box-shadow: 0 4px 12px rgba(124, 58, 237, 0.2);
+        }
+        .activate-btn:hover:not(:disabled) {
+          transform: translateY(-2px);
+          box-shadow: 0 0 20px #7c3aed;
+        }
+        .activate-btn:active:not(:disabled) {
+          transform: translateY(0);
+        }
+        .activate-btn:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+        input[type=range].cyan-slider {
+          -webkit-appearance: none;
+          width: 100%;
+          background: rgba(255, 255, 255, 0.08);
+          height: 6px;
+          border-radius: 999px;
+          outline: none;
+        }
+        input[type=range].cyan-slider::-webkit-slider-thumb {
+          -webkit-appearance: none;
+          appearance: none;
+          width: 16px;
+          height: 16px;
+          border-radius: 50%;
+          background: #06b6d4;
+          cursor: pointer;
+          box-shadow: 0 0 8px #06b6d4, 0 0 12px #7c3aed;
+          transition: transform 0.15s ease;
+        }
+        input[type=range].cyan-slider::-webkit-slider-thumb:hover {
+          transform: scale(1.25);
+        }
+      `}} />
+
+      {/* Main Page Container */}
+      <div style={{
+        width: '100%',
+        maxWidth: '480px',
+        minHeight: '100vh',
+        padding: '24px 16px 100px', // comfortable padding on sides
+        display: 'flex',
+        flexDirection: 'column',
+        boxSizing: 'border-box',
+        position: 'relative',
+        zIndex: 1
+      }}>
+        
+        <PhoneFrame>
           <div style={{
+            padding: '16px 20px 80px',
             display: 'flex',
-            alignItems: 'center',
-            position: 'relative',
-            height: '24px',
-            marginBottom: '10px'
+            flexDirection: 'column',
+            height: '100%',
+            boxSizing: 'border-box'
           }}>
-            <button
-              onClick={() => navigate(-1)}
-              style={{
-                position: 'absolute',
-                left: 0,
-                background: 'none',
-                border: 'none',
-                color: 'var(--white)',
-                fontSize: '18px',
-                cursor: 'pointer',
-                padding: 0
-              }}
-            >
-              ←
-            </button>
-            <div style={{
-              margin: '0 auto',
-              fontFamily: 'var(--font-heading)',
-              fontSize: '15px',
-              fontWeight: 700,
-              color: 'var(--white)'
-            }}>
-              Set your price
-            </div>
-          </div>
-
-          {/* PROGRESS BAR: BOTH SEGMENTS ACTIVE */}
-          <div style={{
-            display: 'flex',
-            width: '100%',
-            height: '4px',
-            background: 'var(--ink5)',
-            borderRadius: '2px',
-            overflow: 'hidden',
-            marginBottom: '18px'
-          }}>
-            <div style={{ flex: 1, background: '#3DD9FF' }} />
-            <div style={{ flex: 1, background: '#3DD9FF' }} />
-          </div>
-
-          {/* SCROLL CONTAINER */}
-          <div style={{
-            flex: 1,
-            overflowY: 'auto',
-            paddingRight: '4px',
-            marginBottom: '20px'
-          }}>
-            <span style={{
-              color: 'var(--g2)',
-              fontSize: '12px',
-              display: 'block',
-              marginBottom: '14px'
-            }}>
-              Choose your Ask Me Anything price:
-            </span>
-
-            {/* PRICING OPTIONS STACK */}
+            {/* HEADER WITH BACK CHEVRON */}
             <div style={{
               display: 'flex',
-              flexDirection: 'column',
-              gap: '10px',
-              marginBottom: '20px',
-              padding: '8px',
-              overflow: 'hidden'
+              alignItems: 'center',
+              position: 'relative',
+              height: '32px',
+              marginBottom: '16px'
             }}>
-              {pricingOptions.map(opt => {
-                const isSelected = price === opt.value;
-                return (
-                  <div
-                    key={opt.value}
-                    onClick={() => setPrice(opt.value)}
-                    style={{
-                      background: isSelected ? '#0d1f2b' : '#141420',
-                      border: `1px solid ${isSelected ? '#3DD9FF' : '#2a2a3e'}`,
-                      borderRadius: '14px',
-                      padding: '12px 16px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      cursor: 'pointer',
-                      transform: isSelected ? 'scale(1.02)' : 'none',
-                      boxShadow: isSelected ? '0 4px 20px rgba(61,217,255,0.15)' : 'none',
-                      transition: 'all 0.15s ease'
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      {/* Radio button indicator */}
-                      <div style={{
-                        width: '18px',
-                        height: '18px',
-                        borderRadius: '50%',
-                        border: `1.5px solid ${isSelected ? '#3DD9FF' : '#2a2a3e'}`,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        background: 'transparent',
-                        boxShadow: isSelected ? '0 0 0 3px rgba(61,217,255,0.2)' : 'none'
-                      }}>
-                        {isSelected && (
-                          <div style={{
-                            width: '10px',
-                            height: '10px',
-                            borderRadius: '50%',
-                            background: '#3DD9FF'
-                          }} />
-                        )}
-                      </div>
-
-                      <div style={{ display: 'flex', flexDirection: 'column' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <span style={{
-                            color: 'var(--white)',
-                            fontSize: '13px',
-                            fontWeight: 500
-                          }}>
-                            {opt.label}
-                          </span>
-                          {opt.badge && (
-                            <span style={{
-                              background: 'rgba(34,197,94,0.1)',
-                              color: '#22C55E',
-                              fontSize: '9px',
-                              fontWeight: 700,
-                              padding: '1px 6px',
-                              borderRadius: '8px',
-                              fontFamily: 'var(--font-mono)',
-                              textTransform: 'uppercase',
-                              transform: 'rotate(-2deg)',
-                              display: 'inline-block'
-                            }}>
-                              {opt.badge}
-                            </span>
-                          )}
-                        </div>
-                        <span style={{
-                          color: 'var(--g3)',
-                          fontSize: '11px',
-                          marginTop: '1px'
-                        }}>
-                          {opt.desc}
-                        </span>
-                      </div>
-                    </div>
-                    <span style={{
-                      color: isSelected ? '#3DD9FF' : 'var(--white)',
-                      fontSize: '16px',
-                      fontWeight: 700,
-                      fontFamily: 'var(--font-mono)'
-                    }}>
-                      ₹{opt.value}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* DAILY QUESTION CAP */}
-            <div style={{ marginBottom: '24px' }}>
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: '8px'
-              }}>
-                <label style={{
-                  fontFamily: 'var(--font-mono)',
-                  fontSize: '9px',
-                  color: 'var(--g3)',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.07em'
-                }}>
-                  DAILY QUESTION CAP
-                </label>
-                <span style={{
-                  color: 'var(--white)',
-                  fontSize: '13px',
-                  fontWeight: 600,
-                  fontFamily: 'var(--font-mono)'
-                }}>
-                  {dailyCap} / day
-                </span>
-              </div>
-              <input
-                type="range"
-                min="10"
-                max="100"
-                step="5"
-                value={dailyCap}
-                onChange={(e) => setDailyCap(parseInt(e.target.value))}
+              <button
+                onClick={() => navigate(-1)}
                 style={{
-                  width: '100%',
-                  accentColor: '#3DD9FF',
+                  position: 'absolute',
+                  left: 0,
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  borderRadius: '50%',
+                  color: '#ffffff',
+                  width: '32px',
+                  height: '32px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                   cursor: 'pointer',
-                  height: '4px',
-                  borderRadius: '2px',
-                  background: 'var(--ink5)'
+                  transition: 'all 0.2s',
+                  padding: 0
                 }}
-              />
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                  e.currentTarget.style.transform = 'translateX(-2px)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                  e.currentTarget.style.transform = 'translateX(0)';
+                }}
+              >
+                ←
+              </button>
+              <div className="gradient-title" style={{ margin: '0 auto' }}>
+                Set your price
+              </div>
             </div>
 
-            {/* ESTIMATED EARNINGS CARD */}
+            {/* PROGRESS BAR: 100% COMPLETE, VIOLET TO CYAN GRADIENT */}
             <div style={{
-              background: '#0a1a0f',
-              border: '1px solid #1a3a20',
-              borderRadius: '12px',
-              padding: '16px',
-              textAlign: 'center'
+              width: '100%',
+              height: '4px',
+              background: 'linear-gradient(90deg, #7c3aed 0%, #06b6d4 100%)',
+              borderRadius: '999px',
+              marginBottom: '20px'
+            }} />
+
+            {/* SCROLL CONTAINER */}
+            <div style={{
+              flex: 1,
+              overflowY: 'auto',
+              paddingRight: '4px',
+              marginBottom: '24px'
             }}>
               <span style={{
-                fontFamily: 'var(--font-mono)',
-                fontSize: '8px',
-                color: '#3a7a3a',
-                letterSpacing: '0.08em',
+                color: '#94a3b8',
+                fontSize: '13px',
                 display: 'block',
-                fontWeight: 500
+                marginBottom: '16px',
+                fontWeight: 500,
+                textAlign: 'left'
               }}>
-                ESTIMATED MONTHLY EARNINGS
+                Choose your Ask Me Anything price:
               </span>
+
+              {/* PRICING OPTIONS STACK */}
               <div style={{
-                color: '#4ade80',
-                fontSize: '32px',
-                fontWeight: 700,
-                fontFamily: 'var(--font-mono)',
-                margin: '8px 0 4px'
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '12px',
+                marginBottom: '24px'
               }}>
-                ₹{estimatedEarnings.toLocaleString('en-IN')}
+                {pricingOptions.map(opt => {
+                  const isSelected = price === opt.value;
+                  return (
+                    <div
+                      key={opt.value}
+                      onClick={() => setPrice(opt.value)}
+                      style={{
+                        background: isSelected ? 'rgba(124, 58, 237, 0.06)' : 'rgba(255, 255, 255, 0.04)',
+                        backdropFilter: 'blur(12px)',
+                        border: isSelected ? '1px solid #7c3aed' : '1px solid rgba(255, 255, 255, 0.08)',
+                        borderRadius: '16px',
+                        padding: '16px 20px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        cursor: 'pointer',
+                        transform: isSelected ? 'scale(1.02)' : 'none',
+                        boxShadow: isSelected ? '0 0 18px rgba(124,58,237,0.25)' : 'none',
+                        transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)'
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                        {/* Radio button indicator */}
+                        <div style={{
+                          width: '18px',
+                          height: '18px',
+                          borderRadius: '50%',
+                          border: isSelected ? '1.5px solid #06b6d4' : '1.5px solid rgba(255, 255, 255, 0.15)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          background: 'transparent',
+                          boxShadow: isSelected ? '0 0 8px rgba(6,182,212,0.25)' : 'none'
+                        }}>
+                          {isSelected && (
+                            <div style={{
+                              width: '10px',
+                              height: '10px',
+                              borderRadius: '50%',
+                              background: '#06b6d4'
+                            }} />
+                          )}
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', textAlign: 'left' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <span style={{
+                              color: '#ffffff',
+                              fontSize: '14px',
+                              fontWeight: 700
+                            }}>
+                              {opt.label}
+                            </span>
+                            {opt.badge && (
+                              <span style={{
+                                background: 'linear-gradient(90deg, #7c3aed 0%, #06b6d4 100%)',
+                                color: '#ffffff',
+                                fontSize: '9px',
+                                fontWeight: 800,
+                                padding: '2px 8px',
+                                borderRadius: '999px',
+                                fontFamily: 'monospace, var(--font-mono)',
+                                textTransform: 'uppercase',
+                                display: 'inline-block'
+                              }}>
+                                {opt.badge}
+                              </span>
+                            )}
+                          </div>
+                          <span style={{
+                            color: '#94a3b8',
+                            fontSize: '11px',
+                            marginTop: '2px'
+                          }}>
+                            {opt.desc}
+                          </span>
+                        </div>
+                      </div>
+                      <span style={{
+                        color: '#06b6d4',
+                        fontSize: '18px',
+                        fontWeight: 800,
+                        fontFamily: 'monospace, var(--font-mono)'
+                      }}>
+                        ₹{opt.value}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
-              <p style={{
-                color: 'var(--g3)',
-                fontSize: '10px',
-                margin: 0
+
+              {/* DAILY QUESTION CAP */}
+              <div style={{ marginBottom: '24px', textAlign: 'left' }}>
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: '10px'
+                }}>
+                  <label style={{
+                    fontFamily: 'monospace, var(--font-mono)',
+                    fontSize: '10px',
+                    color: '#94a3b8',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.1em',
+                    fontWeight: 700
+                  }}>
+                    DAILY QUESTION CAP
+                  </label>
+                  <span style={{
+                    color: '#ffffff',
+                    fontSize: '14px',
+                    fontWeight: 700,
+                    fontFamily: 'monospace, var(--font-mono)'
+                  }}>
+                    {dailyCap} / day
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min={min}
+                  max={max}
+                  step="5"
+                  value={dailyCap}
+                  onChange={(e) => setDailyCap(Number(e.target.value))}
+                  className="cyan-slider"
+                  style={{ background: `linear-gradient(to right, #7c3aed 0%, #06b6d4 ${((dailyCap - min) / (max - min)) * 100}%, rgba(255,255,255,0.1) ${((dailyCap - min) / (max - min)) * 100}%, rgba(255,255,255,0.1) 100%)` }}
+                />
+              </div>
+
+              {/* ESTIMATED EARNINGS CARD */}
+              <div style={{
+                background: 'rgba(255, 255, 255, 0.03)',
+                border: '1px solid rgba(255, 255, 255, 0.06)',
+                borderLeft: '4px solid #10b981',
+                borderRadius: '16px',
+                padding: '20px 16px',
+                textAlign: 'center',
+                backdropFilter: 'blur(12px)'
               }}>
-                Based on 1% conversion · 10K followers
-              </p>
+                <span style={{
+                  fontFamily: 'monospace, var(--font-mono)',
+                  fontSize: '9px',
+                  color: '#10b981',
+                  letterSpacing: '0.08em',
+                  display: 'block',
+                  fontWeight: 700
+                }}>
+                  ESTIMATED MONTHLY EARNINGS
+                </span>
+                <div style={{
+                  color: '#10b981',
+                  fontSize: '34px',
+                  fontWeight: 800,
+                  fontFamily: 'monospace, var(--font-mono)',
+                  margin: '8px 0 4px',
+                  textShadow: '0 0 10px rgba(16, 185, 129, 0.25)'
+                }}>
+                  ₹{(dailyCap * selectedPrice * 0.01 * 30).toLocaleString('en-IN')}
+                </div>
+                <p style={{
+                  color: '#94a3b8',
+                  fontSize: '11px',
+                  margin: 0
+                }}>
+                  Based on 1% conversion · 10K followers
+                </p>
+              </div>
+            </div>
+
+            {/* BOTTOM CTA */}
+            <div style={{
+              position: 'absolute',
+              bottom: '16px',
+              left: 0,
+              right: 0,
+              zIndex: 10,
+              padding: '0 20px',
+              boxSizing: 'border-box'
+            }}>
+              <button
+                onClick={handleActivate}
+                disabled={loading}
+                className="activate-btn"
+              >
+                {loading ? 'Activating...' : 'Activate my page →'}
+              </button>
             </div>
           </div>
+        </PhoneFrame>
 
-          {/* BOTTOM CTA */}
-          <div style={{
-            position: 'absolute',
-            bottom: '12px',
-            left: '20px',
-            right: '20px',
-            zIndex: 10
-          }}>
-            <button
-              onClick={handleActivate}
-              disabled={loading}
-              style={{
-                width: '100%',
-                padding: '12px',
-                borderRadius: '14px',
-                background: '#3DD9FF',
-                color: '#000000',
-                fontWeight: 500,
-                fontSize: '14px',
-                border: 'none',
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: 'none'
-              }}
-            >
-              {loading ? 'Activating...' : 'Activate my page →'}
-            </button>
-          </div>
+        {/* Footer */}
+        <div style={{
+          textAlign: 'center',
+          color: '#94a3b8',
+          fontSize: '11px',
+          fontFamily: 'var(--font-mono), monospace',
+          marginTop: '24px',
+          opacity: 0.75
+        }}>
+          Made with 🤍 for bold conversations
         </div>
-      </PhoneFrame>
+
+      </div>
     </div>
   );
 };
