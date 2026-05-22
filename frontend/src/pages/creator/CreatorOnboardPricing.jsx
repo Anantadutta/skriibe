@@ -16,6 +16,8 @@ const CreatorOnboardPricing = () => {
   const [price, setPrice] = useState(99);
   const [dailyCap, setDailyCap] = useState(50);
   const [loading, setLoading] = useState(false);
+  const [isCustom, setIsCustom] = useState(false);
+  const [customPrice, setCustomPrice] = useState('');
 
   useEffect(() => {
     // If we don't have creatorData, redirect back to profile setup
@@ -34,8 +36,13 @@ const CreatorOnboardPricing = () => {
   const handleActivate = async () => {
     setLoading(true);
     try {
-      await savePricing({ price, dailyCap });
-      navigate('/onboard/live', { state: { creator: { ...creatorData, price, dailyCap } } });
+      await savePricing({ price: Number(price), dailyCap });
+      navigate('/dashboard/share', {
+        state: {
+          isNewlyLive: true,
+          creator: { ...creatorData, price: Number(price), dailyCap }
+        }
+      });
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to activate page');
     } finally {
@@ -44,8 +51,8 @@ const CreatorOnboardPricing = () => {
   };
 
   // Monthly Earnings = Price * 100 questions (1% of 10k followers) * 0.9 (excluding 10% platform commission)
-  const estimatedEarnings = Math.round(price * 100 * 0.9);
-  const selectedPrice = price;
+  const estimatedEarnings = Math.round((Number(price) || 0) * 100 * 0.9);
+  const selectedPrice = Number(price) || 0;
   const min = 10;
   const max = 100;
 
@@ -279,11 +286,14 @@ const CreatorOnboardPricing = () => {
                 marginBottom: '24px'
               }}>
                 {pricingOptions.map(opt => {
-                  const isSelected = price === opt.value;
+                  const isSelected = !isCustom && price === opt.value;
                   return (
                     <div
                       key={opt.value}
-                      onClick={() => setPrice(opt.value)}
+                      onClick={() => {
+                        setIsCustom(false);
+                        setPrice(opt.value);
+                      }}
                       style={{
                         background: isSelected ? 'rgba(124, 58, 237, 0.06)' : 'rgba(255, 255, 255, 0.04)',
                         backdropFilter: 'blur(12px)',
@@ -367,6 +377,147 @@ const CreatorOnboardPricing = () => {
                     </div>
                   );
                 })}
+
+                {/* Custom Price Option */}
+                {(() => {
+                  const isSelected = isCustom;
+                  return (
+                    <div
+                      onClick={() => {
+                        setIsCustom(true);
+                        setPrice(customPrice ? Number(customPrice) : '');
+                      }}
+                      style={{
+                        background: isSelected ? 'rgba(124, 58, 237, 0.06)' : 'rgba(255, 255, 255, 0.04)',
+                        backdropFilter: 'blur(12px)',
+                        border: isSelected ? '1px solid #7c3aed' : '1px solid rgba(255, 255, 255, 0.08)',
+                        borderRadius: '16px',
+                        padding: '16px 20px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: isSelected ? '12px' : '0px',
+                        cursor: 'pointer',
+                        transform: isSelected ? 'scale(1.02)' : 'none',
+                        boxShadow: isSelected ? '0 0 18px rgba(124,58,237,0.25)' : 'none',
+                        transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)'
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                          {/* Radio button indicator */}
+                          <div style={{
+                            width: '18px',
+                            height: '18px',
+                            borderRadius: '50%',
+                            border: isSelected ? '1.5px solid #06b6d4' : '1.5px solid rgba(255, 255, 255, 0.15)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            background: 'transparent',
+                            boxShadow: isSelected ? '0 0 8px rgba(6,182,212,0.25)' : 'none'
+                          }}>
+                            {isSelected && (
+                              <div style={{
+                                width: '10px',
+                                height: '10px',
+                                borderRadius: '50%',
+                                background: '#06b6d4'
+                              }} />
+                            )}
+                          </div>
+
+                          <div style={{ display: 'flex', flexDirection: 'column', textAlign: 'left' }}>
+                            <span style={{
+                              color: '#ffffff',
+                              fontSize: '14px',
+                              fontWeight: 700
+                            }}>
+                              Custom Price
+                            </span>
+                            <span style={{
+                              color: '#94a3b8',
+                              fontSize: '11px',
+                              marginTop: '2px'
+                            }}>
+                              Set your own rate
+                            </span>
+                          </div>
+                        </div>
+
+                        {!isSelected && (
+                          <span style={{
+                            color: '#06b6d4',
+                            fontSize: '18px',
+                            fontWeight: 800,
+                            fontFamily: 'monospace, var(--font-mono)'
+                          }}>
+                            ₹—
+                          </span>
+                        )}
+                        {isSelected && customPrice && (
+                          <span style={{
+                            color: '#06b6d4',
+                            fontSize: '18px',
+                            fontWeight: 800,
+                            fontFamily: 'monospace, var(--font-mono)'
+                          }}>
+                            ₹{customPrice}
+                          </span>
+                        )}
+                      </div>
+
+                      {isSelected && (
+                        <div 
+                          onClick={(e) => e.stopPropagation()}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            paddingLeft: '32px',
+                            width: '100%',
+                            boxSizing: 'border-box'
+                          }}
+                        >
+                          <span style={{
+                            color: '#06b6d4',
+                            fontSize: '16px',
+                            fontWeight: 800,
+                            fontFamily: 'monospace, var(--font-mono)'
+                          }}>
+                            ₹
+                          </span>
+                          <input
+                            type="number"
+                            placeholder="Enter amount"
+                            autoFocus
+                            value={customPrice}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              if (val === '' || /^\d+$/.test(val)) {
+                                setCustomPrice(val);
+                                setPrice(val ? Number(val) : '');
+                              }
+                            }}
+                            style={{
+                              background: 'rgba(255, 255, 255, 0.05)',
+                              border: '1px solid rgba(255, 255, 255, 0.1)',
+                              borderRadius: '8px',
+                              padding: '8px 12px',
+                              color: '#ffffff',
+                              fontSize: '14px',
+                              fontWeight: 700,
+                              outline: 'none',
+                              width: '100%',
+                              maxWidth: '140px',
+                              boxSizing: 'border-box',
+                              fontFamily: 'monospace, var(--font-mono)'
+                            }}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
 
               {/* DAILY QUESTION CAP */}
@@ -460,7 +611,7 @@ const CreatorOnboardPricing = () => {
             }}>
               <button
                 onClick={handleActivate}
-                disabled={loading}
+                disabled={loading || (isCustom && (customPrice === '' || Number(customPrice) < 10))}
                 className="activate-btn"
               >
                 {loading ? 'Activating...' : 'Activate my page →'}

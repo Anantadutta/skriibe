@@ -8,6 +8,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { BottomNav } from '../../components/ama/layout/BottomNav';
 import { getMe } from '../../services/creatorApi';
 import { QRCodeCanvas } from 'qrcode.react';
+import confetti from 'canvas-confetti';
 
 const CreatorSharePage = () => {
   const navigate = useNavigate();
@@ -18,8 +19,21 @@ const CreatorSharePage = () => {
   // Success states for clipboard actions
   const [copiedLink, setCopiedLink] = useState(false);
   const [copiedBio, setCopiedBio] = useState(false);
+  const [showBanner, setShowBanner] = useState(false);
 
   const qrRef = useRef(null);
+
+  useEffect(() => {
+    if (location.state?.isNewlyLive) {
+      setShowBanner(true);
+      confetti({ particleCount: 100, spread: 70, origin: { y: 0.3 } });
+      // Clear the flag so banner doesn't reappear on refresh
+      navigate(location.pathname, {
+        replace: true,
+        state: { ...location.state, isNewlyLive: false }
+      });
+    }
+  }, []);
 
   useEffect(() => {
     if (!creator) {
@@ -423,6 +437,109 @@ const CreatorSharePage = () => {
             </span>
           </div>
         </div>
+
+        {/* SUCCESS BANNER */}
+        {showBanner && (
+          <div style={{
+            background: 'rgba(255, 255, 255, 0.04)',
+            backdropFilter: 'blur(12px)',
+            border: '1px solid rgba(6, 182, 212, 0.25)',
+            borderRadius: '16px',
+            padding: '20px',
+            position: 'relative',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '8px',
+            boxSizing: 'border-box',
+            textAlign: 'left',
+            boxShadow: '0 4px 20px rgba(6, 182, 212, 0.1)'
+          }}>
+            {/* Close Button */}
+            <button
+              onClick={() => setShowBanner(false)}
+              style={{
+                position: 'absolute',
+                top: '12px',
+                right: '12px',
+                background: 'transparent',
+                border: 'none',
+                color: '#94a3b8',
+                fontSize: '20px',
+                lineHeight: '1',
+                cursor: 'pointer',
+                padding: '4px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'color 0.2s'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.color = '#ffffff'}
+              onMouseLeave={(e) => e.currentTarget.style.color = '#94a3b8'}
+            >
+              &times;
+            </button>
+
+            {/* Title */}
+            <h2 style={{
+              margin: 0,
+              fontSize: '18px',
+              fontWeight: 800,
+              background: 'linear-gradient(90deg, #06b6d4 0%, #7c3aed 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent'
+            }}>
+              You're live! 🎉
+            </h2>
+
+            {/* Sub-text */}
+            <p style={{
+              margin: 0,
+              color: '#94a3b8',
+              fontSize: '12px',
+              fontWeight: 500
+            }}>
+              Your Skriibe page is now active.
+            </p>
+
+            {/* Link + Live Pill */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              marginTop: '4px',
+              flexWrap: 'wrap'
+            }}>
+              <span style={{
+                fontFamily: 'var(--font-mono), monospace',
+                fontSize: '13px',
+                fontWeight: 700,
+                color: '#ffffff'
+              }}>
+                {shareUrl}
+              </span>
+              
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                background: 'rgba(34, 197, 94, 0.08)',
+                border: '1px solid rgba(34, 197, 94, 0.2)',
+                borderRadius: '6px',
+                padding: '2px 8px'
+              }}>
+                <div className="live-dot-pulse" />
+                <span style={{
+                  color: '#22c55e',
+                  fontSize: '9px',
+                  fontWeight: 800,
+                  fontFamily: 'monospace, var(--font-mono)'
+                }}>
+                  LIVE
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* TOP CARD: SKRIIBE PAGE CARD */}
         <div style={{

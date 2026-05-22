@@ -179,7 +179,7 @@ function App() {
           <Route path="/creator/connect-instagram" element={<CreatorConnectInstagram />} />
           <Route path="/creator/onboarding/profile" element={<CreatorOnboardProfile />} />
           <Route path="/onboard/pricing" element={<CreatorOnboardPricing />} />
-          <Route path="/onboard/live" element={<CreatorGoLive />} />
+          {/* <Route path="/onboard/live" element={<CreatorGoLive />} /> */}
           
           <Route element={<CreatorRoute />}>
             <Route path="/dashboard" element={<CreatorDashboard />} />
