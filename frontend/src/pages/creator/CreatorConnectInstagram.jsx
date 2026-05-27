@@ -23,7 +23,7 @@ const CreatorConnectInstagram = () => {
         // Clean URL
         window.history.replaceState({}, document.title, '/creator/connect-instagram');
         // Proceed to next step
-        navigate('/creator/onboarding/profile', { state: { creator: location.state?.creator } });
+        navigate('/onboard/profile', { state: { creator: location.state?.creator } });
       } catch (e) {
         console.error(e);
       }
@@ -40,7 +40,7 @@ const CreatorConnectInstagram = () => {
 
   const handleSkip = () => {
     setInstagramSkipped(true);
-    navigate('/creator/onboarding/profile', { state: { creator: location.state?.creator } });
+    navigate('/onboard/profile', { state: { creator: location.state?.creator } });
   };
 
   return (

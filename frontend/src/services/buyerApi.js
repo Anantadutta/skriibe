@@ -1,22 +1,29 @@
 /**
  * @file buyerApi.js
- * @description Axios service for public buyer flow API calls.
+ * @description Mock service for public buyer flow API calls (Phase 6).
  */
 
-import axios from 'axios';
-
-const api = axios.create({
-  baseURL: 'http://localhost:5000',
-  withCredentials: true,
-});
-
-export const getCreatorProfile = (handle) =>
-  api.get(`/api/creators/${handle}`);
+export const getCreatorProfile = (handle) => {
+  const cleanHandle = handle?.replace('@', '') || 'anantadutta';
+  return Promise.resolve({
+    data: {
+      success: true,
+      creator: {
+        handle: cleanHandle,
+        name: cleanHandle === 'anantadutta' ? 'Ananta Dutta' : cleanHandle,
+        bio: 'Fintech creator helping you grow your wealth.',
+        pricePerQuestion: 99,
+        responseTime: '24 hours',
+        questionsAnswered: 42,
+        instagramLinked: true,
+        instagramHandle: cleanHandle
+      }
+    }
+  });
+};
 
 export const getCreatorSamples = (handle) =>
-  api.get(`/api/creators/${handle}/samples`);
+  Promise.resolve({ data: [] });
 
 export const validateQuestion = (questionText) =>
-  api.post('/api/questions/validate', { questionText });
-
-export default api;
+  Promise.resolve({ data: { valid: true } });

@@ -195,13 +195,13 @@ router.post('/verify-otp', async (req, res) => {
 router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'], prompt: 'select_account' }));
 router.get('/google/callback', passport.authenticate('google', { failureRedirect: '/creator/signup' }), (req, res) => {
   issueToken(res, req.user);
-  res.redirect('http://localhost:5173/creator/onboarding/profile');
+  res.redirect('http://localhost:5173/onboard/profile');
 });
 
 router.get('/facebook', passport.authenticate('facebook', { scope: ['email', 'public_profile'] }));
 router.get('/facebook/callback', passport.authenticate('facebook', { failureRedirect: '/creator/signup' }), (req, res) => {
   issueToken(res, req.user);
-  res.redirect('http://localhost:5173/creator/onboarding/profile');
+  res.redirect('http://localhost:5173/onboard/profile');
 });
 
 // -- INSTAGRAM ROUTES --
@@ -277,7 +277,7 @@ router.get('/instagram/callback', async (req, res) => {
       bio: igData.bio,
       avatarUrl: igData.avatarUrl
     }));
-    res.redirect(`http://localhost:5173/creator/onboarding/profile?igData=${dataString}`);
+    res.redirect(`http://localhost:5173/onboard/profile?igData=${dataString}`);
 
   } catch (err) {
     console.error(err);

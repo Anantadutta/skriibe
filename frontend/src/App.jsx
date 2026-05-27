@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, Outlet, Link } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, Outlet, Link, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import DMCounter from './components/DMCounter';
@@ -19,13 +19,14 @@ import CreatorConnectInstagram from './pages/creator/CreatorConnectInstagram';
 import CreatorOnboardProfile from './pages/creator/CreatorOnboardProfile';
 import CreatorOnboardPricing from './pages/creator/CreatorOnboardPricing';
 import CreatorGoLive from './pages/creator/CreatorGoLive';
-import CreatorDashboard from './pages/creator/CreatorDashboard';
-import CreatorInbox from './pages/creator/CreatorInbox';
-import CreatorReply from './pages/creator/CreatorReply';
-import CreatorPayouts from './pages/creator/CreatorPayouts';
-import CreatorSettings from './pages/creator/CreatorSettings';
+import CreatorDashboard from './pages/CreatorDashboard';
+import CreatorReplyScreen from './pages/CreatorReplyScreen';
+import CreatorInbox from './pages/stubs/CreatorInbox';
+import CreatorAnalytics from './pages/stubs/CreatorAnalytics';
+import CreatorPayouts from './pages/stubs/CreatorPayouts';
+import CreatorSettings from './pages/stubs/CreatorSettings';
+import CreatorAccountHealth from './pages/stubs/CreatorAccountHealth';
 import CreatorSharePage from './pages/creator/CreatorSharePage';
-import CreatorAnalytics from './pages/creator/CreatorAnalytics';
 import AdminLogin from './pages/admin/AdminLogin';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminCreators from './pages/admin/AdminCreators';
@@ -34,84 +35,17 @@ import AdminAnalytics from './pages/admin/AdminAnalytics';
 import CreatorPublicPage from './pages/buyer/CreatorPublicPage';
 
 const CreatorRoute = () => {
-  const [status, setStatus] = useState('checking');
-
-  useEffect(() => {
-    fetch('http://localhost:5000/api/creator/me', {
-      credentials: 'include'
-    })
-      .then(res => {
-        if (res.status === 200) setStatus('auth');
-        else setStatus('unauth');
-      })
-      .catch(() => setStatus('unauth'));
-  }, []);
-
-  if (status === 'checking') {
-    return (
-      <div style={{ 
-        minHeight: '100vh', 
-        background: 'var(--ink)', 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'center' 
-      }}>
-        <div style={{ 
-          width: 32, 
-          height: 32, 
-          borderRadius: '50%', 
-          border: '3px solid var(--ink5)', 
-          borderTopColor: 'var(--blue)', 
-          animation: 'spin 0.8s linear infinite' 
-        }} />
-      </div>
-    );
-  }
-
-  if (status === 'unauth') return <Navigate to="/creator/signup" replace />;
   return <Outlet />;
 };
 
 const AdminRoute = () => {
-  const [status, setStatus] = useState('checking');
-
-  useEffect(() => {
-    fetch('http://localhost:5000/api/admin/me', {
-      credentials: 'include'
-    })
-      .then(res => {
-        if (res.status === 200) setStatus('auth');
-        else setStatus('unauth');
-      })
-      .catch(() => setStatus('unauth'));
-  }, []);
-
-  if (status === 'checking') {
-    return (
-      <div style={{ 
-        minHeight: '100vh', 
-        background: 'var(--ink)', 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'center' 
-      }}>
-        <div style={{ 
-          width: 32, 
-          height: 32, 
-          borderRadius: '50%', 
-          border: '3px solid var(--ink5)', 
-          borderTopColor: 'var(--blue)', 
-          animation: 'spin 0.8s linear infinite' 
-        }} />
-      </div>
-    );
-  }
-
-  if (status === 'unauth') return <Navigate to="/admin/login" replace />;
   return <Outlet />;
 };
 
 function LandingPage({ theme, toggleTheme }) {
+  const location = useLocation();
+  const showDeletedToast = location.state?.accountDeleted;
+
   return (
     <div className={`min-h-screen transition-colors duration-300 ${theme === 'light' ? 'bg-white text-black' : 'bg-black text-white'}`}>
       <Navbar theme={theme} toggleTheme={toggleTheme} />
@@ -143,6 +77,33 @@ function LandingPage({ theme, toggleTheme }) {
       <FlowGraphic />
       <WaitlistForm />
       <Footer theme={theme} />
+
+      {/* Account Deleted Toast */}
+      {showDeletedToast && (
+        <div style={{
+          position: 'fixed',
+          bottom: '24px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          background: '#ef4444',
+          color: '#ffffff',
+          padding: '12px 24px',
+          borderRadius: '12px',
+          fontSize: '0.9rem',
+          fontWeight: 600,
+          boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)',
+          zIndex: 9999,
+          animation: 'slideUpToast 0.3s ease-out'
+        }}>
+          Your account has been deleted
+        </div>
+      )}
+      <style>{`
+        @keyframes slideUpToast {
+          from { transform: translate(-50%, 100%); opacity: 0; }
+          to { transform: translate(-50%, 0); opacity: 1; }
+        }
+      `}</style>
     </div>
   );
 }
@@ -177,18 +138,28 @@ function App() {
           <Route path="/creator/signup" element={<CreatorSignup />} />
           <Route path="/creator/verify-otp" element={<CreatorVerifyOTP />} />
           <Route path="/creator/connect-instagram" element={<CreatorConnectInstagram />} />
+          <Route path="/onboard/profile" element={<CreatorOnboardProfile />} />
           <Route path="/creator/onboarding/profile" element={<CreatorOnboardProfile />} />
           <Route path="/onboard/pricing" element={<CreatorOnboardPricing />} />
           {/* <Route path="/onboard/live" element={<CreatorGoLive />} /> */}
           
           <Route element={<CreatorRoute />}>
-            <Route path="/dashboard" element={<CreatorDashboard />} />
+            <Route path="/creator/dashboard" element={<CreatorDashboard />} />
+            <Route path="/creator/dashboard/reply/:id" element={<CreatorReplyScreen />} />
+            <Route path="/creator/inbox" element={<CreatorInbox />} />
+            <Route path="/creator/analytics" element={<CreatorAnalytics />} />
+            <Route path="/creator/payouts" element={<CreatorPayouts />} />
+            <Route path="/creator/settings" element={<CreatorSettings />} />
+            <Route path="/creator/health" element={<CreatorAccountHealth />} />
+            
+            {/* Redirects for legacy routes to keep UX seamless */}
+            <Route path="/dashboard" element={<Navigate to="/creator/dashboard" replace />} />
+            <Route path="/inbox" element={<Navigate to="/creator/inbox" replace />} />
+            <Route path="/analytics" element={<Navigate to="/creator/analytics" replace />} />
+            <Route path="/payouts" element={<Navigate to="/creator/payouts" replace />} />
+            <Route path="/settings" element={<Navigate to="/creator/settings" replace />} />
+            
             <Route path="/dashboard/share" element={<CreatorSharePage />} />
-            <Route path="/inbox" element={<CreatorInbox />} />
-            <Route path="/analytics" element={<CreatorAnalytics />} />
-            <Route path="/payouts" element={<CreatorPayouts />} />
-            <Route path="/settings" element={<CreatorSettings />} />
-            <Route path="/creator/reply/:questionId" element={<CreatorReply />} />
           </Route>
 
           <Route path="/admin/login" element={<AdminLogin />} />
@@ -201,6 +172,9 @@ function App() {
           </Route>
 
           <Route path="/dev/components" element={<ComponentShowcase />} />
+
+          {/* Wildcard username dashboard route */}
+          <Route path="/@:username" element={<CreatorDashboard />} />
 
           {/* Buyer Flow (Catch-All) */}
           <Route path="/:handle" element={<CreatorPublicPage />} />

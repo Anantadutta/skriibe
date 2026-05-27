@@ -12,7 +12,7 @@ const mongoose = require('mongoose');
 const Creator = require('../models/Creator');
 const otpStore = require('../utils/otpStore');
 const { verifyCreatorToken } = require('../middleware/auth');
-const { sendWelcomeEmail } = require('../utils/emailService');
+const { sendWelcomeEmail, sendProfileSubmittedEmail } = require('../utils/emailService');
 
 // Multer setup for avatar uploads (in-memory for now or local uploads folder)
 const storage = multer.diskStorage({
@@ -211,7 +211,11 @@ router.post('/onboarding/profile', verifyCreatorToken, async (req, res) => {
     { new: true }
   );
 
-  // Send Welcome Email asynchronously (don't block the response)
+  // Send Welcome Emails asynchronously (don't block the response)
+  sendProfileSubmittedEmail(email, name).catch(err => {
+    console.error('Failed to send profile submitted email:', err);
+  });
+  
   sendWelcomeEmail(email, name, handle).catch(err => {
     console.error('Failed to send onboarding welcome email:', err);
   });

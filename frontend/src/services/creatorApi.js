@@ -1,35 +1,27 @@
 /**
  * @file creatorApi.js
- * @description Axios service for creator API calls.
+ * @description Mock service for creator API calls (Phase 6).
  */
 
-import axios from 'axios';
-
-const api = axios.create({
-  baseURL: 'http://localhost:5000',
-  withCredentials: true,
-});
-
 // Auth Routes
-export const sendOTP = (phone) => 
-  api.post('/api/auth/send-otp', { phone });
+import api from './api';
 
-export const verifyOTP = (phone, otp) => 
-  api.post('/api/auth/verify-otp', { phone, otp });
+export const sendOTP = (phone) => api.post('/creators/send-otp', { phone });
 
-export const checkHandle = (handle) =>
-  api.post('/api/auth/check-handle', { handle });
+export const verifyOTP = (phone, otp) => api.post('/creators/verify-otp', { phone, otp });
+
+export const checkHandle = (handle) => api.post('/creators/check-handle', { handle });
 
 // Creator Routes
-export const getMe = () => api.get('/api/creators/me').then((res) => res.data);
+export const getMe = async () => {
+  const res = await api.get('/creators/me');
+  return res.data;
+};
 
-export const saveProfile = (data) => 
-  api.post('/api/creator/profile', data);
+export const saveProfile = (data) => api.post('/creators/onboarding/profile', data);
 
-export const savePricing = (data) => 
-  api.post('/api/creator/activate', data);
+export const savePricing = (data) => api.post('/creators/onboarding/pricing', data);
 
-export const logout = () => 
-  api.post('/api/creator/logout');
+export const logout = () => api.post('/creators/logout');
 
-export default api;
+export default {};

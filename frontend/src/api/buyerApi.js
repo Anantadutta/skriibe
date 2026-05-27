@@ -1,19 +1,35 @@
 /**
- * @module buyerApi — Buyer-facing API calls for skriibe
+ * @module buyerApi — Buyer-facing API calls for skriibe (fully mocked for Phase 6)
  */
-import api from '../services/creatorApi'; // existing axios instance pointing to backend
 
-export const getCreatorProfile = (handle) =>
-  api.get(`/api/public/creator/${handle}`).then((r) => r.data);
+export const getCreatorProfile = (handle) => {
+  const cleanHandle = handle?.replace('@', '') || 'anantadutta';
+  return Promise.resolve({
+    success: true,
+    creator: {
+      handle: cleanHandle,
+      name: cleanHandle === 'anantadutta' ? 'Ananta Dutta' : cleanHandle,
+      bio: 'Fintech creator helping you grow your wealth.',
+      pricePerQuestion: 99,
+      responseTime: '24 hours',
+      questionsAnswered: 42,
+      instagramLinked: true,
+      instagramHandle: cleanHandle
+    }
+  });
+};
 
 export const sendBuyerOTP = (phone) =>
-  api.post('/api/buyers/send-otp', { phone }).then((r) => r.data);
+  Promise.resolve({ success: true });
 
 export const verifyBuyerOTP = (phone, otp) =>
-  api.post('/api/buyers/verify-otp', { phone, otp }).then((r) => r.data);
+  Promise.resolve({ success: true, buyerToken: 'mock-buyer-token' });
 
 export const submitQuestion = (payload) =>
-  api.post('/api/buyers/submit-question', payload).then((r) => r.data);
+  Promise.resolve({ success: true });
 
-export const createOrder = (payload) => api.post('/api/buyers/create-order', payload).then((r) => r.data);
-export const confirmPayment = (payload) => api.post('/api/buyers/confirm-payment', payload).then((r) => r.data);
+export const createOrder = (payload) =>
+  Promise.resolve({ success: true, keyId: 'mock-key-id', amount: 9900, orderId: 'mock-order-id' });
+
+export const confirmPayment = (payload) =>
+  Promise.resolve({ success: true });

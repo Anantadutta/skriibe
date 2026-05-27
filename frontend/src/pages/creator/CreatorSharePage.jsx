@@ -13,7 +13,25 @@ import confetti from 'canvas-confetti';
 const CreatorSharePage = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  if (location.state?.creator && !location.state.creator.username) {
+    location.state.creator.username = location.state.creator.handle;
+  }
   const [creator, setCreator] = useState(location.state?.creator || null);
+  
+  useEffect(() => {
+    if (creator && !location.state?.creator) {
+      if (!location.state) {
+        location.state = {};
+      }
+      location.state.creator = {
+        ...creator,
+        username: creator.username || creator.handle
+      };
+    }
+  }, [creator]);
+
+  const { state } = useLocation();
+  const username = state?.creator?.username ?? 'yourhandle';
   const [loading, setLoading] = useState(!creator);
 
   // Success states for clipboard actions
@@ -481,14 +499,15 @@ const CreatorSharePage = () => {
 
             {/* Title */}
             <h2 style={{
-              margin: 0,
-              fontSize: '18px',
-              fontWeight: 800,
-              background: 'linear-gradient(90deg, #06b6d4 0%, #7c3aed 100%)',
+              background: 'linear-gradient(90deg, #00e5ff, #a855f7)',
               WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent'
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+              fontSize: '1.4rem',
+              fontWeight: '700',
+              margin: 0,
             }}>
-              You're live! 🎉
+              You're live! <span style={{ WebkitTextFillColor: 'initial' }}>🎉</span>
             </h2>
 
             {/* Sub-text */}
@@ -566,13 +585,17 @@ const CreatorSharePage = () => {
               YOUR LINK
             </span>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{
-                fontFamily: 'var(--font-mono), monospace',
-                fontSize: '16px',
-                fontWeight: 800,
-                color: '#ffffff',
-                wordBreak: 'break-all'
-              }}>
+              <span 
+                onClick={() => navigate(`/@${username}`)}
+                style={{
+                  fontFamily: 'var(--font-mono), monospace',
+                  fontSize: '16px',
+                  fontWeight: 800,
+                  color: '#ffffff',
+                  wordBreak: 'break-all',
+                  cursor: 'pointer'
+                }}
+              >
                 {shareUrl}
               </span>
               <button
@@ -657,6 +680,14 @@ const CreatorSharePage = () => {
               <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
             </svg>
             <span>{copiedLink ? 'Copied Link! ✓' : 'Copy link'}</span>
+          </button>
+
+          <button
+            onClick={() => navigate(`/@${username}`)}
+            className="copy-link-btn"
+            style={{ marginTop: '10px', background: 'linear-gradient(90deg, #7c3aed, #00e5ff)' }}
+          >
+            <span>Open dashboard →</span>
           </button>
         </div>
 
@@ -942,6 +973,26 @@ const CreatorSharePage = () => {
               className="download-btn"
             >
               Download PNG
+            </button>
+
+            <button 
+              onClick={() => navigate(`/@${username}`)}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#00e5ff',
+                textDecoration: 'underline',
+                cursor: 'pointer',
+                fontSize: '13px',
+                fontWeight: 600,
+                marginTop: '12px',
+                padding: 0,
+                width: 'auto',
+                display: 'inline-block',
+                alignSelf: 'center'
+              }}
+            >
+              Click here to open your page →
             </button>
 
           </div>

@@ -28,7 +28,7 @@ const CreatorOnboardPricing = () => {
 
   const pricingOptions = [
     { value: 49, label: 'Starter', desc: 'Testing the waters' },
-    { value: 99, label: 'Most popular', desc: 'Sweet spot', badge: 'popular' },
+    { value: 99, label: 'Most popular', desc: 'Sweet spot' },
     { value: 199, label: 'Premium', desc: '30K–100K followers' },
     { value: 499, label: 'Expert', desc: 'Strong authority' }
   ];
