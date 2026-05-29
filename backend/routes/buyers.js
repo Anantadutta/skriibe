@@ -56,22 +56,13 @@ router.post('/verify-otp', async (req, res) => {
 });
 
 // POST /api/buyers/submit-question
-// Body: { creatorHandle, questionText, buyerName, buyerEmail, isAnonymous, buyerToken }
-// buyerToken — JWT from verify-otp, proves phone was verified
+// Body: { creatorHandle, questionText, buyerName, buyerPhone, buyerEmail, isAnonymous }
 router.post('/submit-question', async (req, res) => {
   try {
-    const { creatorHandle, questionText, buyerName, buyerEmail, isAnonymous, buyerToken } = req.body;
+    const { creatorHandle, questionText, buyerName, buyerPhone, buyerEmail, isAnonymous } = req.body;
 
-    // Verify buyer token
-    let buyerData;
-    try {
-      buyerData = jwt.verify(buyerToken, process.env.JWT_SECRET || 'secret');
-    } catch {
-      return res.status(401).json({ success: false, message: 'Phone verification expired. Please re-verify.' });
-    }
-
-    if (!buyerData.verified) {
-      return res.status(401).json({ success: false, message: 'Phone not verified' });
+    if (!buyerPhone) {
+      return res.status(400).json({ success: false, message: 'Phone number is required' });
     }
 
     // Validate question
@@ -97,7 +88,7 @@ router.post('/submit-question', async (req, res) => {
       creatorId: creator._id,
       handle: creator.handle,
       buyerName: isAnonymous ? 'Anonymous' : (buyerName || ''),
-      buyerPhone: buyerData.phone,
+      buyerPhone: buyerPhone,
       buyerEmail: buyerEmail || '',
       isAnonymous: !!isAnonymous,
       questionText: questionText.trim(),
@@ -119,12 +110,47 @@ router.post('/submit-question', async (req, res) => {
 });
 
 // POST /api/buyers/create-order
-// Body: { questionId, amount, buyerToken }
-// buyerToken — JWT from verify-otp, proves phone was verified
+// Body: { questionId, amount }
 router.post('/create-order', async (req, res) => {
-  const { questionId, amount, buyerToken } = req.body;
-  const order = await createOrder(amount, 'INR', `question_${questionId}`);
-  res.json({ orderId: order.id });
+  const { questionId, amount } = req.body;
+  // const order = await createOrder(amount, 'INR', `question_${questionId}`);
+  // res.json({ orderId: order.id });
+  res.json({ orderId: 'mock_order_id' }); // Mocked for now
+});
+
+// GET /api/buyers/history/:phone
+// Fetch all questions submitted by a specific phone number
+router.get('/history/:phone', async (req, res) => {
+  try {
+    const { phone } = req.params;
+    if (!phone) {
+      return res.status(400).json({ success: false, message: 'Phone number required' });
+    }
+    const questions = await Question.find({ buyerPhone: phone }).sort({ createdAt: -1 });
+    return res.json({ success: true, questions });
+  } catch (err) {
+    console.error('history error:', err.message);
+    return res.status(500).json({ success: false, message: 'Failed to fetch history' });
+  }
+});
+
+// GET /api/buyers/question/:id
+// Fetch a single question by its ID
+router.get('/question/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ success: false, message: 'Invalid question ID' });
+    }
+    const question = await Question.findById(id);
+    if (!question) {
+      return res.status(404).json({ success: false, message: 'Question not found' });
+    }
+    return res.json({ success: true, question });
+  } catch (err) {
+    console.error('get-question error:', err.message);
+    return res.status(500).json({ success: false, message: 'Failed to fetch question' });
+  }
 });
 
 module.exports = router;

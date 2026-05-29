@@ -256,43 +256,75 @@ const CreatorDashboard = () => {
         {/* 4. PRIMARY ACTIONS */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
 
-          <div 
-            onClick={() => navigate('/creator/payouts')}
-            style={{
-              background: 'linear-gradient(90deg, rgba(41, 197, 246, 0.1) 0%, rgba(124, 58, 237, 0.1) 100%)',
-              border: '1px solid rgba(41, 197, 246, 0.3)',
+          {(creator.bankLinked || localStorage.getItem('bankLinked') === 'true') ? (
+            <div style={{
+              background: '#1A1A1A',
+              border: '1px solid #2A2A2A',
               borderRadius: '16px',
               padding: '16px 20px',
               display: 'flex',
               justifyContent: 'space-between',
-              alignItems: 'center',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease',
-            }}
-            onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(0.98)'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
-          >
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px' }}>
-                <span style={{ fontWeight: 700, fontSize: '1rem', color: '#ffffff' }}>
-                  Setup payouts
+              alignItems: 'center'
+            }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <span style={{ color: '#ffffff', fontWeight: 700, fontSize: '0.95rem' }}>
+                  HDFC Bank · Savings
+                </span>
+                <span style={{ color: '#22C55E', fontSize: '0.8rem', fontWeight: 600 }}>
+                  ✓ Verified via penny drop
                 </span>
               </div>
-              <div style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: '2px' }}>
-                Link your bank account
+              <div style={{
+                background: 'rgba(34, 197, 94, 0.15)',
+                color: '#22C55E',
+                padding: '6px 12px',
+                borderRadius: '8px',
+                fontSize: '0.75rem',
+                fontWeight: 700
+              }}>
+                Linked
               </div>
             </div>
-            <div style={{
-              background: '#ffffff',
-              color: '#0E0E0E',
-              padding: '6px 12px',
-              borderRadius: '20px',
-              fontSize: '0.75rem',
-              fontWeight: 700
-            }}>
-              Setup →
+          ) : (
+            <div 
+              onClick={() => navigate('/creator/payouts')}
+              style={{
+                background: 'linear-gradient(90deg, rgba(41, 197, 246, 0.1) 0%, rgba(124, 58, 237, 0.1) 100%)',
+                border: '1px solid rgba(41, 197, 246, 0.3)',
+                borderRadius: '16px',
+                padding: '16px 20px',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(0.98)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
+            >
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px' }}>
+                  <span style={{ fontWeight: 700, fontSize: '1rem', color: '#ffffff' }}>
+                    Setup payouts
+                  </span>
+                </div>
+                <div style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: '2px' }}>
+                  Link your bank account
+                </div>
+              </div>
+              <div style={{
+                background: '#ffffff',
+                color: '#0E0E0E',
+                padding: '6px 12px',
+                borderRadius: '20px',
+                fontSize: '0.75rem',
+                fontWeight: 700
+              }}>
+                Setup →
+              </div>
             </div>
-          </div>
+          )}
+
 
           <div 
             onClick={() => navigate('/creator/health')}

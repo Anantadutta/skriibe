@@ -682,13 +682,22 @@ const CreatorSharePage = () => {
             <span>{copiedLink ? 'Copied Link! ✓' : 'Copy link'}</span>
           </button>
 
-          <button
-            onClick={() => navigate(`/@${username}`)}
-            className="copy-link-btn"
-            style={{ marginTop: '10px', background: 'linear-gradient(90deg, #7c3aed, #00e5ff)' }}
-          >
-            <span>Open dashboard →</span>
-          </button>
+          <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+            <button
+              onClick={() => navigate('/creator/dashboard')}
+              className="copy-link-btn"
+              style={{ flex: 1, background: '#1A1A1A', border: '1px solid #2A2A2A', color: '#ffffff', boxShadow: 'none' }}
+            >
+              <span>Open Dashboard</span>
+            </button>
+            <button
+              onClick={() => navigate(`/${username}`)}
+              className="copy-link-btn"
+              style={{ flex: 1, background: 'linear-gradient(90deg, #7c3aed, #00e5ff)' }}
+            >
+              <span>View My Page →</span>
+            </button>
+          </div>
         </div>
 
         {/* SHARE YOUR LINK SECTION */}

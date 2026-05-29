@@ -238,35 +238,7 @@ const CreatorPayouts = () => {
             placeholder="e.g. HDFC0001234"
           />
 
-          {/* Verified Status Banner */}
-          <div style={{
-            background: '#1A1A1A',
-            border: '1px solid #2A2A2A',
-            borderRadius: '16px',
-            padding: '16px 20px',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center'
-          }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-              <span style={{ color: '#ffffff', fontWeight: 700, fontSize: '0.95rem' }}>
-                HDFC Bank · Savings
-              </span>
-              <span style={{ color: '#22C55E', fontSize: '0.8rem', fontWeight: 600 }}>
-                ✓ Verified via penny drop
-              </span>
-            </div>
-            <div style={{
-              background: 'rgba(34, 197, 94, 0.15)',
-              color: '#22C55E',
-              padding: '6px 12px',
-              borderRadius: '8px',
-              fontSize: '0.75rem',
-              fontWeight: 700
-            }}>
-              Linked
-            </div>
-          </div>
+
         </div>
 
         {/* PAN Section */}
@@ -305,6 +277,7 @@ const CreatorPayouts = () => {
                 alert('Account numbers do not match.');
                 return;
               }
+              localStorage.setItem('bankLinked', 'true');
               alert('Setup Complete! Going live...');
               navigate('/creator/dashboard');
             }}

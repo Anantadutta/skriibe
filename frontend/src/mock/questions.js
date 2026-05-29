@@ -6,6 +6,7 @@ export const mockCreator = {
   isLive: true,
   weeklyEarnings: 890,
   replyRate: 94,
+  bankLinked: false,
 };
 
 export const mockQuestions = [

@@ -11,34 +11,21 @@ const CreatorPublicPage = () => {
   const [creator, setCreator] = useState(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
-  const [step, setStep] = useState(0); // 0=profile, 1=question, 2=details, 3=review, 4=success
-  const [btnHover, setBtnHover] = useState(false);
+  const [step, setStep] = useState(0); // 0=profile, 1=ask form, 2=success
   
-  // Step 1 - Question
-  const [questionText, setQuestionText] = useState('');
-  const [isAnonymous, setIsAnonymous] = useState(false);
-  
-  // Step 2 - Details
+  // Form State
   const [buyerName, setBuyerName] = useState('');
-  const [buyerPhone, setBuyerPhone] = useState('');
   const [buyerEmail, setBuyerEmail] = useState('');
-  const [otp, setOtp] = useState('');
-  const [otpSent, setOtpSent] = useState(false);
-  const [phoneVerified, setPhoneVerified] = useState(false);
-  const [buyerToken, setBuyerToken] = useState('');
-  const [otpCountdown, setOtpCountdown] = useState(0);
+  const [buyerPhone, setBuyerPhone] = useState('');
+  const [questionText, setQuestionText] = useState('');
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [paymentTab, setPaymentTab] = useState('UPI');
+  const [buyerUpiId, setBuyerUpiId] = useState('');
+  const [submittedQuestionId, setSubmittedQuestionId] = useState(null);
   
   // Status
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
-
-  useEffect(() => {
-    let timer;
-    if (otpCountdown > 0) {
-      timer = setTimeout(() => setOtpCountdown(c => c - 1), 1000);
-    }
-    return () => clearTimeout(timer);
-  }, [otpCountdown]);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -58,55 +45,23 @@ const CreatorPublicPage = () => {
     fetchProfile();
   }, [handle]);
 
-  const handleSendOTP = async () => {
-    if (!/^\d{10}$/.test(buyerPhone)) {
-      setError('Please enter a valid 10-digit number');
-      return;
-    }
-    setError('');
-    setSubmitting(true);
-    try {
-      await sendBuyerOTP(buyerPhone);
-      setOtpSent(true);
-      setOtpCountdown(60);
-    } catch (err) {
-      setError(err.response?.data?.message || 'Failed to send OTP');
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleVerifyOTP = async () => {
-    if (otp.length !== 6) {
-      setError('OTP must be 6 digits');
-      return;
-    }
-    setError('');
-    setSubmitting(true);
-    try {
-      const res = await verifyBuyerOTP(buyerPhone, otp);
-      setBuyerToken(res.buyerToken);
-      setPhoneVerified(true);
-    } catch (err) {
-      setError(err.response?.data?.message || 'Invalid OTP');
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
   const handleSubmitQuestion = async () => {
     setError('');
     setSubmitting(true);
     try {
-      await submitQuestion({
+      const res = await submitQuestion({
         creatorHandle: handle,
         questionText,
-        buyerName: isAnonymous ? 'Anonymous' : buyerName,
+        buyerName,
+        buyerPhone,
         buyerEmail,
-        isAnonymous,
-        buyerToken
+        isAnonymous: false
       });
-      setStep(4);
+      if (res.success && res.questionId) {
+        setSubmittedQuestionId(res.questionId);
+        localStorage.setItem('skriibe_buyer_phone', buyerPhone);
+      }
+      setStep(2);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to submit question');
     } finally {
@@ -115,18 +70,8 @@ const CreatorPublicPage = () => {
   };
 
   const handlePayAndSubmit = async () => {
-    const qId = await handleSubmitQuestion();
-    const orderRes = await createOrder({ questionId: qId, amount: creator.pricePerQuestion });
-    const rzp = new window.Razorpay({
-      key: orderRes.keyId,
-      amount: orderRes.amount,
-      order_id: orderRes.orderId,
-      handler: async (response) => {
-        await confirmPayment({ questionId: qId, ...response });
-        setStep(4);
-      }
-    });
-    rzp.open();
+    // Navigate to custom checkout UI (Step 3) instead of Razorpay SDK
+    setStep(3);
   };
 
   if (loading) {
@@ -171,560 +116,757 @@ const CreatorPublicPage = () => {
       fontFamily: 'system-ui, -apple-system, sans-serif'
     }}>
       <style dangerouslySetInnerHTML={{ __html: `
-        ::-webkit-scrollbar {
-          display: none;
-        }
-        * {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-        @keyframes ripple-dot {
-          0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
-          100% { box-shadow: 0 0 0 14px rgba(34, 197, 94, 0); }
-        }
+        ::-webkit-scrollbar { display: none; }
+        * { -ms-overflow-style: none; scrollbar-width: none; }
       `}} />
       
-      {/* Container to restrict width */}
       <div style={{
         width: '100%',
         maxWidth: '390px',
-        padding: '24px 20px 0',
+        padding: '24px 20px',
         boxSizing: 'border-box',
         display: 'flex',
         flexDirection: 'column',
-        gap: '20px'
+        gap: '24px'
       }}>
-
-        {/* 1. TOP BAR */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          padding: '0 0 4px 0'
-        }}>
-          {/* Logo */}
-          <div style={{
-            fontSize: '1.6rem',
-            fontWeight: '600',
-            fontStyle: 'normal',
-            letterSpacing: '-0.03em',
-            color: '#fff'
-          }}>
+        
+        {/* TOP BAR: Logo only */}
+        <div style={{ display: 'flex', justifyContent: 'flex-end', paddingBottom: '8px' }}>
+          <div style={{ fontSize: '1.2rem', fontWeight: '600', letterSpacing: '-0.03em', color: '#333' }}>
             skr<span style={{ color: '#29C5F6' }}>ii</span>be
           </div>
+        </div>
 
-          {/* Avatar with Status Dot */}
+        {/* HEADER SECTION: Avatar + Info */}
+        <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+          {/* Large Avatar */}
           <div style={{ position: 'relative' }}>
             <div style={{
-              width: '40px',
-              height: '40px',
-              borderRadius: '50%',
-              background: '#1A1A1A',
-              border: '2px solid #2A2A2A',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontWeight: 'bold',
-              color: '#ffffff',
-              fontSize: '16px'
+              width: '80px', height: '80px', borderRadius: '50%',
+              background: '#1A1A1A', border: '2px solid #29C5F6',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontWeight: '900', fontSize: '32px', color: '#ffffff'
             }}>
-              {creator.name ? creator.name[0].toUpperCase() : 'T'}
+              {creator.name ? creator.name[0].toUpperCase() : 'R'}
             </div>
+            {/* Live Dot */}
             <div style={{
-              position: 'absolute',
-              top: '0px',
-              right: '0px',
-              width: '10px',
-              height: '10px',
-              borderRadius: '50%',
-              background: '#22C55E',
-              border: '2px solid #0E0E0E',
-              animation: 'ripple-dot 1.5s infinite ease-out'
+              position: 'absolute', bottom: '4px', right: '4px',
+              width: '12px', height: '12px', borderRadius: '50%',
+              background: '#22C55E', border: '2px solid #0E0E0E'
             }} />
+          </div>
+
+          {/* Info */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ fontSize: '1.4rem', fontWeight: '800', letterSpacing: '-0.02em', color: '#ffffff' }}>
+                {creator.name || 'Rahul Finance'}
+              </span>
+              <span style={{ color: '#29C5F6', fontSize: '1.1rem' }}>✓</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem' }}>
+              <span style={{ color: '#64748b' }}>@{creator.handle}</span>
+              <span style={{ color: '#475569' }}>•</span>
+              <span style={{ color: '#94a3b8', fontWeight: '500' }}><span style={{ color: '#29C5F6', fontWeight: '700' }}>{creator.followers || '12K'}</span> Followers</span>
+            </div>
+            {/* Instagram linked badge */}
+            <div style={{
+              display: 'inline-flex', alignItems: 'center', gap: '6px',
+              background: 'rgba(236, 72, 153, 0.1)', border: '1px solid rgba(236, 72, 153, 0.2)',
+              borderRadius: '6px', padding: '2px 8px', width: 'fit-content', marginTop: '4px'
+            }}>
+              <span style={{ width: '8px', height: '8px', background: '#ec4899', borderRadius: '2px' }} />
+              <span style={{ color: '#ec4899', fontSize: '0.75rem', fontWeight: '700' }}>Instagram linked</span>
+            </div>
+            {/* Tags row */}
+            <div style={{ display: 'flex', gap: '8px', marginTop: '4px', flexWrap: 'wrap' }}>
+              <span style={{ background: 'rgba(41, 197, 246, 0.1)', color: '#29C5F6', padding: '2px 8px', borderRadius: '12px', fontSize: '0.7rem', fontWeight: '700' }}>
+                Finance
+              </span>
+              <span style={{ background: 'rgba(41, 197, 246, 0.1)', color: '#29C5F6', padding: '2px 8px', borderRadius: '12px', fontSize: '0.7rem', fontWeight: '700' }}>
+                SIP
+              </span>
+              <span style={{ background: 'rgba(34, 197, 94, 0.1)', color: '#22C55E', padding: '2px 8px', borderRadius: '12px', fontSize: '0.7rem', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <div style={{ width: '4px', height: '4px', background: '#22C55E', borderRadius: '50%' }} /> LIVE
+              </span>
+            </div>
           </div>
         </div>
 
-        {/* 2. STATS ROW */}
+        {/* STATS ROW (3 boxes) */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
+          <div style={{ background: '#1A1A1A', borderRadius: '14px', padding: '16px 8px', textAlign: 'center' }}>
+            <div style={{ fontSize: '1.4rem', fontWeight: '900', color: '#29C5F6' }}>{creator.replyRate || '94'}%</div>
+            <div style={{ fontSize: '0.65rem', color: '#64748b', marginTop: '4px', fontWeight: '700', letterSpacing: '1px' }}>REPLY</div>
+          </div>
+          <div style={{ background: '#1A1A1A', borderRadius: '14px', padding: '16px 8px', textAlign: 'center' }}>
+            <div style={{ fontSize: '1.4rem', fontWeight: '900', color: '#29C5F6' }}>{creator.avgReplyTime || '3.2'}h</div>
+            <div style={{ fontSize: '0.65rem', color: '#64748b', marginTop: '4px', fontWeight: '700', letterSpacing: '1px' }}>AVG</div>
+          </div>
+          <div style={{ background: '#1A1A1A', borderRadius: '14px', padding: '16px 8px', textAlign: 'center' }}>
+            <div style={{ fontSize: '1.4rem', fontWeight: '900', color: '#29C5F6' }}>{creator.totalAnswered || '247'}</div>
+            <div style={{ fontSize: '0.65rem', color: '#64748b', marginTop: '4px', fontWeight: '700', letterSpacing: '1px' }}>ANSWERED</div>
+          </div>
+        </div>
+
+        {/* BIO */}
+        <div>
+          <p style={{ margin: 0, fontSize: '0.95rem', color: '#94a3b8', lineHeight: '1.5' }}>
+            {creator.bio || 'Helping India save smarter. 5 yrs at HDFC. SIP, mutual funds, tax planning.'}
+          </p>
+        </div>
+        
+        {/* DIVIDER */}
+        <div style={{ width: '100%', height: '1px', background: '#1A1A1A' }} />
+
+        {/* ASK ME ANYTHING CARD */}
         <div style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr 1fr',
-          gap: '10px'
-        }}>
-          <div style={{
-            background: '#1A1A1A',
-            border: '1px solid #2A2A2A',
-            borderRadius: '14px',
-            padding: '16px 12px',
-            textAlign: 'center',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center'
-          }}>
-            <div style={{ fontSize: '2rem', fontWeight: 900, color: '#29C5F6', letterSpacing: '-1px' }}>
-              <span style={{ fontSize: '1.4rem' }}>₹</span>890
-            </div>
-            <div style={{ fontSize: '0.6rem', color: '#64748b', marginTop: '4px', fontWeight: 'bold', letterSpacing: '1px', textTransform: 'uppercase' }}>
-              THIS WEEK
-            </div>
-          </div>
-
-          <div style={{
-            background: '#1A1A1A',
-            border: '1px solid #2A2A2A',
-            borderRadius: '14px',
-            padding: '16px 12px',
-            textAlign: 'center',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center'
-          }}>
-            <div style={{ fontSize: '2rem', fontWeight: 900, color: '#EF4444' }}>
-              3
-            </div>
-            <div style={{ fontSize: '0.6rem', color: '#64748b', marginTop: '4px', fontWeight: 'bold', letterSpacing: '1px', textTransform: 'uppercase' }}>
-              PENDING
-            </div>
-          </div>
-
-          <div style={{
-            background: '#1A1A1A',
-            border: '1px solid #2A2A2A',
-            borderRadius: '14px',
-            padding: '16px 12px',
-            textAlign: 'center',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center'
-          }}>
-            <div style={{ fontSize: '2rem', fontWeight: 900, color: '#22C55E' }}>
-              94%
-            </div>
-            <div style={{ fontSize: '0.6rem', color: '#64748b', marginTop: '4px', fontWeight: 'bold', letterSpacing: '1px', textTransform: 'uppercase' }}>
-              REPLY RATE
-            </div>
-          </div>
-        </div>
-
-        {/* 3. LIVE STATUS BANNER */}
-        <div 
-          onClick={() => setStep(1)}
-          style={{
-          background: '#1A1A1A',
-          border: '1px solid #2A2A2A',
-          boxShadow: 'none',
-          borderRadius: '16px',
-          padding: '16px 20px',
+          background: 'rgba(255, 255, 255, 0.02)',
+          border: '1px solid rgba(41, 197, 246, 0.15)',
+          borderRadius: '24px',
+          padding: '32px 24px',
           display: 'flex',
-          justifyContent: 'space-between',
+          flexDirection: 'column',
           alignItems: 'center',
-          cursor: 'pointer',
-          transition: 'all 0.2s ease'
+          gap: '16px',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)'
         }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px' }}>
-              <div style={{
-                width: '8px',
-                height: '8px',
-                borderRadius: '50%',
-                background: '#22C55E',
-                transition: 'background-color 0.2s ease'
-              }} />
-              <span style={{ fontWeight: 700, fontSize: '1rem', color: '#ffffff' }}>
-                You're LIVE
-              </span>
-            </div>
-            <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '2px' }}>
-              Accepting questions · ₹{creator.pricePerQuestion}/question
-            </div>
+          <div style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: '700', letterSpacing: '2px', textTransform: 'uppercase' }}>
+            Ask me anything
+          </div>
+          
+          <div style={{ display: 'flex', alignItems: 'center', color: '#ffffff' }}>
+            <span style={{ fontSize: '2rem', fontWeight: '600' }}>₹</span>
+            <span style={{ fontSize: '4.5rem', fontWeight: '900', letterSpacing: '-0.03em', fontStyle: 'italic', lineHeight: '1' }}>
+              {creator.pricePerQuestion || '99'}
+            </span>
           </div>
 
-          <div 
-            style={{
-              width: '48px',
-              height: '28px',
-              borderRadius: '14px',
-              background: '#22C55E',
-              position: 'relative',
-              transition: 'all 0.2s ease'
-            }}
-          >
-            <div style={{
-              width: '20px',
-              height: '20px',
-              borderRadius: '50%',
-              background: '#ffffff',
-              position: 'absolute',
-              top: '4px',
-              left: '24px',
-              transition: 'all 0.2s ease'
-            }} />
+          <div style={{ fontSize: '0.9rem', color: '#94a3b8' }}>
+            Reply guaranteed within {creator.responseTime || '24'} hours
           </div>
+
+          <button
+            onClick={() => setStep(1)}
+            style={{
+              background: '#29C5F6', color: '#0E0E0E', width: '100%', border: 'none',
+              borderRadius: '16px', padding: '18px', fontSize: '1.1rem', fontWeight: '800',
+              cursor: 'pointer', marginTop: '8px', transition: 'transform 0.2s'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(0.98)'}
+            onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+          >
+            Ask Now →
+          </button>
         </div>
 
-        {/* 4. PRIMARY ACTIONS */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', paddingBottom: '100px' }}>
-
-          <div 
-            onClick={() => navigate('/creator/payouts')}
-            style={{
-              background: 'linear-gradient(90deg, rgba(41, 197, 246, 0.1) 0%, rgba(124, 58, 237, 0.1) 100%)',
-              border: '1px solid rgba(41, 197, 246, 0.3)',
-              borderRadius: '16px',
-              padding: '16px 20px',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease',
-            }}
-            onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(0.98)'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
-          >
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px' }}>
-                <span style={{ fontWeight: 700, fontSize: '1rem', color: '#ffffff' }}>
-                  Setup payouts
-                </span>
-              </div>
-              <div style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: '2px' }}>
-                Link your bank account
-              </div>
-            </div>
-            <div style={{
-              background: '#ffffff',
-              color: '#0E0E0E',
-              padding: '6px 12px',
-              borderRadius: '20px',
-              fontSize: '0.75rem',
-              fontWeight: 700
-            }}>
-              Setup →
-            </div>
+        {/* FOOTER BADGES */}
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginTop: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#475569', fontSize: '0.75rem' }}>
+            <span style={{ color: '#22C55E' }}>✓</span> Secured by Razorpay
           </div>
-
-          <div 
-            onClick={() => navigate('/creator/health')}
-            style={{
-              background: '#13131f',
-              border: '1px solid #2A2A2A',
-              borderRadius: '16px',
-              padding: '16px 20px',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease',
-            }}
-            onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(0.98)'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
-          >
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px' }}>
-                <span style={{ fontWeight: 700, fontSize: '1rem', color: '#ffffff' }}>
-                  Account health
-                </span>
-                <span style={{
-                  background: 'rgba(34, 197, 94, 0.2)',
-                  color: '#4ade80',
-                  padding: '2px 6px',
-                  borderRadius: '12px',
-                  fontSize: '0.7rem',
-                  fontWeight: 600
-                }}>
-                  Good
-                </span>
-              </div>
-              <div style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: '2px' }}>
-                Review metrics and SLAs
-              </div>
-            </div>
-            <div style={{
-              background: '#2A2A2A',
-              color: '#ffffff',
-              padding: '6px 12px',
-              borderRadius: '20px',
-              fontSize: '0.75rem',
-              fontWeight: 600
-            }}>
-              View →
-            </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#475569', fontSize: '0.75rem' }}>
+            <span style={{ color: '#22C55E' }}>✓</span> 100% refund if no reply
           </div>
         </div>
 
       </div>
-
-      {/* 5. BOTTOM NAV BAR */}
-      <div style={{
-        position: 'fixed',
-        bottom: 0,
-        left: '50%',
-        transform: 'translateX(-50%)',
-        width: '390px',
-        background: '#0E0E0E',
-        borderTop: '1px solid #1A1A1A',
-        display: 'flex',
-        justifyContent: 'space-around',
-        padding: '12px 0 20px',
-        zIndex: 100
-      }}>
-        {[
-          { label: 'HOME', icon: '🏠', route: '/creator/dashboard' },
-          { label: 'INBOX', icon: '💬', route: '/creator/inbox' },
-          { label: 'ANALYTICS', icon: '📊', route: '/creator/analytics' },
-          { label: 'PAYOUTS', icon: '💰', route: '/creator/payouts' },
-          { label: 'SETTINGS', icon: '⚙️', route: '/creator/settings' }
-        ].map((item, idx) => (
-            <div
-              key={idx}
-              onClick={() => navigate(item.route)}
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                cursor: 'pointer',
-                color: item.label === 'HOME' ? '#29C5F6' : '#64748b',
-                fontSize: '0.6rem',
-                letterSpacing: '1px',
-                fontWeight: 'bold',
-                gap: '6px'
-              }}
-            >
-              <span style={{ 
-                fontSize: '20px',
-                filter: item.label === 'HOME' ? cyanFilter : grayFilter
-              }}>
-                {item.icon}
-              </span>
-              <span>{item.label}</span>
-            </div>
-        ))}
-      </div>
-
     </div>
   );
 
   const renderStep1 = () => (
-    <div style={{ width: '100%', maxWidth: 420 }}>
-      <button onClick={() => setStep(0)} style={{ background: 'none', border: 'none', color: 'var(--g3)', fontFamily: 'var(--font-mono)', fontSize: 12, cursor: 'pointer', padding: '0 0 20px 0', display: 'flex', alignItems: 'center', gap: 6 }}>
-        ← Back to profile
-      </button>
-      <div style={{ background: 'var(--ink2)', border: '1px solid var(--ink4)', borderRadius: 'var(--radius-lg)', padding: '28px 24px' }}>
-        <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: 20, color: 'var(--white)', margin: '0 0 24px' }}>
-          Ask @{creator.handle} a question
-        </h2>
-        <textarea
-          value={questionText}
-          onChange={e => setQuestionText(e.target.value)}
-          placeholder={`What do you want to ask @${creator.handle}?`}
-          maxLength={500}
-          style={{ width: '100%', background: 'var(--ink3)', border: '1px solid var(--ink5)', borderRadius: 'var(--radius-md)', padding: '12px 14px', color: 'var(--white)', fontFamily: 'var(--font-body)', fontSize: 14, outline: 'none', minHeight: 120, resize: 'none', marginBottom: 8 }}
-        />
-        <div style={{ display: 'flex', justifyContent: 'flex-end', fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--g3)', marginBottom: 24 }}>
-          {questionText.length}/500
-        </div>
+    <div style={{
+      width: '100%',
+      minHeight: '100vh',
+      background: '#0E0E0E',
+      color: '#ffffff',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      boxSizing: 'border-box',
+      fontFamily: 'system-ui, -apple-system, sans-serif'
+    }}>
+      <style dangerouslySetInnerHTML={{ __html: `
+        ::-webkit-scrollbar { display: none; }
+        * { -ms-overflow-style: none; scrollbar-width: none; }
+        .unified-input {
+          width: 100%;
+          background: transparent;
+          border: none;
+          color: #ffffff;
+          font-size: 1.1rem;
+          font-weight: 600;
+          outline: none;
+          padding: 0;
+          margin-top: 4px;
+        }
+        .unified-input::placeholder {
+          color: #475569;
+        }
+      `}} />
+      
+      <div style={{
+        width: '100%',
+        maxWidth: '390px',
+        padding: '24px 20px',
+        boxSizing: 'border-box',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '24px'
+      }}>
         
-        <label style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', marginBottom: 24 }}>
-          <input 
-            type="checkbox" 
-            checked={isAnonymous} 
-            onChange={e => setIsAnonymous(e.target.checked)} 
-            style={{ width: 18, height: 18, accentColor: 'var(--blue)' }} 
-          />
-          <span style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--white)' }}>Ask anonymously</span>
-        </label>
+        {/* HEADER: Back Button */}
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <button 
+            onClick={() => setStep(0)} 
+            style={{ 
+              background: '#1A1A1A', border: 'none', color: '#94a3b8', 
+              width: '36px', height: '36px', borderRadius: '50%', 
+              display: 'flex', alignItems: 'center', justifyContent: 'center', 
+              cursor: 'pointer', fontSize: '1.2rem', padding: 0 
+            }}
+          >
+            {'<'}
+          </button>
+          <div style={{ flex: 1, textAlign: 'center', fontSize: '1.2rem', fontWeight: '800', letterSpacing: '-0.02em', marginLeft: '-36px' }}>
+            Ask @{creator.handle}
+          </div>
+        </div>
 
+        {/* READ BEFORE CONTINUING CARD */}
+        <div style={{
+          background: 'rgba(249, 115, 22, 0.03)',
+          border: '1px solid rgba(249, 115, 22, 0.2)',
+          borderRadius: '16px',
+          padding: '20px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '12px'
+        }}>
+          <div style={{ color: '#f97316', fontSize: '0.85rem', fontWeight: '800', letterSpacing: '1px', textTransform: 'uppercase' }}>
+            READ BEFORE CONTINUING
+          </div>
+          <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '8px', color: '#94a3b8', fontSize: '0.85rem', lineHeight: '1.5' }}>
+            <li style={{ display: 'flex', gap: '8px' }}><span style={{ color: '#f97316' }}>·</span> Answers are personal opinions — not professional advice</li>
+            <li style={{ display: 'flex', gap: '8px' }}><span style={{ color: '#f97316' }}>·</span> Not a substitute for medical, legal or financial counsel</li>
+            <li style={{ display: 'flex', gap: '8px' }}><span style={{ color: '#f97316' }}>·</span> One question per payment — be specific</li>
+            <li style={{ display: 'flex', gap: '8px' }}><span style={{ color: '#f97316' }}>·</span> 100% refund if no reply in {creator.responseTime || '24'} hours</li>
+            <li style={{ display: 'flex', gap: '8px' }}><span style={{ color: '#f97316' }}>·</span> Do not share others' personal data</li>
+          </ul>
+          
+          <label style={{
+            display: 'flex', alignItems: 'center', gap: '12px', marginTop: '8px',
+            background: '#131313', padding: '12px 16px', borderRadius: '12px', cursor: 'pointer', border: '1px solid #1A1A1A'
+          }}>
+            <input 
+              type="checkbox" 
+              checked={termsAccepted} 
+              onChange={e => setTermsAccepted(e.target.checked)} 
+              style={{ width: '20px', height: '20px', accentColor: '#29C5F6', borderRadius: '4px', border: 'none' }} 
+            />
+            <span style={{ fontSize: '0.95rem', fontWeight: '600', color: '#ffffff' }}>I understand and agree</span>
+          </label>
+        </div>
+
+        {/* FORM FIELDS */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          
+          <div style={{ background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '16px', padding: '16px' }}>
+            <div style={{ color: '#64748b', fontSize: '0.7rem', fontWeight: '800', letterSpacing: '2px', textTransform: 'uppercase' }}>
+              YOUR NAME <span style={{ color: '#ef4444' }}>*</span>
+            </div>
+            <input 
+              className="unified-input" 
+              value={buyerName} 
+              onChange={e => setBuyerName(e.target.value)} 
+              placeholder="Amit Kumar" 
+            />
+          </div>
+
+          <div style={{ background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '16px', padding: '16px' }}>
+            <div style={{ color: '#64748b', fontSize: '0.7rem', fontWeight: '800', letterSpacing: '2px', textTransform: 'uppercase' }}>
+              EMAIL ADDRESS <span style={{ color: '#ef4444' }}>*</span>
+            </div>
+            <input 
+              type="email"
+              className="unified-input" 
+              value={buyerEmail} 
+              onChange={e => setBuyerEmail(e.target.value)} 
+              placeholder="amit@gmail.com" 
+            />
+          </div>
+
+          <div style={{ background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '16px', padding: '16px' }}>
+            <div style={{ color: '#64748b', fontSize: '0.7rem', fontWeight: '800', letterSpacing: '2px', textTransform: 'uppercase' }}>
+              WHATSAPP NUMBER <span style={{ color: '#ef4444' }}>*</span>
+            </div>
+            <input 
+              type="tel"
+              className="unified-input" 
+              maxLength={10}
+              value={buyerPhone} 
+              onChange={e => setBuyerPhone(e.target.value.replace(/\D/g, ''))} 
+              placeholder="9876543210" 
+              style={{ fontStyle: buyerPhone ? 'normal' : 'italic', color: buyerPhone ? '#ffffff' : '#475569' }}
+            />
+          </div>
+
+          <div style={{ background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '16px', padding: '16px', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ color: '#64748b', fontSize: '0.7rem', fontWeight: '800', letterSpacing: '2px', textTransform: 'uppercase' }}>
+              YOUR QUESTION <span style={{ color: '#ef4444' }}>*</span> <span style={{ color: '#64748b' }}>(MIN 20 CHARS)</span>
+            </div>
+            <textarea 
+              className="unified-input"
+              value={questionText} 
+              onChange={e => setQuestionText(e.target.value)} 
+              placeholder={`What do you want to ask @${creator.handle}?`}
+              maxLength={500}
+              style={{ minHeight: '80px', resize: 'none', lineHeight: '1.4' }}
+            />
+          </div>
+
+        </div>
+
+        {/* COUNTER */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 4px', marginTop: '-8px' }}>
+          <div style={{ fontSize: '0.8rem', color: '#475569', fontWeight: '600' }}>
+            Min 20 characters
+          </div>
+          <div style={{ fontSize: '0.85rem', fontWeight: '700', color: questionText.length >= 20 ? '#22C55E' : '#475569' }}>
+            {questionText.length} / 500 {questionText.length >= 20 && '✓'}
+          </div>
+        </div>
+
+        {error && <div style={{ fontSize: '0.85rem', color: '#ef4444', textAlign: 'center', fontWeight: '600' }}>{error}</div>}
+
+        {/* CTA BUTTON */}
         <button 
-          onClick={() => setStep(2)}
-          disabled={questionText.trim().length < 20}
-          style={{ width: '100%', background: 'var(--blue)', color: 'var(--ink1)', border: 'none', borderRadius: 'var(--radius-md)', padding: '14px', fontSize: 14, fontWeight: 700, fontFamily: 'var(--font-body)', cursor: questionText.trim().length < 20 ? 'not-allowed' : 'pointer', opacity: questionText.trim().length < 20 ? 0.5 : 1 }}
+          onClick={handlePayAndSubmit}
+          disabled={!termsAccepted || !buyerName || !buyerEmail || buyerPhone.length !== 10 || questionText.length < 20 || submitting}
+          style={{
+            width: '100%',
+            background: '#29C5F6',
+            color: '#0E0E0E',
+            border: 'none',
+            borderRadius: '16px',
+            padding: '18px',
+            fontSize: '1.1rem',
+            fontWeight: '800',
+            cursor: (!termsAccepted || !buyerName || !buyerEmail || buyerPhone.length !== 10 || questionText.length < 20 || submitting) ? 'not-allowed' : 'pointer',
+            opacity: (!termsAccepted || !buyerName || !buyerEmail || buyerPhone.length !== 10 || questionText.length < 20 || submitting) ? 0.5 : 1,
+            marginTop: '8px'
+          }}
         >
-          Next →
+          {submitting ? 'Processing...' : `Pay Rs.${creator.pricePerQuestion || '99'} — UPI / Card`}
         </button>
+
+        {/* FOOTER */}
+        <div style={{ textAlign: 'center', fontSize: '0.75rem', color: '#475569', fontWeight: '600', marginTop: '4px' }}>
+          Secured by Razorpay <span style={{ margin: '0 4px' }}>·</span> India's most trusted payment
+        </div>
+
       </div>
     </div>
   );
 
   const renderStep2 = () => (
-    <div style={{ width: '100%', maxWidth: 420 }}>
-      <button onClick={() => setStep(1)} style={{ background: 'none', border: 'none', color: 'var(--g3)', fontFamily: 'var(--font-mono)', fontSize: 12, cursor: 'pointer', padding: '0 0 20px 0', display: 'flex', alignItems: 'center', gap: 6 }}>
-        ← Back
-      </button>
-      <div style={{ background: 'var(--ink2)', border: '1px solid var(--ink4)', borderRadius: 'var(--radius-lg)', padding: '28px 24px' }}>
-        <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: 20, color: 'var(--white)', margin: '0 0 24px' }}>
-          Your details
-        </h2>
+    <div style={{
+      width: '100%',
+      minHeight: '100vh',
+      background: '#0E0E0E',
+      color: '#ffffff',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      boxSizing: 'border-box',
+      fontFamily: 'system-ui, -apple-system, sans-serif'
+    }}>
+      <div style={{
+        width: '100%',
+        maxWidth: '390px',
+        padding: '32px 20px',
+        boxSizing: 'border-box',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: '24px'
+      }}>
         
-        {!isAnonymous && (
-          <div style={{ marginBottom: 24 }}>
-            <label style={{ fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '0.08em', color: 'var(--g3)', textTransform: 'uppercase', marginBottom: 6, display: 'block' }}>YOUR NAME *</label>
-            <input 
-              type="text" 
-              value={buyerName} 
-              onChange={e => setBuyerName(e.target.value)} 
-              placeholder="Full name"
-              style={{ width: '100%', background: 'var(--ink3)', border: '1px solid var(--ink5)', borderRadius: 'var(--radius-md)', padding: '12px 14px', color: 'var(--white)', fontFamily: 'var(--font-body)', fontSize: 14, outline: 'none' }} 
-            />
-          </div>
-        )}
-
-        <div style={{ marginBottom: 24 }}>
-          <label style={{ fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '0.08em', color: 'var(--g3)', textTransform: 'uppercase', marginBottom: 6, display: 'block' }}>MOBILE NUMBER *</label>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <div style={{ background: 'var(--ink3)', border: '1px solid var(--ink5)', borderRadius: 'var(--radius-md)', padding: '12px 14px', color: 'var(--g2)', fontFamily: 'var(--font-body)', fontSize: 14 }}>+91</div>
-            <input 
-              type="tel" 
-              maxLength={10}
-              value={buyerPhone} 
-              onChange={e => setBuyerPhone(e.target.value.replace(/\D/g, ''))} 
-              placeholder="9876543210"
-              disabled={phoneVerified || otpSent}
-              style={{ flex: 1, background: 'var(--ink3)', border: '1px solid var(--ink5)', borderRadius: 'var(--radius-md)', padding: '12px 14px', color: 'var(--white)', fontFamily: 'var(--font-body)', fontSize: 14, outline: 'none', opacity: (phoneVerified || otpSent) ? 0.5 : 1 }} 
-            />
-          </div>
-          {(!otpSent && !phoneVerified) && (
-            <button onClick={handleSendOTP} disabled={buyerPhone.length !== 10 || submitting} style={{ background: 'none', border: 'none', color: 'var(--blue)', fontSize: 12, marginTop: 8, cursor: 'pointer', padding: 0 }}>
-              {submitting ? 'Sending...' : 'Send OTP'}
-            </button>
-          )}
-          {(otpSent && !phoneVerified) && (
-            <button onClick={handleSendOTP} disabled={otpCountdown > 0 || submitting} style={{ background: 'none', border: 'none', color: otpCountdown > 0 ? 'var(--g3)' : 'var(--blue)', fontSize: 12, marginTop: 8, cursor: otpCountdown > 0 ? 'default' : 'pointer', padding: 0 }}>
-              {otpCountdown > 0 ? `Resend in ${otpCountdown}s` : 'Resend OTP'}
-            </button>
-          )}
+        {/* SUCCESS ICON */}
+        <div style={{
+          width: '80px',
+          height: '80px',
+          borderRadius: '50%',
+          border: '2px solid #22c55e',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginTop: '16px'
+        }}>
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
         </div>
 
-        {otpSent && !phoneVerified && (
-          <div style={{ marginBottom: 24 }}>
-            <label style={{ fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '0.08em', color: 'var(--g3)', textTransform: 'uppercase', marginBottom: 6, display: 'block' }}>ENTER OTP *</label>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <input 
-                type="text" 
-                maxLength={6}
-                value={otp} 
-                onChange={e => setOtp(e.target.value.replace(/\D/g, ''))} 
-                placeholder="000000"
-                style={{ flex: 1, background: 'var(--ink3)', border: '1px solid var(--ink5)', borderRadius: 'var(--radius-md)', padding: '12px 14px', color: 'var(--white)', fontFamily: 'var(--font-mono)', fontSize: 16, outline: 'none', letterSpacing: '0.2em' }} 
-              />
-              <button onClick={handleVerifyOTP} disabled={otp.length !== 6 || submitting} style={{ background: 'var(--blue)', color: 'var(--ink1)', border: 'none', borderRadius: 'var(--radius-md)', padding: '0 20px', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
-                Verify
-              </button>
+        {/* HEADING & SUBTITLES */}
+        <div style={{ textAlign: 'center', marginTop: '-8px' }}>
+          <h2 style={{ 
+            fontSize: '2.5rem', 
+            fontWeight: '900', 
+            margin: '0 0 12px',
+            fontFamily: '"Arial Black", Impact, sans-serif',
+            letterSpacing: '-0.02em',
+            transform: 'scaleX(1.1)',
+            color: '#ffffff'
+          }}>
+            Question sent!
+          </h2>
+          <p style={{ margin: '0 0 4px', fontSize: '1rem', color: '#64748b' }}>
+            {creator.name || creator.displayName} will reply within {creator.responseTime || '24'} hours.
+          </p>
+          <p style={{ margin: 0, fontSize: '1rem', color: '#64748b' }}>
+            You'll be notified on both channels.
+          </p>
+        </div>
+
+        {/* DELIVERY CHANNELS CARD */}
+        <div style={{ 
+          width: '100%',
+          background: '#1A1A1A', 
+          border: '1px solid #2A2A2A', 
+          borderRadius: '16px', 
+          padding: '20px',
+          marginTop: '8px'
+        }}>
+          <div style={{ color: '#475569', fontSize: '0.7rem', fontWeight: '800', letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '16px' }}>
+            DELIVERY CHANNELS
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#22c55e', boxShadow: '0 0 8px #22c55e' }}></div>
+              <span style={{ fontSize: '1rem', color: '#cbd5e1' }}>{buyerEmail || 'amit@gmail.com'}</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#22c55e', boxShadow: '0 0 8px #22c55e' }}></div>
+              <span style={{ fontSize: '1rem', color: '#cbd5e1' }}>{buyerPhone || '+91 98765 43210'} (WhatsApp)</span>
             </div>
           </div>
-        )}
-
-        {phoneVerified && (
-          <div style={{ marginBottom: 24, color: '#22C55E', fontSize: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
-            ✓ Phone verified
-          </div>
-        )}
-
-        <div style={{ marginBottom: 24 }}>
-          <label style={{ fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '0.08em', color: 'var(--g3)', textTransform: 'uppercase', marginBottom: 6, display: 'block' }}>EMAIL (OPTIONAL)</label>
-          <input 
-            type="email" 
-            value={buyerEmail} 
-            onChange={e => setBuyerEmail(e.target.value)} 
-            placeholder="For answer notifications"
-            style={{ width: '100%', background: 'var(--ink3)', border: '1px solid var(--ink5)', borderRadius: 'var(--radius-md)', padding: '12px 14px', color: 'var(--white)', fontFamily: 'var(--font-body)', fontSize: 14, outline: 'none' }} 
-          />
         </div>
 
-        {error && <div style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: '#EF4444', marginBottom: 16 }}>{error}</div>}
+        {/* ORDER CARD */}
+        <div style={{ 
+          width: '100%',
+          background: '#1A1A1A', 
+          border: '1px solid #2A2A2A', 
+          borderRadius: '16px', 
+          padding: '20px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}>
+          <div>
+            <div style={{ fontSize: '1rem', fontWeight: '700', color: '#ffffff', marginBottom: '4px' }}>
+              Order #SKR-20250501
+            </div>
+            <div style={{ fontSize: '0.85rem', color: '#475569', fontFamily: 'monospace' }}>
+              Amount paid: ₹{creator.pricePerQuestion || '99'}
+            </div>
+          </div>
+          <div style={{ 
+            background: 'rgba(34, 197, 94, 0.1)', 
+            color: '#22c55e', 
+            padding: '6px 12px', 
+            borderRadius: '20px', 
+            fontSize: '0.75rem', 
+            fontWeight: '800',
+            letterSpacing: '0.5px'
+          }}>
+            Paid
+          </div>
+        </div>
 
-        <button 
-          onClick={() => { setError(''); setStep(3); }}
-          disabled={!phoneVerified || (!isAnonymous && !buyerName.trim())}
-          style={{ width: '100%', background: 'var(--blue)', color: 'var(--ink1)', border: 'none', borderRadius: 'var(--radius-md)', padding: '14px', fontSize: 14, fontWeight: 700, fontFamily: 'var(--font-body)', cursor: (!phoneVerified || (!isAnonymous && !buyerName.trim())) ? 'not-allowed' : 'pointer', opacity: (!phoneVerified || (!isAnonymous && !buyerName.trim())) ? 0.5 : 1 }}
-        >
-          Next →
-        </button>
+        {/* BUTTONS */}
+        <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '8px' }}>
+          
+          <button 
+            onClick={() => {
+              if (submittedQuestionId) {
+                window.location.href = `/${creator.handle}/question/${submittedQuestionId}`;
+              } else {
+                alert('Question ID not found in mock');
+              }
+            }}
+            style={{
+              width: '100%',
+              background: '#29C5F6',
+              color: '#0E0E0E',
+              border: 'none',
+              borderRadius: '16px',
+              padding: '18px',
+              fontSize: '1.1rem',
+              fontWeight: '800',
+              cursor: 'pointer'
+            }}
+          >
+            View my question
+          </button>
+          
+          <button 
+            onClick={() => {
+              window.location.href = `/${creator.handle}/demo-answer`;
+            }}
+            style={{
+              width: '100%',
+              background: 'rgba(34, 197, 94, 0.1)',
+              color: '#22c55e',
+              border: '1px solid rgba(34, 197, 94, 0.2)',
+              borderRadius: '16px',
+              padding: '18px',
+              fontSize: '1.1rem',
+              fontWeight: '800',
+              cursor: 'pointer'
+            }}
+          >
+            View reply (Demo)
+          </button>
+
+          <button 
+            onClick={() => {
+              window.location.href = `/history`;
+            }}
+            style={{
+              width: '100%',
+              background: '#1A1A1A',
+              color: '#ffffff',
+              border: 'none',
+              borderRadius: '16px',
+              padding: '18px',
+              fontSize: '1.1rem',
+              fontWeight: '800',
+              cursor: 'pointer'
+            }}
+          >
+            View question history
+          </button>
+          
+          <button 
+            onClick={() => {
+              setQuestionText('');
+              setBuyerUpiId('');
+              setStep(1); // Go back to the form
+            }}
+            style={{
+              width: '100%',
+              background: 'transparent',
+              color: '#94a3b8',
+              border: '1px solid #2A2A2A',
+              borderRadius: '16px',
+              padding: '16px',
+              fontSize: '1rem',
+              fontWeight: '700',
+              cursor: 'pointer'
+            }}
+          >
+            Ask another question
+          </button>
+        </div>
+
       </div>
     </div>
   );
 
   const renderStep3 = () => (
-    <div style={{ width: '100%', maxWidth: 420 }}>
-      <button onClick={() => setStep(2)} style={{ background: 'none', border: 'none', color: 'var(--g3)', fontFamily: 'var(--font-mono)', fontSize: 12, cursor: 'pointer', padding: '0 0 20px 0', display: 'flex', alignItems: 'center', gap: 6 }}>
-        ← Back
-      </button>
-      <div style={{ background: 'var(--ink2)', border: '1px solid var(--ink4)', borderRadius: 'var(--radius-lg)', padding: '28px 24px' }}>
-        <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: 20, color: 'var(--white)', margin: '0 0 24px' }}>
-          Review your question
-        </h2>
+    <div style={{
+      width: '100%',
+      minHeight: '100vh',
+      background: '#0E0E0E',
+      color: '#ffffff',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      boxSizing: 'border-box',
+      fontFamily: 'system-ui, -apple-system, sans-serif'
+    }}>
+      <div style={{
+        width: '100%',
+        maxWidth: '390px',
+        padding: '24px 20px',
+        boxSizing: 'border-box',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '24px'
+      }}>
         
-        <div style={{ background: 'var(--ink3)', border: '1px solid var(--ink5)', borderRadius: 'var(--radius-md)', padding: '16px', marginBottom: 24 }}>
-          <p style={{ margin: 0, fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--white)', lineHeight: 1.5, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-            "{questionText}"
-          </p>
-        </div>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 32 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14 }}>
-            <span style={{ color: 'var(--g3)' }}>To:</span>
-            <span style={{ color: 'var(--white)' }}>@{creator.handle}</span>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14 }}>
-            <span style={{ color: 'var(--g3)' }}>From:</span>
-            <span style={{ color: 'var(--white)' }}>{isAnonymous ? 'Anonymous' : buyerName}</span>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14 }}>
-            <span style={{ color: 'var(--g3)' }}>Price:</span>
-            <span style={{ color: 'var(--white)' }}>₹{creator.pricePerQuestion}</span>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14 }}>
-            <span style={{ color: 'var(--g3)' }}>Expect:</span>
-            <span style={{ color: 'var(--white)' }}>Within {creator.responseTime}</span>
+        {/* HEADER: Back Button */}
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <button 
+            onClick={() => setStep(1)} 
+            style={{ 
+              background: '#1A1A1A', border: 'none', color: '#94a3b8', 
+              width: '36px', height: '36px', borderRadius: '50%', 
+              display: 'flex', alignItems: 'center', justifyContent: 'center', 
+              cursor: 'pointer', fontSize: '1.2rem', padding: 0 
+            }}
+          >
+            {'<'}
+          </button>
+          <div style={{ flex: 1, textAlign: 'center', fontSize: '1.2rem', fontWeight: '800', letterSpacing: '-0.02em', marginLeft: '-36px' }}>
+            Pay ₹{creator.pricePerQuestion || '99'}
           </div>
         </div>
 
-        {error && <div style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: '#EF4444', marginBottom: 16 }}>{error}</div>}
+        {/* PAYMENT INFO */}
+        <div style={{ textAlign: 'center', marginTop: '16px' }}>
+          <div style={{ color: '#64748b', fontSize: '0.9rem', marginBottom: '4px' }}>Paying to</div>
+          <div style={{ fontSize: '1.3rem', fontWeight: '800', letterSpacing: '-0.02em' }}>
+            @{creator.handle} via skriibe
+          </div>
+          <div style={{ 
+            fontSize: '4.5rem', 
+            fontWeight: '900', 
+            color: '#29C5F6', 
+            fontStyle: 'italic', 
+            letterSpacing: '-0.05em',
+            marginTop: '8px',
+            textShadow: '0 4px 24px rgba(41, 197, 246, 0.2)'
+          }}>
+            <span style={{ fontSize: '3.5rem', marginRight: '4px' }}>₹</span>{creator.pricePerQuestion || '99'}
+          </div>
+        </div>
 
+        {/* TABS */}
+        <div style={{ display: 'flex', background: '#1A1A1A', borderRadius: '12px', padding: '4px', border: '1px solid #2A2A2A', marginTop: '16px' }}>
+          {['UPI', 'Card', 'Net Banking'].map(tab => (
+            <button
+              key={tab}
+              onClick={() => setPaymentTab(tab)}
+              style={{
+                flex: 1,
+                padding: '12px',
+                borderRadius: '8px',
+                border: 'none',
+                background: paymentTab === tab ? '#2A2A2A' : 'transparent',
+                color: paymentTab === tab ? '#ffffff' : '#64748b',
+                fontSize: '0.95rem',
+                fontWeight: '700',
+                cursor: 'pointer',
+                transition: 'all 0.2s'
+              }}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+
+        {/* UPI INPUT */}
+        {paymentTab === 'UPI' && (
+          <div style={{ background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '16px', padding: '16px', marginTop: '8px' }}>
+            <div style={{ color: '#64748b', fontSize: '0.7rem', fontWeight: '800', letterSpacing: '2px', textTransform: 'uppercase' }}>
+              UPI ID
+            </div>
+            <input 
+              className="unified-input" 
+              value={buyerUpiId} 
+              onChange={e => setBuyerUpiId(e.target.value)} 
+              placeholder="amit@paytm" 
+            />
+          </div>
+        )}
+        {paymentTab !== 'UPI' && (
+           <div style={{ color: '#64748b', textAlign: 'center', padding: '32px 0', fontSize: '0.9rem' }}>
+             {paymentTab} is not supported in this mockup yet.
+           </div>
+        )}
+
+        {/* OR SCAN QR CODE */}
+        {paymentTab === 'UPI' && (
+          <div style={{ textAlign: 'center', marginTop: '8px' }}>
+            <div style={{ color: '#475569', fontSize: '0.85rem', fontFamily: 'monospace' }}>
+              — or scan QR code —
+            </div>
+            <button style={{
+              background: '#1A1A1A',
+              border: '1px solid #2A2A2A',
+              borderRadius: '16px',
+              width: '80px',
+              height: '80px',
+              marginTop: '16px',
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px', opacity: 0.5 }}>
+                <div style={{ width: '16px', height: '16px', border: '3px solid #94a3b8', borderRadius: '4px' }}></div>
+                <div style={{ width: '16px', height: '16px', border: '3px solid #94a3b8', borderRadius: '4px' }}></div>
+                <div style={{ width: '16px', height: '16px', border: '3px solid #94a3b8', borderRadius: '4px' }}></div>
+                <div style={{ width: '16px', height: '16px', display: 'flex', gap: '2px', flexWrap: 'wrap' }}>
+                  <div style={{ width: '6px', height: '6px', background: '#94a3b8' }}></div>
+                  <div style={{ width: '6px', height: '6px', background: '#94a3b8' }}></div>
+                  <div style={{ width: '6px', height: '6px', background: '#94a3b8' }}></div>
+                </div>
+              </div>
+            </button>
+          </div>
+        )}
+        {/* ERROR DISPLAY */}
+        {error && <div style={{ fontSize: '0.85rem', color: '#ef4444', textAlign: 'center', fontWeight: '600', marginTop: '8px' }}>{error}</div>}
+
+        {/* CTA BUTTON */}
         <button 
-          onClick={handlePayAndSubmit}
+          onClick={async () => {
+            await handleSubmitQuestion();
+          }}
           disabled={submitting}
-          style={{ width: '100%', background: 'var(--blue)', color: 'var(--ink1)', border: 'none', borderRadius: 'var(--radius-md)', padding: '14px', fontSize: 14, fontWeight: 700, fontFamily: 'var(--font-body)', cursor: 'pointer', opacity: submitting ? 0.7 : 1 }}
+          style={{
+            width: '100%',
+            background: '#29C5F6',
+            color: '#0E0E0E',
+            border: 'none',
+            borderRadius: '16px',
+            padding: '18px',
+            fontSize: '1.1rem',
+            fontWeight: '800',
+            cursor: submitting ? 'not-allowed' : 'pointer',
+            opacity: submitting ? 0.5 : 1,
+            marginTop: '16px'
+          }}
         >
-          {submitting ? 'Processing...' : `Pay ₹${creator.pricePerQuestion} & Submit`}
+          {submitting ? 'Processing...' : `Pay ₹${creator.pricePerQuestion || '99'}`}
         </button>
-      </div>
-    </div>
-  );
 
-  const renderStep4 = () => (
-    <div style={{ width: '100%', maxWidth: 420 }}>
-      <div style={{ background: 'var(--ink2)', border: '1px solid var(--ink4)', borderRadius: 'var(--radius-lg)', padding: '40px 24px', textAlign: 'center' }}>
-        <div style={{ fontSize: 48, marginBottom: 16 }}>✅</div>
-        <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: 24, color: 'var(--white)', margin: '0 0 16px' }}>
-          Question submitted!
-        </h2>
-        <p style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--g2)', lineHeight: 1.5, margin: '0 0 32px' }}>
-          We'll notify you when {creator.name} answers.
-          {buyerEmail && <span> Check <strong>{buyerEmail}</strong> for updates.</span>}
-        </p>
+        {/* FOOTER TEXT */}
+        <div style={{ textAlign: 'center', fontSize: '0.8rem', color: '#475569', fontWeight: '600' }}>
+          GPay · PhonePe · Paytm · BHIM UPI
+        </div>
+        
+        <div style={{ 
+          background: '#111827', 
+          border: '1px solid #1f2937', 
+          borderRadius: '12px', 
+          padding: '12px', 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          gap: '8px',
+          color: '#475569',
+          fontSize: '0.8rem',
+          marginTop: '8px'
+        }}>
+          <span style={{ color: '#22c55e', fontSize: '1rem' }}>🔒</span> 256-bit encryption · Razorpay PCI-DSS compliant
+        </div>
 
-        <button 
-          onClick={() => { setStep(1); setQuestionText(''); }}
-          style={{ width: '100%', background: 'var(--blue)', color: 'var(--ink1)', border: 'none', borderRadius: 'var(--radius-md)', padding: '14px', fontSize: 14, fontWeight: 700, fontFamily: 'var(--font-body)', cursor: 'pointer', marginBottom: 12 }}
-        >
-          Ask another question
-        </button>
-        <button 
-          onClick={() => { setStep(0); setQuestionText(''); setBuyerToken(''); setPhoneVerified(false); setOtpSent(false); setBuyerPhone(''); setOtp(''); setBuyerName(''); setIsAnonymous(false); }}
-          style={{ width: '100%', background: 'none', border: '1px solid var(--ink5)', color: 'var(--white)', borderRadius: 'var(--radius-md)', padding: '14px', fontSize: 14, fontWeight: 500, fontFamily: 'var(--font-body)', cursor: 'pointer' }}
-        >
-          ← Back to profile
-        </button>
       </div>
     </div>
   );
 
   return (
-    <div style={{ minHeight: '100vh', background: step === 0 ? '#0E0E0E' : 'var(--ink1)', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: step === 0 ? '0' : '40px 16px 80px' }}>
+    <div style={{ minHeight: '100vh', background: step === 0 ? '#0E0E0E' : '#0E0E0E', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: step === 0 ? '0' : '0' }}>
       {step === 0 && renderStep0()}
       {step === 1 && renderStep1()}
       {step === 2 && renderStep2()}
       {step === 3 && renderStep3()}
-      {step === 4 && renderStep4()}
     </div>
   );
 };

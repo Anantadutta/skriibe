@@ -796,17 +796,16 @@ const CreatorSettings = () => {
               </>
             ) : (
               <>
-                <h3 style={{ margin: '0 0 8px', fontSize: '1.2rem', color: '#ef4444' }}>Type DELETE to confirm</h3>
-                <input
-                  type="text"
-                  placeholder="DELETE"
+                <h3 style={{ margin: '0 0 8px', fontSize: '1.2rem', color: '#ef4444' }}>Why are you leaving?</h3>
+                <textarea
+                  placeholder="Please tell us your reason for deleting your account..."
                   value={deleteInputValue}
-                  onChange={(e) => setDeleteInputValue(e.target.value.toUpperCase())}
+                  onChange={(e) => setDeleteInputValue(e.target.value)}
                   style={{
                     width: '100%', background: '#0E0E0E', border: '1px solid #2A2A2A',
                     color: '#ffffff', padding: '12px', borderRadius: '12px',
                     fontSize: '1rem', outline: 'none', marginBottom: '24px',
-                    boxSizing: 'border-box'
+                    boxSizing: 'border-box', minHeight: '100px', resize: 'vertical'
                   }}
                   autoFocus
                 />
@@ -817,15 +816,25 @@ const CreatorSettings = () => {
                   }} onClick={() => { setDeleteModalStep(0); setDeleteInputValue(''); }}>Cancel</button>
                   <button style={{
                     flex: 1, 
-                    background: deleteInputValue === 'DELETE' ? '#ef4444' : '#2A2A2A', 
+                    background: deleteInputValue.trim().length > 0 ? '#ef4444' : '#2A2A2A', 
                     border: 'none', 
-                    color: deleteInputValue === 'DELETE' ? '#ffffff' : '#64748b',
+                    color: deleteInputValue.trim().length > 0 ? '#ffffff' : '#64748b',
                     padding: '12px', borderRadius: '12px', fontWeight: 600, fontSize: '0.95rem', 
-                    cursor: deleteInputValue === 'DELETE' ? 'pointer' : 'not-allowed',
+                    cursor: deleteInputValue.trim().length > 0 ? 'pointer' : 'not-allowed',
                     transition: 'all 0.2s ease'
                   }} 
-                  disabled={deleteInputValue !== 'DELETE'}
-                  onClick={() => {
+                  disabled={deleteInputValue.trim().length === 0}
+                  onClick={async () => {
+                    try {
+                      await fetch((import.meta.env.VITE_API_URL || 'http://localhost:5000') + '/api/creator/delete-account', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        credentials: 'include',
+                        body: JSON.stringify({ reason: deleteInputValue.trim() })
+                      });
+                    } catch(err) {
+                      console.error("Failed to delete account", err);
+                    }
                     setIsAccountDeleted(true);
                   }}>Delete forever</button>
                 </div>

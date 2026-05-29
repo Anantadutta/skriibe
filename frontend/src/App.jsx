@@ -33,6 +33,10 @@ import AdminCreators from './pages/admin/AdminCreators';
 import AdminDisputes from './pages/admin/AdminDisputes';
 import AdminAnalytics from './pages/admin/AdminAnalytics';
 import CreatorPublicPage from './pages/buyer/CreatorPublicPage';
+import BuyerHistoryPage from './pages/buyer/BuyerHistoryPage';
+import BuyerQuestionPage from './pages/buyer/BuyerQuestionPage';
+import DemoAnswerPage from './pages/buyer/DemoAnswerPage';
+import FlagSubmittedPage from './pages/buyer/FlagSubmittedPage';
 
 const CreatorRoute = () => {
   return <Outlet />;
@@ -175,6 +179,12 @@ function App() {
 
           {/* Wildcard username dashboard route */}
           <Route path="/@:username" element={<CreatorDashboard />} />
+
+          {/* Buyer History & Single Question */}
+          <Route path="/history" element={<BuyerHistoryPage />} />
+          <Route path="/:handle/question/:id" element={<BuyerQuestionPage />} />
+          <Route path="/:handle/demo-answer" element={<DemoAnswerPage />} />
+          <Route path="/:handle/flag-submitted" element={<FlagSubmittedPage />} />
 
           {/* Buyer Flow (Catch-All) */}
           <Route path="/:handle" element={<CreatorPublicPage />} />
