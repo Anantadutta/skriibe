@@ -6,9 +6,10 @@
 // Auth Routes
 import api from './api';
 
+export const emailSignup = (email, password) => api.post('/creators/email-signup', { email, password });
+export const emailLogin = (email, password) => api.post('/creators/email-login', { email, password });
 export const sendOTP = (phone) => api.post('/creators/send-otp', { phone });
-
-export const verifyOTP = (phone, otp) => api.post('/creators/verify-otp', { phone, otp });
+export const verifyOTP = (phone, code) => api.post('/creators/verify-otp', { phone, code });
 
 export const checkHandle = (handle) => api.post('/creators/check-handle', { handle });
 

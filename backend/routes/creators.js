@@ -151,6 +151,102 @@ router.post('/verify-otp', async (req, res) => {
 });
 
 /**
+ * @route POST /api/creators/email-signup
+ * @desc Signup via email and password
+ */
+router.post('/email-signup', async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ message: 'Email and password are required.' });
+  }
+
+  await connectDB();
+
+  let creator = await Creator.findOne({ email });
+
+  if (creator) {
+    return res.status(400).json({ message: 'Email is already registered. Please login.' });
+  }
+
+  creator = await Creator.create({ email, password });
+
+  const token = jwt.sign(
+    { creatorId: creator._id, email: creator.email },
+    process.env.JWT_SECRET,
+    { expiresIn: '7d' }
+  );
+
+  res.cookie('creator_token', token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 7 * 24 * 60 * 60 * 1000
+  });
+
+  res.json({
+    success: true,
+    creator: {
+      id: creator._id,
+      email: creator.email,
+      name: creator.name,
+      handle: creator.handle,
+      onboardingComplete: false
+    }
+  });
+});
+
+/**
+ * @route POST /api/creators/email-login
+ * @desc Login via email and password
+ */
+router.post('/email-login', async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ message: 'Email and password are required.' });
+  }
+
+  await connectDB();
+
+  let creator = await Creator.findOne({ email });
+
+  if (!creator) {
+    return res.status(400).json({ message: 'No account found with this email.' });
+  }
+
+  if (creator.password !== password) {
+    return res.status(400).json({ message: 'Invalid credentials.' });
+  }
+
+  const token = jwt.sign(
+    { creatorId: creator._id, email: creator.email },
+    process.env.JWT_SECRET,
+    { expiresIn: '7d' }
+  );
+
+  res.cookie('creator_token', token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 7 * 24 * 60 * 60 * 1000
+  });
+
+  const onboardingComplete = !!(creator.name && creator.handle && creator.ama_enabled);
+
+  res.json({
+    success: true,
+    creator: {
+      id: creator._id,
+      email: creator.email,
+      name: creator.name,
+      handle: creator.handle,
+      onboardingComplete
+    }
+  });
+});
+
+/**
  * @route GET /api/creators/me
  * @desc Get current creator data
  */

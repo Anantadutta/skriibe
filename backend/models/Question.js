@@ -9,8 +9,9 @@ const QuestionSchema = new mongoose.Schema(
     handle: { type: String, required: true }, // denormalized for fast lookup
 
     // Buyer info
+    fanId: { type: mongoose.Schema.Types.ObjectId, ref: 'Fan' },
     buyerName: { type: String, default: '' },
-    buyerPhone: { type: String, required: true }, // OTP-verified
+    buyerPhone: { type: String, required: false }, // Made false to support Fan flow
     buyerEmail: { type: String, default: '' },
     isAnonymous: { type: Boolean, default: false },
 
@@ -18,7 +19,7 @@ const QuestionSchema = new mongoose.Schema(
     questionText: { type: String, required: true, minlength: 20, maxlength: 500 },
 
     // Payment
-    amountPaid: { type: Number, required: true }, // in INR
+    amountPaid: { type: Number, required: false }, // in INR
     paymentStatus: {
       type: String,
       enum: ['pending', 'paid', 'refunded'],

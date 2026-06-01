@@ -1,0 +1,683 @@
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import api from '../../services/api';
+import { getCreatorProfile } from '../../services/discoveryApi';
+
+const CreatorProfile = () => {
+  const { handle } = useParams();
+  const navigate = useNavigate();
+  
+  const [creator, setCreator] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState('');
+
+  const [step, setStep] = useState('overview'); // 'overview' | 'ask'
+  const [question, setQuestion] = useState('');
+  const [submitLoading, setSubmitLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [submitError, setSubmitError] = useState('');
+  const [orderId, setOrderId] = useState('');
+
+  const [agreed, setAgreed] = useState(false);
+  const [buyerName, setBuyerName] = useState('');
+  const [buyerEmail, setBuyerEmail] = useState('');
+  const [buyerPhone, setBuyerPhone] = useState('');
+
+  useEffect(() => {
+    const fetchCreator = async () => {
+      try {
+        const data = await getCreatorProfile(handle);
+        if (data.success && data.creator) {
+          setCreator(data.creator);
+        } else {
+          setFetchError('Creator not found');
+        }
+      } catch (err) {
+        setFetchError('Failed to load creator profile');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCreator();
+  }, [handle]);
+
+  if (loading) {
+    return (
+      <div style={{ minHeight: '100vh', background: '#0a0a0f', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8' }}>
+        Loading profile...
+      </div>
+    );
+  }
+
+  if (fetchError || !creator) {
+    return (
+      <div style={{ minHeight: '100vh', background: '#0a0a0f', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#ef4444' }}>
+        <h2>{fetchError || 'Creator not found'}</h2>
+        <button onClick={() => navigate('/explore')} style={{ background: '#38bdf8', color: '#000', padding: '10px 20px', borderRadius: '8px', border: 'none', cursor: 'pointer', marginTop: '16px', fontWeight: 'bold' }}>
+          Back to Explore
+        </button>
+      </div>
+    );
+  }
+
+  const price = creator.pricePerQuestion || 99;
+  const replyRate = creator.stats?.replyRate || 94;
+  const avgReply = creator.stats?.avgReplyTime || 3.2;
+  const answeredCount = creator.questionsAnswered || 247;
+
+  // Format reply time (e.g. 3.2h)
+  const formatTime = (time) => {
+    if (typeof time === 'string') return time;
+    if (time < 1) return `${Math.round(time * 60)}m`;
+    return `${time.toFixed(1)}h`;
+  };
+
+  const handleSubmit = async () => {
+    if (!question.trim() || question.length < 20 || question.length > 500) return;
+    if (!agreed || !buyerName.trim() || !buyerEmail.trim() || !buyerPhone.trim()) return;
+
+    setSubmitLoading(true);
+    setSubmitError('');
+    try {
+      const response = await api.post('/questions', {
+        creatorId: creator.id || creator._id,
+        questionText: question,
+        buyerName,
+        buyerEmail,
+        buyerPhone
+      });
+      if (response.data?.question?._id) {
+        setOrderId(response.data.question._id);
+      } else {
+        setOrderId('SKR-' + Math.floor(100000 + Math.random() * 900000));
+      }
+      setSuccess(true);
+    } catch (err) {
+      console.error(err);
+      setSubmitError(err.response?.data?.message || 'Failed to send question. Please try again.');
+    } finally {
+      setSubmitLoading(false);
+    }
+  };
+
+  return (
+    <div style={{
+      minHeight: '100vh',
+      background: '#0a0a0f',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '40px 20px',
+      fontFamily: 'Inter, var(--font-body, sans-serif)',
+      position: 'relative'
+    }}>
+      {/* Back button */}
+      <button 
+        onClick={() => navigate('/explore')}
+        style={{
+          position: 'absolute', top: '32px', left: '32px',
+          background: 'rgba(255,255,255,0.05)', color: '#94a3b8',
+          border: '1px solid rgba(255,255,255,0.1)', borderRadius: '100px',
+          padding: '8px 16px', fontSize: '14px', cursor: 'pointer',
+          display: 'flex', alignItems: 'center', gap: '8px',
+          transition: 'all 0.2s'
+        }}
+        onMouseOver={(e) => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; }}
+        onMouseOut={(e) => { e.currentTarget.style.color = '#94a3b8'; e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; }}
+      >
+        ← Back to Discovery
+      </button>
+
+      <div style={{
+        width: '100%',
+        maxWidth: '480px',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center'
+      }}>
+        {success ? (
+          <div style={{ width: '100%', maxWidth: '440px', display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '24px' }}>
+            
+            {/* Success Icon */}
+            <div style={{
+              width: '72px', height: '72px',
+              borderRadius: '50%',
+              background: '#062c19', // Dark green background
+              border: '2px solid #10b981',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              marginBottom: '24px',
+              boxShadow: '0 0 40px rgba(16, 185, 129, 0.2)'
+            }}>
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M20 6L9 17L4 12" stroke="#10b981" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
+
+            <h2 style={{ margin: '0 0 12px', color: '#fff', fontSize: '32px', fontWeight: '800', letterSpacing: '-0.5px' }}>
+              Question sent!
+            </h2>
+            <p style={{ color: '#94a3b8', margin: '0 0 32px', fontSize: '15px', lineHeight: '1.6', textAlign: 'center' }}>
+              <span style={{ color: '#fff', fontWeight: '600' }}>{creator.name}</span> will reply within {creator.responseTime || '24 hours'}. You'll be notified on both channels.
+            </p>
+
+            {/* Delivery Channels Box */}
+            <div style={{
+              width: '100%', background: '#131313', border: '1px solid #1f1f1f',
+              borderRadius: '16px', padding: '20px', marginBottom: '16px', boxSizing: 'border-box'
+            }}>
+              <div style={{ color: '#64748b', fontSize: '11px', fontWeight: '800', letterSpacing: '1px', marginBottom: '16px' }}>DELIVERY CHANNELS</div>
+              
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+                <div style={{ width: '8px', height: '8px', background: '#10b981', borderRadius: '50%', boxShadow: '0 0 8px #10b981' }} />
+                <div style={{ color: '#fff', fontSize: '14px', fontWeight: '600' }}>
+                  {buyerEmail} <span style={{ color: '#475569', fontWeight: '400' }}>· Email</span>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ width: '8px', height: '8px', background: '#10b981', borderRadius: '50%', boxShadow: '0 0 8px #10b981' }} />
+                <div style={{ color: '#fff', fontSize: '14px', fontWeight: '600' }}>
+                  +91 {buyerPhone} <span style={{ color: '#475569', fontWeight: '400' }}>· WhatsApp</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Order Box */}
+            <div style={{
+              width: '100%', background: '#131313', border: '1px solid #1f1f1f',
+              borderRadius: '16px', padding: '20px', marginBottom: '32px', boxSizing: 'border-box',
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+            }}>
+              <div>
+                <div style={{ color: '#fff', fontSize: '14px', fontWeight: '700', marginBottom: '4px' }}>
+                  Order #SKR-{orderId.slice(-8).toUpperCase()}
+                </div>
+                <div style={{ color: '#64748b', fontSize: '13px' }}>
+                  Amount paid · ₹{price}
+                </div>
+              </div>
+              <div style={{
+                background: '#062c19', color: '#10b981', fontSize: '12px', fontWeight: '700',
+                padding: '6px 12px', borderRadius: '20px', border: '1px solid rgba(16, 185, 129, 0.2)',
+                display: 'flex', alignItems: 'center', gap: '4px'
+              }}>
+                ✓ Paid
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <button
+                onClick={() => navigate('/fan/history')}
+                style={{
+                  background: 'linear-gradient(90deg, #34d399, #10b981)',
+                  color: '#000', border: 'none', borderRadius: '16px',
+                  padding: '16px', fontWeight: '700', fontSize: '15px',
+                  width: '100%', cursor: 'pointer',
+                  boxShadow: '0 4px 14px rgba(16, 185, 129, 0.2)'
+                }}
+              >
+                View my question
+              </button>
+
+              <button
+                style={{
+                  background: '#062c19',
+                  color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.2)', borderRadius: '16px',
+                  padding: '16px', fontWeight: '700', fontSize: '15px',
+                  width: '100%', cursor: 'pointer'
+                }}
+              >
+                View reply (Demo)
+              </button>
+
+              <button
+                onClick={() => navigate('/explore')}
+                style={{
+                  background: '#131313',
+                  color: '#fff', border: '1px solid #1f1f1f', borderRadius: '16px',
+                  padding: '16px', fontWeight: '600', fontSize: '15px',
+                  width: '100%', cursor: 'pointer'
+                }}
+              >
+                Back to profile
+              </button>
+            </div>
+
+          </div>
+        ) : step === 'overview' ? (
+          // STEP 1: Profile Overview
+          <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            
+            {/* Header / Name */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+              <h2 style={{ margin: 0, color: '#ffffff', fontSize: '28px', fontWeight: '800', letterSpacing: '-0.5px' }}>
+                {creator.name}
+              </h2>
+              {/* Blue Tick */}
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M22.5 12L20.4 9.4L20.7 6.1L17.5 5.4L15.6 2.7L12 3.9L8.4 2.7L6.5 5.4L3.3 6.1L3.6 9.4L1.5 12L3.6 14.6L3.3 17.9L6.5 18.6L8.4 21.3L12 20.1L15.6 21.3L17.5 18.6L20.7 17.9L20.4 14.6L22.5 12ZM10.5 16.5L6.8 12.8L8.1 11.5L10.5 13.9L16.2 8.2L17.5 9.5L10.5 16.5Z" fill="#38bdf8"/>
+              </svg>
+            </div>
+            
+            <div style={{ color: '#94a3b8', fontSize: '14px', marginBottom: '16px' }}>
+              @{creator.handle} · <span style={{ color: '#ffffff', fontWeight: '700' }}>{creator.followers || '12K'}</span> followers
+            </div>
+
+            {/* Instagram Linked Pill */}
+            {creator.instagramLinked && (
+              <div style={{
+                background: 'rgba(255,255,255,0.05)',
+                border: '1px solid #db2777',
+                padding: '6px 12px',
+                borderRadius: '20px',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                fontSize: '12px',
+                fontWeight: '600',
+                color: '#f472b6',
+                marginBottom: '20px'
+              }}>
+                📸 Instagram linked
+              </div>
+            )}
+
+            {/* Topic Tags & Live */}
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', flexWrap: 'wrap', justifyContent: 'center' }}>
+              {creator.expertise?.slice(0,2).map(exp => (
+                <span key={exp} style={{
+                  background: 'rgba(6, 182, 212, 0.1)',
+                  color: '#06b6d4',
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  padding: '4px 12px',
+                  borderRadius: '16px',
+                  border: '1px solid rgba(6, 182, 212, 0.2)'
+                }}>
+                  {exp}
+                </span>
+              ))}
+              {creator.isLive && (
+                <span style={{
+                  background: 'rgba(16, 185, 129, 0.1)',
+                  color: '#10b981',
+                  fontSize: '12px',
+                  fontWeight: '700',
+                  padding: '4px 12px',
+                  borderRadius: '16px',
+                  border: '1px solid rgba(16, 185, 129, 0.2)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}>
+                  <div style={{ width: '6px', height: '6px', background: '#10b981', borderRadius: '50%', boxShadow: '0 0 8px #10b981' }} />
+                  LIVE
+                </span>
+              )}
+            </div>
+
+            {/* Stats Row */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr 1fr',
+              gap: '12px',
+              width: '100%',
+              marginBottom: '24px'
+            }}>
+              <div style={{ background: '#131313', border: '1px solid #1f1f1f', borderRadius: '16px', padding: '16px 8px', textAlign: 'center' }}>
+                <div style={{ color: '#38bdf8', fontSize: '24px', fontWeight: '800', marginBottom: '4px' }}>{replyRate}%</div>
+                <div style={{ color: '#64748b', fontSize: '10px', fontWeight: '700', letterSpacing: '1px' }}>REPLY</div>
+              </div>
+              <div style={{ background: '#131313', border: '1px solid #1f1f1f', borderRadius: '16px', padding: '16px 8px', textAlign: 'center' }}>
+                <div style={{ color: '#38bdf8', fontSize: '24px', fontWeight: '800', marginBottom: '4px' }}>{formatTime(avgReply)}</div>
+                <div style={{ color: '#64748b', fontSize: '10px', fontWeight: '700', letterSpacing: '1px' }}>AVG</div>
+              </div>
+              <div style={{ background: '#131313', border: '1px solid #1f1f1f', borderRadius: '16px', padding: '16px 8px', textAlign: 'center' }}>
+                <div style={{ color: '#38bdf8', fontSize: '24px', fontWeight: '800', marginBottom: '4px' }}>{answeredCount}</div>
+                <div style={{ color: '#64748b', fontSize: '10px', fontWeight: '700', letterSpacing: '1px' }}>ANSWERED</div>
+              </div>
+            </div>
+
+            {/* Bio */}
+            <div style={{ color: '#94a3b8', fontSize: '14px', lineHeight: '1.6', textAlign: 'center', padding: '0 16px', marginBottom: '32px' }}>
+              {creator.bio}
+            </div>
+
+            {/* Large Bottom Booking Card */}
+            <div style={{
+              background: '#131313',
+              border: '1px solid #1f1f1f',
+              borderRadius: '24px',
+              padding: '32px 24px',
+              width: '100%',
+              boxSizing: 'border-box',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              boxShadow: 'inset 0 2px 10px rgba(255,255,255,0.02)'
+            }}>
+              <div style={{ color: '#94a3b8', fontSize: '12px', fontWeight: '700', letterSpacing: '2px', marginBottom: '16px' }}>
+                ASK ME ANYTHING
+              </div>
+              
+              <div style={{ display: 'flex', alignItems: 'flex-start', marginBottom: '16px' }}>
+                <span style={{ color: '#fff', fontSize: '24px', fontWeight: '600', marginTop: '6px', marginRight: '4px' }}>₹</span>
+                <span style={{ color: '#fff', fontSize: '56px', fontWeight: '800', lineHeight: '1' }}>{price}</span>
+              </div>
+
+              <div style={{ color: '#94a3b8', fontSize: '14px', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ color: '#fb923c' }}>⚡</span> Reply guaranteed within 24 hours
+              </div>
+
+              <button
+                onClick={() => setStep('ask')}
+                style={{
+                  background: 'linear-gradient(90deg, #34d399, #10b981)',
+                  color: '#000',
+                  border: 'none',
+                  borderRadius: '100px',
+                  padding: '16px',
+                  fontWeight: '700',
+                  fontSize: '16px',
+                  width: '100%',
+                  cursor: 'pointer',
+                  transition: 'transform 0.2s',
+                  boxShadow: '0 4px 14px rgba(16, 185, 129, 0.3)',
+                }}
+                onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
+                onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+              >
+                Ask Now →
+              </button>
+            </div>
+
+            <div style={{ color: '#64748b', fontSize: '12px', marginTop: '20px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span>🔒</span> Secured payments · 100% refund if no reply
+            </div>
+
+          </div>
+        ) : step === 'ask' ? (
+          // STEP 2: Ask Question Form (Redesigned Checkout)
+          <div style={{ width: '100%' }}>
+            
+            {/* Header: Back & Title */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+              <button
+                onClick={() => setStep('overview')}
+                style={{
+                  background: 'rgba(255,255,255,0.05)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: '50%',
+                  width: '32px', height: '32px',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: '#94a3b8', cursor: 'pointer'
+                }}
+              >
+                ←
+              </button>
+              <h2 style={{ margin: 0, color: '#fff', fontSize: '20px', fontWeight: '700' }}>
+                Ask <span style={{ color: '#38bdf8' }}>@{creator.handle}</span>
+              </h2>
+            </div>
+
+            {/* Disclaimer Box */}
+            <div style={{
+              background: '#1a110b',
+              border: '1px solid #451a03',
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '16px'
+            }}>
+              <div style={{ color: '#fb923c', fontSize: '12px', fontWeight: '800', letterSpacing: '1px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span>⚠️</span> READ BEFORE CONTINUING
+              </div>
+              <ul style={{ color: '#d1d5db', fontSize: '13px', lineHeight: '1.6', margin: 0, paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <li><strong style={{ color: '#fff' }}>Answers are personal opinions</strong> — not professional advice.</li>
+                <li>Not a substitute for medical, legal or financial counsel.</li>
+                <li><strong style={{ color: '#fff' }}>One question per payment</strong> — keep it specific.</li>
+                <li>100% refund if there's no reply within {creator.responseTime || '24 hours'}.</li>
+                <li>Don't share other people's personal data.</li>
+              </ul>
+            </div>
+
+            {/* Agreement Checkbox */}
+            <label style={{
+              display: 'flex', alignItems: 'center', gap: '12px',
+              background: '#131313', border: '1px solid #1f1f1f',
+              borderRadius: '12px', padding: '16px', cursor: 'pointer',
+              marginBottom: '32px'
+            }}>
+              <input 
+                type="checkbox" 
+                checked={agreed}
+                onChange={(e) => setAgreed(e.target.checked)}
+                style={{ width: '20px', height: '20px', accentColor: '#38bdf8', cursor: 'pointer' }}
+              />
+              <span style={{ color: '#fff', fontSize: '14px', fontWeight: '600' }}>I understand and agree</span>
+            </label>
+
+            <h3 style={{ color: '#fff', fontSize: '18px', margin: '0 0 16px' }}>Your details</h3>
+
+            {/* Form Fields */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
+              
+              {/* Name */}
+              <div style={{ background: '#131313', border: '1px solid #2a2a2a', borderRadius: '16px', padding: '12px 16px' }}>
+                <div style={{ color: '#64748b', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '4px' }}>YOUR NAME <span style={{ color: '#ef4444' }}>*</span></div>
+                <input 
+                  type="text" 
+                  value={buyerName}
+                  onChange={(e) => setBuyerName(e.target.value)}
+                  placeholder="e.g. Amit Kumar"
+                  style={{ width: '100%', background: 'transparent', border: 'none', color: '#fff', fontSize: '15px', outline: 'none' }}
+                />
+              </div>
+
+              {/* Email */}
+              <div style={{ background: '#131313', border: '1px solid #2a2a2a', borderRadius: '16px', padding: '12px 16px' }}>
+                <div style={{ color: '#64748b', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '4px' }}>EMAIL ADDRESS <span style={{ color: '#ef4444' }}>*</span></div>
+                <input 
+                  type="email" 
+                  value={buyerEmail}
+                  onChange={(e) => setBuyerEmail(e.target.value)}
+                  placeholder="e.g. amit@gmail.com"
+                  style={{ width: '100%', background: 'transparent', border: 'none', color: '#fff', fontSize: '15px', outline: 'none' }}
+                />
+              </div>
+
+              {/* WhatsApp */}
+              <div style={{ background: '#131313', border: '1px solid #2a2a2a', borderRadius: '16px', padding: '12px 16px' }}>
+                <div style={{ color: '#64748b', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '4px' }}>WHATSAPP NUMBER <span style={{ color: '#ef4444' }}>*</span></div>
+                <input 
+                  type="tel" 
+                  value={buyerPhone}
+                  onChange={(e) => setBuyerPhone(e.target.value)}
+                  placeholder="e.g. 9876543210"
+                  style={{ width: '100%', background: 'transparent', border: 'none', color: '#fff', fontSize: '15px', outline: 'none' }}
+                />
+              </div>
+
+              {/* Question */}
+              <div style={{ background: '#131313', border: '1px solid #2a2a2a', borderRadius: '16px', padding: '12px 16px' }}>
+                <div style={{ color: '#64748b', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '8px' }}>YOUR QUESTION <span style={{ color: '#ef4444' }}>*</span> <span style={{ color: '#475569', fontWeight: 'normal' }}>(MIN 20 CHARS)</span></div>
+                <textarea 
+                  value={question}
+                  onChange={(e) => setQuestion(e.target.value)}
+                  placeholder={`What do you want to ask @${creator.handle}?`}
+                  maxLength={500}
+                  style={{ width: '100%', height: '100px', background: 'transparent', border: 'none', color: '#fff', fontSize: '15px', outline: 'none', resize: 'none', fontFamily: 'inherit' }}
+                />
+              </div>
+
+            </div>
+
+            {/* Character Count */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', color: '#64748b', fontSize: '12px', marginBottom: '24px', padding: '0 4px' }}>
+              <span>Min 20 characters</span>
+              <span style={{ color: question.length >= 20 ? '#10b981' : '#64748b' }}>{question.length}/500</span>
+            </div>
+
+            {submitError && (
+              <div style={{ color: '#ef4444', fontSize: '14px', marginBottom: '16px', background: 'rgba(239,68,68,0.1)', padding: '12px', borderRadius: '8px', textAlign: 'center' }}>
+                {submitError}
+              </div>
+            )}
+
+            {/* Submit Button */}
+            <button
+              onClick={() => setStep('payment')}
+              disabled={!agreed || question.length < 20 || !buyerName.trim() || !buyerEmail.trim() || !buyerPhone.trim() || submitLoading}
+              style={{
+                background: 'linear-gradient(90deg, #34d399, #10b981)',
+                color: '#000', border: 'none', borderRadius: '16px',
+                padding: '16px', fontWeight: '700', fontSize: '16px',
+                width: '100%',
+                cursor: (!agreed || question.length < 20 || !buyerName.trim() || !buyerEmail.trim() || !buyerPhone.trim() || submitLoading) ? 'not-allowed' : 'pointer',
+                opacity: (!agreed || question.length < 20 || !buyerName.trim() || !buyerEmail.trim() || !buyerPhone.trim() || submitLoading) ? 0.4 : 1,
+                boxShadow: '0 4px 14px rgba(16, 185, 129, 0.2)'
+              }}
+            >
+              Pay ₹{price} — UPI / Card
+            </button>
+
+            <div style={{ color: '#64748b', fontSize: '12px', marginTop: '20px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px' }}>
+              <span>🔒</span> Secured by Razorpay · India's most trusted payments
+            </div>
+
+          </div>
+        ) : (
+          // STEP 3: Mock Payment Gateway
+          <div style={{ width: '100%', background: '#0a0a0f' }}>
+            
+            {/* Header */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '32px' }}>
+              <button
+                onClick={() => setStep('ask')}
+                style={{
+                  background: 'rgba(255,255,255,0.05)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: '50%',
+                  width: '32px', height: '32px',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: '#94a3b8', cursor: 'pointer'
+                }}
+              >
+                ←
+              </button>
+              <h2 style={{ margin: 0, color: '#fff', fontSize: '20px', fontWeight: '700' }}>
+                Pay ₹{price}
+              </h2>
+            </div>
+
+            {/* Paying To */}
+            <div style={{ textAlign: 'center', marginBottom: '8px', color: '#94a3b8', fontSize: '14px' }}>
+              Paying to <br/>
+              <span style={{ color: '#38bdf8', fontWeight: '700' }}>@{creator.handle}</span> <span style={{ color: '#fff', fontWeight: '700' }}>via skriibe</span>
+            </div>
+
+            {/* Glowing Price */}
+            <div style={{
+              textAlign: 'center',
+              fontSize: '64px',
+              fontWeight: '900',
+              color: '#38bdf8',
+              textShadow: '0 0 40px rgba(56, 189, 248, 0.4)',
+              marginBottom: '32px',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'flex-start'
+            }}>
+              <span style={{ fontSize: '32px', marginTop: '12px', marginRight: '4px' }}>₹</span>{price}
+            </div>
+
+            {/* Payment Tabs */}
+            <div style={{
+              display: 'flex',
+              background: '#131313',
+              border: '1px solid #1f1f1f',
+              borderRadius: '16px',
+              padding: '6px',
+              marginBottom: '16px'
+            }}>
+              <div style={{ flex: 1, background: '#38bdf8', color: '#000', textAlign: 'center', padding: '12px', borderRadius: '12px', fontWeight: '700', fontSize: '14px', cursor: 'pointer' }}>UPI</div>
+              <div style={{ flex: 1, color: '#94a3b8', textAlign: 'center', padding: '12px', borderRadius: '12px', fontWeight: '600', fontSize: '14px', cursor: 'pointer' }}>Card</div>
+              <div style={{ flex: 1, color: '#94a3b8', textAlign: 'center', padding: '12px', borderRadius: '12px', fontWeight: '600', fontSize: '14px', cursor: 'pointer' }}>Net Banking</div>
+            </div>
+
+            {/* UPI Input */}
+            <div style={{ background: '#131313', border: '1px solid #1f1f1f', borderRadius: '16px', padding: '16px', marginBottom: '24px' }}>
+              <div style={{ color: '#64748b', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '8px' }}>UPI ID</div>
+              <input 
+                type="text" 
+                placeholder="e.g. amit@paytm"
+                style={{ width: '100%', background: 'transparent', border: 'none', color: '#fff', fontSize: '16px', outline: 'none' }}
+              />
+            </div>
+
+            {/* QR Code Divider */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
+              <div style={{ flex: 1, height: '1px', background: '#1f1f1f' }} />
+              <div style={{ color: '#64748b', fontSize: '12px' }}>or scan QR code</div>
+              <div style={{ flex: 1, height: '1px', background: '#1f1f1f' }} />
+            </div>
+
+            {/* Mock QR Code */}
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '32px' }}>
+              <div style={{
+                width: '160px', height: '160px',
+                background: '#fff',
+                borderRadius: '16px',
+                padding: '12px',
+                boxShadow: '0 4px 24px rgba(255,255,255,0.1)'
+              }}>
+                <img 
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=136x136&data=upi://pay?pa=skriibe@okaxis&pn=Skriibe&am=${price}`} 
+                  alt="QR Code"
+                  style={{ width: '100%', height: '100%', display: 'block' }}
+                />
+              </div>
+            </div>
+
+            {/* Error Area */}
+            {submitError && (
+              <div style={{ color: '#ef4444', fontSize: '14px', marginBottom: '16px', background: 'rgba(239,68,68,0.1)', padding: '12px', borderRadius: '8px', textAlign: 'center' }}>
+                {submitError}
+              </div>
+            )}
+
+            {/* Final Pay Button */}
+            <button
+              onClick={handleSubmit}
+              disabled={submitLoading}
+              style={{
+                background: 'linear-gradient(90deg, #34d399, #10b981)',
+                color: '#000', border: 'none', borderRadius: '16px',
+                padding: '16px', fontWeight: '700', fontSize: '16px',
+                width: '100%',
+                cursor: submitLoading ? 'not-allowed' : 'pointer',
+                opacity: submitLoading ? 0.7 : 1,
+                boxShadow: '0 4px 20px rgba(16, 185, 129, 0.4)'
+              }}
+            >
+              {submitLoading ? 'Processing Payment...' : `Pay ₹${price} →`}
+            </button>
+
+            {/* Footer */}
+            <div style={{ textAlign: 'center', marginTop: '24px' }}>
+              <div style={{ color: '#64748b', fontSize: '12px', marginBottom: '8px' }}>
+                GPay · PhonePe · Paytm · BHIM UPI
+              </div>
+              <div style={{ color: '#64748b', fontSize: '11px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '4px' }}>
+                <span style={{ color: '#fb923c' }}>🔒</span> 256-bit encrypted · Secured by Razorpay
+              </div>
+            </div>
+
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default CreatorProfile;

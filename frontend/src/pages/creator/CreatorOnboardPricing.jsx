@@ -297,15 +297,15 @@ const CreatorOnboardPricing = () => {
                       style={{
                         background: isSelected ? 'rgba(124, 58, 237, 0.06)' : 'rgba(255, 255, 255, 0.04)',
                         backdropFilter: 'blur(12px)',
-                        border: isSelected ? '1px solid #7c3aed' : '1px solid rgba(255, 255, 255, 0.08)',
+                        border: isSelected ? '2px solid #7c3aed' : '1px solid rgba(255, 255, 255, 0.08)',
                         borderRadius: '16px',
-                        padding: '16px 20px',
+                        padding: isSelected ? '19px 19px' : '16px 20px',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'space-between',
                         cursor: 'pointer',
-                        transform: isSelected ? 'scale(1.02)' : 'none',
-                        boxShadow: isSelected ? '0 0 18px rgba(124,58,237,0.25)' : 'none',
+                        transform: 'none',
+                        boxShadow: isSelected ? '0 0 20px rgba(124,58,237,0.3)' : 'none',
                         transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)'
                       }}
                     >
@@ -390,15 +390,15 @@ const CreatorOnboardPricing = () => {
                       style={{
                         background: isSelected ? 'rgba(124, 58, 237, 0.06)' : 'rgba(255, 255, 255, 0.04)',
                         backdropFilter: 'blur(12px)',
-                        border: isSelected ? '1px solid #7c3aed' : '1px solid rgba(255, 255, 255, 0.08)',
+                        border: isSelected ? '2px solid #7c3aed' : '1px solid rgba(255, 255, 255, 0.08)',
                         borderRadius: '16px',
-                        padding: '16px 20px',
+                        padding: isSelected ? '19px 19px' : '16px 20px',
                         display: 'flex',
                         flexDirection: 'column',
                         gap: isSelected ? '12px' : '0px',
                         cursor: 'pointer',
-                        transform: isSelected ? 'scale(1.02)' : 'none',
-                        boxShadow: isSelected ? '0 0 18px rgba(124,58,237,0.25)' : 'none',
+                        transform: 'none',
+                        boxShadow: isSelected ? '0 0 20px rgba(124,58,237,0.3)' : 'none',
                         transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)'
                       }}
                     >

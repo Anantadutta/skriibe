@@ -5,6 +5,8 @@ const cors = require('cors');
 const { z } = require('zod');
 const passport = require('passport');
 const session = require('express-session');
+const http = require('http');
+const { Server } = require('socket.io');
 const Waitlist = require('./models/Waitlist');
 const { sendWaitlistWelcomeEmail } = require('./utils/emailService');
 // WATI WhatsApp Message
@@ -33,6 +35,28 @@ const sendWhatsAppMessage = async (phone, name) => {
 };
 
 const app = express();
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: ["https://www.skriibe.com", "https://skriibe.com", "http://localhost:5173"],
+    methods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
+    credentials: true
+  }
+});
+
+// Socket.IO Connection Event
+io.on('connection', (socket) => {
+  console.log('A client connected:', socket.id);
+  socket.on('disconnect', () => {
+    console.log('Client disconnected:', socket.id);
+  });
+});
+
+// Attach io to req so routes can emit events
+app.use((req, res, next) => {
+  req.io = io;
+  next();
+});
 
 // Middleware
 // Middleware
@@ -146,14 +170,16 @@ app.get('/api/admin/me', verifyAdminToken, (req, res) => {
 });
 
 app.use('/api/auth', require('./routes/auth'));
+app.use('/api/fan-auth', require('./routes/fanAuth'));
 app.use('/api/creator', require('./routes/creator'));
 app.use('/api/public', require('./routes/public'));
 app.use('/api/buyers', require('./routes/buyers'));
 app.use('/api/creators', require('./routes/creators'));
+app.use('/api/questions', require('./routes/questions'));
 
 const errorHandler = require('./middleware/errorHandler');
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-module.exports = app;
+server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+module.exports = { app, server, io };

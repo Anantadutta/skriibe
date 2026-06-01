@@ -1,41 +1,34 @@
-/**
- * @file CreatorSignup.jsx
- * @description Creator registration screen via email and password.
- */
-
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { emailSignup } from '../../services/creatorApi';
-import { Button } from '../../components/ama/ui/Button';
+import { fanSignup } from '../../services/fanApi';
 
-const CreatorSignup = () => {
+const FanSignup = () => {
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  
+  const [focusedName, setFocusedName] = useState(false);
   const [focusedEmail, setFocusedEmail] = useState(false);
   const [focusedPassword, setFocusedPassword] = useState(false);
-  const [focusedConfirm, setFocusedConfirm] = useState(false);
   const navigate = useNavigate();
+  
+  console.log("FanSignup rendered");
 
   const handleRegister = async () => {
-    if (!email || !password || !confirmPassword) {
+    if (!name || !email || !password) {
       setError('Please fill out all fields');
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      setError('Passwords do not match');
       return;
     }
 
     setLoading(true);
     setError('');
     try {
-      const res = await emailSignup(email, password);
+      const res = await fanSignup(name, email, password);
       if (res.data.success) {
-        navigate('/creator/login', { state: { message: 'Registration successful! Please log in.' } });
+        // Just redirect to explore page for now after successful signup
+        navigate('/explore');
       }
     } catch (err) {
       setError(err.response?.data?.message || 'Registration failed. Try again.');
@@ -44,7 +37,7 @@ const CreatorSignup = () => {
     }
   };
 
-  const isInvalid = !email || !password || !confirmPassword || password !== confirmPassword;
+  const isInvalid = !name || !email || !password;
 
   return (
     <div style={{
@@ -84,13 +77,6 @@ const CreatorSignup = () => {
           mixBlendMode: 'overlay',
           pointerEvents: 'none'
         }} />
-        <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
-          <div className="sparkle" style={{ top: '12%', left: '18%', animationDelay: '0s' }} />
-          <div className="sparkle" style={{ top: '35%', left: '80%', animationDelay: '1.2s' }} />
-          <div className="sparkle" style={{ top: '58%', left: '6%', animationDelay: '2.8s' }} />
-          <div className="sparkle" style={{ top: '82%', left: '84%', animationDelay: '0.5s' }} />
-          <div className="sparkle" style={{ top: '92%', left: '22%', animationDelay: '2s' }} />
-        </div>
       </div>
 
       <style dangerouslySetInnerHTML={{ __html: `
@@ -100,31 +86,12 @@ const CreatorSignup = () => {
           66% { transform: translate(-15px, 15px) rotate(240deg) scale(0.98); }
           100% { transform: translate(0px, 0px) rotate(360deg) scale(1); }
         }
-        @keyframes sparkle-pulse {
-          0%, 100% { opacity: 0.2; transform: scale(0.8); }
-          50% { opacity: 1; transform: scale(1.2) rotate(45deg); }
-        }
-        .sparkle {
-          position: absolute;
-          width: 3px;
-          height: 3px;
-          background: #ffffff;
-          border-radius: 50%;
-          box-shadow: 0 0 6px #06b6d4, 0 0 10px #7c3aed;
-          animation: sparkle-pulse 4s infinite ease-in-out;
-        }
         .gradient-action-btn:hover:not(:disabled) {
           transform: translateY(-2px);
           box-shadow: 0 0 20px rgba(124, 58, 237, 0.6), 0 0 30px rgba(6, 182, 212, 0.4) !important;
         }
         .gradient-action-btn:active:not(:disabled) {
           transform: translateY(0);
-        }
-        .social-btn:hover {
-          background: rgba(255, 255, 255, 0.08) !important;
-          border-color: rgba(255, 255, 255, 0.2) !important;
-          transform: translateY(-1.5px);
-          box-shadow: 0 4px 15px rgba(6, 182, 212, 0.15) !important;
         }
       `}} />
 
@@ -205,11 +172,59 @@ const CreatorSignup = () => {
                 </svg>
               </div>
               <div style={{ color: '#94a3b8', fontSize: '14px', fontFamily: 'var(--font-body)', fontWeight: '500' }}>
-                Join the platform. Get paid to reply.
+                Join as a Fan. Connect with creators.
               </div>
             </div>
 
             <div style={{ marginTop: '40px' }}>
+              <label style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: '9px',
+                color: '#06b6d4',
+                textTransform: 'uppercase',
+                display: 'block',
+                marginBottom: '10px',
+                letterSpacing: '1.5px',
+                fontWeight: '600'
+              }}>
+                YOUR NAME
+              </label>
+
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                background: 'rgba(255, 255, 255, 0.03)',
+                border: focusedName ? '1px solid #7c3aed' : '1px solid rgba(255, 255, 255, 0.08)',
+                borderRadius: '12px',
+                boxShadow: focusedName ? '0 0 15px rgba(124, 58, 237, 0.3)' : 'none',
+                transition: 'all 0.25s ease',
+                overflow: 'hidden',
+                marginBottom: '16px'
+              }}>
+                <input
+                  type="text"
+                  placeholder="John Doe"
+                  value={name}
+                  onChange={(e) => {
+                    setName(e.target.value);
+                    if (error) setError('');
+                  }}
+                  onFocus={() => setFocusedName(true)}
+                  onBlur={() => setFocusedName(false)}
+                  style={{
+                    flex: 1,
+                    background: 'transparent',
+                    border: 'none',
+                    outline: 'none',
+                    padding: '16px 20px',
+                    fontSize: '16px',
+                    color: '#ffffff',
+                    fontFamily: 'var(--font-mono)',
+                    letterSpacing: '1px'
+                  }}
+                />
+              </div>
+
               <label style={{
                 fontFamily: 'var(--font-mono)',
                 fontSize: '9px',
@@ -236,7 +251,7 @@ const CreatorSignup = () => {
               }}>
                 <input
                   type="email"
-                  placeholder="creator@skriibe.com"
+                  placeholder="fan@skriibe.com"
                   value={email}
                   onChange={(e) => {
                     setEmail(e.target.value);
@@ -306,53 +321,6 @@ const CreatorSignup = () => {
                 />
               </div>
 
-              <label style={{
-                fontFamily: 'var(--font-mono)',
-                fontSize: '9px',
-                color: '#06b6d4',
-                textTransform: 'uppercase',
-                display: 'block',
-                marginBottom: '10px',
-                letterSpacing: '1.5px',
-                fontWeight: '600'
-              }}>
-                CONFIRM PASSWORD
-              </label>
-
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                background: 'rgba(255, 255, 255, 0.03)',
-                border: focusedConfirm ? '1px solid #7c3aed' : '1px solid rgba(255, 255, 255, 0.08)',
-                borderRadius: '12px',
-                boxShadow: focusedConfirm ? '0 0 15px rgba(124, 58, 237, 0.3)' : 'none',
-                transition: 'all 0.25s ease',
-                overflow: 'hidden'
-              }}>
-                <input
-                  type="password"
-                  placeholder="••••••••"
-                  value={confirmPassword}
-                  onChange={(e) => {
-                    setConfirmPassword(e.target.value);
-                    if (error) setError('');
-                  }}
-                  onFocus={() => setFocusedConfirm(true)}
-                  onBlur={() => setFocusedConfirm(false)}
-                  style={{
-                    flex: 1,
-                    background: 'transparent',
-                    border: 'none',
-                    outline: 'none',
-                    padding: '16px 20px',
-                    fontSize: '16px',
-                    color: '#ffffff',
-                    fontFamily: 'var(--font-mono)',
-                    letterSpacing: '1px'
-                  }}
-                />
-              </div>
-
               {error && (
                 <div style={{
                   color: '#ef4444',
@@ -388,7 +356,7 @@ const CreatorSignup = () => {
                   boxShadow: '0 4px 12px rgba(124, 58, 237, 0.2)'
                 }}
               >
-                {loading ? 'Registering...' : 'Register →'}
+                {loading ? 'Registering...' : 'Sign up as Fan →'}
               </button>
             </div>
 
@@ -397,7 +365,7 @@ const CreatorSignup = () => {
                 or sign up with
               </div>
               
-              <a href="http://localhost:5000/api/auth/google"
+              <a href="http://localhost:5000/api/auth/google?role=fan"
                  className="social-btn"
                  style={{
                    display: 'flex',
@@ -427,7 +395,7 @@ const CreatorSignup = () => {
                 Continue with Google
               </a>
 
-              <a href="http://localhost:5000/api/auth/facebook"
+              <a href="http://localhost:5000/api/auth/facebook?role=fan"
                  className="social-btn"
                  style={{
                    display: 'flex',
@@ -457,8 +425,8 @@ const CreatorSignup = () => {
             
             {/* LINK TO LOGIN */}
             <div style={{ textAlign: 'center', marginTop: '24px', fontSize: '13px' }}>
-              <span style={{ color: '#94a3b8' }}>Already have an account? </span>
-              <Link to="/creator/login" style={{ color: '#06b6d4', textDecoration: 'none', fontWeight: '600' }}>Log in here</Link>
+              <span style={{ color: '#94a3b8' }}>Already a Fan? </span>
+              <Link to="/fan/login" style={{ color: '#06b6d4', textDecoration: 'none', fontWeight: '600' }}>Log in here</Link>
             </div>
           </div>
 
@@ -482,4 +450,4 @@ const CreatorSignup = () => {
   );
 };
 
-export default CreatorSignup;
+export default FanSignup;

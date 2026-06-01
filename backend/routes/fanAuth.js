@@ -1,0 +1,175 @@
+const express = require('express');
+const router = express.Router();
+const crypto = require('crypto');
+const jwt = require('jsonwebtoken');
+const mongoose = require('mongoose');
+const Fan = require('../models/Fan');
+const passport = require('passport');
+const GoogleStrategy = require('passport-google-oauth20').Strategy;
+const FacebookStrategy = require('passport-facebook').Strategy;
+
+const connectDB = async () => {
+  if (mongoose.connection.readyState === 1) return;
+  await mongoose.connect(process.env.MONGO_URI);
+};
+
+// Helper function to hash password
+const hashPassword = (password) => {
+  const salt = crypto.randomBytes(16).toString('hex');
+  const hash = crypto.scryptSync(password, salt, 64).toString('hex');
+  return `${salt}:${hash}`;
+};
+
+// Helper function to verify password
+const verifyPassword = (password, storedHash) => {
+  const [salt, key] = storedHash.split(':');
+  const hashedBuffer = crypto.scryptSync(password, salt, 64);
+  const keyBuffer = Buffer.from(key, 'hex');
+  const match = crypto.timingSafeEqual(hashedBuffer, keyBuffer);
+  return match;
+};
+
+// Helper: Issue JWT for fan
+const issueToken = (res, fan) => {
+  const token = jwt.sign(
+    { fanId: fan._id, email: fan.email, role: 'fan' },
+    process.env.JWT_SECRET || 'secret',
+    { expiresIn: '7d' }
+  );
+  res.cookie('fan_token', token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 7 * 24 * 60 * 60 * 1000
+  });
+};
+
+// Fan Google Strategy
+passport.use('google-fan', new GoogleStrategy({
+    clientID: process.env.GOOGLE_CLIENT_ID || 'mock',
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET || 'mock',
+    callbackURL: "http://localhost:5000/api/fan-auth/google/callback"
+  },
+  async (accessToken, refreshToken, profile, done) => {
+    try {
+      await connectDB();
+      const email = profile.emails[0].value;
+      let fan = await Fan.findOne({ email });
+      if (!fan) {
+        fan = new Fan({
+          email,
+          name: profile.displayName || '',
+          password: hashPassword(Math.random().toString(36).slice(-8)) // dummy password
+        });
+        await fan.save();
+      }
+      done(null, fan);
+    } catch (err) {
+      done(err, null);
+    }
+  }
+));
+
+// Fan Facebook Strategy
+passport.use('facebook-fan', new FacebookStrategy({
+    clientID: process.env.FACEBOOK_CLIENT_ID || 'mock',
+    clientSecret: process.env.FACEBOOK_CLIENT_SECRET || 'mock',
+    callbackURL: "http://localhost:5000/api/fan-auth/facebook/callback",
+    profileFields: ['id', 'emails', 'name']
+  },
+  async (accessToken, refreshToken, profile, done) => {
+    try {
+      await connectDB();
+      const email = profile.emails?.[0]?.value || `fb_${profile.id}@temp.skriibe.com`;
+      let fan = await Fan.findOne({ email });
+      if (!fan) {
+        fan = new Fan({
+          email,
+          name: `${profile.name?.givenName || ''} ${profile.name?.familyName || ''}`.trim() || profile.displayName || '',
+          password: hashPassword(Math.random().toString(36).slice(-8))
+        });
+        await fan.save();
+      }
+      done(null, fan);
+    } catch (err) {
+      done(err, null);
+    }
+  }
+));
+
+// -- ROUTES --
+
+router.get('/google', passport.authenticate('google-fan', { scope: ['profile', 'email'], prompt: 'select_account' }));
+router.get('/google/callback', passport.authenticate('google-fan', { failureRedirect: '/fan/login' }), (req, res) => {
+  issueToken(res, req.user);
+  res.redirect('http://localhost:5173/explore');
+});
+
+router.get('/facebook', passport.authenticate('facebook-fan', { scope: ['email', 'public_profile'] }));
+router.get('/facebook/callback', passport.authenticate('facebook-fan', { failureRedirect: '/fan/login' }), (req, res) => {
+  issueToken(res, req.user);
+  res.redirect('http://localhost:5173/explore');
+});
+
+router.post('/signup', async (req, res) => {
+  try {
+    await connectDB();
+    const { name, email, password } = req.body;
+    
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Email and password are required' });
+    }
+
+    const existingFan = await Fan.findOne({ email: email.toLowerCase() });
+    if (existingFan) {
+      return res.status(400).json({ message: 'Email already registered' });
+    }
+
+    const hashedPassword = hashPassword(password);
+    
+    const newFan = new Fan({
+      name,
+      email: email.toLowerCase(),
+      password: hashedPassword
+    });
+    
+    await newFan.save();
+    
+    issueToken(res, newFan);
+    
+    res.status(201).json({ success: true, fan: { id: newFan._id, name: newFan.name, email: newFan.email } });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+router.post('/login', async (req, res) => {
+  try {
+    await connectDB();
+    const { email, password } = req.body;
+    
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Email and password are required' });
+    }
+
+    const fan = await Fan.findOne({ email: email.toLowerCase() });
+    if (!fan) {
+      return res.status(401).json({ message: 'Invalid email or password' });
+    }
+
+    const isMatch = verifyPassword(password, fan.password);
+    if (!isMatch) {
+      return res.status(401).json({ message: 'Invalid email or password' });
+    }
+
+    issueToken(res, fan);
+    
+    res.json({ success: true, fan: { id: fan._id, name: fan.name, email: fan.email } });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+module.exports = router;

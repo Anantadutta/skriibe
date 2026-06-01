@@ -1,50 +1,48 @@
 /**
- * @file CreatorSignup.jsx
- * @description Creator registration screen via email and password.
+ * @file CreatorLogin.jsx
+ * @description Creator login screen via email and password.
  */
 
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { emailSignup } from '../../services/creatorApi';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { emailLogin } from '../../services/creatorApi';
 import { Button } from '../../components/ama/ui/Button';
 
-const CreatorSignup = () => {
+const CreatorLogin = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [focusedEmail, setFocusedEmail] = useState(false);
   const [focusedPassword, setFocusedPassword] = useState(false);
-  const [focusedConfirm, setFocusedConfirm] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+  const successMessage = location.state?.message;
 
-  const handleRegister = async () => {
-    if (!email || !password || !confirmPassword) {
-      setError('Please fill out all fields');
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      setError('Passwords do not match');
+  const handleLogin = async () => {
+    if (!email || !password) {
+      setError('Please enter both email and password');
       return;
     }
 
     setLoading(true);
     setError('');
     try {
-      const res = await emailSignup(email, password);
-      if (res.data.success) {
-        navigate('/creator/login', { state: { message: 'Registration successful! Please log in.' } });
+      const res = await emailLogin(email, password);
+      const { creator } = res.data;
+      if (creator.ama_enabled) {
+        navigate('/creator/dashboard', { state: { creator } });
+      } else {
+        navigate('/onboard/profile', { state: { creator } });
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'Registration failed. Try again.');
+      setError(err.response?.data?.message || 'Login failed. Try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  const isInvalid = !email || !password || !confirmPassword || password !== confirmPassword;
+  const isInvalid = !email || !password;
 
   return (
     <div style={{
@@ -134,8 +132,7 @@ const CreatorSignup = () => {
         padding: '0 16px',
         boxSizing: 'border-box',
         zIndex: 1,
-        position: 'relative',
-        margin: '40px 0'
+        position: 'relative'
       }}>
         <div style={{
           background: 'rgba(255, 255, 255, 0.05)',
@@ -205,11 +202,26 @@ const CreatorSignup = () => {
                 </svg>
               </div>
               <div style={{ color: '#94a3b8', fontSize: '14px', fontFamily: 'var(--font-body)', fontWeight: '500' }}>
-                Join the platform. Get paid to reply.
+                Welcome back. Log in to your account.
               </div>
             </div>
 
             <div style={{ marginTop: '40px' }}>
+              {successMessage && (
+                <div style={{
+                  color: '#22c55e',
+                  background: 'rgba(34, 197, 94, 0.1)',
+                  border: '1px solid rgba(34, 197, 94, 0.2)',
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: '12px',
+                  padding: '12px',
+                  borderRadius: '12px',
+                  marginBottom: '20px',
+                  textAlign: 'center'
+                }}>
+                  ✅ {successMessage}
+                </div>
+              )}
               <label style={{
                 fontFamily: 'var(--font-mono)',
                 fontSize: '9px',
@@ -268,7 +280,7 @@ const CreatorSignup = () => {
                 letterSpacing: '1.5px',
                 fontWeight: '600'
               }}>
-                CREATE PASSWORD
+                YOUR PASSWORD
               </label>
 
               <div style={{
@@ -279,8 +291,7 @@ const CreatorSignup = () => {
                 borderRadius: '12px',
                 boxShadow: focusedPassword ? '0 0 15px rgba(124, 58, 237, 0.3)' : 'none',
                 transition: 'all 0.25s ease',
-                overflow: 'hidden',
-                marginBottom: '16px'
+                overflow: 'hidden'
               }}>
                 <input
                   type="password"
@@ -292,53 +303,6 @@ const CreatorSignup = () => {
                   }}
                   onFocus={() => setFocusedPassword(true)}
                   onBlur={() => setFocusedPassword(false)}
-                  style={{
-                    flex: 1,
-                    background: 'transparent',
-                    border: 'none',
-                    outline: 'none',
-                    padding: '16px 20px',
-                    fontSize: '16px',
-                    color: '#ffffff',
-                    fontFamily: 'var(--font-mono)',
-                    letterSpacing: '1px'
-                  }}
-                />
-              </div>
-
-              <label style={{
-                fontFamily: 'var(--font-mono)',
-                fontSize: '9px',
-                color: '#06b6d4',
-                textTransform: 'uppercase',
-                display: 'block',
-                marginBottom: '10px',
-                letterSpacing: '1.5px',
-                fontWeight: '600'
-              }}>
-                CONFIRM PASSWORD
-              </label>
-
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                background: 'rgba(255, 255, 255, 0.03)',
-                border: focusedConfirm ? '1px solid #7c3aed' : '1px solid rgba(255, 255, 255, 0.08)',
-                borderRadius: '12px',
-                boxShadow: focusedConfirm ? '0 0 15px rgba(124, 58, 237, 0.3)' : 'none',
-                transition: 'all 0.25s ease',
-                overflow: 'hidden'
-              }}>
-                <input
-                  type="password"
-                  placeholder="••••••••"
-                  value={confirmPassword}
-                  onChange={(e) => {
-                    setConfirmPassword(e.target.value);
-                    if (error) setError('');
-                  }}
-                  onFocus={() => setFocusedConfirm(true)}
-                  onBlur={() => setFocusedConfirm(false)}
                   style={{
                     flex: 1,
                     background: 'transparent',
@@ -367,7 +331,7 @@ const CreatorSignup = () => {
 
               <button
                 disabled={isInvalid || loading}
-                onClick={handleRegister}
+                onClick={handleLogin}
                 className="gradient-action-btn"
                 style={{
                   width: '100%',
@@ -388,13 +352,13 @@ const CreatorSignup = () => {
                   boxShadow: '0 4px 12px rgba(124, 58, 237, 0.2)'
                 }}
               >
-                {loading ? 'Registering...' : 'Register →'}
+                {loading ? 'Logging in...' : 'Login →'}
               </button>
             </div>
 
             <div style={{ marginTop: '24px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <div style={{ textAlign: 'center', color: '#94a3b8', fontSize: '12px', marginBottom: '8px' }}>
-                or sign up with
+                or continue with
               </div>
               
               <a href="http://localhost:5000/api/auth/google"
@@ -455,10 +419,10 @@ const CreatorSignup = () => {
               </a>
             </div>
             
-            {/* LINK TO LOGIN */}
+            {/* LINK TO SIGNUP */}
             <div style={{ textAlign: 'center', marginTop: '24px', fontSize: '13px' }}>
-              <span style={{ color: '#94a3b8' }}>Already have an account? </span>
-              <Link to="/creator/login" style={{ color: '#06b6d4', textDecoration: 'none', fontWeight: '600' }}>Log in here</Link>
+              <span style={{ color: '#94a3b8' }}>Don't have an account? </span>
+              <Link to="/creator/signup" style={{ color: '#06b6d4', textDecoration: 'none', fontWeight: '600' }}>Register here</Link>
             </div>
           </div>
 
@@ -482,4 +446,4 @@ const CreatorSignup = () => {
   );
 };
 
-export default CreatorSignup;
+export default CreatorLogin;

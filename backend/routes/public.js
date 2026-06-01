@@ -17,8 +17,8 @@ const Question = require('../models/Question');
 router.get('/creator/:handle', async (req, res) => {
   try {
     const { handle } = req.params;
-    const creator = await Creator.findOne({ handle: handle.toLowerCase(), ama_enabled: true }).select(
-      'name handle avatarUrl bio instagramHandle instagramFollowers price pricePerQuestion responseTime questionsAnswered instagramConnected'
+    const creator = await Creator.findOne({ handle: new RegExp(`^${handle}$`, 'i') }).select(
+      'name handle avatarUrl bio expertise stats instagramHandle instagramFollowers price pricePerQuestion responseTime questionsAnswered instagramConnected isLive'
     );
     if (!creator) {
       return res.status(404).json({ success: false, message: 'Creator not found' });
@@ -28,20 +28,80 @@ router.get('/creator/:handle', async (req, res) => {
     return res.json({
       success: true,
       creator: {
+        id: creator._id,
         name: creator.name,
         handle: creator.handle,
         avatarUrl: creator.avatarUrl,
         bio: creator.bio || '',
+        expertise: creator.expertise || [],
+        stats: creator.stats || { replyRate: 94, avgReplyTime: 3.2, totalAnswered: 0 },
         instagramHandle: creator.instagramHandle || '',
         followers: creator.instagramFollowers || 0,
         pricePerQuestion: creator.pricePerQuestion || creator.price || 99,
         responseTime: creator.responseTime || '48 hours',
         questionsAnswered: answeredCount || creator.questionsAnswered || 0,
         instagramLinked: creator.instagramConnected,
+        isLive: creator.isLive,
       },
     });
   } catch (err) {
     console.error('Public route error:', err);
+    return res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// GET /api/public/creators
+// Returns creators with optional filtering: ?live=true, ?category=Tech, ?search=query
+router.get('/creators', async (req, res) => {
+  try {
+    const { live, category, search } = req.query;
+    let query = {};
+    
+    if (live === 'true') query.isLive = true;
+    if (category) query.expertise = category;
+    if (search) {
+      query.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { handle: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    const creators = await Creator.find(query).select(
+      'name handle avatarUrl bio expertise price pricePerQuestion responseTime stats verified instagramFollowers instagramConnected isLive'
+    ).lean();
+    
+    // Sort: Live creators first, then by replyRate descending
+    creators.sort((a, b) => {
+      if (a.isLive === b.isLive) {
+        return (b.stats?.replyRate || 0) - (a.stats?.replyRate || 0);
+      }
+      return a.isLive ? -1 : 1;
+    });
+    
+    const formattedCreators = creators.map(c => ({
+      id: c._id,
+      name: c.name || 'Anonymous',
+      handle: c.handle || 'unknown',
+      avatarUrl: c.avatarUrl || '',
+      bio: c.bio || '',
+      expertise: c.expertise || [],
+      pricePerQuestion: c.pricePerQuestion || c.price || 99,
+      responseTime: c.responseTime || '48 hours',
+      stats: {
+        totalAnswered: c.stats?.totalAnswered || 0,
+        replyRate: c.stats?.replyRate || 0,
+        avgReplyTime: c.stats?.avgReplyTime || 0
+      },
+      verified: c.verified || false,
+      isLive: c.isLive || false
+    }));
+
+    return res.json({
+      success: true,
+      creators: formattedCreators
+    });
+  } catch (err) {
+    console.error('Fetch live creators error:', err);
     return res.status(500).json({ success: false, message: 'Server error' });
   }
 });

@@ -1,48 +1,97 @@
-/**
- * @file questions.js
- * @description Routes for question validation and moderation.
- */
-
 const express = require('express');
 const router = express.Router();
+const mongoose = require('mongoose');
+const jwt = require('jsonwebtoken');
 
-const BANNED_KEYWORDS = ['fuck', 'shit', 'porn', 'sex', 'nude', 'naked', 'kill', 'rape', 'drugs', 'cocaine', 'terrorist', 'bomb'];
+const Question = require('../models/Question');
+const Creator = require('../models/Creator');
 
-const PII_PATTERNS = {
-  aadhaar: /\b\d{4}\s\d{4}\s\d{4}\b/,
-  phone: /\b[6-9]\d{9}\b/,
-  email: /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/
+// Middleware to verify fan JWT
+const verifyFanToken = (req, res, next) => {
+  const token = req.cookies.fan_token;
+  if (!token) return res.status(401).json({ message: 'Unauthorized. Please login as a Fan.' });
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret');
+    if (decoded.role !== 'fan') return res.status(403).json({ message: 'Forbidden. Only fans can ask questions.' });
+    req.fan = decoded;
+    next();
+  } catch (err) {
+    res.status(401).json({ message: 'Invalid token' });
+  }
+};
+
+const connectDB = async () => {
+  if (mongoose.connection.readyState === 1) return;
+  await mongoose.connect(process.env.MONGO_URI);
 };
 
 /**
- * @route POST /api/questions/validate
- * @desc Public route to validate question content
+ * @route POST /api/questions
+ * @desc Submit a new question from a fan to a creator
  */
-router.post('/validate', (req, res) => {
-  const { questionText } = req.body;
+router.post('/', verifyFanToken, async (req, res) => {
+  try {
+    const { creatorId, questionText, buyerName, buyerEmail, buyerPhone } = req.body;
 
-  if (!questionText) {
-    return res.status(400).json({ allowed: false, reason: 'Question text is required' });
-  }
-
-  const lowerText = questionText.toLowerCase();
-
-  // Check banned keywords
-  for (const word of BANNED_KEYWORDS) {
-    if (lowerText.includes(word)) {
-      return res.status(400).json({ allowed: false, reason: 'Question contains inappropriate content' });
+    if (!creatorId || !questionText) {
+      return res.status(400).json({ message: 'Creator ID and question text are required.' });
     }
-  }
 
-  // Check PII
-  if (PII_PATTERNS.aadhaar.test(questionText) || PII_PATTERNS.phone.test(questionText) || PII_PATTERNS.email.test(questionText)) {
-    return res.status(400).json({ 
-      allowed: false, 
-      reason: 'Please do not share personal information like phone numbers, emails, or Aadhaar numbers' 
+    if (questionText.length > 500) {
+      return res.status(400).json({ message: 'Question exceeds 500 characters.' });
+    }
+
+    await connectDB();
+
+    const creator = await Creator.findById(creatorId);
+    if (!creator) {
+      return res.status(404).json({ message: 'Creator not found.' });
+    }
+
+    const newQuestion = new Question({
+      creatorId: creator._id,
+      handle: creator.handle,
+      fanId: req.fan.fanId,
+      buyerName: buyerName || req.fan.name || req.fan.email,
+      buyerEmail: buyerEmail || req.fan.email,
+      buyerPhone: buyerPhone || '',
+      questionText,
+      amountPaid: creator.pricePerQuestion || creator.price || 99,
+      paymentStatus: 'paid', // Dummy payment status for now
+      status: 'submitted'
     });
-  }
 
-  res.json({ allowed: true });
+    await newQuestion.save();
+
+    res.status(201).json({ 
+      success: true, 
+      message: 'Question sent successfully!',
+      question: newQuestion,
+      avgReplyTime: creator.responseTime || '48 hours'
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+/**
+ * @route GET /api/questions/fan-history
+ * @desc Get all questions asked by the logged in fan
+ */
+router.get('/fan-history', verifyFanToken, async (req, res) => {
+  try {
+    await connectDB();
+    const questions = await Question.find({ fanId: req.fan.fanId })
+      .populate('creatorId', 'name avatarUrl handle')
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({ success: true, questions });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
 });
 
 module.exports = router;

@@ -31,22 +31,40 @@ passport.deserializeUser((user, done) => done(null, user));
 passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID || 'mock',
     clientSecret: process.env.GOOGLE_CLIENT_SECRET || 'mock',
-    callbackURL: "http://localhost:5000/api/auth/google/callback"
+    callbackURL: "http://localhost:5000/api/auth/google/callback",
+    passReqToCallback: true
   },
-  async (accessToken, refreshToken, profile, done) => {
+  async (req, accessToken, refreshToken, profile, done) => {
     try {
       await connectDB();
       const email = profile.emails[0].value;
-      let creator = await Creator.findOne({ email });
-      if (!creator) {
-        creator = new Creator({
-          email,
-          name: profile.displayName || '',
-          avatarUrl: profile.photos?.[0]?.value || ''
-        });
-        await creator.save();
+      const isFan = req.query.state === 'fan';
+
+      if (isFan) {
+        const Fan = require('../models/Fan');
+        let fan = await Fan.findOne({ email });
+        if (!fan) {
+          fan = new Fan({
+            email,
+            name: profile.displayName || '',
+            password: 'oauth_dummy_pass'
+          });
+          await fan.save();
+        }
+        fan.isFanLogin = true;
+        return done(null, fan);
+      } else {
+        let creator = await Creator.findOne({ email });
+        if (!creator) {
+          creator = new Creator({
+            email,
+            name: profile.displayName || '',
+            avatarUrl: profile.photos?.[0]?.value || ''
+          });
+          await creator.save();
+        }
+        return done(null, creator);
       }
-      done(null, creator);
     } catch (err) {
       done(err, null);
     }
@@ -57,36 +75,41 @@ passport.use(new GoogleStrategy({
 passport.use(new FacebookStrategy({
     clientID: process.env.FACEBOOK_CLIENT_ID || 'mock',
     clientSecret: process.env.FACEBOOK_CLIENT_SECRET || 'mock',
-    callbackURL: "/api/auth/facebook/callback",
-    profileFields: ['id', 'emails', 'name', 'picture.type(large)']
+    callbackURL: "http://localhost:5000/api/auth/facebook/callback",
+    profileFields: ['id', 'emails', 'name', 'picture.type(large)'],
+    passReqToCallback: true
   },
-  async (accessToken, refreshToken, profile, done) => {
+  async (req, accessToken, refreshToken, profile, done) => {
     try {
       await connectDB();
-      const email = profile.emails?.[0]?.value;
-      if (!email) {
-  const fallbackEmail = `fb_${profile.id}@temp.skriibe.com`;
-  let creator = await Creator.findOne({ email: fallbackEmail });
-  if (!creator) {
-    creator = new Creator({
-      email: fallbackEmail,
-      name: `${profile.name.givenName || ''} ${profile.name.familyName || ''}`.trim(),
-      avatarUrl: profile.photos?.[0]?.value || ''
-    });
-    await creator.save();
-  }
-  return done(null, creator);
-}
-      let creator = await Creator.findOne({ email });
-      if (!creator) {
-        creator = new Creator({
-          email,
-          name: `${profile.name.givenName || ''} ${profile.name.familyName || ''}`.trim(),
-          avatarUrl: profile.photos?.[0]?.value || ''
-        });
-        await creator.save();
+      const email = profile.emails?.[0]?.value || `fb_${profile.id}@temp.skriibe.com`;
+      const isFan = req.query.state === 'fan';
+
+      if (isFan) {
+        const Fan = require('../models/Fan');
+        let fan = await Fan.findOne({ email });
+        if (!fan) {
+          fan = new Fan({
+            email,
+            name: `${profile.name?.givenName || ''} ${profile.name?.familyName || ''}`.trim() || profile.displayName || '',
+            password: 'oauth_dummy_pass'
+          });
+          await fan.save();
+        }
+        fan.isFanLogin = true;
+        return done(null, fan);
+      } else {
+        let creator = await Creator.findOne({ email });
+        if (!creator) {
+          creator = new Creator({
+            email,
+            name: `${profile.name?.givenName || ''} ${profile.name?.familyName || ''}`.trim() || profile.displayName || '',
+            avatarUrl: profile.photos?.[0]?.value || ''
+          });
+          await creator.save();
+        }
+        return done(null, creator);
       }
-      done(null, creator);
     } catch (err) {
       done(err, null);
     }
@@ -192,16 +215,54 @@ router.post('/verify-otp', async (req, res) => {
 });
 
 // -- SOCIAL ROUTES --
-router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'], prompt: 'select_account' }));
-router.get('/google/callback', passport.authenticate('google', { failureRedirect: '/creator/signup' }), (req, res) => {
-  issueToken(res, req.user);
-  res.redirect('http://localhost:5173/onboard/profile');
+router.get('/google', (req, res, next) => {
+  const state = req.query.role === 'fan' ? 'fan' : 'creator';
+  passport.authenticate('google', { scope: ['profile', 'email'], prompt: 'select_account', state })(req, res, next);
 });
 
-router.get('/facebook', passport.authenticate('facebook', { scope: ['email', 'public_profile'] }));
-router.get('/facebook/callback', passport.authenticate('facebook', { failureRedirect: '/creator/signup' }), (req, res) => {
-  issueToken(res, req.user);
-  res.redirect('http://localhost:5173/onboard/profile');
+router.get('/google/callback', passport.authenticate('google', { failureRedirect: '/' }), (req, res) => {
+  if (req.user.isFanLogin) {
+    const token = jwt.sign(
+      { fanId: req.user._id, email: req.user.email, role: 'fan' },
+      process.env.JWT_SECRET || 'secret',
+      { expiresIn: '7d' }
+    );
+    res.cookie('fan_token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000
+    });
+    return res.redirect('http://localhost:5173/explore');
+  } else {
+    issueToken(res, req.user);
+    return res.redirect('http://localhost:5173/onboard/profile');
+  }
+});
+
+router.get('/facebook', (req, res, next) => {
+  const state = req.query.role === 'fan' ? 'fan' : 'creator';
+  passport.authenticate('facebook', { scope: ['email', 'public_profile'], state })(req, res, next);
+});
+
+router.get('/facebook/callback', passport.authenticate('facebook', { failureRedirect: '/' }), (req, res) => {
+  if (req.user.isFanLogin) {
+    const token = jwt.sign(
+      { fanId: req.user._id, email: req.user.email, role: 'fan' },
+      process.env.JWT_SECRET || 'secret',
+      { expiresIn: '7d' }
+    );
+    res.cookie('fan_token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000
+    });
+    return res.redirect('http://localhost:5173/explore');
+  } else {
+    issueToken(res, req.user);
+    return res.redirect('http://localhost:5173/onboard/profile');
+  }
 });
 
 // -- INSTAGRAM ROUTES --

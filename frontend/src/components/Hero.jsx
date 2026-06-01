@@ -1,4 +1,5 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 
 const Hero = () => {
   const canvasRef = useRef(null);
@@ -81,37 +82,62 @@ const Hero = () => {
         className="absolute inset-0 w-full h-full pointer-events-none opacity-50"
       />
 
-      <div className="animate-fade-up inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-skriibe-d3 border border-skriibe-d5 text-[13px] font-semibold text-gray-400 tracking-wider uppercase mb-6">
+      <div className="animate-fade-up z-10 relative inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-skriibe-d3 border border-skriibe-d5 text-[13px] font-semibold text-gray-400 tracking-wider uppercase mb-6">
         <div className="w-1.5 h-1.5 rounded-full bg-skriibe-blue animate-pulse" />
         Creator waitlist now open
       </div>
 
-      <h1 className="animate-fade-up [animation-delay:100ms] font-libre text-[clamp(40px,7vw,84px)] font-bold leading-[1.15] mb-8 text-white">
+      <h1 className="animate-fade-up [animation-delay:100ms] z-10 relative font-libre text-[clamp(40px,7vw,84px)] font-bold leading-[1.15] mb-8 text-white">
         Stop answering DMs<br />
         for <span className="red-strike italic text-skriibe-blue">free.</span><br />
         Start <span className="italic text-skriibe-blue">earning.</span>
       </h1>
 
-      <p className="animate-fade-up [animation-delay:200ms] font-roboto text-[clamp(16px,2.5vw,20px)] text-gray-400 leading-relaxed max-w-[520px] mx-auto mb-11">
+      <p className="animate-fade-up [animation-delay:200ms] z-10 relative font-roboto text-[clamp(16px,2.5vw,20px)] text-gray-400 leading-relaxed max-w-[520px] mx-auto mb-10">
         skriibe lets your followers pay to ask you anything. You earn every time.
       </p>
 
-      <div className="animate-fade-up [animation-delay:300ms] flex flex-col items-center gap-6 mb-16">
-        <button
-          onClick={() => document.getElementById('waitlist').scrollIntoView({ behavior: 'smooth' })}
-          className="bg-skriibe-blue text-black px-10 py-5 rounded-xl font-bold text-lg hover:bg-skriibe-blue2 transform hover:-translate-y-1 hover:shadow-[0_16px_40px_rgba(59,168,216,0.3)] transition-all"
+      {/* Persona Selector (New Buttons) */}
+      <div className="animate-fade-up [animation-delay:300ms] flex flex-col sm:flex-row gap-4 justify-center mb-10 w-full max-w-2xl mx-auto px-4 z-10 relative">
+        <Link
+          to="/creator/signup"
+          className="flex-1 flex items-center justify-center sm:justify-center gap-3 px-6 py-3.5 rounded-full bg-[#5bc5e3] text-black hover:bg-[#4ab8d6] transform hover:-translate-y-0.5 transition-all"
         >
-          Join the waitlist
-        </button>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+            <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" />
+            <path d="M8 12C8 14 10 16 12 16C14 16 16 14 16 12C16 10 14 8 12 8" />
+            <circle cx="10" cy="11" r="1" fill="currentColor" stroke="none" />
+          </svg>
+          <div className="flex flex-col items-start text-left">
+            <span className="font-bold text-[16px] leading-tight">I'm a Creator</span>
+            <span className="text-[12px] text-black/70 font-medium">Get paid to reply</span>
+          </div>
+        </Link>
+
+        <Link
+          to="/fan/signup"
+          className="flex-1 flex items-center justify-center sm:justify-center gap-3 px-6 py-3.5 rounded-full bg-[#131313] border border-white/10 text-white hover:bg-[#1a1a1a] hover:border-white/20 transform hover:-translate-y-0.5 transition-all"
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white shrink-0">
+            <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+          </svg>
+          <div className="flex flex-col items-start text-left">
+            <span className="font-bold text-[16px] leading-tight">I'm a Fan</span>
+            <span className="text-[12px] text-gray-400 font-medium">Ask your favourite creators</span>
+          </div>
+        </Link>
+      </div>
+
+      <div className="animate-fade-up [animation-delay:400ms] z-10 relative flex flex-col items-center mb-16">
         <button
           onClick={() => document.getElementById('story').scrollIntoView({ behavior: 'smooth' })}
-          className="text-[#94A3B8] font-semibold border-2 border-skriibe-d5 px-8 py-4 rounded-xl hover:border-skriibe-blue hover:text-skriibe-blue transition-all"
+          className="text-gray-400 font-medium text-sm border border-white/10 px-6 py-2.5 rounded-full hover:border-white/30 hover:text-white transition-all flex items-center gap-2"
         >
           See how it works ↓
         </button>
       </div>
 
-      <div className="animate-fade-up [animation-delay:400ms] grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-0 max-w-[480px] mx-auto w-full text-center">
+      <div className="animate-fade-up [animation-delay:500ms] z-10 relative grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-0 max-w-[480px] mx-auto w-full text-center">
         <div className="flex flex-col">
           <span className="font-libre text-3xl font-libre text-white">Rs.99</span>
           <span className="text-xs text-gray-500 font-medium mt-1">per question</span>

@@ -8,6 +8,7 @@ const mongoose = require('mongoose');
 const CreatorSchema = new mongoose.Schema({
   phone: { type: String, unique: true, sparse: true },
   email: { type: String, required: true, unique: true },
+  password: { type: String },
   name: { type: String, default: '' },
   handle: { type: String, unique: true, sparse: true, lowercase: true },
   bio: { type: String, default: '' },
@@ -18,7 +19,7 @@ const CreatorSchema = new mongoose.Schema({
   responseTime: { type: String, default: '48 hours' }, // From Phase 3 prompt
   questionsAnswered: { type: Number, default: 0 }, // From Phase 3 prompt
   dailyCap: { type: Number, default: 50 },
-  ama_enabled: { type: Boolean, default: false },
+  isLive: { type: Boolean, default: false },
   verified: { type: Boolean, default: false },
   bankLinked: { type: Boolean, default: false },
   instagramLinked: { type: Boolean, default: false },

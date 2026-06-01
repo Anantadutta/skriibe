@@ -14,6 +14,7 @@ import { CreatorOnboardingProvider } from './context/CreatorOnboardingContext';
 // Pages
 import ComponentShowcase from './pages/dev/ComponentShowcase';
 import CreatorSignup from './pages/creator/CreatorSignup';
+import CreatorLogin from './pages/creator/CreatorLogin';
 import CreatorVerifyOTP from './pages/creator/CreatorVerifyOTP';
 import CreatorConnectInstagram from './pages/creator/CreatorConnectInstagram';
 import CreatorOnboardProfile from './pages/creator/CreatorOnboardProfile';
@@ -37,6 +38,13 @@ import BuyerHistoryPage from './pages/buyer/BuyerHistoryPage';
 import BuyerQuestionPage from './pages/buyer/BuyerQuestionPage';
 import DemoAnswerPage from './pages/buyer/DemoAnswerPage';
 import FlagSubmittedPage from './pages/buyer/FlagSubmittedPage';
+// Fan Flow
+import FanSignup from './pages/fan/FanSignup';
+import FanLogin from './pages/fan/FanLogin';
+import FanDiscovery from './pages/fan/FanDiscovery';
+import FanHistory from './pages/fan/FanHistory';
+import FanNotifications from './pages/fan/FanNotifications';
+import CreatorProfile from './pages/fan/CreatorProfile';
 
 const CreatorRoute = () => {
   return <Outlet />;
@@ -55,26 +63,6 @@ function LandingPage({ theme, toggleTheme }) {
       <Navbar theme={theme} toggleTheme={toggleTheme} />
       <div className="relative flex flex-col">
         <Hero />
-        <div className="absolute bottom-6 w-full flex justify-center z-20">
-          <Link 
-            to="/creator/signup" 
-            style={{
-              background: 'transparent',
-              border: '1px solid rgba(255,255,255,0.2)',
-              color: 'var(--white)',
-              borderRadius: '8px',
-              padding: '12px 24px',
-              fontSize: '14px',
-              textDecoration: 'none',
-              transition: 'all 0.2s ease',
-              display: 'inline-block'
-            }}
-            onMouseEnter={(e) => { e.target.style.borderColor = 'var(--blue)'; e.target.style.color = 'var(--blue)'; }}
-            onMouseLeave={(e) => { e.target.style.borderColor = 'rgba(255,255,255,0.2)'; e.target.style.color = 'var(--white)'; }}
-          >
-            I'm a creator — ask me anything →
-          </Link>
-        </div>
       </div>
       <DMCounter theme={theme} />
       <StorySteps theme={theme} />
@@ -140,12 +128,21 @@ function App() {
           
           {/* Creator Onboarding */}
           <Route path="/creator/signup" element={<CreatorSignup />} />
+          <Route path="/creator/login" element={<CreatorLogin />} />
           <Route path="/creator/verify-otp" element={<CreatorVerifyOTP />} />
           <Route path="/creator/connect-instagram" element={<CreatorConnectInstagram />} />
           <Route path="/onboard/profile" element={<CreatorOnboardProfile />} />
           <Route path="/creator/onboarding/profile" element={<CreatorOnboardProfile />} />
           <Route path="/onboard/pricing" element={<CreatorOnboardPricing />} />
           {/* <Route path="/onboard/live" element={<CreatorGoLive />} /> */}
+
+          {/* Fan Flow */}
+          <Route path="/fan/login" element={<FanLogin />} />
+          <Route path="/fan/signup" element={<FanSignup />} />
+          <Route path="/fan/history" element={<FanHistory />} />
+          <Route path="/fan/notifications" element={<FanNotifications />} />
+          <Route path="/explore" element={<FanDiscovery />} />
+          <Route path="/creator/:handle" element={<CreatorProfile />} />
           
           <Route element={<CreatorRoute />}>
             <Route path="/creator/dashboard" element={<CreatorDashboard />} />

@@ -113,7 +113,7 @@ router.post('/activate', verifyCreatorToken, async (req, res) => {
     await connectDB();
     const updatedCreator = await Creator.findByIdAndUpdate(
       req.creator.creatorId,
-      { price, dailyCap: cap, ama_enabled: true },
+      { price, dailyCap: cap, isLive: true },
       { new: true }
     );
 
@@ -138,6 +138,43 @@ router.get('/me', verifyCreatorToken, async (req, res) => {
     if (!creator) return res.status(404).json({ message: 'Not found' });
     res.json({ success: true, creator });
   } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+/**
+ * @route PATCH /api/creator/live-status
+ * @desc Update the creator's live status and emit socket.io event
+ */
+router.patch('/live-status', verifyCreatorToken, async (req, res) => {
+  try {
+    const { isLive } = req.body;
+    if (typeof isLive !== 'boolean') {
+      return res.status(400).json({ message: 'isLive boolean is required' });
+    }
+
+    await connectDB();
+    const updatedCreator = await Creator.findByIdAndUpdate(
+      req.creator.creatorId,
+      { isLive },
+      { new: true }
+    );
+
+    if (!updatedCreator) {
+      return res.status(404).json({ message: 'Creator not found' });
+    }
+
+    // Emit Socket.IO event if io is attached to req
+    if (req.io) {
+      req.io.emit('creator-status-changed', {
+        creatorId: updatedCreator._id,
+        isLive: updatedCreator.isLive
+      });
+    }
+
+    res.json({ success: true, isLive: updatedCreator.isLive });
+  } catch (err) {
+    console.error(err);
     res.status(500).json({ message: 'Server error' });
   }
 });
