@@ -25,16 +25,19 @@ const CreatorLogin = () => {
       return;
     }
 
+    // Clear stale bankLinked flag on new login attempt
+    localStorage.removeItem('bankLinked');
+
     setLoading(true);
     setError('');
     try {
       const res = await emailLogin(email, password);
       const { creator } = res.data;
-      if (creator.ama_enabled) {
-        navigate('/creator/dashboard', { state: { creator } });
-      } else {
-        navigate('/onboard/profile', { state: { creator } });
-      }
+      
+      // User has logged in, mark them as a returning creator
+      localStorage.setItem('isReturningCreator', 'true');
+      
+      navigate('/creator/dashboard', { state: { creator } });
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed. Try again.');
     } finally {
@@ -422,7 +425,7 @@ const CreatorLogin = () => {
             {/* LINK TO SIGNUP */}
             <div style={{ textAlign: 'center', marginTop: '24px', fontSize: '13px' }}>
               <span style={{ color: '#94a3b8' }}>Don't have an account? </span>
-              <Link to="/creator/signup" style={{ color: '#06b6d4', textDecoration: 'none', fontWeight: '600' }}>Register here</Link>
+              <Link to="/creator/signup" onClick={() => localStorage.removeItem('isReturningCreator')} style={{ color: '#06b6d4', textDecoration: 'none', fontWeight: '600' }}>Register here</Link>
             </div>
           </div>
 

@@ -38,7 +38,7 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: ["https://www.skriibe.com", "https://skriibe.com", "http://localhost:5173"],
+    origin: ["https://www.skriibe.com", "https://skriibe.com", "http://localhost:5173", "http://localhost:5713"],
     methods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
     credentials: true
   }
@@ -60,7 +60,7 @@ app.use((req, res, next) => {
 
 // Middleware
 // Middleware
-const allowedOrigins = ["https://www.skriibe.com", "https://skriibe.com","http://localhost:5173"];
+const allowedOrigins = ["https://www.skriibe.com", "https://skriibe.com","http://localhost:5173", "http://localhost:5713"];
 
 app.use(cors({
   origin: function (origin, callback) {
@@ -176,6 +176,7 @@ app.use('/api/public', require('./routes/public'));
 app.use('/api/buyers', require('./routes/buyers'));
 app.use('/api/creators', require('./routes/creators'));
 app.use('/api/questions', require('./routes/questions'));
+app.use('/api/admin', require('./routes/admin'));
 
 const errorHandler = require('./middleware/errorHandler');
 app.use(errorHandler);

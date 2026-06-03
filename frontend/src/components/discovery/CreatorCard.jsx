@@ -14,6 +14,7 @@ const CreatorCard = ({ creator }) => {
     pricePerQuestion,
     stats,
     verified,
+    isLive,
     bgColor = '#1a1a1a', // fallback background for avatar if no image
     initials
   } = creator;
@@ -62,8 +63,8 @@ const CreatorCard = ({ creator }) => {
           fontWeight: '700',
           color: '#ffffff',
           overflow: 'hidden',
-          border: '2px solid #06b6d4', // The glowing ring
-          boxShadow: '0 0 10px rgba(6, 182, 212, 0.3)'
+          border: isLive ? '2px solid #06b6d4' : '2px solid transparent', // The glowing ring only if live
+          boxShadow: isLive ? '0 0 10px rgba(6, 182, 212, 0.3)' : 'none'
         }}>
           {avatarUrl ? (
             <img src={avatarUrl} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -76,15 +77,16 @@ const CreatorCard = ({ creator }) => {
           bottom: '-6px',
           left: '50%',
           transform: 'translateX(-50%)',
-          background: '#0ea5e9',
-          color: '#000000',
+          background: isLive ? '#0ea5e9' : '#334155',
+          color: isLive ? '#000000' : '#cbd5e1',
           fontSize: '10px',
           fontWeight: '800',
           padding: '2px 6px',
           borderRadius: '8px',
-          letterSpacing: '0.5px'
+          letterSpacing: '0.5px',
+          border: isLive ? 'none' : '1px solid #1e293b'
         }}>
-          LIVE
+          {isLive ? 'LIVE' : 'OFFLINE'}
         </div>
       </div>
 

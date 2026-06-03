@@ -76,7 +76,7 @@ const CreatorSharePage = () => {
     : [];
   const primaryExpertise = expertiseList[0] || 'expertise';
 
-  const shareUrl = `skriibe.in/@${handle}`;
+  const shareUrl = `skriibe.com/@${handle}`;
   const fullShareUrl = `https://${shareUrl}`;
 
   // Bio template to display & copy

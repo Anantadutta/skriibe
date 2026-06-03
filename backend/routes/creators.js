@@ -344,6 +344,41 @@ router.post('/onboarding/pricing', verifyCreatorToken, async (req, res) => {
 });
 
 /**
+ * @route POST /api/creators/link-bank
+ * @desc Link bank account
+ */
+router.post('/link-bank', verifyCreatorToken, async (req, res) => {
+  await connectDB();
+  const updatedCreator = await Creator.findByIdAndUpdate(
+    req.creator.creatorId,
+    { bankLinked: true },
+    { new: true }
+  );
+
+  res.json({ success: true, creator: updatedCreator });
+});
+
+/**
+ * @route POST /api/creators/toggle-live
+ * @desc Toggle creator live status
+ */
+router.post('/toggle-live', verifyCreatorToken, async (req, res) => {
+  const { isLive } = req.body;
+  if (typeof isLive !== 'boolean') return res.status(400).json({ message: 'Invalid status' });
+
+  await connectDB();
+  const updatedCreator = await Creator.findByIdAndUpdate(
+    req.creator.creatorId,
+    { isLive },
+    { new: true }
+  );
+
+  req.io.emit('creator-status-changed', { creatorId: updatedCreator._id.toString(), isLive });
+
+  res.json({ success: true, creator: updatedCreator });
+});
+
+/**
  * @route POST /api/creators/logout
  * @desc Logout creator
  */

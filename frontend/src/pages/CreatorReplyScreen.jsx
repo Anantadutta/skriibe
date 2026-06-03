@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { mockQuestions } from '../mock/questions';
+import api from '../services/api';
 
 const CreatorReplyScreen = () => {
   const { id } = useParams();
@@ -26,32 +27,62 @@ const CreatorReplyScreen = () => {
   const [view, setView] = useState('reply');
   const [rejectReason, setRejectReason] = useState('expertise');
 
+  const navItems = [
+    { label: 'HOME', icon: '🏠', route: '/creator/dashboard' },
+    { label: 'INBOX', icon: '💬', route: '/creator/dashboard/inbox' },
+    { label: 'ANALYTICS', icon: '📊', route: '/creator/analytics' },
+    { label: 'PAYOUTS', icon: '💰', route: '/creator/payouts' },
+    { label: 'SETTINGS', icon: '⚙️', route: '/creator/settings' },
+  ];
+
+  // Cyan filter: to make emojis turn cyan #29C5F6
+  const cyanFilter = 'invert(69%) sepia(87%) saturate(2714%) hue-rotate(164deg) brightness(99%) contrast(98%)';
+  // Gray filter
+  const grayFilter = 'invert(31%) sepia(13%) saturate(760%) hue-rotate(181deg) brightness(96%) contrast(85%)';
+
   if (!question) return null;
 
   const charCount = replyText.length;
   const isMinMet = charCount >= 100;
   const charsRemaining = 100 - charCount;
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!isMinMet) return;
-    alert(`Reply sent to ${question.followerName}!`);
-    navigate('/creator/dashboard');
+    try {
+      await api.post(`/creator/questions/${question._id || question.id}/reply`, { replyText });
+      navigate('/creator/dashboard/inbox');
+    } catch (err) {
+      console.error('Failed to send reply', err);
+      alert('Failed to send reply. Please try again.');
+    }
   };
 
   const handleRejectClick = () => {
     setView('reject');
   };
 
-  const handleConfirmReject = () => {
-    setView('success');
+  const handleConfirmReject = async () => {
+    try {
+      await api.post(`/creator/questions/${question._id || question.id}/reject`, { reason: rejectReason });
+      setView('success');
+    } catch (err) {
+      console.error('Failed to reject', err);
+      alert('Failed to reject. Please try again.');
+    }
   };
 
   const handleFlagClick = () => {
     setView('flag');
   };
 
-  const handleConfirmFlag = () => {
-    setView('success_flag');
+  const handleConfirmFlag = async () => {
+    try {
+      await api.post(`/creator/questions/${question._id || question.id}/flag`);
+      setView('success_flag');
+    } catch (err) {
+      console.error('Failed to flag', err);
+      alert('Failed to flag. Please try again.');
+    }
   };
 
   return (
@@ -109,22 +140,22 @@ const CreatorReplyScreen = () => {
               </button>
               
               <h2 style={{ fontSize: '1.2rem', fontWeight: '700', margin: 0, color: '#ffffff', letterSpacing: '-0.02em' }}>
-                Reply to {question.followerName.split(' ')[0]}
+                Reply to {(question.buyerName || question.followerName || 'Anonymous').split(' ')[0]}
               </h2>
             </div>
 
             {/* SLA Warning Banner */}
             <div style={{ background: '#2C1414', border: '1px solid #3D1B1B', borderRadius: '12px', padding: '16px', display: 'flex', alignItems: 'center', gap: '10px', color: '#EF4444' }}>
               <div style={{ width: '18px', height: '18px', borderRadius: '50%', border: '2px solid #EF4444', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: '900', flexShrink: 0 }}>!</div>
-              <span style={{ fontWeight: 'bold', fontSize: '0.9rem', letterSpacing: '0.01em' }}>SLA: {question.slaHoursLeft} hours remaining</span>
+              <span style={{ fontWeight: 'bold', fontSize: '0.9rem', letterSpacing: '0.01em' }}>SLA: {question.slaHoursLeft || 48} hours remaining</span>
             </div>
 
             {/* Question Details Card */}
             <div style={{ background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase' }}>
-                {question.followerName} · ₹{question.pricePaid} PAID
+                {question.buyerName || question.followerName || 'Anonymous'} · ₹{question.amountPaid || question.pricePaid} PAID
               </div>
-              <p style={{ margin: 0, fontSize: '1.05rem', color: '#f8fafc', lineHeight: '1.5', letterSpacing: '-0.01em' }}>
+              <p style={{ margin: 0, fontSize: '1.05rem', color: '#f8fafc', lineHeight: '1.5', letterSpacing: '-0.01em', wordBreak: 'break-all', overflowWrap: 'anywhere' }}>
                 "{question.questionText}"
               </p>
             </div>
@@ -238,22 +269,22 @@ const CreatorReplyScreen = () => {
                 style={{
                   position: 'absolute',
                   left: 0,
-                  background: '#1A1A1A',
-                  border: '1px solid #2A2A2A',
-                  color: '#ffffff',
+                  background: '#21212B',
+                  border: 'none',
+                  color: '#94a3b8',
                   borderRadius: '50%',
-                  width: '40px',
-                  height: '40px',
+                  width: '36px',
+                  height: '36px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   cursor: 'pointer',
-                  fontSize: '22px',
-                  fontWeight: '300',
+                  fontSize: '18px',
+                  fontWeight: '600',
                   paddingBottom: '2px'
                 }}
               >
-                ‹
+                &lt;
               </button>
               <h2 style={{ fontSize: '1.2rem', fontWeight: '700', margin: 0, color: '#ffffff' }}>
                 Reject question
@@ -262,10 +293,10 @@ const CreatorReplyScreen = () => {
 
             {/* Question Details Card (Compact) */}
             <div style={{ background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 600, letterSpacing: '1px', textTransform: 'uppercase' }}>
-                {question.followerName} · Rs.{question.pricePaid} PAID
+              <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600, letterSpacing: '0.5px' }}>
+                {question.buyerName || question.followerName || 'Anonymous'} · Rs.{question.amountPaid || question.pricePaid} paid
               </div>
-              <p style={{ margin: 0, fontSize: '0.95rem', color: '#e2e8f0', lineHeight: '1.4', fontStyle: 'italic' }}>
+              <p style={{ margin: 0, fontSize: '0.95rem', color: '#e2e8f0', lineHeight: '1.4', fontStyle: 'italic', wordBreak: 'break-word', overflowWrap: 'break-word' }}>
                 "{question.questionText}"
               </p>
             </div>
@@ -326,7 +357,7 @@ const CreatorReplyScreen = () => {
             <div style={{ background: '#1A1A1A', borderRadius: '12px', padding: '16px' }}>
               <span style={{ color: '#64748b', fontSize: '0.9rem' }}>Buyer receives: </span>
               <span style={{ color: '#e2e8f0', fontSize: '0.9rem', fontStyle: 'italic' }}>
-                "The creator could not answer your question. A full refund of Rs.{question.pricePaid} has been issued."
+                "The creator could not answer your question. A full refund of Rs.{question.amountPaid || question.pricePaid} has been issued."
               </span>
             </div>
 
@@ -386,22 +417,22 @@ const CreatorReplyScreen = () => {
                 style={{
                   position: 'absolute',
                   left: 0,
-                  background: '#1A1A1A',
-                  border: '1px solid #2A2A2A',
-                  color: '#ffffff',
+                  background: '#21212B',
+                  border: 'none',
+                  color: '#94a3b8',
                   borderRadius: '50%',
-                  width: '40px',
-                  height: '40px',
+                  width: '36px',
+                  height: '36px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   cursor: 'pointer',
-                  fontSize: '22px',
-                  fontWeight: '300',
+                  fontSize: '18px',
+                  fontWeight: '600',
                   paddingBottom: '2px'
                 }}
               >
-                ‹
+                &lt;
               </button>
               <h2 style={{ fontSize: '1.2rem', fontWeight: '700', margin: 0, color: '#ffffff' }}>
                 Flag abuse
@@ -410,10 +441,10 @@ const CreatorReplyScreen = () => {
 
             {/* Question Details Card (Compact) */}
             <div style={{ background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 600, letterSpacing: '1px', textTransform: 'uppercase' }}>
-                {question.followerName} · Rs.{question.pricePaid} PAID
+              <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600, letterSpacing: '0.5px' }}>
+                {question.buyerName || question.followerName || 'Anonymous'} · Rs.{question.amountPaid || question.pricePaid} paid
               </div>
-              <p style={{ margin: 0, fontSize: '0.95rem', color: '#e2e8f0', lineHeight: '1.4', fontStyle: 'italic' }}>
+              <p style={{ margin: 0, fontSize: '0.95rem', color: '#e2e8f0', lineHeight: '1.4', fontStyle: 'italic', wordBreak: 'break-word', overflowWrap: 'break-word' }}>
                 "{question.questionText}"
               </p>
             </div>
@@ -430,7 +461,7 @@ const CreatorReplyScreen = () => {
               </h3>
               
               {[
-                { id: 'experience', title: 'Outside my experience', subtitle: 'Cannot answer accurately' }
+                { id: 'expertise', title: 'Outside my expertise', subtitle: 'Cannot answer accurately' }
               ].map((reason) => {
                 const isActive = true; // Only one option, so it's always active
                 return (
@@ -470,7 +501,7 @@ const CreatorReplyScreen = () => {
             <div style={{ background: '#1A1A1A', borderRadius: '12px', padding: '16px' }}>
               <span style={{ color: '#64748b', fontSize: '0.9rem' }}>Buyer receives: </span>
               <span style={{ color: '#e2e8f0', fontSize: '0.9rem', fontStyle: 'italic' }}>
-                "The creator could not answer your question. A full refund of Rs.{question.pricePaid} has been issued."
+                "The creator could not answer your question. A full refund of Rs.{question.amountPaid || question.pricePaid} has been issued."
               </span>
             </div>
 
@@ -541,7 +572,7 @@ const CreatorReplyScreen = () => {
                 Question Flagged
               </h2>
               <p style={{ margin: 0, fontSize: '0.95rem', color: '#94a3b8', lineHeight: '1.5' }}>
-                You have flagged this question. A full refund of ₹{question.pricePaid} has been automatically processed to the buyer.
+                You have flagged this question. A full refund of ₹{question.amountPaid || question.pricePaid} has been automatically processed to the buyer.
               </p>
             </div>
 
@@ -590,7 +621,7 @@ const CreatorReplyScreen = () => {
                 Question Rejected
               </h2>
               <p style={{ margin: 0, fontSize: '0.95rem', color: '#94a3b8', lineHeight: '1.5' }}>
-                You have rejected the question. A full refund of ₹{question.pricePaid} has been automatically processed to the buyer.
+                You have rejected the question. A full refund of ₹{question.amountPaid || question.pricePaid} has been automatically processed to the buyer.
               </p>
             </div>
 
@@ -616,6 +647,50 @@ const CreatorReplyScreen = () => {
           </div>
         )}
 
+      </div>
+
+      {/* BOTTOM NAV BAR */}
+      <div style={{
+        position: 'fixed',
+        bottom: 0,
+        left: '50%',
+        transform: 'translateX(-50%)',
+        width: '390px',
+        background: '#0E0E0E',
+        borderTop: '1px solid #1A1A1A',
+        display: 'flex',
+        justifyContent: 'space-around',
+        padding: '12px 0 20px',
+        zIndex: 100
+      }}>
+        {navItems.map((item) => {
+          const isActive = location.pathname.includes(item.route) || (item.label === 'INBOX'); // default highlight inbox since we're replying
+          return (
+            <div
+              key={item.route}
+              onClick={() => navigate(item.route)}
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                cursor: 'pointer',
+                color: isActive ? '#29C5F6' : '#64748b',
+                fontSize: '0.6rem',
+                letterSpacing: '1px',
+                fontWeight: 'bold',
+                gap: '6px'
+              }}
+            >
+              <span style={{ 
+                fontSize: '20px',
+                filter: isActive ? cyanFilter : grayFilter
+              }}>
+                {item.icon}
+              </span>
+              <span>{item.label}</span>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

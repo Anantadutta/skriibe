@@ -6,6 +6,7 @@ const FanHistory = () => {
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [selectedQuestion, setSelectedQuestion] = useState(null);
 
   useEffect(() => {
     const fetchHistory = async () => {
@@ -34,6 +35,272 @@ const FanHistory = () => {
     }
   };
 
+  const getTimeAgo = (date) => {
+    if (!date) return '';
+    const diff = (new Date() - new Date(date)) / (1000 * 60 * 60);
+    if (diff < 1) return `${Math.round(diff * 60)} mins ago`;
+    if (diff < 24) return `${Math.round(diff)} hours ago`;
+    return `${Math.round(diff / 24)} days ago`;
+  };
+
+  const getAnsweredIn = (created, answered) => {
+    if (!created || !answered) return '';
+    const diff = (new Date(answered) - new Date(created)) / (1000 * 60);
+    if (diff < 60) return `${Math.round(diff)} min`;
+    return `${Math.floor(diff / 60)}h ${Math.round(diff % 60)} min`;
+  };
+
+  const renderList = () => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      {questions.map((q) => (
+        <div 
+          key={q._id} 
+          onClick={() => setSelectedQuestion(q)}
+          style={{
+            background: 'rgba(255,255,255,0.03)',
+            border: '1px solid rgba(255,255,255,0.05)',
+            borderRadius: '16px',
+            padding: '24px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '16px',
+            cursor: 'pointer',
+            transition: 'all 0.2s'
+          }}
+          onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+          onMouseOut={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.03)'}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: '50%',
+                background: 'linear-gradient(45deg, #7c3aed, #06b6d4)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontWeight: 'bold',
+                fontSize: '18px'
+              }}>
+                {q.creatorId?.avatarUrl ? (
+                  <img src={q.creatorId.avatarUrl} alt="" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+                ) : (
+                  (q.creatorId?.name || q.handle || 'C').charAt(0).toUpperCase()
+                )}
+              </div>
+              <div>
+                <div style={{ fontWeight: 'bold', fontSize: '16px' }}>{q.creatorId?.name || '@'+q.handle}</div>
+                <div style={{ color: '#94a3b8', fontSize: '13px' }}>
+                  Asked on {new Date(q.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                </div>
+              </div>
+            </div>
+            <div style={{
+              background: `${getStatusColor(q.status)}20`,
+              color: getStatusColor(q.status),
+              padding: '4px 12px',
+              borderRadius: '12px',
+              fontSize: '12px',
+              fontWeight: 'bold',
+              textTransform: 'uppercase'
+            }}>
+              {q.status}
+            </div>
+          </div>
+          
+          <div style={{ color: '#e2e8f0', fontSize: '15px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+            {q.questionText}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
+  const renderDetail = () => {
+    const q = selectedQuestion;
+    const isAnswered = q.status === 'answered' && q.answeredAt;
+    let diffHours = 0;
+    
+    if (isAnswered) {
+      diffHours = (new Date() - new Date(q.answeredAt)) / (1000 * 60 * 60);
+    }
+
+    const creatorName = q.creatorId?.name || '@' + q.handle;
+
+    if (isAnswered && diffHours < 24) {
+      return (
+        <div style={{ maxWidth: '480px', margin: '0 auto', width: '100%' }}>
+          <div style={{ display: 'flex', alignItems: 'center', marginBottom: '24px', position: 'relative' }}>
+            <button 
+              onClick={() => setSelectedQuestion(null)}
+              style={{ background: 'transparent', border: 'none', color: '#94a3b8', fontSize: '20px', cursor: 'pointer', position: 'absolute', left: 0 }}
+            >
+              ←
+            </button>
+            <h2 style={{ flex: 1, textAlign: 'center', margin: 0, fontSize: '18px', fontWeight: '800' }}>Answer ready</h2>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#1e293b', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: '900', fontSize: '18px' }}>
+                  {creatorName.charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <div style={{ fontWeight: '800', fontSize: '16px', color: '#fff' }}>{creatorName}</div>
+                  <div style={{ color: '#64748b', fontSize: '12px' }}>Replied {getTimeAgo(q.answeredAt)}</div>
+                </div>
+              </div>
+              <div style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', padding: '6px 16px', borderRadius: '20px', fontSize: '12px', fontWeight: '700' }}>
+                Replied
+              </div>
+            </div>
+
+            <div style={{ height: '1px', background: 'rgba(255,255,255,0.05)', margin: '4px 0' }} />
+
+            <div style={{ background: '#1a1b23', borderRadius: '16px', padding: '20px', border: '1px solid rgba(255,255,255,0.05)' }}>
+              <div style={{ color: '#64748b', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '12px', textTransform: 'uppercase' }}>YOUR QUESTION</div>
+              <div style={{ color: '#94a3b8', fontSize: '15px', fontStyle: 'italic', lineHeight: '1.5' }}>
+                "{q.questionText}"
+              </div>
+            </div>
+
+            <div style={{ background: '#0a1922', borderRadius: '16px', padding: '20px', border: '1px solid rgba(56, 189, 248, 0.2)' }}>
+              <div style={{ color: '#38bdf8', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '12px', textTransform: 'uppercase' }}>{creatorName.split(' ')[0]}'S ANSWER</div>
+              <div style={{ color: '#fff', fontSize: '16px', lineHeight: '1.6', wordBreak: 'break-all', overflowWrap: 'anywhere' }}>
+                {q.answerText}
+              </div>
+            </div>
+
+            <div style={{ background: '#062c19', borderRadius: '16px', padding: '16px', border: '1px solid rgba(16, 185, 129, 0.2)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ color: '#fff', fontSize: '20px' }}>💬</div>
+                <div>
+                  <div style={{ color: '#10b981', fontWeight: '800', fontSize: '14px' }}>1 free follow-up available</div>
+                  <div style={{ color: '#64748b', fontSize: '12px' }}>Valid for 7 days · Ask now</div>
+                </div>
+              </div>
+              <button style={{ background: '#10b981', color: '#000', border: 'none', borderRadius: '8px', padding: '8px 16px', fontWeight: '700', fontSize: '14px', cursor: 'pointer' }}>
+                Ask →
+              </button>
+            </div>
+
+            <button style={{ background: 'transparent', border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: '16px', padding: '16px', color: '#ef4444', fontWeight: '600', fontSize: '14px', cursor: 'pointer', marginTop: '8px', transition: 'background 0.2s' }} onMouseOver={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.05)'} onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}>
+              Flag as incomplete (48hr window)
+            </button>
+
+          </div>
+        </div>
+      );
+    }
+
+    if (isAnswered && diffHours >= 24) {
+      return (
+        <div style={{ maxWidth: '480px', margin: '0 auto', width: '100%' }}>
+          <div style={{ display: 'flex', alignItems: 'center', marginBottom: '24px', position: 'relative' }}>
+            <button 
+              onClick={() => setSelectedQuestion(null)}
+              style={{ background: 'rgba(255,255,255,0.05)', borderRadius: '50%', width: '32px', height: '32px', border: 'none', color: '#94a3b8', fontSize: '16px', cursor: 'pointer', position: 'absolute', left: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            >
+              ←
+            </button>
+            <h2 style={{ flex: 1, textAlign: 'center', margin: 0, fontSize: '18px', fontWeight: '800' }}>Answer receipt</h2>
+          </div>
+
+          <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+            <div style={{ color: '#64748b', fontSize: '10px', fontWeight: '800', letterSpacing: '2px', marginBottom: '4px' }}>SKRIIBE RECEIPT</div>
+            <div style={{ color: '#fff', fontSize: '28px', fontWeight: '900', fontStyle: 'italic', letterSpacing: '1px' }}>#{q.orderId || `SKR-${q._id.substring(0,8).toUpperCase()}`}</div>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div style={{ background: '#11131a', borderRadius: '16px', padding: '24px', border: '1px solid rgba(255,255,255,0.05)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{ width: '40px', height: '40px', borderRadius: '8px', background: '#1e293b', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: '900', fontSize: '18px' }}>
+                    {creatorName.charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <div style={{ fontWeight: '800', fontSize: '16px', color: '#fff' }}>{creatorName}</div>
+                    <div style={{ color: '#64748b', fontSize: '12px' }}>@{q.handle || creatorName.toLowerCase().replace(/\s+/g, '')}</div>
+                  </div>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ color: '#fff', fontSize: '24px', fontWeight: '900', fontStyle: 'italic', lineHeight: '1', display: 'flex', alignItems: 'flex-start', justifyContent: 'flex-end' }}>
+                    <span style={{ fontSize: '14px', marginRight: '2px', marginTop: '2px' }}>Rs.</span>{q.price || '99'}
+                  </div>
+                  <div style={{ color: '#10b981', fontSize: '12px', fontWeight: '700', marginTop: '4px' }}>Paid</div>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', fontSize: '13px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: '#64748b' }}>Date</span>
+                  <span style={{ color: '#cbd5e1', fontWeight: '500' }}>{new Date(q.createdAt).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })} · {new Date(q.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</span>
+                </div>
+                <div style={{ height: '1px', background: 'rgba(255,255,255,0.05)' }} />
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: '#64748b' }}>Razorpay ID</span>
+                  <span style={{ color: '#cbd5e1', fontFamily: 'monospace' }}>{q.razorpayId || 'pay_ABC123XYZ456'}</span>
+                </div>
+                <div style={{ height: '1px', background: 'rgba(255,255,255,0.05)' }} />
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: '#64748b' }}>Answered in</span>
+                  <span style={{ color: '#cbd5e1', fontWeight: '500' }}>{getAnsweredIn(q.createdAt, q.answeredAt)}</span>
+                </div>
+              </div>
+            </div>
+
+            <div style={{ background: '#1a1b23', borderRadius: '16px', padding: '20px', border: '1px solid rgba(255,255,255,0.05)' }}>
+              <div style={{ color: '#64748b', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '12px', textTransform: 'uppercase' }}>YOUR QUESTION</div>
+              <div style={{ color: '#94a3b8', fontSize: '15px', fontStyle: 'italic', lineHeight: '1.5' }}>
+                "{q.questionText}"
+              </div>
+            </div>
+
+            <div style={{ background: '#0a1922', borderRadius: '16px', padding: '20px', border: '1px solid rgba(56, 189, 248, 0.2)' }}>
+              <div style={{ color: '#38bdf8', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '12px', textTransform: 'uppercase' }}>{creatorName.split(' ')[0]}'S FULL ANSWER</div>
+              <div style={{ color: '#fff', fontSize: '16px', lineHeight: '1.6' }}>
+                {q.answerText}
+              </div>
+            </div>
+
+            <button style={{ background: '#38bdf8', color: '#000', border: 'none', borderRadius: '16px', padding: '16px', fontWeight: '800', fontSize: '15px', cursor: 'pointer', marginTop: '8px' }}>
+              Ask {creatorName.split(' ')[0]} another question
+            </button>
+
+          </div>
+        </div>
+      );
+    }
+    
+    return (
+        <div style={{ maxWidth: '480px', margin: '0 auto', width: '100%' }}>
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '24px', position: 'relative' }}>
+            <button 
+                onClick={() => setSelectedQuestion(null)}
+                style={{ background: 'transparent', border: 'none', color: '#94a3b8', fontSize: '20px', cursor: 'pointer', position: 'absolute', left: 0 }}
+            >
+                ←
+            </button>
+            <h2 style={{ flex: 1, textAlign: 'center', margin: 0, fontSize: '18px', fontWeight: '800' }}>Question Details</h2>
+            </div>
+            
+            <div style={{ background: '#1a1b23', borderRadius: '16px', padding: '20px', border: '1px solid rgba(255,255,255,0.05)', marginBottom: '16px' }}>
+                <div style={{ color: '#64748b', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '12px', textTransform: 'uppercase' }}>YOUR QUESTION</div>
+                <div style={{ color: '#94a3b8', fontSize: '15px', fontStyle: 'italic', lineHeight: '1.5' }}>
+                "{q.questionText}"
+                </div>
+            </div>
+            
+            <div style={{ textAlign: 'center', padding: '32px', color: '#94a3b8', background: 'rgba(255,255,255,0.02)', borderRadius: '16px' }}>
+                Status: <strong style={{ color: getStatusColor(q.status), textTransform: 'uppercase' }}>{q.status}</strong>
+                <p style={{ marginTop: '8px', fontSize: '14px' }}>Waiting for {creatorName} to reply.</p>
+            </div>
+        </div>
+    );
+  };
+
   return (
     <div style={{
       minHeight: '100vh',
@@ -45,9 +312,13 @@ const FanHistory = () => {
     }}>
       <FanNavbar />
       
-      <main style={{ flex: 1, padding: '40px', maxWidth: '800px', margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
-        <h1 style={{ fontSize: '36px', fontWeight: '800', marginBottom: '8px' }}>Your History</h1>
-        <p style={{ color: '#94a3b8', marginBottom: '40px' }}>Track the questions you've asked and view creator replies.</p>
+      <main style={{ flex: 1, padding: '40px 20px', maxWidth: '800px', margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
+        {!selectedQuestion && (
+          <>
+            <h1 style={{ fontSize: '36px', fontWeight: '800', marginBottom: '8px' }}>Your History</h1>
+            <p style={{ color: '#94a3b8', marginBottom: '40px' }}>Track the questions you've asked and view creator replies.</p>
+          </>
+        )}
         
         {loading ? (
           <div style={{ color: '#94a3b8', textAlign: 'center', padding: '40px' }}>Loading history...</div>
@@ -68,77 +339,7 @@ const FanHistory = () => {
             <p style={{ color: '#94a3b8', margin: 0 }}>Go to the explore page to ask your first question!</p>
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            {questions.map((q) => (
-              <div key={q._id} style={{
-                background: 'rgba(255,255,255,0.03)',
-                border: '1px solid rgba(255,255,255,0.05)',
-                borderRadius: '16px',
-                padding: '24px',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '16px'
-              }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <div style={{
-                      width: '40px',
-                      height: '40px',
-                      borderRadius: '50%',
-                      background: 'linear-gradient(45deg, #7c3aed, #06b6d4)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontWeight: 'bold',
-                      fontSize: '18px'
-                    }}>
-                      {q.creatorId?.avatarUrl ? (
-                        <img src={q.creatorId.avatarUrl} alt="" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
-                      ) : (
-                        (q.creatorId?.name || q.handle || 'C').charAt(0).toUpperCase()
-                      )}
-                    </div>
-                    <div>
-                      <div style={{ fontWeight: 'bold', fontSize: '16px' }}>{q.creatorId?.name || '@'+q.handle}</div>
-                      <div style={{ color: '#94a3b8', fontSize: '13px' }}>
-                        Asked on {new Date(q.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} at {new Date(q.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
-                      </div>
-                    </div>
-                  </div>
-                  <div style={{
-                    background: `${getStatusColor(q.status)}20`,
-                    color: getStatusColor(q.status),
-                    padding: '4px 12px',
-                    borderRadius: '12px',
-                    fontSize: '12px',
-                    fontWeight: 'bold',
-                    textTransform: 'uppercase'
-                  }}>
-                    {q.status}
-                  </div>
-                </div>
-
-                <div style={{ background: 'rgba(0,0,0,0.3)', padding: '16px', borderRadius: '12px', fontSize: '15px', lineHeight: '1.5', color: '#e2e8f0' }}>
-                  <div style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '4px', fontWeight: 'bold', textTransform: 'uppercase' }}>Your Question:</div>
-                  {q.questionText}
-                </div>
-
-                {q.status === 'answered' && q.answerText && (
-                  <div style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.2)', padding: '16px', borderRadius: '12px', fontSize: '15px', lineHeight: '1.5', color: '#e2e8f0' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                      <div style={{ fontSize: '12px', color: '#10b981', fontWeight: 'bold', textTransform: 'uppercase' }}>Creator's Reply:</div>
-                      {q.answeredAt && (
-                        <div style={{ fontSize: '11px', color: '#10b981', opacity: 0.8 }}>
-                          {new Date(q.answeredAt).toLocaleDateString()} {new Date(q.answeredAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                        </div>
-                      )}
-                    </div>
-                    {q.answerText}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
+          selectedQuestion ? renderDetail() : renderList()
         )}
       </main>
     </div>

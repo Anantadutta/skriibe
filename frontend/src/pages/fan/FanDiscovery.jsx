@@ -3,23 +3,23 @@ import { Link } from 'react-router-dom';
 import CreatorCard from '../../components/discovery/CreatorCard';
 import FanNavbar from '../../components/fan/layout/FanNavbar';
 import { getLiveCreators } from '../../services/discoveryApi';
+import { getFanMe } from '../../services/fanApi';
 import { io } from 'socket.io-client';
 
 
 
 const categories = [
-  { id: 'All', label: 'All creators', query: 'All creators' },
-  { id: 'Tech', label: '💻 Tech', query: 'Tech' },
-  { id: 'Finance', label: '💰 Finance', query: 'Finance' },
-  { id: 'Fitness', label: '💪 Fitness', query: 'Fitness' },
-  { id: 'Music', label: '🎧 Music', query: 'Music' },
-  { id: 'Art', label: '🎨 Art', query: 'Art' },
-  { id: 'Gaming', label: '🎮 Gaming', query: 'Gaming' },
-  { id: 'SIP', label: '📈 SIP/Mutual Funds', query: 'SIP' },
-  { id: 'Stock', label: '📊 Stock Trading', query: 'Stock Trading' },
-  { id: 'Career', label: '🚀 Career Coaching', query: 'Career Coaching' },
-  { id: 'Tax', label: '🧾 Tax Planning', query: 'Tax Planning' },
-  { id: 'RealEstate', label: '🏠 Real Estate', query: 'Real Estate' }
+  { id: 'All', label: 'All Categories', query: 'All creators' },
+  { id: 'Career', label: 'Career & Finance', query: 'Career & Finance' },
+  { id: 'Health', label: 'Health & Fitness', query: 'Health & Fitness' },
+  { id: 'Tech', label: 'Tech & Skills', query: 'Tech & Skills' },
+  { id: 'Fashion', label: 'Fashion & Lifestyle', query: 'Fashion & Lifestyle' },
+  { id: 'Vlogs', label: 'Daily Vlogs & Entertainment', query: 'Daily Vlogs & Entertainment' },
+  { id: 'Education', label: 'Education', query: 'Education' },
+  { id: 'Business', label: 'Business & Entrepreneurship', query: 'Business & Entrepreneurship' },
+  { id: 'Relationships', label: 'Relationships & Life', query: 'Relationships & Life' },
+  { id: 'Spirituality', label: 'Spirituality', query: 'Spirituality' },
+  { id: 'Others', label: 'Others', query: 'Others' }
 ];
 
 const FanDiscovery = () => {
@@ -27,6 +27,7 @@ const FanDiscovery = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
   const [loading, setLoading] = useState(true);
+  const [fanName, setFanName] = useState('Fan');
 
   const [isLiveFilter, setIsLiveFilter] = useState(false);
 
@@ -60,6 +61,19 @@ const FanDiscovery = () => {
   useEffect(() => {
     // Initial fetch
     fetchCreators(searchQuery, activeCategory, isLiveFilter);
+
+    // Fetch fan profile
+    const fetchFanProfile = async () => {
+      try {
+        const res = await getFanMe();
+        if (res.success && res.fan && res.fan.name) {
+          setFanName(res.fan.name.split(' ')[0]);
+        }
+      } catch (err) {
+        console.error('Failed to fetch fan profile', err);
+      }
+    };
+    fetchFanProfile();
 
     // Socket.IO setup
     const socket = io('http://localhost:5000');
@@ -98,8 +112,8 @@ const FanDiscovery = () => {
     fetchCreators(searchQuery, activeCategory, newLive);
   };
 
-  // filteredCreators is now just the creators state (filtered by backend)
-  const filteredCreators = creators;
+  // Filter locally so socket updates instantly remove offline creators if filter is active
+  const filteredCreators = isLiveFilter ? creators.filter(c => c.isLive) : creators;
 
   return (
     <div style={{
@@ -114,10 +128,75 @@ const FanDiscovery = () => {
       <FanNavbar />
 
       {/* Main Content */}
-      <main style={{ flex: 1, padding: '40px', maxWidth: '1200px', margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
+      <main style={{ flex: 1, padding: 'min(40px, 5vw)', maxWidth: '1200px', margin: '0 auto', width: '100%', boxSizing: 'border-box', overflowX: 'hidden' }}>
         
         {/* Header Section */}
         <div style={{ marginBottom: '40px' }}>
+          
+          {/* Personalized Fan Greeting Card */}
+          <div style={{
+            background: '#13161C',
+            border: '1px solid #1F2937',
+            borderRadius: '16px',
+            padding: '16px 20px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '16px',
+            marginBottom: '32px',
+            width: '100%',
+            maxWidth: '400px',
+            position: 'relative',
+            overflow: 'hidden',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.2)'
+          }}>
+            {/* Purple glow on the left */}
+            <div style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '4px',
+              height: '100%',
+              background: '#8B5CF6',
+              boxShadow: '0 0 12px #8B5CF6'
+            }} />
+            <div style={{
+              position: 'absolute',
+              top: 0,
+              left: '4px',
+              width: '40px',
+              height: '100%',
+              background: 'linear-gradient(90deg, rgba(139, 92, 246, 0.1) 0%, transparent 100%)',
+              pointerEvents: 'none'
+            }} />
+
+            {/* Avatar */}
+            <div style={{
+              width: '48px',
+              height: '48px',
+              borderRadius: '12px',
+              background: 'linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontWeight: 900,
+              fontSize: '1.4rem',
+              color: '#000',
+              zIndex: 1
+            }}>
+              {fanName.charAt(0).toUpperCase()}
+            </div>
+
+            {/* Greeting Text */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', zIndex: 1 }}>
+              <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#fff', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                Hey <span style={{ color: '#2DD4BF' }}>{fanName}</span> <span style={{ fontSize: '1.1rem' }}>👋</span>
+              </div>
+              <div style={{ fontSize: '0.85rem' }}>
+                <span style={{ color: '#94a3b8' }}>On your mind today: </span>
+                <span style={{ color: '#64748b' }}>Need to consult on SIPs?</span>
+              </div>
+            </div>
+          </div>
           <div style={{
             display: 'inline-flex',
             alignItems: 'center',
@@ -148,7 +227,7 @@ const FanDiscovery = () => {
           </h1>
           
           <p style={{ color: '#94a3b8', fontSize: '18px', maxWidth: '460px', lineHeight: '1.5', margin: 0 }}>
-            Skip the unread DMs. Pay your favourite creators to actually reply — usually within hours.
+            
           </p>
         </div>
 
@@ -182,56 +261,48 @@ const FanDiscovery = () => {
             />
           </div>
 
-          {/* Filter Chips */}
-          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
-            <button 
-              onClick={toggleLiveFilter}
-              style={{
-              background: isLiveFilter ? '#10b981' : 'rgba(255,255,255,0.03)',
-              color: isLiveFilter ? '#000' : '#94a3b8',
-              border: isLiveFilter ? 'none' : '1px solid rgba(255,255,255,0.05)',
-              borderRadius: '20px',
-              padding: '10px 20px',
-              fontWeight: '700',
-              fontSize: '14px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              cursor: 'pointer'
-            }}>
-              <div style={{ width: '6px', height: '6px', background: isLiveFilter ? '#000' : '#10b981', borderRadius: '50%' }} />
-              Live now
-            </button>
-            
-            {categories.map(cat => (
-              <button 
-                key={cat.id}
-                onClick={() => handleCategoryClick(cat.id)}
+          {/* Filter Chips / Dropdown */}
+          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+
+            <div style={{ position: 'relative', width: '280px' }}>
+              <select 
+                value={activeCategory}
+                onChange={(e) => handleCategoryClick(e.target.value)}
                 style={{
-                  background: activeCategory === cat.id ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.03)',
-                  border: '1px solid',
-                  borderColor: activeCategory === cat.id ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.05)',
-                  color: activeCategory === cat.id ? '#fff' : '#94a3b8',
+                  background: 'rgba(255,255,255,0.03)',
+                  color: '#fff',
+                  border: '1px solid rgba(255,255,255,0.05)',
+                  padding: '10px 40px 10px 20px',
                   borderRadius: '20px',
-                  padding: '10px 20px',
-                  fontWeight: '600',
                   fontSize: '14px',
+                  fontWeight: '600',
+                  outline: 'none',
                   cursor: 'pointer',
-                  transition: 'all 0.2s',
-                  whiteSpace: 'nowrap'
+                  appearance: 'none',
+                  WebkitAppearance: 'none',
+                  width: '100%',
+                  fontFamily: 'inherit'
                 }}
               >
-                {cat.label}
-              </button>
-            ))}
+                {categories.map(cat => (
+                  <option key={cat.id} value={cat.id} style={{ background: '#13131A' }}>{cat.label}</option>
+                ))}
+              </select>
+              {/* Custom arrow */}
+              <div style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#94a3b8', fontSize: '10px' }}>
+                ▼
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Live Right Now Header */}
+        {/* Dynamic Section Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{ width: '16px', height: '16px', background: '#f43f5e', borderRadius: '50%', boxShadow: '0 0 12px rgba(244,63,94,0.6)' }} />
-            <h2 style={{ margin: 0, fontSize: '24px', fontWeight: '700' }}>Live right now</h2>
+            {isLiveFilter && <div style={{ width: '16px', height: '16px', background: '#f43f5e', borderRadius: '50%', boxShadow: '0 0 12px rgba(244,63,94,0.6)' }} />}
+            <h2 style={{ margin: 0, fontSize: '24px', fontWeight: '700' }}>
+              {isLiveFilter ? 'Live right now' : (searchQuery ? 'Search results' : 'All creators')}
+            </h2>
           </div>
           <div style={{ color: '#94a3b8', fontSize: '14px' }}>
             {filteredCreators.length} creators

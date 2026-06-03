@@ -22,6 +22,7 @@ const CreatorProfile = () => {
   const [buyerName, setBuyerName] = useState('');
   const [buyerEmail, setBuyerEmail] = useState('');
   const [buyerPhone, setBuyerPhone] = useState('');
+  const [paymentTab, setPaymentTab] = useState('UPI');
 
   useEffect(() => {
     const fetchCreator = async () => {
@@ -220,16 +221,7 @@ const CreatorProfile = () => {
                 View my question
               </button>
 
-              <button
-                style={{
-                  background: '#062c19',
-                  color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.2)', borderRadius: '16px',
-                  padding: '16px', fontWeight: '700', fontSize: '15px',
-                  width: '100%', cursor: 'pointer'
-                }}
-              >
-                View reply (Demo)
-              </button>
+
 
               <button
                 onClick={() => navigate('/explore')}
@@ -491,11 +483,15 @@ const CreatorProfile = () => {
                 <div style={{ color: '#64748b', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '4px' }}>WHATSAPP NUMBER <span style={{ color: '#ef4444' }}>*</span></div>
                 <input 
                   type="tel" 
+                  maxLength={10}
                   value={buyerPhone}
-                  onChange={(e) => setBuyerPhone(e.target.value)}
+                  onChange={(e) => setBuyerPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
                   placeholder="e.g. 9876543210"
                   style={{ width: '100%', background: 'transparent', border: 'none', color: '#fff', fontSize: '15px', outline: 'none' }}
                 />
+                <div style={{ fontSize: '11px', color: '#64748b', marginTop: '6px' }}>
+                  It should only be a 10 digit number.
+                </div>
               </div>
 
               {/* Question */}
@@ -527,14 +523,14 @@ const CreatorProfile = () => {
             {/* Submit Button */}
             <button
               onClick={() => setStep('payment')}
-              disabled={!agreed || question.length < 20 || !buyerName.trim() || !buyerEmail.trim() || !buyerPhone.trim() || submitLoading}
+              disabled={!agreed || question.length < 20 || !buyerName.trim() || !buyerEmail.trim() || buyerPhone.length !== 10 || submitLoading}
               style={{
                 background: 'linear-gradient(90deg, #34d399, #10b981)',
                 color: '#000', border: 'none', borderRadius: '16px',
                 padding: '16px', fontWeight: '700', fontSize: '16px',
                 width: '100%',
-                cursor: (!agreed || question.length < 20 || !buyerName.trim() || !buyerEmail.trim() || !buyerPhone.trim() || submitLoading) ? 'not-allowed' : 'pointer',
-                opacity: (!agreed || question.length < 20 || !buyerName.trim() || !buyerEmail.trim() || !buyerPhone.trim() || submitLoading) ? 0.4 : 1,
+                cursor: (!agreed || question.length < 20 || !buyerName.trim() || !buyerEmail.trim() || buyerPhone.length !== 10 || submitLoading) ? 'not-allowed' : 'pointer',
+                opacity: (!agreed || question.length < 20 || !buyerName.trim() || !buyerEmail.trim() || buyerPhone.length !== 10 || submitLoading) ? 0.4 : 1,
                 boxShadow: '0 4px 14px rgba(16, 185, 129, 0.2)'
               }}
             >
@@ -600,44 +596,130 @@ const CreatorProfile = () => {
               padding: '6px',
               marginBottom: '16px'
             }}>
-              <div style={{ flex: 1, background: '#38bdf8', color: '#000', textAlign: 'center', padding: '12px', borderRadius: '12px', fontWeight: '700', fontSize: '14px', cursor: 'pointer' }}>UPI</div>
-              <div style={{ flex: 1, color: '#94a3b8', textAlign: 'center', padding: '12px', borderRadius: '12px', fontWeight: '600', fontSize: '14px', cursor: 'pointer' }}>Card</div>
-              <div style={{ flex: 1, color: '#94a3b8', textAlign: 'center', padding: '12px', borderRadius: '12px', fontWeight: '600', fontSize: '14px', cursor: 'pointer' }}>Net Banking</div>
+              {['UPI', 'Card', 'Net Banking'].map(tab => (
+                <div 
+                  key={tab}
+                  onClick={() => setPaymentTab(tab)}
+                  style={{ 
+                    flex: 1, 
+                    background: paymentTab === tab ? '#38bdf8' : 'transparent', 
+                    color: paymentTab === tab ? '#000' : '#94a3b8', 
+                    textAlign: 'center', 
+                    padding: '12px', 
+                    borderRadius: '12px', 
+                    fontWeight: paymentTab === tab ? '700' : '600', 
+                    fontSize: '14px', 
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
+                  }}>
+                  {tab}
+                </div>
+              ))}
             </div>
 
-            {/* UPI Input */}
-            <div style={{ background: '#131313', border: '1px solid #1f1f1f', borderRadius: '16px', padding: '16px', marginBottom: '24px' }}>
-              <div style={{ color: '#64748b', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '8px' }}>UPI ID</div>
-              <input 
-                type="text" 
-                placeholder="e.g. amit@paytm"
-                style={{ width: '100%', background: 'transparent', border: 'none', color: '#fff', fontSize: '16px', outline: 'none' }}
-              />
-            </div>
+            {paymentTab === 'UPI' && (
+              <>
+                {/* UPI Input */}
+                <div style={{ background: '#131313', border: '1px solid #1f1f1f', borderRadius: '16px', padding: '16px', marginBottom: '24px' }}>
+                  <div style={{ color: '#64748b', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '8px' }}>UPI ID</div>
+                  <input 
+                    type="text" 
+                    placeholder="e.g. amit@paytm"
+                    style={{ width: '100%', background: 'transparent', border: 'none', color: '#fff', fontSize: '16px', outline: 'none' }}
+                  />
+                </div>
 
-            {/* QR Code Divider */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
-              <div style={{ flex: 1, height: '1px', background: '#1f1f1f' }} />
-              <div style={{ color: '#64748b', fontSize: '12px' }}>or scan QR code</div>
-              <div style={{ flex: 1, height: '1px', background: '#1f1f1f' }} />
-            </div>
+                {/* QR Code Divider */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
+                  <div style={{ flex: 1, height: '1px', background: '#1f1f1f' }} />
+                  <div style={{ color: '#64748b', fontSize: '12px' }}>or scan QR code</div>
+                  <div style={{ flex: 1, height: '1px', background: '#1f1f1f' }} />
+                </div>
 
-            {/* Mock QR Code */}
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '32px' }}>
-              <div style={{
-                width: '160px', height: '160px',
-                background: '#fff',
-                borderRadius: '16px',
-                padding: '12px',
-                boxShadow: '0 4px 24px rgba(255,255,255,0.1)'
-              }}>
-                <img 
-                  src={`https://api.qrserver.com/v1/create-qr-code/?size=136x136&data=upi://pay?pa=skriibe@okaxis&pn=Skriibe&am=${price}`} 
-                  alt="QR Code"
-                  style={{ width: '100%', height: '100%', display: 'block' }}
-                />
+                {/* Mock QR Code */}
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '32px' }}>
+                  <div style={{
+                    width: '160px', height: '160px',
+                    background: '#fff',
+                    borderRadius: '16px',
+                    padding: '12px',
+                    boxShadow: '0 4px 24px rgba(255,255,255,0.1)'
+                  }}>
+                    <img 
+                      src={`https://api.qrserver.com/v1/create-qr-code/?size=136x136&data=upi://pay?pa=skriibe@okaxis&pn=Skriibe&am=${price}`} 
+                      alt="QR Code"
+                      style={{ width: '100%', height: '100%', display: 'block' }}
+                    />
+                  </div>
+                </div>
+              </>
+            )}
+
+            {paymentTab === 'Card' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
+                <div style={{ background: '#131313', border: '1px solid #1f1f1f', borderRadius: '16px', padding: '16px' }}>
+                  <div style={{ color: '#64748b', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '8px' }}>CARD NUMBER</div>
+                  <input 
+                    type="text" 
+                    placeholder="0000 0000 0000 0000"
+                    maxLength={19}
+                    style={{ width: '100%', background: 'transparent', border: 'none', color: '#fff', fontSize: '16px', outline: 'none', letterSpacing: '1px' }}
+                  />
+                </div>
+                <div style={{ display: 'flex', gap: '16px' }}>
+                  <div style={{ flex: 1, background: '#131313', border: '1px solid #1f1f1f', borderRadius: '16px', padding: '16px' }}>
+                    <div style={{ color: '#64748b', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '8px' }}>EXPIRY</div>
+                    <input 
+                      type="text" 
+                      placeholder="MM/YY"
+                      maxLength={5}
+                      style={{ width: '100%', background: 'transparent', border: 'none', color: '#fff', fontSize: '16px', outline: 'none', letterSpacing: '1px' }}
+                    />
+                  </div>
+                  <div style={{ flex: 1, background: '#131313', border: '1px solid #1f1f1f', borderRadius: '16px', padding: '16px' }}>
+                    <div style={{ color: '#64748b', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '8px' }}>CVV</div>
+                    <input 
+                      type="password" 
+                      placeholder="•••"
+                      maxLength={4}
+                      style={{ width: '100%', background: 'transparent', border: 'none', color: '#fff', fontSize: '16px', outline: 'none', letterSpacing: '2px' }}
+                    />
+                  </div>
+                </div>
+                <div style={{ background: '#131313', border: '1px solid #1f1f1f', borderRadius: '16px', padding: '16px' }}>
+                  <div style={{ color: '#64748b', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '8px' }}>CARDHOLDER NAME</div>
+                  <input 
+                    type="text" 
+                    placeholder="e.g. Amit Kumar"
+                    style={{ width: '100%', background: 'transparent', border: 'none', color: '#fff', fontSize: '16px', outline: 'none' }}
+                  />
+                </div>
               </div>
-            </div>
+            )}
+
+            {paymentTab === 'Net Banking' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
+                <div style={{ background: '#131313', border: '1px solid #1f1f1f', borderRadius: '16px', padding: '16px' }}>
+                  <div style={{ color: '#64748b', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '16px' }}>SELECT BANK</div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                    {['HDFC Bank', 'ICICI Bank', 'SBI', 'Axis Bank'].map(bank => (
+                      <div key={bank} style={{ background: '#1a1a1a', border: '1px solid #2a2a2a', borderRadius: '12px', padding: '16px 12px', textAlign: 'center', color: '#fff', fontSize: '14px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s' }}
+                           onMouseOver={(e) => { e.currentTarget.style.background = '#2a2a2a'; e.currentTarget.style.borderColor = '#38bdf8'; }}
+                           onMouseOut={(e) => { e.currentTarget.style.background = '#1a1a1a'; e.currentTarget.style.borderColor = '#2a2a2a'; }}>
+                        {bank}
+                      </div>
+                    ))}
+                  </div>
+                  <select style={{ width: '100%', marginTop: '16px', background: '#1a1a1a', border: '1px solid #2a2a2a', borderRadius: '12px', padding: '16px', color: '#fff', fontSize: '14px', outline: 'none', cursor: 'pointer' }}>
+                    <option value="">Search other banks...</option>
+                    <option value="kotak">Kotak Mahindra Bank</option>
+                    <option value="pnb">Punjab National Bank</option>
+                    <option value="yes">Yes Bank</option>
+                    <option value="bob">Bank of Baroda</option>
+                  </select>
+                </div>
+              </div>
+            )}
 
             {/* Error Area */}
             {submitError && (

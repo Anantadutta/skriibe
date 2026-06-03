@@ -55,7 +55,9 @@ passport.use(new GoogleStrategy({
         return done(null, fan);
       } else {
         let creator = await Creator.findOne({ email });
+        let isNewCreator = false;
         if (!creator) {
+          isNewCreator = true;
           creator = new Creator({
             email,
             name: profile.displayName || '',
@@ -63,6 +65,7 @@ passport.use(new GoogleStrategy({
           });
           await creator.save();
         }
+        creator.isNewCreator = isNewCreator;
         return done(null, creator);
       }
     } catch (err) {
@@ -100,7 +103,9 @@ passport.use(new FacebookStrategy({
         return done(null, fan);
       } else {
         let creator = await Creator.findOne({ email });
+        let isNewCreator = false;
         if (!creator) {
+          isNewCreator = true;
           creator = new Creator({
             email,
             name: `${profile.name?.givenName || ''} ${profile.name?.familyName || ''}`.trim() || profile.displayName || '',
@@ -108,6 +113,7 @@ passport.use(new FacebookStrategy({
           });
           await creator.save();
         }
+        creator.isNewCreator = isNewCreator;
         return done(null, creator);
       }
     } catch (err) {
@@ -236,7 +242,11 @@ router.get('/google/callback', passport.authenticate('google', { failureRedirect
     return res.redirect('http://localhost:5173/explore');
   } else {
     issueToken(res, req.user);
-    return res.redirect('http://localhost:5173/onboard/profile');
+    if (req.user.isNewCreator) {
+      return res.redirect('http://localhost:5173/onboard/profile');
+    } else {
+      return res.redirect('http://localhost:5173/creator/dashboard');
+    }
   }
 });
 
@@ -261,7 +271,11 @@ router.get('/facebook/callback', passport.authenticate('facebook', { failureRedi
     return res.redirect('http://localhost:5173/explore');
   } else {
     issueToken(res, req.user);
-    return res.redirect('http://localhost:5173/onboard/profile');
+    if (req.user.isNewCreator) {
+      return res.redirect('http://localhost:5173/onboard/profile');
+    } else {
+      return res.redirect('http://localhost:5173/creator/dashboard');
+    }
   }
 });
 

@@ -22,7 +22,7 @@ const CreatorGoLive = () => {
   }, [creatorData, navigate]);
 
   const handleShare = async () => {
-    const rawUrl = `skriibe.in/@${creatorData?.handle || 'creator'}`;
+    const rawUrl = `skriibe.com/@${creatorData?.handle || 'creator'}`;
     const fullUrl = `https://${rawUrl}`;
 
     if (navigator.share) {
@@ -387,7 +387,7 @@ const CreatorGoLive = () => {
                   fontWeight: 800,
                   letterSpacing: '-0.02em'
                 }}>
-                  skriibe.in/@{creatorData?.handle || 'creator'}
+                  skriibe.com/@{creatorData?.handle || 'creator'}
                 </span>
 
                 {/* LIVE Badge with pulse dot */}

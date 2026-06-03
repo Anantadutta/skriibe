@@ -29,17 +29,20 @@ const CreatorOnboardProfile = () => {
   const [loadingCreator, setLoadingCreator] = useState(true);
 
   const [bioFocused, setBioFocused] = useState(false);
+  const [customExpertise, setCustomExpertise] = useState('');
 
   // List of standard expertise tag options
   const expertiseOptions = [
-    'Personal Finance',
-    'SIP / Mutual Funds',
-    'Stock Trading',
-    'Career Coaching',
-    'Tax Planning',
-    'Real Estate',
-    'Tech & Coding',
-    'Fitness & Health'
+    'Career & Finance',
+    'Health & Fitness',
+    'Tech & Skills',
+    'Fashion & Lifestyle',
+    'Daily Vlogs & Entertainment',
+    'Education',
+    'Business & Entrepreneurship',
+    'Relationships & Life',
+    'Spirituality',
+    'Others'
   ];
 
   useEffect(() => {
@@ -132,15 +135,31 @@ const CreatorOnboardProfile = () => {
     }
   };
 
+  const handleAddCustomExpertise = () => {
+    if (!customExpertise.trim()) return;
+    setForm(prev => ({
+      ...prev,
+      expertise: prev.expertise.map(t => t === 'Others' ? customExpertise.trim() : t)
+    }));
+    setCustomExpertise('');
+  };
+
   const handleContinue = async () => {
     if (!form.name || !form.email || form.expertise.length === 0) return;
+    if (form.expertise.includes('Others') && !customExpertise.trim()) {
+      alert('Please specify your expertise in the text field.');
+      return;
+    }
     
     setLoading(true);
     try {
       // If handle is not filled, default to formatted name or standard handle
       const finalHandle = form.handle || form.name.toLowerCase().replace(/[^a-z0-9_]/g, '');
+      const finalExpertise = form.expertise.map(t => t === 'Others' ? customExpertise.trim() : t);
+
       const res = await saveProfile({
         ...form,
+        expertise: finalExpertise,
         handle: finalHandle,
         avatarUrl: typeof avatarPreview === 'string' && avatarPreview.startsWith('http') ? avatarPreview : null
       });
@@ -710,6 +729,56 @@ const CreatorOnboardProfile = () => {
                       );
                     })}
                   </div>
+
+                  {/* Custom 'Others' Input */}
+                  {form.expertise.includes('Others') && (
+                    <div style={{ marginTop: '12px', animation: 'fadeIn 0.2s ease-in-out', display: 'flex', gap: '8px' }}>
+                      <input 
+                        type="text"
+                        placeholder="Please specify your expertise..."
+                        value={customExpertise}
+                        onChange={(e) => setCustomExpertise(e.target.value)}
+                        style={{
+                          flex: 1,
+                          background: 'rgba(255, 255, 255, 0.02)',
+                          border: '1px solid rgba(6, 182, 212, 0.3)',
+                          borderRadius: '12px',
+                          padding: '12px 16px',
+                          color: '#ffffff',
+                          fontSize: '12px',
+                          fontFamily: 'var(--font-body)',
+                          outline: 'none',
+                          boxSizing: 'border-box',
+                          boxShadow: '0 0 10px rgba(6, 182, 212, 0.1)',
+                          transition: 'all 0.2s'
+                        }}
+                        onFocus={(e) => e.target.style.borderColor = '#06b6d4'}
+                        onBlur={(e) => e.target.style.borderColor = 'rgba(6, 182, 212, 0.3)'}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleAddCustomExpertise();
+                          }
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={handleAddCustomExpertise}
+                        style={{
+                          background: 'linear-gradient(90deg, #7c3aed 0%, #06b6d4 100%)',
+                          color: '#fff',
+                          border: 'none',
+                          borderRadius: '12px',
+                          padding: '0 20px',
+                          fontWeight: 'bold',
+                          cursor: 'pointer',
+                          fontSize: '12px'
+                        }}
+                      >
+                        Done
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 <Field

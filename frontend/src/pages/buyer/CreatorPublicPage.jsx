@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { getCreatorProfile, sendBuyerOTP, verifyBuyerOTP, submitQuestion } from '../../api/buyerApi';
 import { mockQuestions } from '../../mock/questions';
+import { io } from 'socket.io-client';
 
 const CreatorPublicPage = () => {
   const { handle } = useParams();
@@ -43,6 +44,22 @@ const CreatorPublicPage = () => {
       }
     };
     fetchProfile();
+
+    const socket = io('http://localhost:5000');
+    socket.on('creator-status-changed', ({ creatorId, isLive }) => {
+      setCreator(prev => {
+        if (!prev) return prev;
+        // Only update if it's the current creator
+        if (prev._id === creatorId || prev.id === creatorId) {
+          return { ...prev, isLive };
+        }
+        return prev;
+      });
+    });
+
+    return () => {
+      socket.disconnect();
+    };
   }, [handle]);
 
   const handleSubmitQuestion = async () => {
@@ -149,12 +166,17 @@ const CreatorPublicPage = () => {
             }}>
               {creator.name ? creator.name[0].toUpperCase() : 'R'}
             </div>
-            {/* Live Dot */}
-            <div style={{
-              position: 'absolute', bottom: '4px', right: '4px',
-              width: '12px', height: '12px', borderRadius: '50%',
-              background: '#22C55E', border: '2px solid #0E0E0E'
-            }} />
+            {/* Live Dot / Badge */}
+            {creator.isLive && (
+              <div style={{
+                position: 'absolute', bottom: '-8px', left: '50%', transform: 'translateX(-50%)',
+                background: '#29C5F6', color: '#0E0E0E', fontSize: '0.65rem', fontWeight: '900',
+                padding: '2px 8px', borderRadius: '12px', border: '2px solid #0E0E0E',
+                letterSpacing: '1px'
+              }}>
+                LIVE
+              </div>
+            )}
           </div>
 
           {/* Info */}
@@ -187,9 +209,11 @@ const CreatorPublicPage = () => {
               <span style={{ background: 'rgba(41, 197, 246, 0.1)', color: '#29C5F6', padding: '2px 8px', borderRadius: '12px', fontSize: '0.7rem', fontWeight: '700' }}>
                 SIP
               </span>
-              <span style={{ background: 'rgba(34, 197, 94, 0.1)', color: '#22C55E', padding: '2px 8px', borderRadius: '12px', fontSize: '0.7rem', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <div style={{ width: '4px', height: '4px', background: '#22C55E', borderRadius: '50%' }} /> LIVE
-              </span>
+              {creator.isLive && (
+                <span style={{ background: 'rgba(34, 197, 94, 0.1)', color: '#22C55E', padding: '2px 8px', borderRadius: '12px', fontSize: '0.7rem', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <div style={{ width: '4px', height: '4px', background: '#22C55E', borderRadius: '50%' }} /> LIVE
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -406,10 +430,13 @@ const CreatorPublicPage = () => {
               className="unified-input" 
               maxLength={10}
               value={buyerPhone} 
-              onChange={e => setBuyerPhone(e.target.value.replace(/\D/g, ''))} 
+              onChange={e => setBuyerPhone(e.target.value.replace(/\D/g, '').slice(0, 10))} 
               placeholder="9876543210" 
               style={{ fontStyle: buyerPhone ? 'normal' : 'italic', color: buyerPhone ? '#ffffff' : '#475569' }}
             />
+            <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '8px' }}>
+              It should only be a 10 digit number.
+            </div>
           </div>
 
           <div style={{ background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '16px', padding: '16px', display: 'flex', flexDirection: 'column' }}>
@@ -612,24 +639,7 @@ const CreatorPublicPage = () => {
             View my question
           </button>
           
-          <button 
-            onClick={() => {
-              window.location.href = `/${creator.handle}/demo-answer`;
-            }}
-            style={{
-              width: '100%',
-              background: 'rgba(34, 197, 94, 0.1)',
-              color: '#22c55e',
-              border: '1px solid rgba(34, 197, 94, 0.2)',
-              borderRadius: '16px',
-              padding: '18px',
-              fontSize: '1.1rem',
-              fontWeight: '800',
-              cursor: 'pointer'
-            }}
-          >
-            View reply (Demo)
-          </button>
+
 
           <button 
             onClick={() => {
@@ -773,10 +783,77 @@ const CreatorPublicPage = () => {
             />
           </div>
         )}
-        {paymentTab !== 'UPI' && (
-           <div style={{ color: '#64748b', textAlign: 'center', padding: '32px 0', fontSize: '0.9rem' }}>
-             {paymentTab} is not supported in this mockup yet.
-           </div>
+        {/* CARD INPUTS */}
+        {paymentTab === 'Card' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '8px' }}>
+            <div style={{ background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '16px', padding: '16px' }}>
+              <div style={{ color: '#64748b', fontSize: '0.7rem', fontWeight: '800', letterSpacing: '2px', textTransform: 'uppercase' }}>
+                CARD NUMBER
+              </div>
+              <input 
+                className="unified-input" 
+                placeholder="0000 0000 0000 0000" 
+                maxLength={19}
+              />
+            </div>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <div style={{ flex: 1, background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '16px', padding: '16px' }}>
+                <div style={{ color: '#64748b', fontSize: '0.7rem', fontWeight: '800', letterSpacing: '2px', textTransform: 'uppercase' }}>
+                  EXPIRY
+                </div>
+                <input 
+                  className="unified-input" 
+                  placeholder="MM/YY" 
+                  maxLength={5}
+                />
+              </div>
+              <div style={{ flex: 1, background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '16px', padding: '16px' }}>
+                <div style={{ color: '#64748b', fontSize: '0.7rem', fontWeight: '800', letterSpacing: '2px', textTransform: 'uppercase' }}>
+                  CVV
+                </div>
+                <input 
+                  type="password"
+                  className="unified-input" 
+                  placeholder="•••" 
+                  maxLength={4}
+                />
+              </div>
+            </div>
+            <div style={{ background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '16px', padding: '16px' }}>
+              <div style={{ color: '#64748b', fontSize: '0.7rem', fontWeight: '800', letterSpacing: '2px', textTransform: 'uppercase' }}>
+                CARDHOLDER NAME
+              </div>
+              <input 
+                className="unified-input" 
+                placeholder="e.g. Amit Kumar" 
+              />
+            </div>
+          </div>
+        )}
+
+        {/* NET BANKING INPUTS */}
+        {paymentTab === 'Net Banking' && (
+          <div style={{ background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '16px', padding: '16px', marginTop: '8px' }}>
+            <div style={{ color: '#64748b', fontSize: '0.7rem', fontWeight: '800', letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '12px' }}>
+              SELECT BANK
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+              {['HDFC Bank', 'ICICI Bank', 'SBI', 'Axis Bank'].map(bank => (
+                <div key={bank} style={{ background: '#2A2A2A', borderRadius: '8px', padding: '12px', textAlign: 'center', color: '#ffffff', fontSize: '0.9rem', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s' }}
+                     onMouseOver={(e) => e.currentTarget.style.background = '#333'}
+                     onMouseOut={(e) => e.currentTarget.style.background = '#2A2A2A'}>
+                  {bank}
+                </div>
+              ))}
+            </div>
+            <select style={{ width: '100%', marginTop: '12px', background: '#2A2A2A', border: 'none', borderRadius: '8px', padding: '12px', color: '#ffffff', fontSize: '0.9rem', outline: 'none', cursor: 'pointer' }}>
+              <option value="">Other Banks...</option>
+              <option value="kotak">Kotak Mahindra Bank</option>
+              <option value="pnb">Punjab National Bank</option>
+              <option value="yes">Yes Bank</option>
+              <option value="bob">Bank of Baroda</option>
+            </select>
+          </div>
         )}
 
         {/* OR SCAN QR CODE */}

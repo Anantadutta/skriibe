@@ -143,6 +143,157 @@ router.get('/me', verifyCreatorToken, async (req, res) => {
 });
 
 /**
+ * @route GET /api/creator/questions
+ * @desc Get questions for the creator dashboard inbox, optionally filtered by status
+ */
+router.get('/questions', verifyCreatorToken, async (req, res) => {
+  try {
+    const { status } = req.query;
+    await connectDB();
+    
+    // Map frontend tab statuses to backend enum ('submitted', 'answered', 'expired', 'flagged')
+    let queryStatus = null;
+    if (status && status !== 'All') {
+      if (status.toLowerCase() === 'pending') queryStatus = 'submitted';
+      else if (status.toLowerCase() === 'replied') queryStatus = 'answered';
+      else queryStatus = status.toLowerCase();
+    }
+
+    const filter = { creatorId: req.creator.creatorId };
+    if (queryStatus) {
+      filter.status = queryStatus;
+    }
+
+    // Pending questions are sorted oldest first (urgent), others newest first
+    const sortOrder = queryStatus === 'submitted' ? { createdAt: 1 } : { createdAt: -1 };
+
+    console.log('[DEBUG] GET /api/creator/questions');
+    console.log('Logged-in Creator ID:', req.creator.creatorId);
+    console.log('Query Parameters (status):', status);
+    console.log('Constructed DB Filter:', filter);
+
+    const Question = require('../models/Question');
+    const questions = await Question.find(filter).sort(sortOrder);
+
+    res.json({ success: true, questions });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+/**
+ * @route POST /api/creator/questions/:id/reply
+ * @desc Reply to a question
+ */
+router.post('/questions/:id/reply', verifyCreatorToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { replyText } = req.body;
+    
+    if (!replyText || replyText.trim().length < 100) {
+      return res.status(400).json({ message: 'Reply must be at least 100 characters.' });
+    }
+
+    await connectDB();
+    const Question = require('../models/Question');
+    const question = await Question.findOneAndUpdate(
+      { _id: id, creatorId: req.creator.creatorId },
+      { 
+        status: 'answered',
+        answerText: replyText,
+        answeredAt: new Date()
+      },
+      { new: true }
+    );
+
+    if (!question) {
+      return res.status(404).json({ message: 'Question not found or unauthorized' });
+    }
+
+    if (question.fanId) {
+      const Notification = require('../models/Notification');
+      await Notification.create({
+        fanId: question.fanId,
+        questionId: question._id,
+        title: 'Question Answered!',
+        message: `@${req.creator.handle} has replied to your question.`
+      });
+    }
+
+    res.json({ success: true, question });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+/**
+ * @route POST /api/creator/questions/:id/reject
+ * @desc Reject a question
+ */
+router.post('/questions/:id/reject', verifyCreatorToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { reason } = req.body;
+
+    await connectDB();
+    const Question = require('../models/Question');
+    const question = await Question.findOneAndUpdate(
+      { _id: id, creatorId: req.creator.creatorId },
+      { 
+        status: 'rejected',
+        rejectReason: reason || 'expertise'
+      },
+      { new: true }
+    );
+
+    if (!question) {
+      return res.status(404).json({ message: 'Question not found or unauthorized' });
+    }
+
+    // In the future: trigger refund logic here
+
+    res.json({ success: true, question });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+/**
+ * @route POST /api/creator/questions/:id/flag
+ * @desc Flag a question for abuse
+ */
+router.post('/questions/:id/flag', verifyCreatorToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    await connectDB();
+    const Question = require('../models/Question');
+    const question = await Question.findOneAndUpdate(
+      { _id: id, creatorId: req.creator.creatorId },
+      { 
+        status: 'flagged',
+        rejectReason: 'abuse'
+      },
+      { new: true }
+    );
+
+    if (!question) {
+      return res.status(404).json({ message: 'Question not found or unauthorized' });
+    }
+
+    // In the future: trigger refund and moderation logic here
+
+    res.json({ success: true, question });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+/**
  * @route PATCH /api/creator/live-status
  * @desc Update the creator's live status and emit socket.io event
  */

@@ -99,6 +99,32 @@ passport.use('facebook-fan', new FacebookStrategy({
 
 // -- ROUTES --
 
+// Middleware to verify fan JWT
+const verifyFanToken = (req, res, next) => {
+  const token = req.cookies.fan_token;
+  if (!token) return res.status(401).json({ success: false, message: 'Not authenticated' });
+  try {
+    req.fan = jwt.verify(token, process.env.JWT_SECRET || 'secret');
+    next();
+  } catch (err) {
+    res.status(401).json({ success: false, message: 'Invalid token' });
+  }
+};
+
+router.get('/me', verifyFanToken, async (req, res) => {
+  try {
+    await connectDB();
+    const fan = await Fan.findById(req.fan.fanId).select('-password');
+    if (!fan) {
+      return res.status(404).json({ success: false, message: 'Fan not found' });
+    }
+    res.json({ success: true, fan });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
 router.get('/google', passport.authenticate('google-fan', { scope: ['profile', 'email'], prompt: 'select_account' }));
 router.get('/google/callback', passport.authenticate('google-fan', { failureRedirect: '/fan/login' }), (req, res) => {
   issueToken(res, req.user);

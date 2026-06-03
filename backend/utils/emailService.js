@@ -215,7 +215,7 @@ const sendWelcomeEmail = async (email, name, handle) => {
           <p>We are excited to confirm that your skriibe profile setup was successful and is now live! Your page is active and ready to accept Ask Me Anything questions.</p>
           <p>You can find your profile at:</p>
           <div style="text-align: center; margin: 30px 0;">
-            <a href="https://skriibe.in/@${handle}" style="display: inline-block; background: #00C2FF; color: #06060A; text-decoration: none; padding: 14px 28px; border-radius: 24px; font-weight: 600; font-size: 16px;">Go to skriibe.in/@${handle}</a>
+            <a href="https://skriibe.com/@${handle}" style="display: inline-block; background: #00C2FF; color: #06060A; text-decoration: none; padding: 14px 28px; border-radius: 24px; font-weight: 600; font-size: 16px;">Go to skriibe.com/@${handle}</a>
           </div>
           <p style="font-size: 12px; color: #888888; text-align: center;">Delivered with love from skriibe</p>
         </div>

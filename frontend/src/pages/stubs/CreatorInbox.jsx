@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { mockQuestions } from '../../mock/questions';
+import api from '../../services/api';
 
 const CreatorInbox = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [activeTab, setActiveTab] = useState('All');
+  const [questions, setQuestions] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   // Cyan filter for active bottom nav icons
   const cyanFilter = 'invert(69%) sepia(87%) saturate(2714%) hue-rotate(164deg) brightness(99%) contrast(98%)';
@@ -19,22 +21,44 @@ const CreatorInbox = () => {
     { label: 'SETTINGS', icon: '⚙️', route: '/creator/settings' },
   ];
 
-  const repliedQuestions = [
-    {
-      id: 'r1',
-      followerName: 'Rohan M.',
-      pricePaid: 99,
-      questionText: 'NPS vs PPF for retirement?',
-      status: 'replied'
-    },
-    {
-      id: 'r2',
-      followerName: 'Sana B.',
-      pricePaid: 99,
-      questionText: 'Best index fund for beginners?',
-      status: 'replied'
+  useEffect(() => {
+    const fetchQuestions = async () => {
+      setLoading(true);
+      try {
+        const res = await api.get('/creator/questions');
+        if (res.data.success) {
+          setQuestions(res.data.questions);
+        }
+      } catch (err) {
+        console.error('Error fetching questions:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchQuestions();
+  }, []);
+
+  const pendingQuestions = questions.filter(q => q.status?.toLowerCase() === 'submitted');
+  const repliedQuestions = questions.filter(q => q.status?.toLowerCase() === 'answered');
+  const flaggedQuestions = questions.filter(q => q.status?.toLowerCase() === 'flagged');
+
+  const tabCounts = {
+    'All': questions.length,
+    'Pending': pendingQuestions.length,
+    'Replied': repliedQuestions.length,
+    'Flagged': flaggedQuestions.length
+  };
+
+  const getRelativeTime = (dateStr) => {
+    const date = new Date(dateStr);
+    const diffHours = Math.floor((new Date() - date) / (1000 * 60 * 60));
+    if (diffHours < 1) {
+        const diffMins = Math.floor((new Date() - date) / (1000 * 60));
+        return diffMins > 0 ? `${diffMins}m` : 'now';
     }
-  ];
+    if (diffHours > 24) return `${Math.floor(diffHours / 24)}d`;
+    return `${diffHours}h`;
+  };
 
   return (
     <div style={{
@@ -115,12 +139,13 @@ const CreatorInbox = () => {
           padding: '4px',
           gap: '4px'
         }}>
-          {['All (12)', 'Pending (3)', 'Replied (8)', 'Flagged (1)'].map((tab) => {
-            const isActive = activeTab === tab.split(' ')[0];
+          {['All', 'Pending', 'Replied', 'Flagged'].map((tabName) => {
+            const isActive = activeTab === tabName;
+            const count = tabCounts[tabName] || 0;
             return (
               <div 
-                key={tab}
-                onClick={() => setActiveTab(tab.split(' ')[0])}
+                key={tabName}
+                onClick={() => setActiveTab(tabName)}
                 style={{
                   flex: 1,
                   textAlign: 'center',
@@ -137,8 +162,8 @@ const CreatorInbox = () => {
                   transition: 'all 0.2s ease'
                 }}
               >
-                <span>{tab.split(' ')[0]}</span>
-                <span style={{ fontSize: '0.75rem', opacity: 0.8 }}>{tab.split(' ')[1]}</span>
+                <span>{tabName}</span>
+                <span style={{ fontSize: '0.75rem', opacity: 0.8 }}>({count})</span>
               </div>
             );
           })}
@@ -148,6 +173,7 @@ const CreatorInbox = () => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', paddingBottom: '100px' }}>
           
           {/* URGENT SECTION */}
+          {(activeTab === 'All' || activeTab === 'Pending') && pendingQuestions.length > 0 && (
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
               <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#EF4444' }} />
@@ -157,15 +183,15 @@ const CreatorInbox = () => {
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {mockQuestions.map((q) => {
-                const borderLeftColor = q.slaStatus === 'urgent' ? '#EF4444' : '#00e5ff';
-                const slaColor = q.slaStatus === 'urgent' ? '#EF4444' : '#F59E0B'; // Changed ok to yellow matching image
-                const slaBg = q.slaStatus === 'urgent' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(245, 158, 11, 0.1)';
+              {pendingQuestions.map((q) => {
+                const borderLeftColor = '#EF4444';
+                const slaColor = '#F59E0B'; 
+                const slaBg = 'rgba(245, 158, 11, 0.1)';
                 
                 return (
                   <div 
-                    key={q.id} 
-                    onClick={() => navigate(`/creator/dashboard/reply/${q.id}`)}
+                    key={q._id || q.id} 
+                    onClick={() => navigate(`/creator/dashboard/reply/${q._id || q.id}`, { state: { question: q } })}
                     onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(0.98)'; }}
                     onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
                     style={{
@@ -193,10 +219,10 @@ const CreatorInbox = () => {
                           fontWeight: 700,
                           fontSize: '0.9rem'
                         }}>
-                          {q.followerName.charAt(0)}
+                          {(q.buyerName || 'A').charAt(0).toUpperCase()}
                         </div>
                         <div style={{ color: '#00e5ff', fontSize: '0.95rem', fontWeight: 600 }}>
-                          {q.followerName} <span style={{ color: '#64748b' }}>·</span> ₹{q.pricePaid}
+                          {q.buyerName} <span style={{ color: '#64748b' }}>·</span> ₹{q.amountPaid || 99}
                         </div>
                       </div>
                       <div style={{
@@ -207,7 +233,7 @@ const CreatorInbox = () => {
                         fontSize: '0.75rem',
                         fontWeight: 700
                       }}>
-                        {q.slaHoursLeft}h
+                        {getRelativeTime(q.createdAt)}
                       </div>
                     </div>
                     <div style={{ color: '#94a3b8', fontSize: '0.9rem', lineHeight: 1.4, paddingLeft: '44px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
@@ -218,8 +244,10 @@ const CreatorInbox = () => {
               })}
             </div>
           </div>
+          )}
 
           {/* REPLIED SECTION */}
+          {(activeTab === 'All' || activeTab === 'Replied') && repliedQuestions.length > 0 && (
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
               <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748b', letterSpacing: '1px' }}>
@@ -231,7 +259,7 @@ const CreatorInbox = () => {
               {repliedQuestions.map((q) => {
                 return (
                   <div 
-                    key={q.id} 
+                    key={q._id || q.id} 
                     style={{
                     background: '#13131f',
                     border: '1px solid #2A2A2A',
@@ -255,10 +283,10 @@ const CreatorInbox = () => {
                           fontWeight: 700,
                           fontSize: '0.9rem'
                         }}>
-                          {q.followerName.charAt(0)}
+                          {(q.buyerName || 'A').charAt(0).toUpperCase()}
                         </div>
                         <div style={{ color: '#00e5ff', fontSize: '0.95rem', fontWeight: 600 }}>
-                          {q.followerName} <span style={{ color: '#64748b' }}>·</span> ₹{q.pricePaid}
+                          {q.buyerName} <span style={{ color: '#64748b' }}>·</span> ₹{q.amountPaid || 99}
                         </div>
                       </div>
                       <div style={{
@@ -280,6 +308,7 @@ const CreatorInbox = () => {
               })}
             </div>
           </div>
+          )}
         </div>
 
       </div>

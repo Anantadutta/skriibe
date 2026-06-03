@@ -186,7 +186,7 @@ const CreatorSettings = () => {
               Rahul Sharma
             </div>
             <div style={{ fontSize: '0.9rem', color: '#29C5F6', marginBottom: '4px', cursor: 'pointer' }}>
-              skriibe.in/@rahulfinance
+              skriibe.com/@rahulfinance
             </div>
             <div 
               onClick={handleEditBio}

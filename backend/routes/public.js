@@ -7,6 +7,15 @@ const mongoose = require('mongoose');
 const Creator = require('../models/Creator');
 const Question = require('../models/Question');
 
+router.get('/debug-questions', async (req, res) => {
+  try {
+    const questions = await Question.find({});
+    res.json({ questions });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ConnectDB helper since this is how the prompt structure implies connections might be done inside the route
 // But usually mongoose handles it globally. We will just use standard query execution.
 // If the app uses a serverless connectDB, we assume it's already connected by index/server,

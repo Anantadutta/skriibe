@@ -32,9 +32,10 @@ const QuestionSchema = new mongoose.Schema(
     // Status
     status: {
       type: String,
-      enum: ['submitted', 'answered', 'expired', 'flagged'],
+      enum: ['submitted', 'answered', 'expired', 'flagged', 'rejected'],
       default: 'submitted',
     },
+    rejectReason: { type: String, default: '' },
     answerText: { type: String, default: '' },
     answeredAt: { type: Date },
     expiresAt: { type: Date }, // SLA deadline — set on creation based on creator's responseTime

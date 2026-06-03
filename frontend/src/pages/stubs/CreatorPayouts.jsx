@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { mockCreator } from '../../mock/questions';
+import { linkBank } from '../../services/creatorApi';
 
 const InputCard = ({ label, value, onChange, placeholder, type = 'text' }) => {
   const [focused, setFocused] = useState(false);
@@ -49,12 +51,13 @@ const InputCard = ({ label, value, onChange, placeholder, type = 'text' }) => {
 const CreatorPayouts = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const creator = location.state?.creator || mockCreator;
 
-  const [accountName, setAccountName] = useState('Rahul Sharma');
-  const [accountNumber, setAccountNumber] = useState('···· ···· 4821');
+  const [accountName, setAccountName] = useState('');
+  const [accountNumber, setAccountNumber] = useState('');
   const [confirmAccount, setConfirmAccount] = useState('');
-  const [ifsc, setIfsc] = useState('HDFC0001234');
-  const [panNumber, setPanNumber] = useState('ABCDE1234F');
+  const [ifsc, setIfsc] = useState('');
+  const [panNumber, setPanNumber] = useState('');
 
   const navItems = [
     { label: 'HOME', icon: '🏠', route: '/creator/dashboard' },
@@ -268,7 +271,7 @@ const CreatorPayouts = () => {
         {/* Action Buttons */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '16px' }}>
           <button
-            onClick={() => {
+            onClick={async () => {
               if (!accountName.trim() || !accountNumber.trim() || !confirmAccount.trim() || !ifsc.trim()) {
                 alert('Please fill out all mandatory fields (marked with a red asterisk) before going live.');
                 return;
@@ -277,9 +280,13 @@ const CreatorPayouts = () => {
                 alert('Account numbers do not match.');
                 return;
               }
-              localStorage.setItem('bankLinked', 'true');
-              alert('Setup Complete! Going live...');
-              navigate('/creator/dashboard');
+              try {
+                await linkBank();
+                navigate('/creator/dashboard');
+              } catch (error) {
+                console.error('Failed to link bank:', error);
+                alert('Failed to link bank account. Please try again.');
+              }
             }}
             style={{
               background: '#29C5F6',

@@ -23,6 +23,10 @@ export const saveProfile = (data) => api.post('/creators/onboarding/profile', da
 
 export const savePricing = (data) => api.post('/creators/onboarding/pricing', data);
 
+export const toggleLive = (isLive) => api.post('/creators/toggle-live', { isLive });
+
+export const linkBank = () => api.post('/creators/link-bank');
+
 export const logout = () => api.post('/creators/logout');
 
 export default {};

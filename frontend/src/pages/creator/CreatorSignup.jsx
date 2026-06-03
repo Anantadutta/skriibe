@@ -3,7 +3,7 @@
  * @description Creator registration screen via email and password.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { emailSignup } from '../../services/creatorApi';
 import { Button } from '../../components/ama/ui/Button';
@@ -18,6 +18,12 @@ const CreatorSignup = () => {
   const [focusedPassword, setFocusedPassword] = useState(false);
   const [focusedConfirm, setFocusedConfirm] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (localStorage.getItem('isReturningCreator') === 'true') {
+      navigate('/creator/login', { replace: true });
+    }
+  }, [navigate]);
 
   const handleRegister = async () => {
     if (!email || !password || !confirmPassword) {
@@ -35,6 +41,8 @@ const CreatorSignup = () => {
     try {
       const res = await emailSignup(email, password);
       if (res.data.success) {
+        localStorage.setItem('isReturningCreator', 'true');
+        localStorage.removeItem('bankLinked');
         navigate('/creator/login', { state: { message: 'Registration successful! Please log in.' } });
       }
     } catch (err) {
