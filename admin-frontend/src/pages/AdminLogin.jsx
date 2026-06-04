@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Eye, EyeOff } from 'lucide-react';
 
 const AdminLogin = ({ onLogin }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
@@ -43,21 +45,44 @@ const AdminLogin = ({ onLogin }) => {
               outline: 'none'
             }}
           />
-          <input 
-            type="password" 
-            placeholder="Password" 
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            style={{ 
-              padding: '12px 16px', 
-              borderRadius: '8px', 
-              border: '1px solid #2A2A2A', 
-              background: '#13131f', 
-              color: '#fff',
-              fontSize: '1rem',
-              outline: 'none'
-            }}
-          />
+          <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+            <input 
+              type={showPassword ? "text" : "password"} 
+              placeholder="Password" 
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              style={{ 
+                padding: '12px 16px', 
+                paddingRight: '48px',
+                borderRadius: '8px', 
+                border: '1px solid #2A2A2A', 
+                background: '#13131f', 
+                color: '#fff',
+                fontSize: '1rem',
+                outline: 'none',
+                width: '100%',
+                boxSizing: 'border-box'
+              }}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              style={{
+                position: 'absolute',
+                right: '12px',
+                background: 'none',
+                border: 'none',
+                color: '#94a3b8',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: 0
+              }}
+            >
+              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+            </button>
+          </div>
           {error && <div style={{ color: '#EF4444', fontSize: '0.8rem', textAlign: 'left' }}>{error}</div>}
           <button 
             type="submit" 

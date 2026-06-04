@@ -1,8 +1,16 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const CreatorAccountHealth = () => {
   const navigate = useNavigate();
+  const scrollRef = useRef(null);
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = 0;
+    }
+  }, []);
 
   return (
     <div style={{
@@ -54,7 +62,7 @@ const CreatorAccountHealth = () => {
         </h2>
       </div>
 
-      <div style={{ padding: '20px', flex: 1, overflowY: 'auto' }}>
+      <div ref={scrollRef} style={{ padding: '20px', flex: 1, overflowY: 'auto' }}>
         
         {/* Banner: Account healthy */}
         <div style={{

@@ -59,7 +59,7 @@ const Dashboard = () => {
           style={{ padding: '24px 20px', display: 'flex', flexDirection: 'column', gap: '8px', cursor: 'pointer' }}
         >
           <div className="font-wide text-blue" style={{ fontSize: '2rem' }}>₹{data.gmvToday.toLocaleString()}</div>
-          <div className="text-muted" style={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '1px' }}>GMV TODAY</div>
+          <div className="text-muted" style={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '1px' }}>REVENUE TODAY</div>
         </div>
         <div 
           onClick={() => navigate('/admin/analytics')}
@@ -67,7 +67,7 @@ const Dashboard = () => {
           style={{ padding: '24px 20px', display: 'flex', flexDirection: 'column', gap: '8px', cursor: 'pointer' }}
         >
           <div className="font-wide text-green" style={{ fontSize: '2rem' }}>₹{data.revenue.toLocaleString()}</div>
-          <div className="text-muted" style={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '1px' }}>REVENUE</div>
+          <div className="text-muted" style={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '1px' }}>PROFIT</div>
         </div>
       </div>
 
@@ -94,15 +94,11 @@ const Dashboard = () => {
       <hr style={{ border: 'none', borderTop: '1px solid #1e1e2d', margin: '8px 0' }} />
 
       {/* Action Metrics Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
         <div 
-          onClick={() => navigate('/admin/verification')}
+          onClick={() => navigate('/admin/open-questions')}
           style={{ background: '#13131A', border: '1px solid #1E1E2D', borderRadius: '12px', padding: '16px 12px', textAlign: 'center', cursor: 'pointer' }}
         >
-          <div className="font-wide text-red" style={{ fontSize: '1.4rem' }}>{data.actionMetrics.pendingVerify}</div>
-          <div style={{ color: '#94a3b8', fontSize: '0.7rem', marginTop: '4px' }}>Pending verify →</div>
-        </div>
-        <div style={{ background: '#13131A', border: '1px solid #1E1E2D', borderRadius: '12px', padding: '16px 12px', textAlign: 'center' }}>
           <div className="font-wide text-yellow" style={{ fontSize: '1.4rem' }}>{data.actionMetrics.openQuestions}</div>
           <div style={{ color: '#94a3b8', fontSize: '0.7rem', marginTop: '4px' }}>Open questions →</div>
         </div>

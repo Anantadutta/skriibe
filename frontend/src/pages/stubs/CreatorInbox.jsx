@@ -86,33 +86,25 @@ const CreatorInbox = () => {
           <div 
             onClick={() => navigate('/creator/dashboard')}
             style={{
-              width: '40px',
-              height: '40px',
-              borderRadius: '50%',
-              background: '#1A1A1A',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer'
+              width: '40px', height: '40px', borderRadius: '12px', background: '#1A1A1A',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+              marginRight: '12px'
             }}
           >
             <span style={{ fontSize: '1.2rem', color: '#94a3b8' }}>‹</span>
           </div>
-          <h2 style={{ fontSize: '1.25rem', fontWeight: 700, margin: '0 auto', paddingRight: '40px' }}>
-            Question inbox
-          </h2>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <h2 style={{ fontSize: '1.4rem', fontWeight: 700, margin: 0 }}>Question inbox</h2>
+            <div style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: '2px' }}>
+              <span style={{ color: '#FBBF24', fontWeight: 600 }}>{pendingQuestions.length}</span> awaiting your reply · ₹{pendingQuestions.length * 99} in escrow
+            </div>
+          </div>
         </div>
 
         {/* Search */}
         <div style={{ position: 'relative' }}>
-          <span style={{
-            position: 'absolute',
-            left: '16px',
-            top: '50%',
-            transform: 'translateY(-50%)',
-            color: '#64748b'
-          }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          <span style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)' }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
           </span>
           <input 
             type="text" 
@@ -121,8 +113,8 @@ const CreatorInbox = () => {
               width: '100%',
               background: '#1A1A1A',
               border: '1px solid #2A2A2A',
-              borderRadius: '24px',
-              padding: '12px 16px 12px 44px',
+              borderRadius: '16px',
+              padding: '14px 16px 14px 44px',
               color: '#ffffff',
               fontSize: '0.95rem',
               outline: 'none',
@@ -132,13 +124,7 @@ const CreatorInbox = () => {
         </div>
 
         {/* Tabs */}
-        <div style={{
-          display: 'flex',
-          background: '#1A1A1A',
-          borderRadius: '12px',
-          padding: '4px',
-          gap: '4px'
-        }}>
+        <div style={{ display: 'flex', background: '#1A1A1A', borderRadius: '16px', padding: '6px', gap: '4px', border: '1px solid #2A2A2A' }}>
           {['All', 'Pending', 'Replied', 'Flagged'].map((tabName) => {
             const isActive = activeTab === tabName;
             const count = tabCounts[tabName] || 0;
@@ -147,168 +133,180 @@ const CreatorInbox = () => {
                 key={tabName}
                 onClick={() => setActiveTab(tabName)}
                 style={{
-                  flex: 1,
-                  textAlign: 'center',
-                  padding: '12px 4px',
-                  borderRadius: '10px',
-                  background: isActive ? '#2A2A2A' : 'transparent',
-                  color: isActive ? '#ffffff' : '#64748b',
-                  fontSize: '0.85rem',
-                  fontWeight: isActive ? 600 : 500,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '2px',
+                  flex: 1, textAlign: 'center', padding: '10px 4px', borderRadius: '12px',
+                  background: isActive ? '#2A2A35' : 'transparent',
+                  color: isActive ? '#ffffff' : '#94a3b8',
+                  fontSize: '0.85rem', fontWeight: isActive ? 700 : 600,
+                  cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: '4px',
                   transition: 'all 0.2s ease'
                 }}
               >
                 <span>{tabName}</span>
-                <span style={{ fontSize: '0.75rem', opacity: 0.8 }}>({count})</span>
+                <span style={{ fontSize: '0.8rem', color: isActive ? '#38bdf8' : '#64748b' }}>{count}</span>
               </div>
             );
           })}
         </div>
 
+        <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#94a3b8', letterSpacing: '1px', marginTop: '8px' }}>
+          {activeTab === 'All' ? 'ALL QUESTIONS' : activeTab.toUpperCase() + ' QUESTIONS'}
+        </div>
+
         {/* List */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', paddingBottom: '100px' }}>
-          
-          {/* URGENT SECTION */}
-          {(activeTab === 'All' || activeTab === 'Pending') && pendingQuestions.length > 0 && (
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-              <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#EF4444' }} />
-              <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#EF4444', letterSpacing: '1px' }}>
-                URGENT — REPLY NEEDED
-              </span>
-            </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', paddingBottom: '100px' }}>
+          {(() => {
+            const displayedQuestions = activeTab === 'All' ? questions : questions.filter(q => {
+              if (activeTab === 'Pending') return q.status?.toLowerCase() === 'submitted';
+              if (activeTab === 'Replied') return q.status?.toLowerCase() === 'answered';
+              if (activeTab === 'Flagged') return q.status?.toLowerCase() === 'flagged';
+              return true;
+            });
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {pendingQuestions.map((q) => {
-                const borderLeftColor = '#EF4444';
-                const slaColor = '#F59E0B'; 
-                const slaBg = 'rgba(245, 158, 11, 0.1)';
-                
-                return (
-                  <div 
-                    key={q._id || q.id} 
-                    onClick={() => navigate(`/creator/dashboard/reply/${q._id || q.id}`, { state: { question: q } })}
-                    onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(0.98)'; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
-                    style={{
-                    background: '#13131f',
-                    border: '1px solid #2A2A2A',
-                    borderLeft: `4px solid ${borderLeftColor}`,
-                    borderRadius: '16px',
-                    padding: '16px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '8px',
-                    cursor: 'pointer',
-                    transition: 'transform 0.1s ease'
-                  }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <div style={{
-                          width: '32px',
-                          height: '32px',
-                          borderRadius: '50%',
-                          background: '#1A1A1A',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontWeight: 700,
-                          fontSize: '0.9rem'
-                        }}>
-                          {(q.buyerName || 'A').charAt(0).toUpperCase()}
-                        </div>
-                        <div style={{ color: '#00e5ff', fontSize: '0.95rem', fontWeight: 600 }}>
-                          {q.buyerName} <span style={{ color: '#64748b' }}>·</span> ₹{q.amountPaid || 99}
-                        </div>
+            if (displayedQuestions.length === 0) {
+               return <div style={{ color: '#64748b', textAlign: 'center', marginTop: '20px' }}>No questions found.</div>
+            }
+
+            return displayedQuestions.map((q) => {
+              const isPending = q.status?.toLowerCase() === 'submitted';
+              const isReplied = q.status?.toLowerCase() === 'answered';
+              const isFlagged = q.status?.toLowerCase() === 'flagged';
+
+              let borderColor = '#333';
+              let badgeText = '';
+              let badgeColor = '';
+              let badgeBg = '';
+              let subtitle = '';
+
+              if (isPending) {
+                borderColor = '#FBBF24'; // yellow
+                badgeText = 'Pending';
+                badgeColor = '#FBBF24';
+                badgeBg = 'rgba(251, 191, 36, 0.15)';
+                subtitle = 'new question';
+              } else if (isReplied) {
+                borderColor = '#22C55E'; // green
+                badgeText = 'Done';
+                badgeColor = '#22C55E';
+                badgeBg = 'rgba(34, 197, 94, 0.15)';
+                subtitle = 'replied earlier';
+              } else if (isFlagged) {
+                borderColor = '#EF4444'; // red
+                badgeText = 'Flagged';
+                badgeColor = '#EF4444';
+                badgeBg = 'rgba(239, 68, 68, 0.15)';
+                subtitle = 'reported by you';
+              }
+
+              // Mock time for demo matching screenshots
+              let timeText = '39m left';
+              let timeBadgeColor = '#EF4444';
+              let timeBadgeBg = 'rgba(239, 68, 68, 0.15)';
+              if (q.buyerName?.startsWith('S') || q.followerName?.startsWith('S')) {
+                timeText = '4h 59m left';
+                timeBadgeColor = '#22C55E';
+                timeBadgeBg = 'rgba(34, 197, 94, 0.15)';
+              }
+
+              return (
+                <div key={q._id || q.id} style={{
+                  background: '#16161e',
+                  border: '1px solid #2A2A2A',
+                  borderLeft: `4px solid ${borderColor}`,
+                  borderRadius: '16px',
+                  padding: '16px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '12px'
+                }}>
+                  {/* Card Header */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                      <div style={{ width: '40px', height: '40px', borderRadius: '8px', background: '#2a2a35', color: '#94a3b8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '1.2rem' }}>
+                        {(q.buyerName || q.followerName || 'A')[0].toUpperCase()}
                       </div>
-                      <div style={{
-                        color: slaColor,
-                        background: slaBg,
-                        padding: '4px 8px',
-                        borderRadius: '12px',
-                        fontSize: '0.75rem',
-                        fontWeight: 700
-                      }}>
-                        {getRelativeTime(q.createdAt)}
+                      <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        <div style={{ fontSize: '1rem', fontWeight: 700, color: '#fff' }}>
+                          {q.buyerName || q.followerName} <span style={{ color: '#38BDF8' }}>· ₹{q.amountPaid || q.pricePaid || 99}</span>
+                        </div>
+                        <div style={{ color: '#64748b', fontSize: '0.8rem' }}>{subtitle}</div>
                       </div>
                     </div>
-                    <div style={{ color: '#94a3b8', fontSize: '0.9rem', lineHeight: 1.4, paddingLeft: '44px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      {q.questionText}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <div style={{ background: badgeBg, color: badgeColor, padding: '4px 10px', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 700 }}>
+                        {badgeText}
+                      </div>
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if(window.confirm('Are you sure you want to delete this question?')) {
+                            setQuestions(prev => prev.filter(item => (item._id || item.id) !== (q._id || q.id)));
+                          }
+                        }}
+                        style={{
+                          background: 'transparent', border: 'none', color: '#64748b', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'color 0.2s', borderRadius: '4px'
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.color = '#EF4444'}
+                        onMouseLeave={(e) => e.currentTarget.style.color = '#64748b'}
+                        title="Delete Question"
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                      </button>
                     </div>
                   </div>
-                );
-              })}
-            </div>
-          </div>
-          )}
 
-          {/* REPLIED SECTION */}
-          {(activeTab === 'All' || activeTab === 'Replied') && repliedQuestions.length > 0 && (
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-              <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748b', letterSpacing: '1px' }}>
-                REPLIED · EARLIER
-              </span>
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {repliedQuestions.map((q) => {
-                return (
-                  <div 
-                    key={q._id || q.id} 
-                    style={{
-                    background: '#13131f',
-                    border: '1px solid #2A2A2A',
-                    borderLeft: `4px solid #22C55E`,
-                    borderRadius: '16px',
-                    padding: '16px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '8px',
-                  }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <div style={{
-                          width: '32px',
-                          height: '32px',
-                          borderRadius: '50%',
-                          background: '#1A1A1A',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontWeight: 700,
-                          fontSize: '0.9rem'
-                        }}>
-                          {(q.buyerName || 'A').charAt(0).toUpperCase()}
-                        </div>
-                        <div style={{ color: '#00e5ff', fontSize: '0.95rem', fontWeight: 600 }}>
-                          {q.buyerName} <span style={{ color: '#64748b' }}>·</span> ₹{q.amountPaid || 99}
-                        </div>
-                      </div>
-                      <div style={{
-                        color: '#22C55E',
-                        background: 'rgba(34, 197, 94, 0.1)',
-                        padding: '4px 12px',
-                        borderRadius: '12px',
-                        fontSize: '0.75rem',
-                        fontWeight: 700
-                      }}>
-                        Done
-                      </div>
-                    </div>
-                    <div style={{ color: '#94a3b8', fontSize: '0.9rem', lineHeight: 1.4, paddingLeft: '44px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      {q.questionText}
-                    </div>
+                  {/* Question Text */}
+                  <div style={{ color: '#e2e8f0', fontSize: '0.95rem', lineHeight: '1.5' }}>
+                    {q.questionText}
                   </div>
-                );
-              })}
-            </div>
-          </div>
-          )}
+
+                  {/* Pending Action Row */}
+                  {isPending && (
+                    <>
+                      <div style={{ alignSelf: 'flex-start', background: timeBadgeBg, color: timeBadgeColor, padding: '4px 8px', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        {timeBadgeColor === '#EF4444' ? <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: timeBadgeColor }} /> : 
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>}
+                        {timeText}
+                      </div>
+                      <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
+                        <button 
+                          onClick={() => navigate(`/creator/dashboard/reply/${q._id || q.id}`, { state: { question: q } })}
+                          style={{ flex: 1, background: 'linear-gradient(90deg, #38BDF8 0%, #34D399 100%)', border: 'none', borderRadius: '12px', color: '#0F172A', fontWeight: 800, fontSize: '0.95rem', padding: '14px', cursor: 'pointer' }}
+                        >
+                          Reply & earn ₹{q.amountPaid || q.pricePaid || 99}
+                        </button>
+                        <button style={{ width: '48px', background: '#2a2a35', border: 'none', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg>
+                        </button>
+                      </div>
+                    </>
+                  )}
+
+                  {/* Replied Section */}
+                  {isReplied && (
+                    <div style={{ marginTop: '4px' }}>
+                      <span style={{ color: '#22C55E', fontWeight: 700, fontSize: '0.9rem' }}>You replied:</span>
+                      <span style={{ color: '#94a3b8', fontSize: '0.9rem', marginLeft: '4px' }}>
+                        {q.replyText || 'Start with HTML & CSS, then JavaScript fundamentals before any framework. DM me if you want a 30-day plan!'}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Flagged Section */}
+                  {isFlagged && (
+                    <div style={{ marginTop: '4px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#EF4444', fontSize: '0.85rem', fontWeight: 600 }}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg>
+                        Flagged — hidden from your queue, under review
+                      </div>
+                      <button style={{ background: '#2a2a35', border: 'none', borderRadius: '12px', color: '#94a3b8', fontWeight: 600, fontSize: '0.95rem', padding: '14px', cursor: 'pointer' }}>
+                        Restore to pending
+                      </button>
+                    </div>
+                  )}
+                </div>
+              );
+            });
+          })()}
         </div>
 
       </div>

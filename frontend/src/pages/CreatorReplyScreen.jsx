@@ -27,6 +27,11 @@ const CreatorReplyScreen = () => {
   const [view, setView] = useState('reply');
   const [rejectReason, setRejectReason] = useState('expertise');
 
+  // Scroll to top when view changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [view]);
+
   const navItems = [
     { label: 'HOME', icon: '🏠', route: '/creator/dashboard' },
     { label: 'INBOX', icon: '💬', route: '/creator/dashboard/inbox' },
@@ -50,7 +55,7 @@ const CreatorReplyScreen = () => {
     if (!isMinMet) return;
     try {
       await api.post(`/creator/questions/${question._id || question.id}/reply`, { replyText });
-      navigate('/creator/dashboard/inbox');
+      setView('success_reply');
     } catch (err) {
       console.error('Failed to send reply', err);
       alert('Failed to send reply. Please try again.');
@@ -118,77 +123,95 @@ const CreatorReplyScreen = () => {
               <button
                 onClick={() => navigate('/creator/dashboard')}
                 style={{
-                  background: '#1A1A1A',
-                  border: '1px solid #2A2A2A',
-                  color: '#ffffff',
-                  borderRadius: '50%',
-                  width: '40px',
-                  height: '40px',
+                  background: '#1A1B23',
+                  border: 'none',
+                  color: '#94a3b8',
+                  borderRadius: '16px',
+                  width: '44px',
+                  height: '44px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   cursor: 'pointer',
-                  fontSize: '22px',
-                  fontWeight: '300',
+                  fontSize: '20px',
+                  fontWeight: '500',
                   transition: 'background-color 0.2s',
                   paddingBottom: '2px'
                 }}
-                onMouseEnter={(e) => e.target.style.background = '#2A2A2A'}
-                onMouseLeave={(e) => e.target.style.background = '#1A1A1A'}
               >
                 ‹
               </button>
               
-              <h2 style={{ fontSize: '1.2rem', fontWeight: '700', margin: 0, color: '#ffffff', letterSpacing: '-0.02em' }}>
-                Reply to {(question.buyerName || question.followerName || 'Anonymous').split(' ')[0]}
-              </h2>
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <h2 style={{ fontSize: '1.4rem', fontWeight: '800', margin: '0', color: '#ffffff', letterSpacing: '-0.02em' }}>
+                  Reply to {(question.buyerName || question.followerName || 'Ayushi').split(' ')[0]}
+                </h2>
+                <div style={{ color: '#64748b', fontSize: '0.85rem', fontWeight: 500 }}>
+                  Finance question · ₹{question.amountPaid || question.pricePaid || 99}
+                </div>
+              </div>
             </div>
 
             {/* SLA Warning Banner */}
-            <div style={{ background: '#2C1414', border: '1px solid #3D1B1B', borderRadius: '12px', padding: '16px', display: 'flex', alignItems: 'center', gap: '10px', color: '#EF4444' }}>
-              <div style={{ width: '18px', height: '18px', borderRadius: '50%', border: '2px solid #EF4444', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: '900', flexShrink: 0 }}>!</div>
-              <span style={{ fontWeight: 'bold', fontSize: '0.9rem', letterSpacing: '0.01em' }}>SLA: {question.slaHoursLeft || 48} hours remaining</span>
+            <div style={{ background: '#291E00', border: '1px solid #B45309', borderRadius: '16px', padding: '16px', display: 'flex', alignItems: 'center', gap: '12px', color: '#FBBF24' }}>
+              <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#FBBF24' }} />
+              <span style={{ fontWeight: '800', fontSize: '0.95rem', letterSpacing: '0.01em' }}>SLA: {question.slaHoursLeft || '3'}h 57m remaining</span>
             </div>
 
             {/* Question Details Card */}
-            <div style={{ background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase' }}>
-                {question.buyerName || question.followerName || 'Anonymous'} · ₹{question.amountPaid || question.pricePaid} PAID
+            <div style={{ background: '#16161E', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(56, 189, 248, 0.1)', color: '#38BDF8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '1rem' }}>
+                  {(question.buyerName || question.followerName || 'A')[0].toUpperCase()}
+                </div>
+                <div style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase' }}>
+                  {question.buyerName || question.followerName || 'AYUSHI'} · <span style={{ color: '#34D399' }}>₹{question.amountPaid || question.pricePaid || 99} PAID</span>
+                </div>
               </div>
-              <p style={{ margin: 0, fontSize: '1.05rem', color: '#f8fafc', lineHeight: '1.5', letterSpacing: '-0.01em', wordBreak: 'break-all', overflowWrap: 'anywhere' }}>
+              <p style={{ margin: 0, fontSize: '1.1rem', color: '#ffffff', lineHeight: '1.5', fontStyle: 'italic', fontWeight: 600, wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
                 "{question.questionText}"
               </p>
             </div>
 
             {/* Reply Editor */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <label style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 500 }}>Your reply (minimum 100 characters) *</label>
+              <label style={{ fontSize: '0.95rem', color: '#ffffff', fontWeight: 800 }}>
+                Your reply <span style={{ color: '#94a3b8', fontWeight: 500 }}>(minimum 100 characters)</span> <span style={{ color: '#38BDF8' }}>*</span>
+              </label>
+              
+              {/* Quick Reply Chips */}
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                {['Great question!', "Here's my take —", 'Short answer:'].map((chip, idx) => (
+                  <div key={idx} onClick={() => setReplyText(prev => prev ? prev + ' ' + chip : chip)} style={{ background: '#1E293B', color: '#94a3b8', padding: '10px 16px', borderRadius: '12px', fontSize: '0.9rem', fontWeight: 600, whiteSpace: 'nowrap', cursor: 'pointer' }}>
+                    {chip}
+                  </div>
+                ))}
+              </div>
+
               <textarea
                 value={replyText}
                 onChange={(e) => setReplyText(e.target.value)}
                 placeholder="Start typing your detailed response here..."
                 style={{
-                  background: '#1A1A1A',
-                  border: '1px solid #2A2A2A',
+                  background: '#16161E',
+                  border: 'none',
                   borderRadius: '16px',
                   padding: '20px',
-                  color: '#ffffff',
-                  fontSize: '0.95rem',
+                  color: '#94a3b8',
+                  fontSize: '1rem',
                   lineHeight: '1.5',
-                  minHeight: '180px',
+                  minHeight: '200px',
                   resize: 'none',
                   fontFamily: 'system-ui, -apple-system, sans-serif',
                   fontStyle: replyText ? 'normal' : 'italic',
                   outline: 'none',
                   boxSizing: 'border-box'
                 }}
-                onFocus={(e) => e.target.style.border = '1px solid #38BDF8'}
-                onBlur={(e) => e.target.style.border = '1px solid #2A2A2A'}
               />
 
               {/* Character Count Validator */}
-              <div style={{ display: 'flex', justifyContent: 'flex-end', fontSize: '0.8rem', fontWeight: 500, color: isMinMet ? '#22C55E' : '#64748b' }}>
-                {charCount} characters — {isMinMet ? 'minimum met ✓' : `${charsRemaining} left to minimum`}
+              <div style={{ display: 'flex', justifyContent: 'flex-end', fontSize: '0.85rem', fontWeight: 700, color: '#94a3b8' }}>
+                {charCount} characters — {isMinMet ? <span style={{ color: '#34D399' }}>minimum met ✓</span> : `${charsRemaining} left to minimum`}
               </div>
             </div>
 
@@ -197,13 +220,13 @@ const CreatorReplyScreen = () => {
               disabled={!isMinMet}
               onClick={handleSend}
               style={{
-                background: isMinMet ? '#38BDF8' : '#2A2A2A',
+                background: isMinMet ? '#38BDF8' : '#1E293B',
                 color: isMinMet ? '#0F172A' : '#64748b',
                 border: 'none',
-                borderRadius: '14px',
-                padding: '16px',
-                fontWeight: 'bold',
-                fontSize: '1rem',
+                borderRadius: '16px',
+                padding: '18px',
+                fontWeight: '800',
+                fontSize: '1.05rem',
                 cursor: isMinMet ? 'pointer' : 'not-allowed',
                 transition: 'all 0.2s ease',
                 textAlign: 'center',
@@ -214,43 +237,42 @@ const CreatorReplyScreen = () => {
             </button>
 
             {/* Action Button Grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '8px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '4px' }}>
               <button
-                onMouseEnter={() => setRejectHover(true)}
-                onMouseLeave={() => setRejectHover(false)}
                 onClick={handleRejectClick}
                 style={{
-                  background: '#1A1A1A',
-                  border: rejectHover ? '1px solid #64748b' : '1px solid #2A2A2A',
+                  background: '#1A1B23',
+                  border: 'none',
                   color: '#ffffff',
-                  borderRadius: '14px',
+                  borderRadius: '16px',
                   padding: '16px',
-                  fontWeight: 600,
-                  fontSize: '0.9rem',
+                  fontWeight: 800,
+                  fontSize: '0.95rem',
                   cursor: 'pointer',
-                  transition: 'all 0.2s ease',
                   textAlign: 'center'
                 }}
               >
-                Reject
+                Reject & refund
               </button>
               <button
-                onMouseEnter={() => setAbuseHover(true)}
-                onMouseLeave={() => setAbuseHover(false)}
                 onClick={handleFlagClick}
                 style={{
-                  background: '#1A1A1A',
-                  border: abuseHover ? '1px solid #EF4444' : '1px solid #2C1414',
-                  color: '#EF4444',
-                  borderRadius: '14px',
+                  background: 'rgba(239, 68, 68, 0.1)',
+                  border: '1px solid rgba(239, 68, 68, 0.2)',
+                  color: '#ef4444',
+                  borderRadius: '16px',
                   padding: '16px',
-                  fontWeight: 600,
-                  fontSize: '0.9rem',
+                  fontWeight: 800,
+                  fontSize: '0.95rem',
                   cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  textAlign: 'center'
+                  textAlign: 'center',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px'
                 }}
               >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="#ef4444" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg>
                 Flag abuse
               </button>
             </div>
@@ -547,6 +569,55 @@ const CreatorReplyScreen = () => {
               </button>
             </div>
           </>
+        )}
+
+        {/* ========================================= */}
+        {/* VIEW: SUCCESS (Reply Sent)                */}
+        {/* ========================================= */}
+        {view === 'success_reply' && (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, padding: '40px 0', gap: '24px', textAlign: 'center' }}>
+            <div style={{
+              width: '80px',
+              height: '80px',
+              borderRadius: '50%',
+              background: 'rgba(56, 189, 248, 0.1)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '40px'
+            }}>
+              ✅
+            </div>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <h2 style={{ fontSize: '1.5rem', fontWeight: '700', margin: 0, color: '#ffffff' }}>
+                Reply Sent!
+              </h2>
+              <p style={{ margin: 0, fontSize: '0.95rem', color: '#94a3b8', lineHeight: '1.5' }}>
+                Your response has been sent to {question.buyerName || question.followerName || 'the buyer'}. ₹{question.amountPaid || question.pricePaid || 99} has been credited to your account.
+              </p>
+            </div>
+
+            <button
+              onClick={() => navigate('/creator/dashboard')}
+              style={{
+                background: '#1A1A1A',
+                border: '1px solid #2A2A2A',
+                color: '#ffffff',
+                borderRadius: '14px',
+                padding: '16px 32px',
+                fontWeight: '600',
+                fontSize: '1rem',
+                cursor: 'pointer',
+                marginTop: '16px',
+                transition: 'background 0.2s ease',
+              }}
+              onMouseEnter={(e) => e.target.style.background = '#2A2A2A'}
+              onMouseLeave={(e) => e.target.style.background = '#1A1A1A'}
+            >
+              Return to Dashboard
+            </button>
+          </div>
         )}
 
         {/* ========================================= */}

@@ -15,6 +15,7 @@ import ConfirmBlock from './pages/ConfirmBlock';
 import UnbanBuyer from './pages/UnbanBuyer';
 import AdminAlerts from './pages/AdminAlerts';
 import AdminLogin from './pages/AdminLogin';
+import OpenQuestions from './pages/OpenQuestions';
 import AdminLayout from './components/AdminLayout';
 
 // Authentication guard
@@ -45,6 +46,7 @@ function App() {
             <Route path="dispute/:id/strike" element={<StrikeCreator />} />
             <Route path="dispute/:id/dismiss" element={<DismissDispute />} />
             <Route path="creators" element={<CreatorHealth />} />
+            <Route path="open-questions" element={<OpenQuestions />} />
             <Route path="analytics" element={<PlatformAnalytics />} />
             <Route path="buyers" element={<BuyerManagement />} />
             <Route path="buyers/confirm-block" element={<ConfirmBlock />} />

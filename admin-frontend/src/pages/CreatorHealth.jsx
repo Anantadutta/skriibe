@@ -1,8 +1,23 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 const CreatorHealth = () => {
   const navigate = useNavigate();
+  const [creators, setCreators] = useState([]);
+  const [expandedId, setExpandedId] = useState(null);
+
+  useEffect(() => {
+    const fetchCreators = async () => {
+      try {
+        const res = await axios.get('http://localhost:5000/api/admin/creators', { withCredentials: true });
+        setCreators(res.data);
+      } catch (err) {
+        console.error('Failed to fetch creators', err);
+      }
+    };
+    fetchCreators();
+  }, []);
 
   return (
     <div style={{ padding: '32px 24px', maxWidth: '600px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '24px' }}>
@@ -21,104 +36,110 @@ const CreatorHealth = () => {
 
       <div style={{ display: 'flex', flexDirection: 'column' }}>
         <h1 className="font-wide" style={{ margin: 0, fontSize: '1.75rem', letterSpacing: '-0.03em', color: '#ffffff' }}>
-          Creator health
+          All Creators
         </h1>
-        <div style={{ fontSize: '0.85rem', color: '#94a3b8', marginTop: '4px' }}>Monitor reply rates, refunds & SLA breaches</div>
+        <div style={{ fontSize: '0.85rem', color: '#94a3b8', marginTop: '4px' }}>Monitor all signed up creators</div>
       </div>
 
-      {/* Tabs */}
-      <div style={{ display: 'flex', background: '#13131A', borderRadius: '12px', padding: '4px', width: 'fit-content', border: '1px solid #1E1E2D' }}>
-        <div style={{ padding: '8px 24px', borderRadius: '8px', background: '#2A2A35', color: '#fff', fontSize: '0.85rem', fontWeight: 'bold', cursor: 'pointer' }}>Healthy (76)</div>
-        <div style={{ padding: '8px 24px', borderRadius: '8px', color: '#94a3b8', fontSize: '0.85rem', fontWeight: 'bold', cursor: 'pointer' }}>At Risk (8)</div>
-        <div style={{ padding: '8px 24px', borderRadius: '8px', color: '#94a3b8', fontSize: '0.85rem', fontWeight: 'bold', cursor: 'pointer' }}>Critical (2)</div>
-      </div>
-
-      {/* AT RISK Section */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#F59E0B', fontWeight: 'bold', fontSize: '0.8rem', letterSpacing: '1px', marginTop: '8px' }}>
-          <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#F59E0B' }} />
-          AT RISK
-        </div>
-        
-        <div style={{ background: '#13131A', borderRadius: '16px', padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px', border: '1px solid #1E1E2D' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-              <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'rgba(245, 158, 11, 0.1)', color: '#F59E0B', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', flexShrink: 0, fontWeight: 'bold' }}>
-                P
+        {creators.map((creator) => {
+          const isExpanded = expandedId === creator._id;
+          return (
+            <div 
+              key={creator._id} 
+              onClick={() => setExpandedId(isExpanded ? null : creator._id)}
+              style={{ 
+                background: '#13131A', 
+                borderRadius: '16px', 
+                padding: '20px', 
+                display: 'flex', 
+                flexDirection: 'column', 
+                border: isExpanded ? '1px solid #38BDF8' : '1px solid #1E1E2D',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                  <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(56, 189, 248, 0.1)', color: '#38BDF8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', flexShrink: 0, fontWeight: 'bold' }}>
+                    {(creator.handle || creator.email || 'C')[0].toUpperCase()}
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                    <div style={{ color: '#fff', fontWeight: 'bold', fontSize: '0.95rem' }}>@{creator.handle || 'No Handle'}</div>
+                    <div style={{ color: '#64748b', fontSize: '0.8rem' }}>{creator.email}</div>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
+                  <div style={{ color: creator.verified ? '#10B981' : '#F59E0B', fontWeight: 'bold', fontSize: '0.85rem' }}>
+                    {creator.verified ? 'Verified' : 'Pending'}
+                  </div>
+                  <div style={{ color: '#64748b', fontSize: '0.8rem' }}>₹{creator.price}</div>
+                </div>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                <div style={{ color: '#fff', fontWeight: 'bold', fontSize: '1.1rem' }}>@priya_startup</div>
-                <div style={{ color: '#94a3b8', fontSize: '0.85rem' }}>Score: 62/100 ↓</div>
-              </div>
-            </div>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <button style={{ background: 'rgba(245, 158, 11, 0.1)', color: '#F59E0B', border: 'none', padding: '6px 16px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.8rem' }}>
-                Warn
-              </button>
-              <button style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#EF4444', border: 'none', padding: '6px 16px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.8rem' }}>
-                Suspend
-              </button>
-            </div>
-          </div>
 
-          <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
-              <div style={{ color: '#F59E0B', fontSize: '1.4rem', fontWeight: 'bold' }}>71%</div>
-              <div style={{ color: '#f8fafc', fontSize: '0.75rem', fontWeight: 'bold' }}>Reply</div>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
-              <div style={{ color: '#F59E0B', fontSize: '1.4rem', fontWeight: 'bold' }}>14%</div>
-              <div style={{ color: '#f8fafc', fontSize: '0.75rem', fontWeight: 'bold' }}>Refunds</div>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
-              <div style={{ color: '#EF4444', fontSize: '1.4rem', fontWeight: 'bold' }}>3</div>
-              <div style={{ color: '#f8fafc', fontSize: '0.75rem', fontWeight: 'bold' }}>Breaches</div>
-            </div>
-          </div>
-        </div>
-      </div>
+              {/* Expanded details section */}
+              {isExpanded && (
+                <div style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px solid #1E1E2D', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <div style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: 'bold' }}>FULL NAME</div>
+                      <div style={{ color: '#f8fafc', fontSize: '0.9rem' }}>{creator.name || 'Not provided'}</div>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <div style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: 'bold' }}>PHONE</div>
+                      <div style={{ color: '#f8fafc', fontSize: '0.9rem' }}>{creator.phone || 'Not provided'}</div>
+                    </div>
+                  </div>
 
-      {/* TOP PERFORMERS Section */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#10B981', fontWeight: 'bold', fontSize: '0.8rem', letterSpacing: '1px', marginTop: '8px' }}>
-          <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10B981' }} />
-          TOP PERFORMERS
-        </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <div style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: 'bold' }}>BIO</div>
+                    <div style={{ color: '#f8fafc', fontSize: '0.9rem', lineHeight: '1.4' }}>{creator.bio || 'No bio provided'}</div>
+                  </div>
 
-        {/* Performer 1 */}
-        <div style={{ background: '#13131A', borderRadius: '16px', padding: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid #1E1E2D' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(56, 189, 248, 0.1)', color: '#38BDF8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', flexShrink: 0, fontWeight: 'bold' }}>
-              R
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-              <div style={{ color: '#fff', fontWeight: 'bold', fontSize: '0.95rem' }}>@rahulfinance</div>
-              <div style={{ color: '#64748b', fontSize: '0.8rem' }}>94% reply rate</div>
-            </div>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
-            <div style={{ color: '#10B981', fontWeight: 'bold', fontSize: '0.95rem' }}>97/100 ↑</div>
-            <div style={{ color: '#64748b', fontSize: '0.8rem' }}>₹3,241</div>
-          </div>
-        </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <div style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: 'bold' }}>REPLY RATE</div>
+                      <div style={{ color: '#10B981', fontSize: '0.9rem', fontWeight: 'bold' }}>{creator.stats?.replyRate || 0}%</div>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <div style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: 'bold' }}>ANSWERED</div>
+                      <div style={{ color: '#f8fafc', fontSize: '0.9rem', fontWeight: 'bold' }}>{creator.stats?.totalAnswered || 0}</div>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <div style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: 'bold' }}>STATUS</div>
+                      <div style={{ color: creator.isLive ? '#10B981' : '#EF4444', fontSize: '0.9rem', fontWeight: 'bold' }}>{creator.isLive ? 'Live' : 'Offline'}</div>
+                    </div>
+                  </div>
 
-        {/* Performer 2 */}
-        <div style={{ background: '#13131A', borderRadius: '16px', padding: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid #1E1E2D' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(16, 185, 129, 0.1)', color: '#10B981', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', flexShrink: 0, fontWeight: 'bold' }}>
-              A
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-              <div style={{ color: '#fff', fontWeight: 'bold', fontSize: '0.95rem' }}>@amitupsc</div>
-              <div style={{ color: '#64748b', fontSize: '0.8rem' }}>91% reply rate</div>
-            </div>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
-            <div style={{ color: '#10B981', fontWeight: 'bold', fontSize: '0.95rem' }}>94/100 →</div>
-            <div style={{ color: '#64748b', fontSize: '0.8rem' }}>₹4,455</div>
-          </div>
-        </div>
+                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                    {creator.expertise && creator.expertise.length > 0 && creator.expertise.map((exp, idx) => (
+                      <div key={idx} style={{ background: '#1E1E2D', padding: '4px 12px', borderRadius: '16px', fontSize: '0.75rem', color: '#94a3b8' }}>
+                        {exp}
+                      </div>
+                    ))}
+                    {(!creator.expertise || creator.expertise.length === 0) && (
+                      <div style={{ color: '#64748b', fontSize: '0.8rem', fontStyle: 'italic' }}>No expertise listed</div>
+                    )}
+                  </div>
 
+                  <div style={{ display: 'flex', gap: '16px', marginTop: '8px' }}>
+                    <div style={{ fontSize: '0.85rem', color: creator.bankLinked ? '#10B981' : '#EF4444', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span style={{ fontSize: '1rem' }}>{creator.bankLinked ? '✅' : '❌'}</span> Bank Linked
+                    </div>
+                    <div style={{ fontSize: '0.85rem', color: creator.instagramLinked || creator.instagramConnected ? '#10B981' : '#EF4444', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span style={{ fontSize: '1rem' }}>{creator.instagramLinked || creator.instagramConnected ? '✅' : '❌'}</span> Instagram Linked
+                    </div>
+                  </div>
+
+                </div>
+              )}
+            </div>
+          );
+        })}
+        {creators.length === 0 && (
+          <div style={{ color: '#94a3b8', textAlign: 'center', padding: '24px' }}>No creators found.</div>
+        )}
       </div>
 
     </div>
