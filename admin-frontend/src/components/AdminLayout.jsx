@@ -1,16 +1,33 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import axios from 'axios';
 
 const AdminLayout = () => {
   const location = useLocation();
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    const fetchUnread = async () => {
+      try {
+        const res = await axios.get('http://localhost:5000/api/admin/alerts', { withCredentials: true });
+        const unread = res.data.filter(a => !a.isRead).length;
+        setUnreadCount(unread);
+      } catch (err) {
+        console.error('Failed to fetch unread alerts count:', err);
+      }
+    };
+    fetchUnread();
+  }, [location.pathname]);
+
   const isDisputeDrilldown = location.pathname.includes('/admin/dispute/');
 
   const menuItems = [
     { name: 'Dashboard', path: '/admin/dashboard', icon: '📊' },
-    { name: 'Alerts', path: '/admin/alerts', icon: '🔔', badge: 7 },
-    { name: 'Verification', path: '/admin/verification', icon: '✅' },
-    { name: 'Creators', path: '/admin/creators', icon: '👥' },
+    { name: 'Alerts', path: '/admin/alerts', icon: '🔔', badge: unreadCount > 0 ? unreadCount : null },
+    { name: 'Creator Health', path: '/admin/creators', icon: '👥' },
     { name: 'Buyers', path: '/admin/buyers', icon: '🛒' },
+    { name: 'Creator Disputes', path: '/admin/creator-disputes', icon: '⚔️' },
+    { name: 'Buyer Disputes', path: '/admin/buyer-disputes', icon: '⚖️' },
     { name: 'Analytics', path: '/admin/analytics', icon: '📈' },
   ];
 

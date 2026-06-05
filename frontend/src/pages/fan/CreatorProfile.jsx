@@ -42,6 +42,29 @@ const CreatorProfile = () => {
     fetchCreator();
   }, [handle]);
 
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const res = await api.get('/fan-auth/me');
+        if (res.data?.fan) {
+          setBuyerName(res.data.fan.name || '');
+          setBuyerEmail(res.data.fan.email || '');
+        }
+      } catch (err) {
+        try {
+          const cRes = await api.get('/creators/me');
+          if (cRes.data?.creator) {
+            setBuyerName(cRes.data.creator.name || '');
+            setBuyerEmail(cRes.data.creator.email || '');
+          }
+        } catch (e) {
+          // not logged in, leave empty
+        }
+      }
+    };
+    fetchUser();
+  }, []);
+
   if (loading) {
     return (
       <div style={{ minHeight: '100vh', background: '#0a0a0f', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8' }}>

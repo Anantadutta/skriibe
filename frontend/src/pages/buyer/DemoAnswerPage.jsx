@@ -2,22 +2,45 @@ import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 
 const DemoAnswerPage = () => {
+  const flagOptions = [
+    { category: "About the answer quality", options: [
+      { label: "Didn't answer my question", desc: "the reply was vague or completely off-topic" },
+      { label: "Copy-pasted / not original", desc: "looks like it was lifted from somewhere else" }
+    ]},
+    { category: "About the content itself", options: [
+      { label: "Spam or self-promotion", desc: "the reply was just plugging their own links/products" },
+      { label: "Undisclosed paid promotion", desc: "looks like a sponsored answer but wasn't labeled" }
+    ]},
+    { category: "About behavior toward the fan", options: [
+      { label: "Rude or dismissive", desc: "the creator was condescending or disrespectful in the reply" },
+      { label: "Ignored the actual question", desc: "replied but deliberately dodged what was asked" }
+    ]},
+    { category: "About authenticity", options: [
+      { label: "This doesn't seem like the real creator", desc: "suspected impersonation or ghost-written" },
+      { label: "AI-generated response", desc: "feels like it wasn't written by the creator at all" }
+    ]},
+    { category: "Catch-all", options: [
+      { label: "Something else", desc: "with a short text box for the fan to explain" }
+    ]}
+  ];
+
   const { handle } = useParams();
-  const [showFlagSheet, setShowFlagSheet] = useState(false);
+  const [showFlagModal, setShowFlagModal] = useState(false);
   const [showToast, setShowToast] = useState(false);
-  const [selectedReason, setSelectedReason] = useState('');
+  const [selectedFlagOption, setSelectedFlagOption] = useState('');
+  const [flagReason, setFlagReason] = useState('');
 
   const submitFlag = () => {
-    if (!selectedReason) return;
-    window.location.href = `/${handle}/flag-submitted`;
-  };
+    const finalReason = selectedFlagOption === 'Something else' 
+      ? `Something else: ${flagReason}` 
+      : (selectedFlagOption || flagReason);
 
-  const reasons = [
-    { title: "Reply was too short or unhelpful", sub: "Generic or under 100 characters" },
-    { title: "Reply did not answer my question", sub: "Off-topic or missed the point" },
-    { title: "Reply was inappropriate", sub: "Offensive or unprofessional" },
-    { title: "Factually incorrect information", sub: "Wrong advice that could cause harm" }
-  ];
+    setShowFlagModal(false);
+    setShowToast(true);
+    setTimeout(() => {
+      window.location.href = `/${handle}/flag-submitted`;
+    }, 1500);
+  };
 
   return (
     <div className="no-scrollbar" style={{
@@ -130,7 +153,7 @@ const DemoAnswerPage = () => {
 
           {/* FLAG BUTTON */}
           <button 
-            onClick={() => setShowFlagSheet(true)}
+            onClick={() => setShowFlagModal(true)}
             style={{
               width: '100%',
               background: 'transparent',
@@ -154,162 +177,114 @@ const DemoAnswerPage = () => {
           </div>
         </div>
 
-        {/* FULL SCREEN FLAG UI */}
-        {showFlagSheet && (
-          <div className="no-scrollbar" style={{
-            position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-            background: '#06060A', zIndex: 50,
-            display: 'flex', flexDirection: 'column',
-            overflowY: 'auto'
-          }}>
-            {/* Header */}
-            <div style={{ padding: '24px 20px', display: 'flex', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-              <button 
-                onClick={() => setShowFlagSheet(false)}
-                style={{
-                  background: '#1A1A24', border: 'none', color: '#94a3b8',
-                  width: '36px', height: '36px', borderRadius: '50%',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  cursor: 'pointer'
-                }}
-              >
-                {'<'}
-              </button>
-              <h1 style={{ flex: 1, textAlign: 'center', margin: 0, fontSize: '1.2rem', fontWeight: '800', marginRight: '36px' }}>
-                Flag answer
-              </h1>
-            </div>
-
-            <div style={{ padding: '24px 20px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              {/* Warning box */}
-              <div style={{
-                background: 'rgba(239, 68, 68, 0.05)',
-                border: '1px solid rgba(239, 68, 68, 0.2)',
-                borderRadius: '16px',
-                padding: '20px',
-                color: '#f8fafc',
-                fontSize: '0.95rem',
-                lineHeight: '1.5'
-              }}>
-                Flagging pauses the creator payout and opens a dispute. Admin reviews within 48 hours and you will be notified.
-              </div>
-
-              <h2 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '800' }}>Reason for flagging</h2>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                {reasons.map((r, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setSelectedReason(r.title)}
-                    style={{
-                      background: selectedReason === r.title ? 'rgba(239, 68, 68, 0.05)' : '#15151A',
-                      border: selectedReason === r.title ? '1px solid rgba(239, 68, 68, 0.5)' : '1px solid rgba(255,255,255,0.06)',
-                      borderRadius: '16px',
-                      padding: '16px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '16px',
-                      cursor: 'pointer',
-                      textAlign: 'left'
-                    }}
-                  >
-                    <div style={{
-                      width: '24px', height: '24px', borderRadius: '50%',
-                      border: selectedReason === r.title ? 'none' : '2px solid rgba(255,255,255,0.2)',
-                      background: selectedReason === r.title ? '#ef4444' : 'transparent',
-                      flexShrink: 0
-                    }} />
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                      <div style={{ color: '#ffffff', fontWeight: '800', fontSize: '1rem' }}>{r.title}</div>
-                      <div style={{ color: selectedReason === r.title ? 'rgba(255,255,255,0.3)' : '#64748b', fontSize: '0.85rem' }}>{r.sub}</div>
+        {/* FLAG CONFIRMATION MODAL */}
+        {showFlagModal && (
+          <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}>
+            <div style={{ background: '#11131a', border: '1px solid #1f2937', borderRadius: '16px', padding: '32px', maxWidth: '400px', width: '100%', textAlign: 'center' }}>
+              <div style={{ fontSize: '48px', marginBottom: '16px' }}>⚠️</div>
+              <h3 style={{ margin: '0 0 16px', fontSize: '20px', color: '#fff' }}>Flag Reply?</h3>
+              <p style={{ color: '#94a3b8', marginBottom: '24px', lineHeight: '1.5', fontSize: '0.9rem' }}>
+                Select a reason for flagging this reply. This will open a dispute.
+              </p>
+              
+              <div style={{ maxHeight: '55vh', overflowY: 'auto', textAlign: 'left', marginBottom: '24px', paddingRight: '8px' }} className="custom-scrollbar">
+                {flagOptions.map((group, idx) => (
+                  <div key={idx} style={{ marginBottom: '24px' }}>
+                    <div style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', marginBottom: '12px', letterSpacing: '1px' }}>{group.category}</div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                      {group.options.map((opt, oIdx) => (
+                        <div key={oIdx} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                          <button
+                            onClick={() => { setSelectedFlagOption(opt.label); if(opt.label !== 'Something else') setFlagReason(''); }}
+                            style={{
+                              width: '100%',
+                              background: selectedFlagOption === opt.label ? 'rgba(239, 68, 68, 0.05)' : '#15151A',
+                              border: selectedFlagOption === opt.label ? '1px solid rgba(239, 68, 68, 0.5)' : '1px solid rgba(255,255,255,0.06)',
+                              borderRadius: '16px',
+                              padding: '16px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '16px',
+                              cursor: 'pointer',
+                              textAlign: 'left',
+                              transition: 'all 0.2s'
+                            }}
+                          >
+                            <div style={{
+                              width: '24px', height: '24px', borderRadius: '50%',
+                              border: selectedFlagOption === opt.label ? 'none' : '2px solid rgba(255,255,255,0.2)',
+                              background: selectedFlagOption === opt.label ? '#ef4444' : 'transparent',
+                              flexShrink: 0
+                            }} />
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                              <div style={{ color: '#ffffff', fontWeight: '800', fontSize: '1rem' }}>{opt.label}</div>
+                              <div style={{ color: selectedFlagOption === opt.label ? 'rgba(255,255,255,0.5)' : '#64748b', fontSize: '0.85rem' }}>{opt.desc}</div>
+                            </div>
+                          </button>
+                          
+                          {opt.label === 'Something else' && selectedFlagOption === 'Something else' && (
+                            <div style={{
+                              background: '#15151A',
+                              border: '1px solid rgba(255,255,255,0.06)',
+                              borderRadius: '16px',
+                              padding: '16px',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              animation: 'fadeIn 0.3s ease-out'
+                            }}>
+                              <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: '800', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '8px' }}>
+                                Please explain
+                              </div>
+                              <textarea 
+                                placeholder="Write your reason here..."
+                                value={flagReason}
+                                onChange={(e) => setFlagReason(e.target.value)}
+                                autoFocus
+                                style={{
+                                  background: 'transparent',
+                                  border: 'none',
+                                  color: '#ffffff',
+                                  fontSize: '1rem',
+                                  resize: 'none',
+                                  outline: 'none',
+                                  minHeight: '60px',
+                                  fontFamily: 'inherit'
+                                }}
+                              />
+                            </div>
+                          )}
+                        </div>
+                      ))}
                     </div>
-                  </button>
+                  </div>
                 ))}
               </div>
 
-              {/* Textarea */}
-              <div style={{
-                background: '#15151A',
-                border: '1px solid rgba(255,255,255,0.06)',
-                borderRadius: '16px',
-                padding: '16px',
-                display: 'flex',
-                flexDirection: 'column'
-              }}>
-                <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: '800', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '8px' }}>
-                  Additional note (Optional)
-                </div>
-                <textarea 
-                  placeholder="Explain what was wrong..."
-                  style={{
-                    background: 'transparent',
-                    border: 'none',
-                    color: '#ffffff',
-                    fontSize: '1rem',
-                    resize: 'none',
-                    outline: 'none',
-                    minHeight: '60px',
-                    fontFamily: 'inherit'
-                  }}
-                />
-              </div>
-              <div style={{ textAlign: 'right', fontSize: '0.75rem', color: '#64748b', marginTop: '-12px', fontFamily: 'monospace' }}>
-                0 / 150
-              </div>
-
-              {/* Refund Info */}
-              <div style={{
-                background: '#062010',
-                border: '1px solid #14532D',
-                borderRadius: '16px',
-                padding: '20px',
-                marginTop: '8px'
-              }}>
-                <div style={{ color: '#22c55e', fontWeight: '800', fontSize: '1rem', marginBottom: '4px' }}>
-                  If approved: full Rs.99 refund
-                </div>
-                <div style={{ color: '#475569', fontSize: '0.9rem', lineHeight: '1.4' }}>
-                  Returned to your original payment method within 5-7 business days.
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '16px', paddingBottom: '32px' }}>
-                <button
-                  onClick={submitFlag}
-                  disabled={!selectedReason}
-                  style={{
-                    width: '100%',
-                    background: 'rgba(239, 68, 68, 0.1)',
-                    color: '#ef4444',
-                    border: '1px solid rgba(239, 68, 68, 0.2)',
-                    borderRadius: '16px',
-                    padding: '18px',
-                    fontSize: '1.1rem',
-                    fontWeight: '800',
-                    cursor: selectedReason ? 'pointer' : 'not-allowed',
-                    opacity: selectedReason ? 1 : 0.5
-                  }}
-                >
-                  Submit flag
-                </button>
-                <button
-                  onClick={() => setShowFlagSheet(false)}
-                  style={{
-                    width: '100%',
-                    background: '#15151A',
-                    color: '#ffffff',
-                    border: '1px solid rgba(255,255,255,0.06)',
-                    borderRadius: '16px',
-                    padding: '18px',
-                    fontSize: '1.1rem',
-                    fontWeight: '800',
-                    cursor: 'pointer'
-                  }}
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <button 
+                  onClick={() => { setShowFlagModal(false); setSelectedFlagOption(''); setFlagReason(''); }}
+                  style={{ flex: 1, background: 'transparent', border: '1px solid #334155', color: '#cbd5e1', padding: '12px', borderRadius: '12px', fontWeight: '600', cursor: 'pointer' }}
                 >
                   Cancel
                 </button>
+                <button 
+                  onClick={submitFlag}
+                  disabled={!selectedFlagOption || (selectedFlagOption === 'Something else' && !flagReason.trim())}
+                  style={{ 
+                    flex: 1, 
+                    background: (!selectedFlagOption || (selectedFlagOption === 'Something else' && !flagReason.trim())) ? '#3f3f46' : '#ef4444', 
+                    border: 'none', 
+                    color: (!selectedFlagOption || (selectedFlagOption === 'Something else' && !flagReason.trim())) ? '#a1a1aa' : '#fff', 
+                    padding: '12px', 
+                    borderRadius: '12px', 
+                    fontWeight: 'bold', 
+                    cursor: (!selectedFlagOption || (selectedFlagOption === 'Something else' && !flagReason.trim())) ? 'not-allowed' : 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  Yes, Flag it
+                </button>
               </div>
-
             </div>
           </div>
         )}

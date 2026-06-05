@@ -38,7 +38,8 @@ const CreatorSettings = () => {
   const [isLive, setIsLive] = useState(creator.isLive !== undefined ? creator.isLive : true);
   const [autoPause, setAutoPause] = useState(true);
   const [bio, setBio] = useState('Finance · 12K followers');
-  const [avatar, setAvatar] = useState(creator.avatarInitial || (creator.displayName ? creator.displayName[0] : 'R'));
+  const displayUserName = creator.name || creator.displayName || creator.handle || 'C';
+  const [avatar, setAvatar] = useState(displayUserName[0].toUpperCase());
   
   const [isEditingPrice, setIsEditingPrice] = useState(false);
   const [isEditingCap, setIsEditingCap] = useState(false);

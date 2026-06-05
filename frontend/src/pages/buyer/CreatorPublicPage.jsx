@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { getCreatorProfile, sendBuyerOTP, verifyBuyerOTP, submitQuestion } from '../../api/buyerApi';
 import { mockQuestions } from '../../mock/questions';
 import { io } from 'socket.io-client';
+import api from '../../services/api';
 
 const CreatorPublicPage = () => {
   const { handle } = useParams();
@@ -61,6 +62,29 @@ const CreatorPublicPage = () => {
       socket.disconnect();
     };
   }, [handle]);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const res = await api.get('/fan-auth/me');
+        if (res.data?.fan) {
+          setBuyerName(res.data.fan.name || '');
+          setBuyerEmail(res.data.fan.email || '');
+        }
+      } catch (err) {
+        try {
+          const cRes = await api.get('/creators/me');
+          if (cRes.data?.creator) {
+            setBuyerName(cRes.data.creator.name || '');
+            setBuyerEmail(cRes.data.creator.email || '');
+          }
+        } catch (e) {
+          // not logged in, leave empty
+        }
+      }
+    };
+    fetchUser();
+  }, []);
 
   const handleSubmitQuestion = async () => {
     setError('');

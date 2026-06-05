@@ -4,6 +4,7 @@ const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 const Fan = require('../models/Fan');
+const AdminAlert = require('../models/AdminAlert');
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const FacebookStrategy = require('passport-facebook').Strategy;
@@ -62,6 +63,13 @@ passport.use('google-fan', new GoogleStrategy({
           password: hashPassword(Math.random().toString(36).slice(-8)) // dummy password
         });
         await fan.save();
+        
+        await AdminAlert.create({
+          type: 'fan_signup',
+          title: 'New fan/buyer signup',
+          message: `Fan signed up via Google: ${email}`,
+          referenceId: fan._id
+        });
       }
       done(null, fan);
     } catch (err) {
@@ -89,6 +97,13 @@ passport.use('facebook-fan', new FacebookStrategy({
           password: hashPassword(Math.random().toString(36).slice(-8))
         });
         await fan.save();
+
+        await AdminAlert.create({
+          type: 'fan_signup',
+          title: 'New fan/buyer signup',
+          message: `Fan signed up via Facebook: ${email}`,
+          referenceId: fan._id
+        });
       }
       done(null, fan);
     } catch (err) {
@@ -160,6 +175,13 @@ router.post('/signup', async (req, res) => {
     });
     
     await newFan.save();
+
+    await AdminAlert.create({
+      type: 'fan_signup',
+      title: 'New fan/buyer signup',
+      message: `Fan signed up via Email: ${newFan.email}`,
+      referenceId: newFan._id
+    });
     
     issueToken(res, newFan);
     

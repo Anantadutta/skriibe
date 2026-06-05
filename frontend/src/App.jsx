@@ -27,6 +27,7 @@ import CreatorAnalytics from './pages/stubs/CreatorAnalytics';
 import CreatorPayouts from './pages/stubs/CreatorPayouts';
 import CreatorSettings from './pages/stubs/CreatorSettings';
 import CreatorAccountHealth from './pages/stubs/CreatorAccountHealth';
+import CreatorDeleteQuestion from './pages/stubs/CreatorDeleteQuestion';
 import CreatorSharePage from './pages/creator/CreatorSharePage';
 import AdminLogin from './pages/admin/AdminLogin';
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -147,6 +148,7 @@ function App() {
           <Route element={<CreatorRoute />}>
             <Route path="/creator/dashboard" element={<CreatorDashboard />} />
             <Route path="/creator/dashboard/reply/:id" element={<CreatorReplyScreen />} />
+            <Route path="/creator/inbox/delete/:id" element={<CreatorDeleteQuestion />} />
             <Route path="/creator/inbox" element={<CreatorInbox />} />
             <Route path="/creator/analytics" element={<CreatorAnalytics />} />
             <Route path="/creator/payouts" element={<CreatorPayouts />} />

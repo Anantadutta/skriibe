@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import NotificationBell from '../components/NotificationBell';
 
 const BuyerManagement = () => {
   const navigate = useNavigate();
@@ -26,9 +27,7 @@ const BuyerManagement = () => {
         <div style={{ fontSize: '0.9rem', color: '#64748b' }}>
           Admin <span style={{ color: '#ffffff', fontWeight: 'bold' }}>/ Buyers</span>
         </div>
-        <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: '#1A1A1A', border: '1px solid #2A2A2A', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', position: 'relative' }}>
-          <span style={{ fontSize: '1.2rem' }}>🔔</span>
-        </div>
+        <NotificationBell />
       </div>
       
       <hr style={{ border: 'none', borderTop: '1px solid #1e1e2d', margin: '0 0 8px 0' }} />

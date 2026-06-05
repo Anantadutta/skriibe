@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import NotificationBell from '../components/NotificationBell';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -9,10 +10,22 @@ const Dashboard = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const getLocalDateString = () => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  };
+
+  const [dateRange, setDateRange] = useState({
+    startDate: getLocalDateString(),
+    endDate: getLocalDateString()
+  });
+
   useEffect(() => {
     const fetchDashboard = async () => {
       try {
-        const response = await axios.get(`${API_URL}/admin/dashboard`);
+        const response = await axios.get(`${API_URL}/admin/dashboard`, {
+          params: { startDate: dateRange.startDate, endDate: dateRange.endDate }
+        });
         setData(response.data);
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
@@ -21,7 +34,7 @@ const Dashboard = () => {
       }
     };
     fetchDashboard();
-  }, []);
+  }, [dateRange]);
 
   if (loading) {
     return <div style={{ padding: 40, color: '#fff' }}>Loading Platform Pulse...</div>;
@@ -37,9 +50,7 @@ const Dashboard = () => {
         <div style={{ fontSize: '0.9rem', color: '#64748b' }}>
           Admin <span style={{ color: '#ffffff', fontWeight: 'bold' }}>/ Dashboard</span>
         </div>
-        <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: '#1A1A1A', border: '1px solid #2A2A2A', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-          <span style={{ fontSize: '1.2rem' }}>🔔</span>
-        </div>
+        <NotificationBell />
       </div>
       
       <hr style={{ border: 'none', borderTop: '1px solid #1e1e2d', margin: '0 0 8px 0' }} />
@@ -54,17 +65,41 @@ const Dashboard = () => {
       {/* Top Metrics Grid */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
         <div 
-          onClick={() => navigate('/admin/analytics')}
           className="bg-card" 
-          style={{ padding: '24px 20px', display: 'flex', flexDirection: 'column', gap: '8px', cursor: 'pointer' }}
+          style={{ padding: '16px 20px 24px 20px', display: 'flex', flexDirection: 'column', gap: '8px', position: 'relative' }}
         >
+          {/* Date Filter Inside Card */}
+          <div 
+            style={{ display: 'flex', gap: '8px', marginBottom: '12px', alignItems: 'center', flexWrap: 'wrap' }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: '#13131A', border: '1px solid #2A2A2A', borderRadius: '6px', padding: '4px 8px' }}>
+              <span style={{ color: '#64748b', fontSize: '0.7rem' }}>From:</span>
+              <input 
+                type="date" 
+                value={dateRange.startDate}
+                onChange={(e) => setDateRange(prev => ({ ...prev, startDate: e.target.value }))}
+                style={{ background: 'transparent', border: 'none', color: '#e2e8f0', fontSize: '0.75rem', outline: 'none', cursor: 'pointer' }}
+              />
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: '#13131A', border: '1px solid #2A2A2A', borderRadius: '6px', padding: '4px 8px' }}>
+              <span style={{ color: '#64748b', fontSize: '0.7rem' }}>To:</span>
+              <input 
+                type="date" 
+                value={dateRange.endDate}
+                onChange={(e) => setDateRange(prev => ({ ...prev, endDate: e.target.value }))}
+                style={{ background: 'transparent', border: 'none', color: '#e2e8f0', fontSize: '0.75rem', outline: 'none', cursor: 'pointer' }}
+              />
+            </div>
+          </div>
+
           <div className="font-wide text-blue" style={{ fontSize: '2rem' }}>₹{data.gmvToday.toLocaleString()}</div>
-          <div className="text-muted" style={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '1px' }}>REVENUE TODAY</div>
+          <div className="text-muted" style={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase' }}>
+            {dateRange.startDate === dateRange.endDate ? 'REVENUE TODAY' : 'REVENUE'}
+          </div>
         </div>
         <div 
-          onClick={() => navigate('/admin/analytics')}
           className="bg-card" 
-          style={{ padding: '24px 20px', display: 'flex', flexDirection: 'column', gap: '8px', cursor: 'pointer' }}
+          style={{ padding: '24px 20px', display: 'flex', flexDirection: 'column', gap: '8px' }}
         >
           <div className="font-wide text-green" style={{ fontSize: '2rem' }}>₹{data.revenue.toLocaleString()}</div>
           <div className="text-muted" style={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '1px' }}>PROFIT</div>

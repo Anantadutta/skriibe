@@ -22,3 +22,8 @@ export const getFanHistory = async () => {
   const response = await api.get('/questions/fan-history');
   return response.data;
 };
+
+export const flagQuestion = async (id, reason) => {
+  const response = await api.post(`/buyers/question/${id}/flag`, { reason });
+  return response.data;
+};

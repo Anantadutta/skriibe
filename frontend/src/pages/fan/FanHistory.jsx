@@ -1,12 +1,38 @@
 import React, { useState, useEffect } from 'react';
 import FanNavbar from '../../components/fan/layout/FanNavbar';
-import { getFanHistory } from '../../services/fanApi';
+import { getFanHistory, flagQuestion } from '../../services/fanApi';
 
 const FanHistory = () => {
+  const flagOptions = [
+    { category: "About the answer quality", options: [
+      { label: "Didn't answer my question", desc: "the reply was vague or completely off-topic" },
+      { label: "Copy-pasted / not original", desc: "looks like it was lifted from somewhere else" }
+    ]},
+    { category: "About the content itself", options: [
+      { label: "Spam or self-promotion", desc: "the reply was just plugging their own links/products" },
+      { label: "Undisclosed paid promotion", desc: "looks like a sponsored answer but wasn't labeled" }
+    ]},
+    { category: "About behavior toward the fan", options: [
+      { label: "Rude or dismissive", desc: "the creator was condescending or disrespectful in the reply" },
+      { label: "Ignored the actual question", desc: "replied but deliberately dodged what was asked" }
+    ]},
+    { category: "About authenticity", options: [
+      { label: "This doesn't seem like the real creator", desc: "suspected impersonation or ghost-written" },
+      { label: "AI-generated response", desc: "feels like it wasn't written by the creator at all" }
+    ]},
+    { category: "Catch-all", options: [
+      { label: "Something else", desc: "with a short text box for the fan to explain" }
+    ]}
+  ];
+
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [selectedQuestion, setSelectedQuestion] = useState(null);
+  const [isFlagModalOpen, setIsFlagModalOpen] = useState(false);
+  const [isFlagging, setIsFlagging] = useState(false);
+  const [selectedFlagOption, setSelectedFlagOption] = useState('');
+  const [flagReason, setFlagReason] = useState('');
 
   useEffect(() => {
     const fetchHistory = async () => {
@@ -48,6 +74,32 @@ const FanHistory = () => {
     const diff = (new Date(answered) - new Date(created)) / (1000 * 60);
     if (diff < 60) return `${Math.round(diff)} min`;
     return `${Math.floor(diff / 60)}h ${Math.round(diff % 60)} min`;
+  };
+
+  const handleFlagConfirm = async () => {
+    if (!selectedQuestion) return;
+    const finalReason = selectedFlagOption === 'Something else' 
+      ? `Something else: ${flagReason}` 
+      : (selectedFlagOption || flagReason);
+    
+    setIsFlagging(true);
+    try {
+      const res = await flagQuestion(selectedQuestion._id, finalReason);
+      if (res.success) {
+        const updatedQuestions = questions.map(q => q._id === selectedQuestion._id ? { ...q, status: 'flagged' } : q);
+        setQuestions(updatedQuestions);
+        setSelectedQuestion({ ...selectedQuestion, status: 'flagged' });
+        setIsFlagModalOpen(false);
+        setSelectedFlagOption('');
+        setFlagReason('');
+      } else {
+        alert(res.message || 'Failed to flag question');
+      }
+    } catch (err) {
+      alert('Error flagging question');
+    } finally {
+      setIsFlagging(false);
+    }
   };
 
   const renderList = () => (
@@ -186,7 +238,12 @@ const FanHistory = () => {
               </button>
             </div>
 
-            <button style={{ background: 'transparent', border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: '16px', padding: '16px', color: '#ef4444', fontWeight: '600', fontSize: '14px', cursor: 'pointer', marginTop: '8px', transition: 'background 0.2s' }} onMouseOver={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.05)'} onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}>
+            <button 
+              onClick={() => setIsFlagModalOpen(true)}
+              style={{ background: 'transparent', border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: '16px', padding: '16px', color: '#ef4444', fontWeight: '600', fontSize: '14px', cursor: 'pointer', marginTop: '8px', transition: 'background 0.2s' }} 
+              onMouseOver={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.05)'} 
+              onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
+            >
               Flag as incomplete (48hr window)
             </button>
 
@@ -342,6 +399,119 @@ const FanHistory = () => {
           selectedQuestion ? renderDetail() : renderList()
         )}
       </main>
+
+      {/* Flag Confirmation Modal */}
+      {isFlagModalOpen && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}>
+          <div style={{ background: '#11131a', border: '1px solid #1f2937', borderRadius: '16px', padding: '32px', maxWidth: '400px', width: '100%', textAlign: 'center' }}>
+            <div style={{ fontSize: '48px', marginBottom: '16px' }}>⚠️</div>
+            <h3 style={{ margin: '0 0 16px', fontSize: '20px', color: '#fff' }}>Flag Reply?</h3>
+            <p style={{ color: '#94a3b8', marginBottom: '24px', lineHeight: '1.5', fontSize: '0.9rem' }}>
+              Select a reason for flagging this reply. This will open a dispute.
+            </p>
+            
+            <div style={{ maxHeight: '55vh', overflowY: 'auto', textAlign: 'left', marginBottom: '24px', paddingRight: '8px' }} className="custom-scrollbar">
+              {flagOptions.map((group, idx) => (
+                <div key={idx} style={{ marginBottom: '24px' }}>
+                  <div style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', marginBottom: '12px', letterSpacing: '1px' }}>{group.category}</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {group.options.map((opt, oIdx) => (
+                      <div key={oIdx} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        <button
+                          onClick={() => { setSelectedFlagOption(opt.label); if(opt.label !== 'Something else') setFlagReason(''); }}
+                          style={{
+                            width: '100%',
+                            background: selectedFlagOption === opt.label ? 'rgba(239, 68, 68, 0.05)' : '#15151A',
+                            border: selectedFlagOption === opt.label ? '1px solid rgba(239, 68, 68, 0.5)' : '1px solid rgba(255,255,255,0.06)',
+                            borderRadius: '16px',
+                            padding: '16px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '16px',
+                            cursor: 'pointer',
+                            textAlign: 'left',
+                            transition: 'all 0.2s'
+                          }}
+                        >
+                          <div style={{
+                            width: '24px', height: '24px', borderRadius: '50%',
+                            border: selectedFlagOption === opt.label ? 'none' : '2px solid rgba(255,255,255,0.2)',
+                            background: selectedFlagOption === opt.label ? '#ef4444' : 'transparent',
+                            flexShrink: 0
+                          }} />
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            <div style={{ color: '#ffffff', fontWeight: '800', fontSize: '1rem' }}>{opt.label}</div>
+                            <div style={{ color: selectedFlagOption === opt.label ? 'rgba(255,255,255,0.5)' : '#64748b', fontSize: '0.85rem' }}>{opt.desc}</div>
+                          </div>
+                        </button>
+                        
+                        {opt.label === 'Something else' && selectedFlagOption === 'Something else' && (
+                          <div style={{
+                            background: '#15151A',
+                            border: '1px solid rgba(255,255,255,0.06)',
+                            borderRadius: '16px',
+                            padding: '16px',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            animation: 'fadeIn 0.3s ease-out'
+                          }}>
+                            <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: '800', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '8px' }}>
+                              Please explain
+                            </div>
+                            <textarea 
+                              placeholder="Write your reason here..."
+                              value={flagReason}
+                              onChange={(e) => setFlagReason(e.target.value)}
+                              autoFocus
+                              style={{
+                                background: 'transparent',
+                                border: 'none',
+                                color: '#ffffff',
+                                fontSize: '1rem',
+                                resize: 'none',
+                                outline: 'none',
+                                minHeight: '60px',
+                                fontFamily: 'inherit'
+                              }}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button 
+                onClick={() => { setIsFlagModalOpen(false); setSelectedFlagOption(''); setFlagReason(''); }}
+                disabled={isFlagging}
+                style={{ flex: 1, background: 'transparent', border: '1px solid #334155', color: '#cbd5e1', padding: '12px', borderRadius: '12px', fontWeight: '600', cursor: 'pointer' }}
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={handleFlagConfirm}
+                disabled={!selectedFlagOption || (selectedFlagOption === 'Something else' && !flagReason.trim()) || isFlagging}
+                style={{ 
+                  flex: 1, 
+                  background: (!selectedFlagOption || (selectedFlagOption === 'Something else' && !flagReason.trim()) || isFlagging) ? '#3f3f46' : '#ef4444', 
+                  border: 'none', 
+                  color: (!selectedFlagOption || (selectedFlagOption === 'Something else' && !flagReason.trim()) || isFlagging) ? '#a1a1aa' : '#fff', 
+                  padding: '12px', 
+                  borderRadius: '12px', 
+                  fontWeight: 'bold', 
+                  cursor: (!selectedFlagOption || (selectedFlagOption === 'Something else' && !flagReason.trim()) || isFlagging) ? 'not-allowed' : 'pointer',
+                  transition: 'all 0.2s'
+                }}
+              >
+                {isFlagging ? 'Flagging...' : 'Yes, Flag it'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

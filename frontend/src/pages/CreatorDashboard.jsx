@@ -102,6 +102,9 @@ const CreatorDashboard = () => {
   // Gray filter
   const grayFilter = 'invert(31%) sepia(13%) saturate(760%) hue-rotate(181deg) brightness(96%) contrast(85%)';
 
+  const displayUserName = creator.name || creator.displayName || creator.handle || 'Tanvi';
+  const avatarLetter = (displayUserName[0] || 'T').toUpperCase();
+
   return (
     <div style={{
       minHeight: '100vh',
@@ -176,7 +179,7 @@ const CreatorDashboard = () => {
             <div style={{ position: 'relative', zIndex: 1, color: '#94a3b8', fontSize: '0.85rem', display: 'flex', flexDirection: 'column', gap: '2px' }}>
               Good afternoon
               <div style={{ color: '#ffffff', fontWeight: 'bold', fontSize: '1rem' }}>
-                {creator.name || creator.displayName || 'Tanvi'}
+                {displayUserName}
               </div>
             </div>
           </div>
@@ -184,21 +187,49 @@ const CreatorDashboard = () => {
           {/* Icons: Bell and Avatar */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             {/* Bell */}
-            <div style={{
-              width: '40px',
-              height: '40px',
-              borderRadius: '50%',
-              background: '#1A1A1A',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '18px'
-            }}>
+            <div 
+              onClick={() => navigate('/creator/inbox')}
+              style={{
+                position: 'relative',
+                width: '40px',
+                height: '40px',
+                borderRadius: '50%',
+                background: '#1A1A1A',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '18px',
+                cursor: 'pointer'
+              }}
+            >
               <span style={{ filter: 'grayscale(100%) sepia(100%) hue-rotate(350deg) saturate(500%) brightness(1.2)' }}>🔔</span>
+              {questions.filter(q => q.status?.toLowerCase() === 'submitted').length > 0 && (
+                <div style={{
+                  position: 'absolute',
+                  top: '-4px',
+                  right: '-4px',
+                  background: '#EF4444',
+                  color: '#ffffff',
+                  fontSize: '0.7rem',
+                  fontWeight: 'bold',
+                  width: '20px',
+                  height: '20px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderRadius: '50%',
+                  border: '2px solid #0E0E0E'
+                }}>
+                  {questions.filter(q => q.status?.toLowerCase() === 'submitted').length}
+                </div>
+              )}
             </div>
 
             {/* Avatar */}
-            <div style={{ position: 'relative', cursor: 'pointer' }}>
+            <div 
+              onClick={() => navigate('/creator/settings')}
+              style={{ position: 'relative', cursor: 'pointer' }}
+            >
               <div style={{
                 width: '40px',
                 height: '40px',
@@ -212,7 +243,7 @@ const CreatorDashboard = () => {
                 color: '#0E0E0E',
                 fontSize: '18px'
               }}>
-                {creator.avatarInitial || (creator.displayName ? creator.displayName[0] : 'T')}
+                {avatarLetter}
               </div>
               <div style={{
                 position: 'absolute',
@@ -221,8 +252,9 @@ const CreatorDashboard = () => {
                 width: '10px',
                 height: '10px',
                 borderRadius: '50%',
-                background: '#22C55E',
-                border: '2px solid #0E0E0E'
+                background: isLive ? '#22C55E' : '#EF4444',
+                border: '2px solid #0E0E0E',
+                transition: 'background-color 0.3s ease'
               }} />
             </div>
           </div>
@@ -378,6 +410,70 @@ const CreatorDashboard = () => {
             }} />
           </div>
         </div>
+
+        {/* SETUP PAYOUTS */}
+        {!creator.bankLinked ? (
+          <div 
+            onClick={() => navigate('/creator/payouts')}
+            style={{ 
+              background: '#13161C', 
+              border: '1px dashed #F59E0B', 
+              borderRadius: '16px', 
+              padding: '20px', 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'center', 
+              cursor: 'pointer',
+              marginTop: '4px'
+            }}
+          >
+            <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+              <div style={{ width: '48px', height: '48px', minWidth: '48px', borderRadius: '12px', background: 'rgba(245, 158, 11, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#F59E0B', fontSize: '1.5rem' }}>
+                🏦
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <div style={{ fontWeight: 800, fontSize: '1.05rem', color: '#fff' }}>Setup payouts</div>
+                <div style={{ color: '#94a3b8', fontSize: '0.8rem', marginTop: '4px', lineHeight: '1.4' }}>
+                  Link your bank account to start receiving earnings.
+                </div>
+              </div>
+            </div>
+            <div style={{ background: '#F59E0B', color: '#0F172A', padding: '6px 12px', borderRadius: '8px', fontSize: '0.8rem', fontWeight: 800 }}>
+              Setup
+            </div>
+          </div>
+        ) : (
+          <div 
+            style={{ 
+              background: '#13161C', 
+              border: '1px solid #1F2937', 
+              borderRadius: '16px', 
+              padding: '16px 20px', 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'center', 
+              marginTop: '4px'
+            }}
+          >
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <div style={{ fontWeight: 800, fontSize: '1.05rem', color: '#fff' }}>HDFC Bank - Savings</div>
+              <div style={{ color: '#10B981', fontSize: '0.8rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                ✓ Verified via penny drop
+              </div>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
+              <div style={{ background: 'rgba(16, 185, 129, 0.15)', color: '#10B981', padding: '6px 12px', borderRadius: '8px', fontSize: '0.8rem', fontWeight: 800 }}>
+                Linked
+              </div>
+              <span 
+                onClick={() => navigate('/creator/payouts')}
+                style={{ color: '#94a3b8', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', textDecoration: 'underline' }}
+              >
+                Edit details
+              </span>
+            </div>
+          </div>
+        )}
 
         {/* ACCOUNT HEALTH */}
         <h3 style={{ margin: '4px 0 0', fontSize: '1.1rem', fontWeight: 800 }}>Account health</h3>

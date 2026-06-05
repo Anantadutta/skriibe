@@ -10,6 +10,7 @@ const multer = require('multer');
 const rateLimit = require('express-rate-limit');
 const mongoose = require('mongoose');
 const Creator = require('../models/Creator');
+const AdminAlert = require('../models/AdminAlert');
 const otpStore = require('../utils/otpStore');
 const { verifyCreatorToken } = require('../middleware/auth');
 const { sendWelcomeEmail, sendProfileSubmittedEmail } = require('../utils/emailService');
@@ -117,11 +118,28 @@ router.post('/verify-otp', async (req, res) => {
   otpStore.clearOTP(phone);
   await connectDB();
 
-  let creator = await Creator.findOneAndUpdate(
-    { phone },
-    { phone },
-    { upsert: true, new: true }
-  );
+  let creator = await Creator.findOne({ phone });
+  let isNew = false;
+  if (!creator) {
+    creator = await Creator.create({ phone });
+    isNew = true;
+    
+    // Create Admin Alert for Signup
+    await AdminAlert.create({
+      type: 'creator_signup',
+      title: 'New creator signup',
+      message: `Creator signed up via Phone: ${phone}`,
+      referenceId: creator._id
+    });
+  } else {
+    // Create Admin Alert for Login
+    await AdminAlert.create({
+      type: 'creator_signup', // reusing type for now to show up in alerts
+      title: 'Creator login',
+      message: `Creator logged in via Phone: ${phone}`,
+      referenceId: creator._id
+    });
+  }
 
   const token = jwt.sign(
     { creatorId: creator._id, phone: creator.phone },
@@ -170,6 +188,14 @@ router.post('/email-signup', async (req, res) => {
   }
 
   creator = await Creator.create({ email, password });
+
+  // Create Admin Alert
+  await AdminAlert.create({
+    type: 'creator_signup',
+    title: 'New creator signup',
+    message: `Creator signed up via Email: ${email}`,
+    referenceId: creator._id
+  });
 
   const token = jwt.sign(
     { creatorId: creator._id, email: creator.email },

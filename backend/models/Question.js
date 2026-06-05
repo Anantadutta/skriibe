@@ -35,10 +35,15 @@ const QuestionSchema = new mongoose.Schema(
       enum: ['submitted', 'answered', 'expired', 'flagged', 'rejected'],
       default: 'submitted',
     },
+    flagReason: { type: String, default: '' },
     rejectReason: { type: String, default: '' },
     answerText: { type: String, default: '' },
     answeredAt: { type: Date },
     expiresAt: { type: Date }, // SLA deadline — set on creation based on creator's responseTime
+    
+    // Admin Resolution
+    adminNotes: { type: String, default: '' },
+    adminDecision: { type: String, enum: ['pending', 'creator_wins', 'fan_wins'], default: 'pending' }
   },
   { timestamps: true }
 );

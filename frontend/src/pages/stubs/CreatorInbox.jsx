@@ -25,7 +25,7 @@ const CreatorInbox = () => {
     const fetchQuestions = async () => {
       setLoading(true);
       try {
-        const res = await api.get('/creator/questions');
+        const res = await api.get(`/creator/questions?t=${Date.now()}`);
         if (res.data.success) {
           setQuestions(res.data.questions);
         }
@@ -238,9 +238,7 @@ const CreatorInbox = () => {
                       <button 
                         onClick={(e) => {
                           e.stopPropagation();
-                          if(window.confirm('Are you sure you want to delete this question?')) {
-                            setQuestions(prev => prev.filter(item => (item._id || item.id) !== (q._id || q.id)));
-                          }
+                          navigate(`/creator/inbox/delete/${q._id || q.id}`, { state: { question: q } });
                         }}
                         style={{
                           background: 'transparent', border: 'none', color: '#64748b', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'color 0.2s', borderRadius: '4px'

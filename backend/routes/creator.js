@@ -9,6 +9,8 @@ const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 
 const Creator = require('../models/Creator');
+const Question = require('../models/Question');
+const AdminAlert = require('../models/AdminAlert');
 const { sendWelcomeEmail, sendProfileSubmittedEmail } = require('../utils/emailService');
 
 // Middleware to verify creator JWT
@@ -252,6 +254,13 @@ router.post('/questions/:id/reject', verifyCreatorToken, async (req, res) => {
       return res.status(404).json({ message: 'Question not found or unauthorized' });
     }
 
+    await AdminAlert.create({
+      type: 'creator_reject',
+      title: 'Creator rejected question',
+      message: `Creator rejected question #${question._id.toString().slice(-6)}: ${reason || 'expertise'}`,
+      referenceId: question._id
+    });
+
     // In the future: trigger refund logic here
 
     res.json({ success: true, question });
@@ -274,7 +283,7 @@ router.post('/questions/:id/flag', verifyCreatorToken, async (req, res) => {
     const question = await Question.findOneAndUpdate(
       { _id: id, creatorId: req.creator.creatorId },
       { 
-        status: 'flagged',
+        status: 'rejected',
         rejectReason: 'abuse'
       },
       { new: true }
@@ -284,9 +293,54 @@ router.post('/questions/:id/flag', verifyCreatorToken, async (req, res) => {
       return res.status(404).json({ message: 'Question not found or unauthorized' });
     }
 
+    await AdminAlert.create({
+      type: 'creator_flag',
+      title: 'Creator flagged abuse',
+      message: `Creator flagged question #${question._id.toString().slice(-6)} for abuse.`,
+      referenceId: question._id
+    });
+
     // In the future: trigger refund and moderation logic here
 
     res.json({ success: true, question });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+/**
+ * @route DELETE /api/creator/questions/:id
+ * @desc Delete a question
+ */
+router.delete('/questions/:id', verifyCreatorToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    await connectDB();
+    
+    const mongoose = require('mongoose');
+    let queryId = id;
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      queryId = new mongoose.Types.ObjectId(id);
+    }
+    
+    let creatorQueryId = req.creator.creatorId;
+    if (mongoose.Types.ObjectId.isValid(creatorQueryId)) {
+      creatorQueryId = new mongoose.Types.ObjectId(creatorQueryId);
+    }
+
+    const collection = mongoose.connection.collection('questions');
+    const result = await collection.deleteOne({ _id: queryId, creatorId: creatorQueryId });
+
+    if (result.deletedCount === 0) {
+      // fallback in case creatorId was stored as string instead of ObjectId
+      const fallbackResult = await collection.deleteOne({ _id: queryId, creatorId: req.creator.creatorId });
+      if (fallbackResult.deletedCount === 0) {
+        return res.status(404).json({ message: 'Question not found or unauthorized' });
+      }
+    }
+
+    res.json({ success: true });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });

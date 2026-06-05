@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { mockCreator } from '../../mock/questions';
-import { linkBank } from '../../services/creatorApi';
+import { linkBank, toggleLive } from '../../services/creatorApi';
 
 const InputCard = ({ label, value, onChange, placeholder, type = 'text' }) => {
   const [focused, setFocused] = useState(false);
@@ -233,6 +233,11 @@ const CreatorPayouts = () => {
             onChange={setConfirmAccount} 
             placeholder="Confirm account number"
           />
+          {confirmAccount && accountNumber !== confirmAccount && (
+            <div style={{ color: '#EF4444', fontSize: '0.85rem', marginTop: '-8px', paddingLeft: '8px', fontWeight: 600 }}>
+              Account numbers do not match
+            </div>
+          )}
           
           <InputCard 
             label="IFSC CODE *" 
@@ -276,12 +281,13 @@ const CreatorPayouts = () => {
                 alert('Please fill out all mandatory fields (marked with a red asterisk) before going live.');
                 return;
               }
-              if (accountNumber !== confirmAccount && !accountNumber.includes('·')) {
+              if (accountNumber !== confirmAccount) {
                 alert('Account numbers do not match.');
                 return;
               }
               try {
                 await linkBank();
+                await toggleLive(true); // Automatically turn green (go live)
                 navigate('/creator/dashboard');
               } catch (error) {
                 console.error('Failed to link bank:', error);
