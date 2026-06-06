@@ -60,7 +60,8 @@ passport.use('google-fan', new GoogleStrategy({
         fan = new Fan({
           email,
           name: profile.displayName || '',
-          password: hashPassword(Math.random().toString(36).slice(-8)) // dummy password
+          password: hashPassword(Math.random().toString(36).slice(-8)), // dummy password
+          authProvider: 'google'
         });
         await fan.save();
         
@@ -94,7 +95,8 @@ passport.use('facebook-fan', new FacebookStrategy({
         fan = new Fan({
           email,
           name: `${profile.name?.givenName || ''} ${profile.name?.familyName || ''}`.trim() || profile.displayName || '',
-          password: hashPassword(Math.random().toString(36).slice(-8))
+          password: hashPassword(Math.random().toString(36).slice(-8)),
+          authProvider: 'facebook'
         });
         await fan.save();
 
@@ -206,6 +208,8 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ message: 'Invalid email or password' });
     }
 
+
+
     const isMatch = verifyPassword(password, fan.password);
     if (!isMatch) {
       return res.status(401).json({ message: 'Invalid email or password' });
@@ -214,6 +218,62 @@ router.post('/login', async (req, res) => {
     issueToken(res, fan);
     
     res.json({ success: true, fan: { id: fan._id, name: fan.name, email: fan.email } });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+router.post('/forgot-password', async (req, res) => {
+  try {
+    await connectDB();
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ message: 'Email required' });
+
+    const fan = await Fan.findOne({ email: email.toLowerCase() });
+    if (fan) {
+      const resetToken = crypto.randomBytes(32).toString('hex');
+      fan.resetPasswordToken = resetToken;
+      fan.resetPasswordExpires = new Date(Date.now() + 30 * 60 * 1000); // 30 mins
+      await fan.save();
+      
+      const resetLink = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/fan/reset-password/${resetToken}`;
+      const { sendPasswordResetEmail } = require('../utils/emailService');
+      await sendPasswordResetEmail(fan.email, fan.name, resetLink);
+    }
+
+    res.json({ success: true, message: "If this email exists, you'll receive a link" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+router.post('/reset-password', async (req, res) => {
+  try {
+    await connectDB();
+    const { token, password } = req.body;
+    if (!token || !password) return res.status(400).json({ message: 'Token and new password required' });
+
+    if (password.length < 8 || !/[0-9\\W]/.test(password)) {
+      return res.status(400).json({ message: 'Password must be at least 8 characters long and contain at least one number or special character.' });
+    }
+
+    const fan = await Fan.findOne({
+      resetPasswordToken: token,
+      resetPasswordExpires: { $gt: new Date() }
+    });
+
+    if (!fan) {
+      return res.status(400).json({ message: 'Password reset token is invalid or has expired.' });
+    }
+
+    fan.password = hashPassword(password);
+    fan.resetPasswordToken = undefined;
+    fan.resetPasswordExpires = undefined;
+    await fan.save();
+
+    res.json({ success: true, message: 'Password has been reset successfully.' });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });

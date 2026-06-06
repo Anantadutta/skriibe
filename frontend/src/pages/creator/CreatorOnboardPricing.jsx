@@ -15,6 +15,7 @@ const CreatorOnboardPricing = () => {
 
   const [price, setPrice] = useState(99);
   const [dailyCap, setDailyCap] = useState(50);
+  const [weeklyGoal, setWeeklyGoal] = useState(1500);
   const [loading, setLoading] = useState(false);
   const [isCustom, setIsCustom] = useState(false);
   const [customPrice, setCustomPrice] = useState('');
@@ -36,11 +37,11 @@ const CreatorOnboardPricing = () => {
   const handleActivate = async () => {
     setLoading(true);
     try {
-      await savePricing({ price: Number(price), dailyCap });
+      await savePricing({ price: Number(price), dailyCap, weeklyGoal });
       navigate('/dashboard/share', {
         state: {
           isNewlyLive: true,
-          creator: { ...creatorData, price: Number(price), dailyCap }
+          creator: { ...creatorData, price: Number(price), dailyCap, weeklyGoal }
         }
       });
     } catch (err) {
@@ -556,6 +557,45 @@ const CreatorOnboardPricing = () => {
                   onChange={(e) => setDailyCap(Number(e.target.value))}
                   className="cyan-slider"
                   style={{ background: `linear-gradient(to right, #7c3aed 0%, #06b6d4 ${((dailyCap - min) / (max - min)) * 100}%, rgba(255,255,255,0.1) ${((dailyCap - min) / (max - min)) * 100}%, rgba(255,255,255,0.1) 100%)` }}
+                />
+              </div>
+
+              {/* WEEKLY GOAL */}
+              <div style={{ marginBottom: '24px', textAlign: 'left' }}>
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: '10px'
+                }}>
+                  <label style={{
+                    fontFamily: 'monospace, var(--font-mono)',
+                    fontSize: '10px',
+                    color: '#94a3b8',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.1em',
+                    fontWeight: 700
+                  }}>
+                    WEEKLY EARNINGS GOAL
+                  </label>
+                  <span style={{
+                    color: '#ffffff',
+                    fontSize: '14px',
+                    fontWeight: 700,
+                    fontFamily: 'monospace, var(--font-mono)'
+                  }}>
+                    ₹{weeklyGoal}
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min={100}
+                  max={20000}
+                  step="100"
+                  value={weeklyGoal}
+                  onChange={(e) => setWeeklyGoal(Number(e.target.value))}
+                  className="cyan-slider"
+                  style={{ background: `linear-gradient(to right, #7c3aed 0%, #06b6d4 ${((weeklyGoal - 100) / (20000 - 100)) * 100}%, rgba(255,255,255,0.1) ${((weeklyGoal - 100) / (20000 - 100)) * 100}%, rgba(255,255,255,0.1) 100%)` }}
                 />
               </div>
 

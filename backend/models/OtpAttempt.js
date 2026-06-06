@@ -12,4 +12,4 @@ const OtpAttemptSchema = new mongoose.Schema({
   createdAt: { type: Date, expires: '1h', default: Date.now } // TTL index auto-cleans
 });
 
-module.exports = mongoose.model('OtpAttempt', OtpAttemptSchema);
+module.exports = mongoose.models.OtpAttempt || mongoose.model('OtpAttempt', OtpAttemptSchema);

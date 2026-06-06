@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { getCreatorProfile, sendBuyerOTP, verifyBuyerOTP, submitQuestion } from '../../api/buyerApi';
 import { mockQuestions } from '../../mock/questions';
 import { io } from 'socket.io-client';
@@ -14,6 +14,11 @@ const CreatorPublicPage = () => {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [step, setStep] = useState(0); // 0=profile, 1=ask form, 2=success
+  
+  // Extract follow up params
+  const [searchParams] = useSearchParams();
+  const isFollowUp = searchParams.get('isFollowUp') === 'true';
+  const parentQuestionId = searchParams.get('parentQuestionId');
   
   // Form State
   const [buyerName, setBuyerName] = useState('');
@@ -96,7 +101,9 @@ const CreatorPublicPage = () => {
         buyerName,
         buyerPhone,
         buyerEmail,
-        isAnonymous: false
+        isAnonymous: false,
+        isFollowUp,
+        parentQuestionId
       });
       if (res.success && res.questionId) {
         setSubmittedQuestionId(res.questionId);
@@ -401,6 +408,7 @@ const CreatorPublicPage = () => {
             <li style={{ display: 'flex', gap: '8px' }}><span style={{ color: '#f97316' }}>·</span> One question per payment — be specific</li>
             <li style={{ display: 'flex', gap: '8px' }}><span style={{ color: '#f97316' }}>·</span> 100% refund if no reply in {creator.responseTime || '24'} hours</li>
             <li style={{ display: 'flex', gap: '8px' }}><span style={{ color: '#f97316' }}>·</span> Do not share others' personal data</li>
+            <li style={{ display: 'flex', gap: '8px' }}><span style={{ color: '#f97316' }}>·</span> <span>By logging in and using Skriibe, you agree to our <span style={{ color: '#29C5F6', cursor: 'pointer' }}>Terms of Service</span> and <span style={{ color: '#29C5F6', cursor: 'pointer' }}>Privacy Policy</span>.</span></li>
           </ul>
           
           <label style={{
@@ -493,7 +501,13 @@ const CreatorPublicPage = () => {
 
         {/* CTA BUTTON */}
         <button 
-          onClick={handlePayAndSubmit}
+          onClick={() => {
+            if (isFollowUp) {
+              handleSubmitQuestion();
+            } else {
+              handlePayAndSubmit();
+            }
+          }}
           disabled={!termsAccepted || !buyerName || !buyerEmail || buyerPhone.length !== 10 || questionText.length < 20 || submitting}
           style={{
             width: '100%',
@@ -509,13 +523,15 @@ const CreatorPublicPage = () => {
             marginTop: '8px'
           }}
         >
-          {submitting ? 'Processing...' : `Pay Rs.${creator.pricePerQuestion || '99'} — UPI / Card`}
+          {submitting ? 'Processing...' : (isFollowUp ? 'Ask for free.' : `Pay ₹${creator.pricePerQuestion || '99'} — UPI / Card`)}
         </button>
 
         {/* FOOTER */}
-        <div style={{ textAlign: 'center', fontSize: '0.75rem', color: '#475569', fontWeight: '600', marginTop: '4px' }}>
-          Secured by Razorpay <span style={{ margin: '0 4px' }}>·</span> India's most trusted payment
-        </div>
+        {!isFollowUp && (
+          <div style={{ textAlign: 'center', fontSize: '0.75rem', color: '#475569', fontWeight: '600', marginTop: '4px' }}>
+            Secured by Razorpay <span style={{ margin: '0 4px' }}>·</span> India's most trusted payments
+          </div>
+        )}
 
       </div>
     </div>

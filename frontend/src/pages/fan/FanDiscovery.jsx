@@ -131,7 +131,7 @@ const FanDiscovery = () => {
       <main style={{ flex: 1, padding: 'min(40px, 5vw)', maxWidth: '1200px', margin: '0 auto', width: '100%', boxSizing: 'border-box', overflowX: 'hidden' }}>
         
         {/* Header Section */}
-        <div style={{ marginBottom: '40px' }}>
+        <div style={{ marginBottom: '16px' }}>
           
           {/* Personalized Fan Greeting Card */}
           <div style={{
@@ -192,8 +192,8 @@ const FanDiscovery = () => {
                 Hey <span style={{ color: '#2DD4BF' }}>{fanName}</span> <span style={{ fontSize: '1.1rem' }}>👋</span>
               </div>
               <div style={{ fontSize: '0.85rem' }}>
-                <span style={{ color: '#94a3b8' }}>On your mind today: </span>
-                <span style={{ color: '#64748b' }}>Need to consult on SIPs?</span>
+                <span style={{ color: '#94a3b8' }}>On your mind today 💭: </span>
+                <span style={{ color: '#64748b' }}>Need to consult on SIPs? 📈</span>
               </div>
             </div>
           </div>
@@ -215,20 +215,19 @@ const FanDiscovery = () => {
             {creators.length} CREATORS LIVE NOW
           </div>
           
-          <h1 style={{ fontSize: '64px', fontWeight: '800', lineHeight: '1.1', margin: '0 0 16px 0', letterSpacing: '-2px' }}>
+          <h1 style={{ fontSize: '36px', fontWeight: '800', lineHeight: '1.1', margin: '0 0 16px 0', letterSpacing: '-2px', textAlign: 'left', width: 'fit-content', WebkitFontSmoothing: 'antialiased', MozOsxFontSmoothing: 'grayscale' }}>
             Ask anyone.<br />
             <span style={{ 
               background: 'linear-gradient(90deg, #38bdf8 0%, #a78bfa 50%, #34d399 100%)',
               WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent'
+              WebkitTextFillColor: 'transparent',
+              whiteSpace: 'nowrap'
             }}>
               Get a real answer.
             </span>
           </h1>
           
-          <p style={{ color: '#94a3b8', fontSize: '18px', maxWidth: '460px', lineHeight: '1.5', margin: 0 }}>
-            
-          </p>
+
         </div>
 
         {/* Search & Filters */}
@@ -312,8 +311,8 @@ const FanDiscovery = () => {
         {/* Creators Grid */}
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
-          gap: '24px'
+          gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
+          gap: '20px'
         }}>
           {filteredCreators.map(creator => (
             <CreatorCard key={creator.id || creator.handle} creator={creator} />

@@ -6,4 +6,4 @@ const DeletedAccountReasonSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 });
 
-module.exports = mongoose.model('DeletedAccountReason', DeletedAccountReasonSchema);
+module.exports = mongoose.models.DeletedAccountReason || mongoose.model('DeletedAccountReason', DeletedAccountReasonSchema);

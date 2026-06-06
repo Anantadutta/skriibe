@@ -258,4 +258,33 @@ const sendProfileSubmittedEmail = async (email, name) => {
   }
 };
 
-module.exports = { sendWaitlistWelcomeEmail, sendCreatorWelcomeEmail, sendWelcomeEmail, sendProfileSubmittedEmail };
+const sendPasswordResetEmail = async (email, name, resetLink) => {
+  const resend = getResendClient();
+  if (!resend) return;
+
+  try {
+    const { data, error } = await resend.emails.send({
+      from: 'skriibe <founder@skriibe.com>',
+      to: [email],
+      subject: 'Reset your password - skriibe',
+      html: `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff; color: #1A1A1A;">
+          <h2>Hi ${name || 'there'},</h2>
+          <p>We received a request to reset the password for your skriibe account.</p>
+          <p>Click the link below to set a new password. This link is valid for 30 minutes.</p>
+          <div style="margin: 30px 0;">
+            <a href="${resetLink}" style="background-color: #06b6d4; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">Reset Password</a>
+          </div>
+          <p>If you didn't request a password reset, you can safely ignore this email.</p>
+          <p style="font-size: 12px; color: #888;">— Team skriibe</p>
+        </div>
+      `
+    });
+    if (error) console.error('Password reset email error:', error);
+    return data;
+  } catch (err) {
+    console.error('sendPasswordResetEmail error:', err);
+  }
+};
+
+module.exports = { sendWaitlistWelcomeEmail, sendCreatorWelcomeEmail, sendWelcomeEmail, sendProfileSubmittedEmail, sendPasswordResetEmail };

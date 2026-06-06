@@ -31,7 +31,7 @@ const connectDB = async () => {
  */
 router.post('/', verifyFanToken, async (req, res) => {
   try {
-    const { creatorId, questionText, buyerName, buyerEmail, buyerPhone } = req.body;
+    const { creatorId, questionText, buyerName, buyerEmail, buyerPhone, isFollowUp, parentQuestionId } = req.body;
 
     if (!creatorId || !questionText) {
       return res.status(400).json({ message: 'Creator ID and question text are required.' });
@@ -56,9 +56,12 @@ router.post('/', verifyFanToken, async (req, res) => {
       buyerEmail: buyerEmail || req.fan.email,
       buyerPhone: buyerPhone || '',
       questionText,
-      amountPaid: creator.pricePerQuestion || creator.price || 99,
+      amountPaid: isFollowUp ? 0 : (creator.pricePerQuestion || creator.price || 99),
       paymentStatus: 'paid', // Dummy payment status for now
-      status: 'submitted'
+      status: 'submitted',
+      expiresAt: new Date(Date.now() + (parseInt(creator.responseTime) || 48) * 60 * 60 * 1000),
+      isFollowUp: !!isFollowUp,
+      parentQuestionId: isFollowUp ? parentQuestionId : undefined,
     });
 
     await newQuestion.save();

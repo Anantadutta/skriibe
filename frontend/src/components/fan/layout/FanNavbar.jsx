@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { getFanMe } from '../../../services/fanApi';
+import api from '../../../services/api';
 
 const FanNavbar = () => {
   const location = useLocation();
@@ -12,20 +13,37 @@ const FanNavbar = () => {
     { label: 'Notifications', path: '/fan/notifications', icon: '🔔' }
   ];
 
-  const [fanName, setFanName] = useState('Fan');
+  const [fanName, setFanName] = useState(() => {
+    return localStorage.getItem('cachedFanName') || 'Fan';
+  });
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     const fetchFanProfile = async () => {
       try {
         const res = await getFanMe();
         if (res.success && res.fan && res.fan.name) {
-          setFanName(res.fan.name.split(' ')[0]);
+          const firstName = res.fan.name.split(' ')[0];
+          setFanName(firstName);
+          localStorage.setItem('cachedFanName', firstName);
         }
       } catch (err) {
         console.error('Failed to fetch fan profile in navbar', err);
       }
     };
+    
+    const fetchNotifications = async () => {
+      try {
+        const res = await api.get('/questions/notifications');
+        if (res.data.success && res.data.notifications) {
+          const unread = res.data.notifications.filter(n => !n.isRead).length;
+          setUnreadCount(unread);
+        }
+      } catch (err) {}
+    };
+
     fetchFanProfile();
+    fetchNotifications();
   }, []);
 
   return (
@@ -49,19 +67,22 @@ const FanNavbar = () => {
         }
         .fan-nav-links {
           display: flex;
-          gap: 8px;
+          gap: 12px;
           flex-wrap: nowrap;
         }
         .fan-nav-link-item {
           text-decoration: none;
           display: flex;
           align-items: center;
-          gap: 8px;
-          padding: 10px 16px;
-          border-radius: 20px;
+          justify-content: center;
+          width: 44px;
+          height: 44px;
+          border-radius: 14px;
           transition: all 0.2s;
-          font-size: 15px;
-          white-space: nowrap;
+          font-size: 20px;
+        }
+        .fan-nav-link-item:hover {
+          background: rgba(255,255,255,0.05);
         }
         @media (max-width: 768px) {
           .fan-navbar {
@@ -108,14 +129,36 @@ const FanNavbar = () => {
           <nav className="fan-nav-links">
           {navItems.map(item => {
             const isActive = currentPath === item.path;
+            const isNotification = item.label === 'Notifications';
             return (
-              <Link key={item.path} to={item.path} className="fan-nav-link-item" style={{
-                background: isActive ? 'rgba(255,255,255,0.1)' : 'transparent',
-                color: isActive ? '#fff' : '#94a3b8',
-                fontWeight: isActive ? '700' : '600',
+              <Link key={item.path} to={item.path} className="fan-nav-link-item" title={item.label} style={{
+                background: isActive ? 'rgba(255,255,255,0.08)' : 'transparent',
+                position: 'relative'
               }}>
-                <span>{item.icon}</span>
-                {item.label}
+                <span style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {item.icon}
+                  {isNotification && unreadCount > 0 && (
+                    <div style={{
+                      position: 'absolute',
+                      top: '-6px',
+                      right: '-8px',
+                      background: '#ef4444',
+                      color: '#ffffff',
+                      fontSize: '10px',
+                      fontWeight: '800',
+                      minWidth: '16px',
+                      height: '16px',
+                      borderRadius: '8px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      border: '2px solid #0a0a0f',
+                      padding: '0 2px'
+                    }}>
+                      {unreadCount}
+                    </div>
+                  )}
+                </span>
               </Link>
             );
           })}

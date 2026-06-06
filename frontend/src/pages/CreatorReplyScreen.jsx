@@ -13,6 +13,10 @@ const CreatorReplyScreen = () => {
     return mockQuestions.find(q => q.id === id) || null;
   });
 
+  const [rootQuestion] = useState(() => {
+    return location.state?.rootQuestion || null;
+  });
+
   useEffect(() => {
     if (!question) {
       navigate('/creator/dashboard');
@@ -147,7 +151,7 @@ const CreatorReplyScreen = () => {
                   Reply to {(question.buyerName || question.followerName || 'Ayushi').split(' ')[0]}
                 </h2>
                 <div style={{ color: '#64748b', fontSize: '0.85rem', fontWeight: 500 }}>
-                  Finance question · ₹{question.amountPaid || question.pricePaid || 99}
+                  {question.isFollowUp ? 'Follow-up question · Free' : `Finance question · ₹${question.amountPaid || question.pricePaid || 99}`}
                 </div>
               </div>
             </div>
@@ -158,6 +162,29 @@ const CreatorReplyScreen = () => {
               <span style={{ fontWeight: '800', fontSize: '0.95rem', letterSpacing: '0.01em' }}>SLA: {question.slaHoursLeft || '3'}h 57m remaining</span>
             </div>
 
+            {/* Context (Original Question and Answer) */}
+            {rootQuestion && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div style={{ background: '#16161E', borderRadius: '16px', padding: '20px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                  <div style={{ color: '#64748b', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '12px', textTransform: 'uppercase' }}>THEIR ORIGINAL QUESTION</div>
+                  <div style={{ color: '#94a3b8', fontSize: '15px', fontStyle: 'italic', lineHeight: '1.5', wordBreak: 'break-all', overflowWrap: 'anywhere' }}>
+                    "{rootQuestion.questionText}"
+                  </div>
+                </div>
+
+                <div style={{ background: '#0a1922', borderRadius: '16px', padding: '20px', border: '1px solid rgba(56, 189, 248, 0.2)' }}>
+                  <div style={{ color: '#38bdf8', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '12px', textTransform: 'uppercase' }}>YOUR PREVIOUS ANSWER</div>
+                  <div style={{ color: '#fff', fontSize: '16px', lineHeight: '1.6', wordBreak: 'break-all', overflowWrap: 'anywhere' }}>
+                    {rootQuestion.answerText}
+                  </div>
+                </div>
+                
+                <div style={{ height: '20px', display: 'flex', justifyContent: 'center' }}>
+                  <div style={{ width: '2px', height: '100%', background: 'rgba(255,255,255,0.1)' }} />
+                </div>
+              </div>
+            )}
+
             {/* Question Details Card */}
             <div style={{ background: '#16161E', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -165,10 +192,10 @@ const CreatorReplyScreen = () => {
                   {(question.buyerName || question.followerName || 'A')[0].toUpperCase()}
                 </div>
                 <div style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase' }}>
-                  {question.buyerName || question.followerName || 'AYUSHI'} · <span style={{ color: '#34D399' }}>₹{question.amountPaid || question.pricePaid || 99} PAID</span>
+                  {question.buyerName || question.followerName || 'AYUSHI'} · <span style={{ color: '#34D399' }}>{question.isFollowUp ? 'FREE FOLLOW-UP' : `₹${question.amountPaid || question.pricePaid || 99} PAID`}</span>
                 </div>
               </div>
-              <p style={{ margin: 0, fontSize: '1.1rem', color: '#ffffff', lineHeight: '1.5', fontStyle: 'italic', fontWeight: 600, wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
+              <p style={{ margin: 0, fontSize: '1.1rem', color: '#ffffff', lineHeight: '1.5', fontStyle: 'italic', fontWeight: 600, wordBreak: 'break-all', overflowWrap: 'anywhere' }}>
                 "{question.questionText}"
               </p>
             </div>
@@ -594,7 +621,7 @@ const CreatorReplyScreen = () => {
                 Reply Sent!
               </h2>
               <p style={{ margin: 0, fontSize: '0.95rem', color: '#94a3b8', lineHeight: '1.5' }}>
-                Your response has been sent to {question.buyerName || question.followerName || 'the buyer'}. ₹{question.amountPaid || question.pricePaid || 99} has been credited to your account.
+                Your response has been sent to {question.buyerName || question.followerName || 'the buyer'}. {question.isFollowUp ? 'No additional charges applied for this follow-up.' : `₹${question.amountPaid || question.pricePaid || 99} has been credited to your account.`}
               </p>
             </div>
 

@@ -11,6 +11,7 @@ import { Button } from '../../components/ama/ui/Button';
 const CreatorLogin = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [focusedEmail, setFocusedEmail] = useState(false);
@@ -37,7 +38,11 @@ const CreatorLogin = () => {
       // User has logged in, mark them as a returning creator
       localStorage.setItem('isReturningCreator', 'true');
       
-      navigate('/creator/dashboard', { state: { creator } });
+      if (creator.onboardingComplete || creator.ama_enabled || creator.handle) {
+        navigate('/creator/dashboard', { state: { creator } });
+      } else {
+        navigate('/onboard/profile', { state: { creator } });
+      }
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed. Try again.');
     } finally {
@@ -251,7 +256,7 @@ const CreatorLogin = () => {
               }}>
                 <input
                   type="email"
-                  placeholder="creator@skriibe.com"
+                  placeholder=""
                   value={email}
                   onChange={(e) => {
                     setEmail(e.target.value);
@@ -298,7 +303,7 @@ const CreatorLogin = () => {
               }}>
                 <input
                   type="password"
-                  placeholder="••••••••"
+                  placeholder=""
                   value={password}
                   onChange={(e) => {
                     setPassword(e.target.value);
@@ -320,12 +325,25 @@ const CreatorLogin = () => {
                 />
               </div>
 
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginTop: '12px'
+              }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: '#94a3b8', fontSize: '12px', fontFamily: 'var(--font-mono)' }}>
+                  <input type="checkbox" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} style={{ accentColor: '#06b6d4' }} />
+                  Remember me
+                </label>
+                <Link to="/creator/forgot-password" style={{ color: '#06b6d4', fontSize: '12px', textDecoration: 'none', fontFamily: 'var(--font-mono)' }}>Forgot Password?</Link>
+              </div>
+
               {error && (
                 <div style={{
                   color: '#ef4444',
                   fontFamily: 'var(--font-mono)',
                   fontSize: '11px',
-                  marginTop: '10px',
+                  marginTop: '16px',
                   textAlign: 'center'
                 }}>
                   ⚠️ {error}
@@ -437,8 +455,8 @@ const CreatorLogin = () => {
             fontFamily: 'var(--font-mono)',
             lineHeight: '1.6'
           }}>
-            By continuing you agree to our<br />
-            <span style={{ color: '#06b6d4', cursor: 'pointer' }}>Terms & Privacy Policy</span>
+            By logging in and using Skriibe, you agree to our<br />
+            <span style={{ color: '#06b6d4', cursor: 'pointer' }}>Terms of Service</span> and <span style={{ color: '#06b6d4', cursor: 'pointer' }}>Privacy Policy</span>.
             <div style={{ marginTop: '24px', opacity: 0.5, fontSize: '9px', textTransform: 'uppercase', letterSpacing: '1px' }}>
               Made with 🤍 for bold conversations
             </div>

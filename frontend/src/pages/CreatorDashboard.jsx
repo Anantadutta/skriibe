@@ -32,9 +32,8 @@ const CreatorDashboard = () => {
         console.error('Failed to fetch creator:', error);
       }
     };
-    if (!location.state?.creator) {
-      fetchCreator();
-    }
+    // Always fetch latest data from backend on dashboard mount to ensure all stats (including weekly goal) are perfectly in sync
+    fetchCreator();
 
     const fetchQuestions = async () => {
       try {
@@ -104,6 +103,18 @@ const CreatorDashboard = () => {
 
   const displayUserName = creator.name || creator.displayName || creator.handle || 'Tanvi';
   const avatarLetter = (displayUserName[0] || 'T').toUpperCase();
+
+  const resolvedQuestions = questions.filter(q => ['answered', 'rejected', 'expired'].includes(q.status?.toLowerCase()));
+  const repliedQuestions = questions.filter(q => ['answered', 'rejected'].includes(q.status?.toLowerCase()));
+  const dynamicReplyRate = resolvedQuestions.length > 0 
+    ? Math.round((repliedQuestions.length / resolvedQuestions.length) * 100)
+    : 100;
+
+  const oneWeekAgo = new Date();
+  oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+  const dynamicWeeklyEarnings = questions
+    .filter(q => q.paid === true && new Date(q.createdAt) >= oneWeekAgo)
+    .reduce((sum, q) => sum + (q.amountPaid || 0), 0);
 
   return (
     <div style={{
@@ -290,21 +301,18 @@ const CreatorDashboard = () => {
             </div>
             <div style={{ display: 'flex', alignItems: 'baseline', marginTop: '4px' }}>
               <span style={{ fontSize: '2.2rem', color: '#29C5F6', marginRight: '4px' }}>₹</span>
-              <span style={{ fontSize: '3rem', fontWeight: 900, color: '#fff', letterSpacing: '-1.5px' }}>{creator.weeklyEarnings || 890}</span>
+              <span style={{ fontSize: '3rem', fontWeight: 900, color: '#fff', letterSpacing: '-1.5px' }}>{dynamicWeeklyEarnings}</span>
             </div>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: 'rgba(16, 185, 129, 0.15)', padding: '4px 10px', borderRadius: '8px', marginTop: '8px' }}>
-              <span style={{ color: '#10B981', fontSize: '0.7rem' }}>▲</span>
-              <span style={{ color: '#10B981', fontWeight: 700, fontSize: '0.75rem' }}>+24% vs last week</span>
-            </div>
+
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '4px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: '#94a3b8' }}>
               <span>Weekly goal</span>
-              <span><strong style={{ color: '#fff' }}>₹{creator.weeklyEarnings || 890}</strong> / ₹1,500</span>
+              <span><strong style={{ color: '#fff' }}>₹{dynamicWeeklyEarnings}</strong> / ₹{creator.weeklyGoal || 1500}</span>
             </div>
             <div style={{ width: '100%', height: '6px', background: '#1F2937', borderRadius: '4px', overflow: 'hidden' }}>
-              <div style={{ width: `${Math.min(100, ((creator.weeklyEarnings || 890) / 1500) * 100)}%`, height: '100%', background: 'linear-gradient(90deg, #29C5F6 0%, #38BDF8 100%)', borderRadius: '4px' }} />
+              <div style={{ width: `${Math.min(100, (dynamicWeeklyEarnings / (creator.weeklyGoal || 1500)) * 100)}%`, height: '100%', background: 'linear-gradient(90deg, #29C5F6 0%, #38BDF8 100%)', borderRadius: '4px' }} />
             </div>
           </div>
         </div>
@@ -312,7 +320,7 @@ const CreatorDashboard = () => {
         {/* 3. STATS ROW */}
         <div style={{
           display: 'grid',
-          gridTemplateColumns: '1fr 1fr 1fr',
+          gridTemplateColumns: '1fr 1fr',
           gap: '10px'
         }}>
           <div style={{
@@ -325,7 +333,9 @@ const CreatorDashboard = () => {
             flexDirection: 'column',
             justifyContent: 'center'
           }}>
-            <div style={{ fontSize: '1.5rem', fontWeight: 900, color: '#F87171' }}>3</div>
+            <div style={{ fontSize: '1.5rem', fontWeight: 900, color: '#F87171' }}>
+              {questions.filter(q => q.status?.toLowerCase() === 'submitted').length}
+            </div>
             <div style={{ fontSize: '0.6rem', color: '#94a3b8', marginTop: '4px', fontWeight: 'bold', letterSpacing: '1px', textTransform: 'uppercase' }}>PENDING</div>
           </div>
           <div style={{
@@ -338,21 +348,8 @@ const CreatorDashboard = () => {
             flexDirection: 'column',
             justifyContent: 'center'
           }}>
-            <div style={{ fontSize: '1.5rem', fontWeight: 900, color: '#34D399' }}>{creator.replyRate || 94}%</div>
+            <div style={{ fontSize: '1.5rem', fontWeight: 900, color: '#34D399' }}>{dynamicReplyRate}%</div>
             <div style={{ fontSize: '0.6rem', color: '#94a3b8', marginTop: '4px', fontWeight: 'bold', letterSpacing: '1px', textTransform: 'uppercase' }}>REPLY RATE</div>
-          </div>
-          <div style={{
-            background: '#13161C',
-            border: '1px solid #1F2937',
-            borderRadius: '16px',
-            padding: '16px 8px',
-            textAlign: 'center',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center'
-          }}>
-            <div style={{ fontSize: '1.5rem', fontWeight: 900, color: '#FBBF24' }}>4.9★</div>
-            <div style={{ fontSize: '0.6rem', color: '#94a3b8', marginTop: '4px', fontWeight: 'bold', letterSpacing: '1px', textTransform: 'uppercase' }}>RATING</div>
           </div>
         </div>
 
@@ -466,7 +463,7 @@ const CreatorDashboard = () => {
                 Linked
               </div>
               <span 
-                onClick={() => navigate('/creator/payouts')}
+                onClick={() => navigate('/creator/payouts', { state: { creator } })}
                 style={{ color: '#94a3b8', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', textDecoration: 'underline' }}
               >
                 Edit details
@@ -545,22 +542,27 @@ const CreatorDashboard = () => {
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
                       <span style={{ fontWeight: 700, fontSize: '1rem', color: '#fff' }}>{q.buyerName || q.followerName}</span>
-                      <span style={{ color: '#10B981', fontSize: '0.8rem', fontWeight: 700 }}>paid ₹{q.amountPaid || q.pricePaid}</span>
+                      <span style={{ color: '#10B981', fontSize: '0.8rem', fontWeight: 700 }}>
+                        {q.isFollowUp ? 'Follow-up' : `paid ₹${q.amountPaid || q.pricePaid}`}
+                      </span>
                     </div>
                   </div>
                   <div style={{ background: timerBg, color: timerColor, padding: '4px 10px', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '4px' }}>
                     ⏱ {timeDiff}h left
                   </div>
                 </div>
-                <div style={{ fontSize: '0.95rem', color: '#cbd5e1', lineHeight: '1.5' }}>
+                <div style={{ fontSize: '0.95rem', color: '#cbd5e1', lineHeight: '1.5', wordBreak: 'break-all', overflowWrap: 'anywhere' }}>
                   "{q.questionText}"
                 </div>
                 <div style={{ display: 'flex', gap: '12px' }}>
                   <button 
-                    onClick={() => navigate('/creator/inbox')}
+                    onClick={() => {
+                      const rootQuestion = q.isFollowUp ? questions.find(r => (r._id || r.id) === q.parentQuestionId) : null;
+                      navigate(`/creator/dashboard/reply/${q._id || q.id}`, { state: { question: q, rootQuestion } });
+                    }}
                     style={{ flex: 1, background: 'linear-gradient(90deg, #38BDF8 0%, #34D399 100%)', color: '#0F172A', border: 'none', borderRadius: '12px', padding: '14px', fontWeight: 800, fontSize: '0.95rem', cursor: 'pointer' }}
                   >
-                    Reply & earn ₹{q.amountPaid || q.pricePaid}
+                    {q.isFollowUp ? 'Reply (Free)' : `Reply & earn ₹${q.amountPaid || q.pricePaid}`}
                   </button>
                 </div>
               </div>

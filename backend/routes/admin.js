@@ -396,4 +396,68 @@ router.get('/debug-db', async (req, res) => {
   }
 });
 
+/**
+ * @route DELETE /api/admin/buyer-disputes/:id
+ * @desc Delete a dispute completely from the database
+ */
+router.delete('/buyer-disputes/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    await connectDB();
+    const dispute = await Question.findByIdAndDelete(id);
+    if (!dispute) return res.status(404).json({ error: 'Dispute not found' });
+    res.json({ success: true, message: 'Dispute deleted successfully' });
+  } catch (err) {
+    console.error('Delete error:', err);
+    res.status(500).json({ error: 'Server error deleting dispute: ' + err.message });
+  }
+});
+
+/**
+ * @route POST /api/admin/buyer-disputes/:id/ban
+ * @desc Ban the buyer who initiated the dispute
+ */
+router.post('/buyer-disputes/:id/ban', async (req, res) => {
+  try {
+    const { id } = req.params;
+    await connectDB();
+    const Question = require('../models/Question');
+    const Fan = require('../models/Fan');
+
+    const dispute = await Question.findById(id);
+    if (!dispute) return res.status(404).json({ error: 'Dispute not found' });
+
+    let fan = null;
+    if (dispute.fanId) {
+      fan = await Fan.findById(dispute.fanId);
+    } else if (dispute.buyerEmail) {
+      fan = await Fan.findOne({ email: dispute.buyerEmail.toLowerCase() });
+    }
+
+    if (!fan) {
+      let dummyEmail = dispute.buyerEmail || (dispute.buyerPhone ? `${dispute.buyerPhone}@banned.skriibe.com` : `anon_${Date.now()}@banned.skriibe.com`);
+      fan = await Fan.findOne({ email: dummyEmail.toLowerCase() });
+      if (!fan) {
+        fan = new Fan({
+          email: dummyEmail.toLowerCase(),
+          name: dispute.buyerName || 'Banned Buyer',
+          password: 'banned_stub_account',
+          isBanned: true
+        });
+      } else {
+        fan.isBanned = true;
+      }
+    } else {
+      fan.isBanned = true;
+    }
+
+    await fan.save();
+
+    res.json({ success: true, message: 'Buyer banned successfully' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error banning buyer' });
+  }
+});
+
 module.exports = router;

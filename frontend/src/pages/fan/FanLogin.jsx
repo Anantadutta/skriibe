@@ -5,6 +5,7 @@ import { fanLogin } from '../../services/fanApi';
 const FanLogin = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   
@@ -219,7 +220,7 @@ const FanLogin = () => {
               }}>
                 <input
                   type="email"
-                  placeholder="fan@skriibe.com"
+                  placeholder=""
                   value={email}
                   onChange={(e) => {
                     setEmail(e.target.value);
@@ -267,7 +268,7 @@ const FanLogin = () => {
               }}>
                 <input
                   type="password"
-                  placeholder="••••••••"
+                  placeholder=""
                   value={password}
                   onChange={(e) => {
                     setPassword(e.target.value);
@@ -289,12 +290,25 @@ const FanLogin = () => {
                 />
               </div>
 
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginTop: '12px'
+              }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: '#94a3b8', fontSize: '12px', fontFamily: 'var(--font-mono)' }}>
+                  <input type="checkbox" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} style={{ accentColor: '#06b6d4' }} />
+                  Remember me
+                </label>
+                <Link to="/fan/forgot-password" style={{ color: '#06b6d4', fontSize: '12px', textDecoration: 'none', fontFamily: 'var(--font-mono)' }}>Forgot Password?</Link>
+              </div>
+
               {error && (
                 <div style={{
                   color: '#ef4444',
                   fontFamily: 'var(--font-mono)',
                   fontSize: '11px',
-                  marginTop: '10px',
+                  marginTop: '16px',
                   textAlign: 'center'
                 }}>
                   ⚠️ {error}

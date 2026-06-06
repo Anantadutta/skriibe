@@ -17,6 +17,8 @@ const QuestionSchema = new mongoose.Schema(
 
     // Question
     questionText: { type: String, required: true, minlength: 20, maxlength: 500 },
+    isFollowUp: { type: Boolean, default: false },
+    parentQuestionId: { type: mongoose.Schema.Types.ObjectId, ref: 'Question' },
 
     // Payment
     amountPaid: { type: Number, required: false }, // in INR

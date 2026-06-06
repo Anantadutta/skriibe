@@ -163,6 +163,7 @@ const DisclaimerQuestion = () => {
                 <li style={{ marginBottom: '8px' }}>· One question per payment — be specific</li>
                 <li style={{ marginBottom: '8px' }}>· 100% refund if no reply in 24 hours</li>
                 <li>· Do not share others' personal data</li>
+                <li>· By logging in and using Skriibe, you agree to our <span style={{ color: 'var(--blue)', cursor: 'pointer' }}>Terms of Service</span> and <span style={{ color: 'var(--blue)', cursor: 'pointer' }}>Privacy Policy</span>.</li>
               </ul>
             </div>
 

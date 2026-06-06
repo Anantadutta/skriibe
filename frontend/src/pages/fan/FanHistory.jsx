@@ -102,12 +102,46 @@ const FanHistory = () => {
     }
   };
 
+  const buildThreads = (qs) => {
+    const roots = [];
+    const childrenMap = {};
+
+    qs.forEach(q => {
+      if (q.isFollowUp && q.parentQuestionId) {
+        if (!childrenMap[q.parentQuestionId]) childrenMap[q.parentQuestionId] = [];
+        childrenMap[q.parentQuestionId].push(q);
+      } else {
+        roots.push(q);
+      }
+    });
+
+    qs.forEach(q => {
+      if (q.isFollowUp && q.parentQuestionId && !roots.find(r => r._id === q.parentQuestionId)) {
+        roots.push(q);
+      }
+    });
+
+    Object.values(childrenMap).forEach(children => {
+      children.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+    });
+
+    roots.sort((a, b) => {
+      return new Date(b.createdAt) - new Date(a.createdAt);
+    });
+
+    return { roots, childrenMap };
+  };
+
+  const { roots, childrenMap } = buildThreads(questions);
+
   const renderList = () => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      {questions.map((q) => (
-        <div 
-          key={q._id} 
-          onClick={() => setSelectedQuestion(q)}
+      {roots.map((q) => {
+        const threadChildren = childrenMap[q._id] || [];
+        return (
+        <div key={q._id} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div 
+            onClick={() => setSelectedQuestion(q)}
           style={{
             background: 'rgba(255,255,255,0.03)',
             border: '1px solid rgba(255,255,255,0.05)',
@@ -148,24 +182,43 @@ const FanHistory = () => {
                 </div>
               </div>
             </div>
-            <div style={{
-              background: `${getStatusColor(q.status)}20`,
-              color: getStatusColor(q.status),
-              padding: '4px 12px',
-              borderRadius: '12px',
-              fontSize: '12px',
-              fontWeight: 'bold',
-              textTransform: 'uppercase'
-            }}>
-              {q.status}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              {threadChildren.length > 0 && (
+                <div style={{
+                  background: 'rgba(56, 189, 248, 0.1)',
+                  color: '#38bdf8',
+                  padding: '4px 10px',
+                  borderRadius: '12px',
+                  fontSize: '12px',
+                  fontWeight: 'bold',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}>
+                  <span>💬</span> {threadChildren.length + 1} Messages
+                </div>
+              )}
+              <div style={{
+                background: `${getStatusColor(q.status)}20`,
+                color: getStatusColor(q.status),
+                padding: '4px 12px',
+                borderRadius: '12px',
+                fontSize: '12px',
+                fontWeight: 'bold',
+                textTransform: 'uppercase'
+              }}>
+                {q.status}
+              </div>
             </div>
           </div>
           
-          <div style={{ color: '#e2e8f0', fontSize: '15px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+          <div style={{ color: '#e2e8f0', fontSize: '15px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', wordBreak: 'break-all', overflowWrap: 'anywhere' }}>
             {q.questionText}
           </div>
         </div>
-      ))}
+
+        </div>
+      )})}
     </div>
   );
 
@@ -179,6 +232,8 @@ const FanHistory = () => {
     }
 
     const creatorName = q.creatorId?.name || '@' + q.handle;
+
+    const hasFollowUp = (childrenMap[q._id] || []).length > 0;
 
     if (isAnswered && diffHours < 24) {
       return (
@@ -213,7 +268,7 @@ const FanHistory = () => {
 
             <div style={{ background: '#1a1b23', borderRadius: '16px', padding: '20px', border: '1px solid rgba(255,255,255,0.05)' }}>
               <div style={{ color: '#64748b', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '12px', textTransform: 'uppercase' }}>YOUR QUESTION</div>
-              <div style={{ color: '#94a3b8', fontSize: '15px', fontStyle: 'italic', lineHeight: '1.5' }}>
+              <div style={{ color: '#94a3b8', fontSize: '15px', fontStyle: 'italic', lineHeight: '1.5', wordBreak: 'break-all', overflowWrap: 'anywhere' }}>
                 "{q.questionText}"
               </div>
             </div>
@@ -225,15 +280,45 @@ const FanHistory = () => {
               </div>
             </div>
 
-            <div style={{ background: '#062c19', borderRadius: '16px', padding: '16px', border: '1px solid rgba(16, 185, 129, 0.2)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            {(childrenMap[q._id] || []).map((child) => (
+              <React.Fragment key={child._id}>
+                <div style={{ display: 'flex', justifyContent: 'center', margin: '-8px 0' }}>
+                  <div style={{ width: '2px', height: '24px', background: 'rgba(255,255,255,0.1)' }} />
+                </div>
+                <div style={{ background: '#1a1b23', borderRadius: '16px', padding: '20px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                  <div style={{ color: '#64748b', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '12px', textTransform: 'uppercase' }}>↳ YOUR FOLLOW-UP</div>
+                  <div style={{ color: '#94a3b8', fontSize: '15px', fontStyle: 'italic', lineHeight: '1.5', wordBreak: 'break-all', overflowWrap: 'anywhere' }}>
+                    "{child.questionText}"
+                  </div>
+                </div>
+                {child.status === 'answered' && child.answerText && (
+                  <>
+                    <div style={{ display: 'flex', justifyContent: 'center', margin: '-8px 0' }}>
+                      <div style={{ width: '2px', height: '24px', background: 'rgba(56, 189, 248, 0.2)' }} />
+                    </div>
+                    <div style={{ background: '#0a1922', borderRadius: '16px', padding: '20px', border: '1px solid rgba(56, 189, 248, 0.2)' }}>
+                      <div style={{ color: '#38bdf8', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '12px', textTransform: 'uppercase' }}>{creatorName.split(' ')[0]}'S ANSWER</div>
+                      <div style={{ color: '#fff', fontSize: '16px', lineHeight: '1.6', wordBreak: 'break-all', overflowWrap: 'anywhere' }}>
+                        {child.answerText}
+                      </div>
+                    </div>
+                  </>
+                )}
+              </React.Fragment>
+            ))}
+
+            <div style={{ background: hasFollowUp ? '#11131a' : '#062c19', borderRadius: '16px', padding: '16px', border: hasFollowUp ? '1px solid rgba(255,255,255,0.05)' : '1px solid rgba(16, 185, 129, 0.2)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', opacity: hasFollowUp ? 0.5 : 1 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <div style={{ color: '#fff', fontSize: '20px' }}>💬</div>
                 <div>
-                  <div style={{ color: '#10b981', fontWeight: '800', fontSize: '14px' }}>1 free follow-up available</div>
-                  <div style={{ color: '#64748b', fontSize: '12px' }}>Valid for 7 days · Ask now</div>
+                  <div style={{ color: hasFollowUp ? '#94a3b8' : '#10b981', fontWeight: '800', fontSize: '14px' }}>1 free follow-up available</div>
+                  <div style={{ color: '#64748b', fontSize: '12px' }}>{hasFollowUp ? 'Follow-up submitted' : 'Valid for 24 hours'}</div>
                 </div>
               </div>
-              <button style={{ background: '#10b981', color: '#000', border: 'none', borderRadius: '8px', padding: '8px 16px', fontWeight: '700', fontSize: '14px', cursor: 'pointer' }}>
+              <button 
+                onClick={() => window.location.href = `/creator/${q.handle}?isFollowUp=true&parentQuestionId=${q._id}`} 
+                disabled={hasFollowUp}
+                style={{ background: hasFollowUp ? '#334155' : '#10b981', color: hasFollowUp ? '#94a3b8' : '#000', border: 'none', borderRadius: '8px', padding: '8px 16px', fontWeight: '700', fontSize: '14px', cursor: hasFollowUp ? 'not-allowed' : 'pointer' }}>
                 Ask →
               </button>
             </div>
@@ -310,7 +395,7 @@ const FanHistory = () => {
 
             <div style={{ background: '#1a1b23', borderRadius: '16px', padding: '20px', border: '1px solid rgba(255,255,255,0.05)' }}>
               <div style={{ color: '#64748b', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '12px', textTransform: 'uppercase' }}>YOUR QUESTION</div>
-              <div style={{ color: '#94a3b8', fontSize: '15px', fontStyle: 'italic', lineHeight: '1.5' }}>
+              <div style={{ color: '#94a3b8', fontSize: '15px', fontStyle: 'italic', lineHeight: '1.5', wordBreak: 'break-all', overflowWrap: 'anywhere' }}>
                 "{q.questionText}"
               </div>
             </div>
@@ -320,6 +405,19 @@ const FanHistory = () => {
               <div style={{ color: '#fff', fontSize: '16px', lineHeight: '1.6' }}>
                 {q.answerText}
               </div>
+            </div>
+
+            <div style={{ background: '#11131a', borderRadius: '16px', padding: '16px', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', opacity: 0.5 }}>
+                <div style={{ color: '#fff', fontSize: '20px' }}>💬</div>
+                <div>
+                  <div style={{ color: '#94a3b8', fontWeight: '800', fontSize: '14px' }}>1 free follow-up available</div>
+                  <div style={{ color: '#64748b', fontSize: '12px' }}>{hasFollowUp ? 'Follow-up submitted' : 'Expired (24h limit)'}</div>
+                </div>
+              </div>
+              <button disabled style={{ background: '#334155', color: '#94a3b8', border: 'none', borderRadius: '8px', padding: '8px 16px', fontWeight: '700', fontSize: '14px', cursor: 'not-allowed' }}>
+                Ask →
+              </button>
             </div>
 
             <button style={{ background: '#38bdf8', color: '#000', border: 'none', borderRadius: '16px', padding: '16px', fontWeight: '800', fontSize: '15px', cursor: 'pointer', marginTop: '8px' }}>
@@ -345,7 +443,7 @@ const FanHistory = () => {
             
             <div style={{ background: '#1a1b23', borderRadius: '16px', padding: '20px', border: '1px solid rgba(255,255,255,0.05)', marginBottom: '16px' }}>
                 <div style={{ color: '#64748b', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '12px', textTransform: 'uppercase' }}>YOUR QUESTION</div>
-                <div style={{ color: '#94a3b8', fontSize: '15px', fontStyle: 'italic', lineHeight: '1.5' }}>
+                <div style={{ color: '#94a3b8', fontSize: '15px', fontStyle: 'italic', lineHeight: '1.5', wordBreak: 'break-all', overflowWrap: 'anywhere' }}>
                 "{q.questionText}"
                 </div>
             </div>

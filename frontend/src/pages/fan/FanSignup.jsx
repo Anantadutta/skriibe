@@ -6,19 +6,35 @@ const FanSignup = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   
   const [focusedName, setFocusedName] = useState(false);
   const [focusedEmail, setFocusedEmail] = useState(false);
   const [focusedPassword, setFocusedPassword] = useState(false);
+  const [focusedConfirmPassword, setFocusedConfirmPassword] = useState(false);
   const navigate = useNavigate();
   
   console.log("FanSignup rendered");
 
+  const checkPasswordStrength = (pwd) => {
+    return pwd.length >= 8 && /[0-9\\W]/.test(pwd);
+  };
+
   const handleRegister = async () => {
-    if (!name || !email || !password) {
+    if (!name || !email || !password || !confirmPassword) {
       setError('Please fill out all fields');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    if (!checkPasswordStrength(password)) {
+      setError('Password must be at least 8 chars and contain a number/special char');
       return;
     }
 
@@ -31,13 +47,14 @@ const FanSignup = () => {
         navigate('/explore');
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'Registration failed. Try again.');
+      console.error("Signup error:", err);
+      setError(err.response?.data?.message || 'Registration failed. Please check if your backend server is running.');
     } finally {
       setLoading(false);
     }
   };
 
-  const isInvalid = !name || !email || !password;
+  const isInvalid = !name || !email || !password || !confirmPassword || password !== confirmPassword || !checkPasswordStrength(password);
 
   return (
     <div style={{
@@ -203,7 +220,7 @@ const FanSignup = () => {
               }}>
                 <input
                   type="text"
-                  placeholder="John Doe"
+                  placeholder=""
                   value={name}
                   onChange={(e) => {
                     setName(e.target.value);
@@ -251,7 +268,7 @@ const FanSignup = () => {
               }}>
                 <input
                   type="email"
-                  placeholder="fan@skriibe.com"
+                  placeholder=""
                   value={email}
                   onChange={(e) => {
                     setEmail(e.target.value);
@@ -299,7 +316,7 @@ const FanSignup = () => {
               }}>
                 <input
                   type="password"
-                  placeholder="••••••••"
+                  placeholder=""
                   value={password}
                   onChange={(e) => {
                     setPassword(e.target.value);
@@ -320,6 +337,66 @@ const FanSignup = () => {
                   }}
                 />
               </div>
+
+              {password && !checkPasswordStrength(password) && (
+                <div style={{ color: '#ef4444', fontSize: '10px', fontFamily: 'var(--font-mono)', marginBottom: '16px', marginTop: '-8px' }}>
+                  Must be at least 8 chars with 1 number/special char.
+                </div>
+              )}
+
+              <label style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: '9px',
+                color: '#06b6d4',
+                textTransform: 'uppercase',
+                display: 'block',
+                marginBottom: '10px',
+                letterSpacing: '1.5px',
+                fontWeight: '600'
+              }}>
+                CONFIRM PASSWORD
+              </label>
+
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                background: 'rgba(255, 255, 255, 0.03)',
+                border: focusedConfirmPassword ? '1px solid #7c3aed' : '1px solid rgba(255, 255, 255, 0.08)',
+                borderRadius: '12px',
+                boxShadow: focusedConfirmPassword ? '0 0 15px rgba(124, 58, 237, 0.3)' : 'none',
+                transition: 'all 0.25s ease',
+                overflow: 'hidden',
+                marginBottom: '16px'
+              }}>
+                <input
+                  type="password"
+                  placeholder=""
+                  value={confirmPassword}
+                  onChange={(e) => {
+                    setConfirmPassword(e.target.value);
+                    if (error) setError('');
+                  }}
+                  onFocus={() => setFocusedConfirmPassword(true)}
+                  onBlur={() => setFocusedConfirmPassword(false)}
+                  style={{
+                    flex: 1,
+                    background: 'transparent',
+                    border: 'none',
+                    outline: 'none',
+                    padding: '16px 20px',
+                    fontSize: '16px',
+                    color: '#ffffff',
+                    fontFamily: 'var(--font-mono)',
+                    letterSpacing: '1px'
+                  }}
+                />
+              </div>
+
+              {password && confirmPassword && password !== confirmPassword && (
+                <div style={{ color: '#ef4444', fontSize: '10px', fontFamily: 'var(--font-mono)', marginBottom: '16px', marginTop: '-8px' }}>
+                  Passwords do not match
+                </div>
+              )}
 
               {error && (
                 <div style={{
@@ -438,8 +515,8 @@ const FanSignup = () => {
             fontFamily: 'var(--font-mono)',
             lineHeight: '1.6'
           }}>
-            By continuing you agree to our<br />
-            <span style={{ color: '#06b6d4', cursor: 'pointer' }}>Terms & Privacy Policy</span>
+            By logging in and using Skriibe, you agree to our<br />
+            <span style={{ color: '#06b6d4', cursor: 'pointer' }}>Terms of Service</span> and <span style={{ color: '#06b6d4', cursor: 'pointer' }}>Privacy Policy</span>.
             <div style={{ marginTop: '24px', opacity: 0.5, fontSize: '9px', textTransform: 'uppercase', letterSpacing: '1px' }}>
               Made with 🤍 for bold conversations
             </div>

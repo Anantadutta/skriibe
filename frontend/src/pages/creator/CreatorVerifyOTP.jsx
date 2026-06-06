@@ -78,7 +78,7 @@ const CreatorVerifyOTP = () => {
     try {
       const res = await verifyOTP(phone, otpString);
       const { creator } = res.data;
-      if (creator.ama_enabled) {
+      if (creator.onboardingComplete || creator.ama_enabled || creator.handle) {
         navigate('/creator/dashboard', { state: { creator } });
       } else {
         navigate('/onboard/profile', { state: { creator } });

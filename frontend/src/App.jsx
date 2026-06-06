@@ -15,6 +15,8 @@ import { CreatorOnboardingProvider } from './context/CreatorOnboardingContext';
 import ComponentShowcase from './pages/dev/ComponentShowcase';
 import CreatorSignup from './pages/creator/CreatorSignup';
 import CreatorLogin from './pages/creator/CreatorLogin';
+import CreatorForgotPassword from './pages/creator/CreatorForgotPassword';
+import CreatorResetPassword from './pages/creator/CreatorResetPassword';
 import CreatorVerifyOTP from './pages/creator/CreatorVerifyOTP';
 import CreatorConnectInstagram from './pages/creator/CreatorConnectInstagram';
 import CreatorOnboardProfile from './pages/creator/CreatorOnboardProfile';
@@ -42,6 +44,8 @@ import FlagSubmittedPage from './pages/buyer/FlagSubmittedPage';
 // Fan Flow
 import FanSignup from './pages/fan/FanSignup';
 import FanLogin from './pages/fan/FanLogin';
+import FanForgotPassword from './pages/fan/FanForgotPassword';
+import FanResetPassword from './pages/fan/FanResetPassword';
 import FanDiscovery from './pages/fan/FanDiscovery';
 import FanHistory from './pages/fan/FanHistory';
 import FanNotifications from './pages/fan/FanNotifications';
@@ -130,6 +134,8 @@ function App() {
           {/* Creator Onboarding */}
           <Route path="/creator/signup" element={<CreatorSignup />} />
           <Route path="/creator/login" element={<CreatorLogin />} />
+          <Route path="/creator/forgot-password" element={<CreatorForgotPassword />} />
+          <Route path="/creator/reset-password/:token" element={<CreatorResetPassword />} />
           <Route path="/creator/verify-otp" element={<CreatorVerifyOTP />} />
           <Route path="/creator/connect-instagram" element={<CreatorConnectInstagram />} />
           <Route path="/onboard/profile" element={<CreatorOnboardProfile />} />
@@ -140,6 +146,8 @@ function App() {
           {/* Fan Flow */}
           <Route path="/fan/login" element={<FanLogin />} />
           <Route path="/fan/signup" element={<FanSignup />} />
+          <Route path="/fan/forgot-password" element={<FanForgotPassword />} />
+          <Route path="/fan/reset-password/:token" element={<FanResetPassword />} />
           <Route path="/fan/history" element={<FanHistory />} />
           <Route path="/fan/notifications" element={<FanNotifications />} />
           <Route path="/explore" element={<FanDiscovery />} />

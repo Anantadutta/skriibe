@@ -7,8 +7,21 @@ const passport = require('passport');
 const session = require('express-session');
 const http = require('http');
 const { Server } = require('socket.io');
+let Razorpay;
+let razorpay;
+const crypto = require('crypto');
 const Waitlist = require('./models/Waitlist');
 const { sendWaitlistWelcomeEmail } = require('./utils/emailService');
+
+try {
+  Razorpay = require('razorpay');
+  razorpay = new Razorpay({
+    key_id: process.env.RAZORPAY_KEY_ID || 'dummy',
+    key_secret: process.env.RAZORPAY_KEY_SECRET || 'dummy',
+  });
+} catch (err) {
+  console.warn("Razorpay module not installed or configured. Payment endpoints will fail until installed.");
+}
 // WATI WhatsApp Message
 const sendWhatsAppMessage = async (phone, name) => {
   const formattedPhone = '91' + phone;
@@ -38,7 +51,7 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: ["https://www.skriibe.com", "https://skriibe.com", "http://localhost:5173", "http://localhost:5713"],
+    origin: ["https://www.skriibe.com", "https://skriibe.com", "http://localhost:5173", "http://localhost:5713", "http://localhost:3000", "http://localhost:5174", "http://127.0.0.1:5173", "http://127.0.0.1:5713", "http://127.0.0.1:3000", "http://127.0.0.1:5174"],
     methods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
     credentials: true
   }
@@ -60,7 +73,7 @@ app.use((req, res, next) => {
 
 // Middleware
 // Middleware
-const allowedOrigins = ["https://www.skriibe.com", "https://skriibe.com","http://localhost:5173", "http://localhost:5713"];
+const allowedOrigins = ["https://www.skriibe.com", "https://skriibe.com","http://localhost:5173", "http://localhost:5713", "http://localhost:3000", "http://localhost:5174", "http://127.0.0.1:5173", "http://127.0.0.1:5713", "http://127.0.0.1:3000", "http://127.0.0.1:5174"];
 
 app.use(cors({
   origin: function (origin, callback) {
@@ -162,6 +175,48 @@ app.get('/health', async (req, res) => {
   await connectDB();
   res.json({ status: 'ok', dbConnected: isConnected });
 });
+
+// --- Razorpay Routes ---
+app.post('/api/create-order', async (req, res) => {
+  try {
+    const { amount } = req.body; // Amount in paise
+    if (!amount) return res.status(400).json({ error: 'Amount is required' });
+
+    const options = {
+      amount,
+      currency: 'INR',
+      receipt: 'receipt_' + Date.now(),
+    };
+
+    const order = await razorpay.orders.create(options);
+    res.json(order);
+  } catch (error) {
+    console.error('Error creating razorpay order:', error);
+    res.status(500).json({ error: 'Something went wrong' });
+  }
+});
+
+app.post('/api/verify-payment', (req, res) => {
+  try {
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+
+    const sign = razorpay_order_id + '|' + razorpay_payment_id;
+    const expectedSign = crypto
+      .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+      .update(sign.toString())
+      .digest('hex');
+
+    if (razorpay_signature === expectedSign) {
+      return res.status(200).json({ success: true, message: 'Payment verified successfully' });
+    } else {
+      return res.status(400).json({ success: false, message: 'Invalid signature sent' });
+    }
+  } catch (error) {
+    console.error('Error verifying payment:', error);
+    res.status(500).json({ success: false, message: 'Internal Server Error' });
+  }
+});
+// -----------------------
 
 app.get('/test-route-123', (req, res) => res.json({ hello: 'world' }));
 

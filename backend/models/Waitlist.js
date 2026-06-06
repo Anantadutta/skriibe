@@ -11,4 +11,4 @@ const WaitlistSchema = new mongoose.Schema({
   joinedAt: { type: Date, default: Date.now }
 });
 
-module.exports = mongoose.model('Waitlist', WaitlistSchema);
+module.exports = mongoose.models.Waitlist || mongoose.model('Waitlist', WaitlistSchema);

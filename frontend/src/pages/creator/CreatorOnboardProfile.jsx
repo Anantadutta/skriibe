@@ -16,6 +16,7 @@ const CreatorOnboardProfile = () => {
     name: '',
     handle: '',
     email: '',
+    phone: '',
     bio: '',
     expertise: [],
     instagramHandle: '',
@@ -56,6 +57,7 @@ const CreatorOnboardProfile = () => {
             name: creator.name || '',
             handle: creator.handle || '',
             email: (creator.email && !creator.email.includes('@temp.skriibe.com')) ? creator.email : '',
+            phone: creator.phone || '',
             bio: creator.bio || '',
             expertise: creator.expertise ? (Array.isArray(creator.expertise) ? creator.expertise : creator.expertise.split(',').map(e => e.trim())) : [],
             instagramHandle: creator.instagramHandle || '',
@@ -145,7 +147,7 @@ const CreatorOnboardProfile = () => {
   };
 
   const handleContinue = async () => {
-    if (!form.name || !form.email || form.expertise.length === 0) return;
+    if (!form.name || !form.handle || !form.email || !form.phone || form.expertise.length === 0) return;
     if (form.expertise.includes('Others') && !customExpertise.trim()) {
       alert('Please specify your expertise in the text field.');
       return;
@@ -153,8 +155,7 @@ const CreatorOnboardProfile = () => {
     
     setLoading(true);
     try {
-      // If handle is not filled, default to formatted name or standard handle
-      const finalHandle = form.handle || form.name.toLowerCase().replace(/[^a-z0-9_]/g, '');
+      const finalHandle = form.handle;
       const finalExpertise = form.expertise.map(t => t === 'Others' ? customExpertise.trim() : t);
 
       const res = await saveProfile({
@@ -173,8 +174,12 @@ const CreatorOnboardProfile = () => {
   };
 
   const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email);
+  const isHandleValid = /^[a-z0-9_]{3,30}$/.test(form.handle);
+  const isPhoneValid = /^[0-9]{10}$/.test(form.phone);
   const canContinue = form.name.trim().length >= 2 &&
+    isHandleValid &&
     isEmailValid &&
+    isPhoneValid &&
     form.expertise.length >= 1 &&
     form.expertise.length <= 3;
 
@@ -629,7 +634,14 @@ const CreatorOnboardProfile = () => {
                   label="FULL NAME *"
                   value={form.name}
                   onChange={(e) => handleInputChange('name', e.target.value)}
-                  placeholder="Pre-filled from Instagram"
+                  required
+                />
+
+                <Field
+                  label="USERNAME *"
+                  value={form.handle}
+                  onChange={(e) => handleInputChange('handle', e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
+                  placeholder=""
                   required
                 />
 
@@ -645,7 +657,7 @@ const CreatorOnboardProfile = () => {
                     marginBottom: '10px',
                     fontWeight: 700
                   }}>
-                    FIELD OF EXPERTISE * (1–3)
+                    FIELD OF EXPERTISE <span style={{ color: '#ef4444' }}>*</span> (1–3)
                   </label>
 
                   {/* Selected tags */}
@@ -790,6 +802,15 @@ const CreatorOnboardProfile = () => {
                   required
                 />
 
+                <Field
+                  label="MOBILE NUMBER *"
+                  type="tel"
+                  value={form.phone}
+                  onChange={(e) => handleInputChange('phone', e.target.value.replace(/[^0-9]/g, '').slice(0, 10))}
+                  placeholder="10 digit mobile number"
+                  required
+                />
+
                 {/* BIO TEXTAREA — styled exactly like Field */}
                 <div style={{
                   background: '#0f0f1a',
@@ -815,7 +836,6 @@ const CreatorOnboardProfile = () => {
                   <textarea
                     value={form.bio}
                     onChange={(e) => handleInputChange('bio', e.target.value.slice(0, 200))}
-                    placeholder="Helping India save smarter…"
                     rows={2}
                     onFocus={() => setBioFocused(true)}
                     onBlur={() => setBioFocused(false)}

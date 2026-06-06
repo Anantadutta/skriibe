@@ -47,7 +47,8 @@ passport.use(new GoogleStrategy({
           fan = new Fan({
             email,
             name: profile.displayName || '',
-            password: 'oauth_dummy_pass'
+            password: 'oauth_dummy_pass',
+            authProvider: 'google'
           });
           await fan.save();
         }
@@ -61,7 +62,8 @@ passport.use(new GoogleStrategy({
           creator = new Creator({
             email,
             name: profile.displayName || '',
-            avatarUrl: profile.photos?.[0]?.value || ''
+            avatarUrl: profile.photos?.[0]?.value || '',
+            authProvider: 'google'
           });
           await creator.save();
         }
@@ -95,7 +97,8 @@ passport.use(new FacebookStrategy({
           fan = new Fan({
             email,
             name: `${profile.name?.givenName || ''} ${profile.name?.familyName || ''}`.trim() || profile.displayName || '',
-            password: 'oauth_dummy_pass'
+            password: 'oauth_dummy_pass',
+            authProvider: 'facebook'
           });
           await fan.save();
         }
@@ -109,7 +112,8 @@ passport.use(new FacebookStrategy({
           creator = new Creator({
             email,
             name: `${profile.name?.givenName || ''} ${profile.name?.familyName || ''}`.trim() || profile.displayName || '',
-            avatarUrl: profile.photos?.[0]?.value || ''
+            avatarUrl: profile.photos?.[0]?.value || '',
+            authProvider: 'facebook'
           });
           await creator.save();
         }
@@ -242,7 +246,8 @@ router.get('/google/callback', passport.authenticate('google', { failureRedirect
     return res.redirect('http://localhost:5173/explore');
   } else {
     issueToken(res, req.user);
-    if (req.user.isNewCreator) {
+    const hasCompletedOnboarding = !!req.user.handle;
+    if (req.user.isNewCreator || !hasCompletedOnboarding) {
       return res.redirect('http://localhost:5173/onboard/profile');
     } else {
       return res.redirect('http://localhost:5173/creator/dashboard');
@@ -271,7 +276,8 @@ router.get('/facebook/callback', passport.authenticate('facebook', { failureRedi
     return res.redirect('http://localhost:5173/explore');
   } else {
     issueToken(res, req.user);
-    if (req.user.isNewCreator) {
+    const hasCompletedOnboarding = !!req.user.handle;
+    if (req.user.isNewCreator || !hasCompletedOnboarding) {
       return res.redirect('http://localhost:5173/onboard/profile');
     } else {
       return res.redirect('http://localhost:5173/creator/dashboard');

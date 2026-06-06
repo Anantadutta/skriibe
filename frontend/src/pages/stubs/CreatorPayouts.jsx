@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { mockCreator } from '../../mock/questions';
-import { linkBank, toggleLive } from '../../services/creatorApi';
+import { getMe, linkBank, toggleLive } from '../../services/creatorApi';
 
-const InputCard = ({ label, value, onChange, placeholder, type = 'text' }) => {
+const InputCard = ({ label, value, onChange, placeholder, type = 'text', isUppercase = false }) => {
   const [focused, setFocused] = useState(false);
   return (
     <div style={{
@@ -41,7 +41,8 @@ const InputCard = ({ label, value, onChange, placeholder, type = 'text' }) => {
           fontWeight: '600',
           outline: 'none',
           fontFamily: 'system-ui, -apple-system, sans-serif',
-          width: '100%'
+          width: '100%',
+          textTransform: isUppercase ? 'uppercase' : 'none'
         }}
       />
     </div>
@@ -51,13 +52,38 @@ const InputCard = ({ label, value, onChange, placeholder, type = 'text' }) => {
 const CreatorPayouts = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const creator = location.state?.creator || mockCreator;
+  const [creator, setCreator] = useState(location.state?.creator || mockCreator);
 
-  const [accountName, setAccountName] = useState('');
-  const [accountNumber, setAccountNumber] = useState('');
-  const [confirmAccount, setConfirmAccount] = useState('');
-  const [ifsc, setIfsc] = useState('');
-  const [panNumber, setPanNumber] = useState('');
+  const [accountName, setAccountName] = useState(creator.bankAccountName || '');
+  const [accountNumber, setAccountNumber] = useState(creator.bankAccountNumber || '');
+  const [confirmAccount, setConfirmAccount] = useState(creator.bankAccountNumber || '');
+  const [ifsc, setIfsc] = useState(creator.bankIfsc || '');
+  const [panNumber, setPanNumber] = useState(creator.pan || '');
+  const [phone, setPhone] = useState(creator.phone || '');
+
+  useEffect(() => {
+    const fetchCreator = async () => {
+      try {
+        const res = await getMe();
+        if (res.success && res.creator) {
+          setCreator(res.creator);
+          setAccountName(res.creator.bankAccountName || '');
+          setAccountNumber(res.creator.bankAccountNumber || '');
+          setConfirmAccount(res.creator.bankAccountNumber || '');
+          setIfsc(res.creator.bankIfsc || '');
+          setPanNumber(res.creator.pan || '');
+          setPhone(res.creator.phone || '');
+        }
+      } catch (error) {
+        console.error('Failed to fetch creator:', error);
+      }
+    };
+    if (!location.state?.creator || !creator.pan) {
+      fetchCreator();
+    }
+  }, [location.state?.creator]);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const navItems = [
     { label: 'HOME', icon: '🏠', route: '/creator/dashboard' },
@@ -256,10 +282,11 @@ const CreatorPayouts = () => {
           </h3>
           
           <InputCard 
-            label="PAN NUMBER" 
+            label="PAN NUMBER *" 
             value={panNumber} 
             onChange={setPanNumber} 
             placeholder="e.g. ABCDE1234F"
+            isUppercase={true}
           />
 
           <p style={{
@@ -273,25 +300,59 @@ const CreatorPayouts = () => {
           </p>
         </div>
 
+        {/* Phone Section */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '8px' }}>
+          <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: '#ffffff', marginBottom: '4px' }}>
+            Contact Details
+          </h3>
+          <InputCard 
+            label="MOBILE NUMBER *" 
+            value={phone} 
+            onChange={(val) => setPhone(val.replace(/[^0-9]/g, '').slice(0, 10))} 
+            placeholder="10 digit mobile number"
+          />
+        </div>
+
         {/* Action Buttons */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '16px' }}>
           <button
             onClick={async () => {
-              if (!accountName.trim() || !accountNumber.trim() || !confirmAccount.trim() || !ifsc.trim()) {
-                alert('Please fill out all mandatory fields (marked with a red asterisk) before going live.');
+              if (!accountName.trim() || !accountNumber.trim() || !confirmAccount.trim() || !ifsc.trim() || !panNumber.trim() || !phone.trim()) {
+                setErrorMessage('Please fill in all mandatory fields (marked with a red asterisk) before going live.');
+                setShowErrorModal(true);
+                return;
+              }
+              const formattedPan = panNumber.trim().toUpperCase();
+              const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
+              if (!panRegex.test(formattedPan)) {
+                setErrorMessage('Please enter a valid PAN number format (e.g. ABCDE1234F).');
+                setShowErrorModal(true);
+                return;
+              }
+              if (phone.length !== 10) {
+                setErrorMessage('Please enter a valid 10-digit mobile number.');
+                setShowErrorModal(true);
                 return;
               }
               if (accountNumber !== confirmAccount) {
-                alert('Account numbers do not match.');
+                setErrorMessage('Account numbers do not match.');
+                setShowErrorModal(true);
                 return;
               }
               try {
-                await linkBank();
+                await linkBank({ 
+                  pan: formattedPan,
+                  accountName: accountName.trim(),
+                  accountNumber: accountNumber.trim(),
+                  ifsc: ifsc.trim(),
+                  phone: phone.trim()
+                });
                 await toggleLive(true); // Automatically turn green (go live)
                 navigate('/creator/dashboard');
               } catch (error) {
                 console.error('Failed to link bank:', error);
-                alert('Failed to link bank account. Please try again.');
+                setErrorMessage('Failed to link bank account. Please try again.');
+                setShowErrorModal(true);
               }
             }}
             style={{
@@ -392,6 +453,56 @@ const CreatorPayouts = () => {
           );
         })}
       </div>
+
+      {/* Custom Error Modal */}
+      {showErrorModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0, 0, 0, 0.6)',
+          backdropFilter: 'blur(4px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            background: '#1c1613',
+            border: '1px solid #332b26',
+            borderRadius: '16px',
+            padding: '24px',
+            width: '85%',
+            maxWidth: '320px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '24px',
+            boxShadow: '0 20px 40px rgba(0,0,0,0.8)'
+          }}>
+            <p style={{ margin: 0, fontSize: '0.95rem', color: '#e2e8f0', lineHeight: '1.5' }}>
+              {errorMessage}
+            </p>
+            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setShowErrorModal(false)}
+                style={{
+                  background: '#fbb142',
+                  border: 'none',
+                  color: '#0e0e0e',
+                  borderRadius: '24px',
+                  padding: '8px 24px',
+                  fontSize: '0.85rem',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  boxShadow: '0 0 0 2px #1c1613, 0 0 0 4px #fbb142',
+                  marginRight: '4px'
+                }}
+              >
+                OK
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

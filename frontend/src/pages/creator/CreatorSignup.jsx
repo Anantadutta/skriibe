@@ -25,6 +25,10 @@ const CreatorSignup = () => {
     }
   }, [navigate]);
 
+  const checkPasswordStrength = (pwd) => {
+    return pwd.length >= 8 && /[0-9\\W]/.test(pwd);
+  };
+
   const handleRegister = async () => {
     if (!email || !password || !confirmPassword) {
       setError('Please fill out all fields');
@@ -33,6 +37,11 @@ const CreatorSignup = () => {
 
     if (password !== confirmPassword) {
       setError('Passwords do not match');
+      return;
+    }
+
+    if (!checkPasswordStrength(password)) {
+      setError('Password must be at least 8 chars and contain a number/special char');
       return;
     }
 
@@ -46,13 +55,14 @@ const CreatorSignup = () => {
         navigate('/creator/login', { state: { message: 'Registration successful! Please log in.' } });
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'Registration failed. Try again.');
+      console.error("Signup error:", err);
+      setError(err.response?.data?.message || 'Registration failed. Please check if your backend server is running.');
     } finally {
       setLoading(false);
     }
   };
 
-  const isInvalid = !email || !password || !confirmPassword || password !== confirmPassword;
+  const isInvalid = !email || !password || !confirmPassword || password !== confirmPassword || !checkPasswordStrength(password);
 
   return (
     <div style={{
@@ -244,7 +254,7 @@ const CreatorSignup = () => {
               }}>
                 <input
                   type="email"
-                  placeholder="creator@skriibe.com"
+                  placeholder=""
                   value={email}
                   onChange={(e) => {
                     setEmail(e.target.value);
@@ -292,7 +302,7 @@ const CreatorSignup = () => {
               }}>
                 <input
                   type="password"
-                  placeholder="••••••••"
+                  placeholder=""
                   value={password}
                   onChange={(e) => {
                     setPassword(e.target.value);
@@ -313,6 +323,12 @@ const CreatorSignup = () => {
                   }}
                 />
               </div>
+
+              {password && !checkPasswordStrength(password) && (
+                <div style={{ color: '#ef4444', fontSize: '10px', fontFamily: 'var(--font-mono)', marginBottom: '16px', marginTop: '-8px' }}>
+                  Must be at least 8 chars with 1 number/special char.
+                </div>
+              )}
 
               <label style={{
                 fontFamily: 'var(--font-mono)',
@@ -339,7 +355,7 @@ const CreatorSignup = () => {
               }}>
                 <input
                   type="password"
-                  placeholder="••••••••"
+                  placeholder=""
                   value={confirmPassword}
                   onChange={(e) => {
                     setConfirmPassword(e.target.value);
@@ -360,6 +376,12 @@ const CreatorSignup = () => {
                   }}
                 />
               </div>
+
+              {password && confirmPassword && password !== confirmPassword && (
+                <div style={{ color: '#ef4444', fontSize: '10px', fontFamily: 'var(--font-mono)', marginBottom: '16px', marginTop: '-8px' }}>
+                  Passwords do not match
+                </div>
+              )}
 
               {error && (
                 <div style={{
@@ -478,8 +500,8 @@ const CreatorSignup = () => {
             fontFamily: 'var(--font-mono)',
             lineHeight: '1.6'
           }}>
-            By continuing you agree to our<br />
-            <span style={{ color: '#06b6d4', cursor: 'pointer' }}>Terms & Privacy Policy</span>
+            By logging in and using Skriibe, you agree to our<br />
+            <span style={{ color: '#06b6d4', cursor: 'pointer' }}>Terms of Service</span> and <span style={{ color: '#06b6d4', cursor: 'pointer' }}>Privacy Policy</span>.
             <div style={{ marginTop: '24px', opacity: 0.5, fontSize: '9px', textTransform: 'uppercase', letterSpacing: '1px' }}>
               Made with 🤍 for bold conversations
             </div>

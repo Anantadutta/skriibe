@@ -9,6 +9,7 @@ const AdminAlert = require('../models/AdminAlert');
 const { sendOTPviaMSG91 } = require('../utils/smsService');
 const Creator = require('../models/Creator');
 const Question = require('../models/Question');
+const Fan = require('../models/Fan');
 const jwt = require('jsonwebtoken');
 
 // In-memory OTP store (replace with Redis in production)
@@ -61,10 +62,23 @@ router.post('/verify-otp', async (req, res) => {
 // Body: { creatorHandle, questionText, buyerName, buyerPhone, buyerEmail, isAnonymous }
 router.post('/submit-question', async (req, res) => {
   try {
-    const { creatorHandle, questionText, buyerName, buyerPhone, buyerEmail, isAnonymous } = req.body;
+    const { creatorHandle, questionText, buyerName, buyerPhone, buyerEmail, isAnonymous, isFollowUp, parentQuestionId } = req.body;
 
     if (!buyerPhone) {
       return res.status(400).json({ success: false, message: 'Phone number is required' });
+    }
+
+    // Check if buyer is banned
+    let bannedFan = null;
+    if (buyerEmail) {
+      bannedFan = await Fan.findOne({ email: buyerEmail.toLowerCase(), isBanned: true });
+    }
+    if (!bannedFan && buyerPhone) {
+      bannedFan = await Fan.findOne({ email: `${buyerPhone}@banned.skriibe.com`, isBanned: true });
+    }
+
+    if (bannedFan) {
+      return res.status(403).json({ success: false, message: 'Your account is restricted from asking questions.' });
     }
 
     // Validate question
@@ -94,10 +108,13 @@ router.post('/submit-question', async (req, res) => {
       buyerEmail: buyerEmail || '',
       isAnonymous: !!isAnonymous,
       questionText: questionText.trim(),
-      amountPaid: creator.pricePerQuestion || creator.price || 99,
-      paymentStatus: 'pending', // Updated to 'paid' after Razorpay in Phase 4
+      amountPaid: isFollowUp ? 0 : (creator.pricePerQuestion || creator.price || 99),
+      paymentStatus: isFollowUp ? 'paid' : 'pending', // Updated to 'paid' after Razorpay in Phase 4
+      paid: !!isFollowUp,
       status: 'submitted',
       expiresAt,
+      isFollowUp: !!isFollowUp,
+      parentQuestionId: isFollowUp ? parentQuestionId : undefined,
     });
 
     return res.json({

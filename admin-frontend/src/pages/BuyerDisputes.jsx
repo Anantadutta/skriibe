@@ -7,6 +7,7 @@ const BuyerDisputes = () => {
   const navigate = useNavigate();
   const [disputes, setDisputes] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState('open');
 
   useEffect(() => {
     const fetchDisputes = async () => {
@@ -41,15 +42,57 @@ const BuyerDisputes = () => {
         <div style={{ fontSize: '0.85rem', color: '#94a3b8', marginTop: '4px' }}>Manage disputes initiated by buyers</div>
       </div>
 
-      {loading ? (
-        <div style={{ color: '#94a3b8', textAlign: 'center', padding: '40px' }}>Loading disputes...</div>
-      ) : disputes.length === 0 ? (
-        <div style={{ background: '#13131A', borderRadius: '16px', padding: '40px', border: '1px solid #1E1E2D', textAlign: 'center', color: '#64748b' }}>
-          No active buyer disputes at the moment.
-        </div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {disputes.map(d => (
+      {(() => {
+        const openDisputes = disputes.filter(d => !d.adminDecision || d.adminDecision === 'pending');
+        const resolvedDisputes = disputes.filter(d => d.adminDecision && d.adminDecision !== 'pending');
+        const displayedDisputes = filter === 'open' ? openDisputes : resolvedDisputes;
+
+        return (
+          <>
+            <div style={{ display: 'flex', background: '#13131A', borderRadius: '12px', padding: '4px', width: 'fit-content', border: '1px solid #1E1E2D' }}>
+              <button 
+                onClick={() => setFilter('open')}
+                style={{ 
+                  padding: '8px 24px', 
+                  borderRadius: '8px', 
+                  border: 'none', 
+                  background: filter === 'open' ? '#2A2A35' : 'transparent', 
+                  color: filter === 'open' ? '#fff' : '#64748b', 
+                  fontWeight: 'bold', 
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  fontSize: '0.9rem'
+                }}
+              >
+                Open ({openDisputes.length})
+              </button>
+              <button 
+                onClick={() => setFilter('resolved')}
+                style={{ 
+                  padding: '8px 24px', 
+                  borderRadius: '8px', 
+                  border: 'none', 
+                  background: filter === 'resolved' ? '#2A2A35' : 'transparent', 
+                  color: filter === 'resolved' ? '#fff' : '#64748b', 
+                  fontWeight: 'bold', 
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  fontSize: '0.9rem'
+                }}
+              >
+                Resolved ({resolvedDisputes.length})
+              </button>
+            </div>
+
+            {loading ? (
+              <div style={{ color: '#94a3b8', textAlign: 'center', padding: '40px' }}>Loading disputes...</div>
+            ) : displayedDisputes.length === 0 ? (
+              <div style={{ background: '#13131A', borderRadius: '16px', padding: '40px', border: '1px solid #1E1E2D', textAlign: 'center', color: '#64748b' }}>
+                No {filter} buyer disputes at the moment.
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {displayedDisputes.map(d => (
             <div 
               key={d._id} 
               onClick={() => navigate(`/admin/dispute/${d._id}`)}
@@ -88,8 +131,11 @@ const BuyerDisputes = () => {
               </div>
             </div>
           ))}
-        </div>
-      )}
+          </div>
+        )}
+      </>
+    );
+  })()}
     </div>
   );
 };

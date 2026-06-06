@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import api from '../../services/api';
 import { getCreatorProfile } from '../../services/discoveryApi';
+import PaymentButton from '../../components/PaymentButton';
 
 const CreatorProfile = () => {
   const { handle } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const isFollowUp = searchParams.get('isFollowUp') === 'true';
+  const parentQuestionId = searchParams.get('parentQuestionId');
   
   const [creator, setCreator] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -22,6 +26,7 @@ const CreatorProfile = () => {
   const [buyerName, setBuyerName] = useState('');
   const [buyerEmail, setBuyerEmail] = useState('');
   const [buyerPhone, setBuyerPhone] = useState('');
+  const [isBanned, setIsBanned] = useState(false);
   const [paymentTab, setPaymentTab] = useState('UPI');
 
   useEffect(() => {
@@ -49,6 +54,7 @@ const CreatorProfile = () => {
         if (res.data?.fan) {
           setBuyerName(res.data.fan.name || '');
           setBuyerEmail(res.data.fan.email || '');
+          setIsBanned(res.data.fan.isBanned || false);
         }
       } catch (err) {
         try {
@@ -108,7 +114,9 @@ const CreatorProfile = () => {
         questionText: question,
         buyerName,
         buyerEmail,
-        buyerPhone
+        buyerPhone,
+        isFollowUp,
+        parentQuestionId
       });
       if (response.data?.question?._id) {
         setOrderId(response.data.question._id);
@@ -129,29 +137,13 @@ const CreatorProfile = () => {
       minHeight: '100vh',
       background: '#0a0a0f',
       display: 'flex',
+      flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
       padding: '40px 20px',
       fontFamily: 'Inter, var(--font-body, sans-serif)',
       position: 'relative'
     }}>
-      {/* Back button */}
-      <button 
-        onClick={() => navigate('/explore')}
-        style={{
-          position: 'absolute', top: '32px', left: '32px',
-          background: 'rgba(255,255,255,0.05)', color: '#94a3b8',
-          border: '1px solid rgba(255,255,255,0.1)', borderRadius: '100px',
-          padding: '8px 16px', fontSize: '14px', cursor: 'pointer',
-          display: 'flex', alignItems: 'center', gap: '8px',
-          transition: 'all 0.2s'
-        }}
-        onMouseOver={(e) => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; }}
-        onMouseOut={(e) => { e.currentTarget.style.color = '#94a3b8'; e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; }}
-      >
-        ← Back to Discovery
-      </button>
-
       <div style={{
         width: '100%',
         maxWidth: '480px',
@@ -159,6 +151,23 @@ const CreatorProfile = () => {
         flexDirection: 'column',
         alignItems: 'center'
       }}>
+        {/* Back button */}
+        <button 
+          onClick={() => navigate('/explore')}
+          style={{
+            alignSelf: 'flex-start',
+            marginBottom: '32px',
+            background: 'rgba(255,255,255,0.05)', color: '#94a3b8',
+            border: '1px solid rgba(255,255,255,0.1)', borderRadius: '100px',
+            padding: '8px 16px', fontSize: '14px', cursor: 'pointer',
+            display: 'inline-flex', alignItems: 'center', gap: '8px',
+            transition: 'all 0.2s'
+          }}
+          onMouseOver={(e) => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; }}
+          onMouseOut={(e) => { e.currentTarget.style.color = '#94a3b8'; e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; }}
+        >
+          ← Back to Discovery
+        </button>
         {success ? (
           <div style={{ width: '100%', maxWidth: '440px', display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '24px' }}>
             
@@ -387,23 +396,24 @@ const CreatorProfile = () => {
 
               <button
                 onClick={() => setStep('ask')}
+                disabled={isBanned}
                 style={{
-                  background: 'linear-gradient(90deg, #34d399, #10b981)',
-                  color: '#000',
+                  background: isBanned ? '#333' : 'linear-gradient(90deg, #34d399, #10b981)',
+                  color: isBanned ? '#888' : '#000',
                   border: 'none',
                   borderRadius: '100px',
                   padding: '16px',
                   fontWeight: '700',
                   fontSize: '16px',
                   width: '100%',
-                  cursor: 'pointer',
+                  cursor: isBanned ? 'not-allowed' : 'pointer',
                   transition: 'transform 0.2s',
-                  boxShadow: '0 4px 14px rgba(16, 185, 129, 0.3)',
+                  boxShadow: isBanned ? 'none' : '0 4px 14px rgba(16, 185, 129, 0.3)',
                 }}
-                onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
-                onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                onMouseOver={(e) => { if (!isBanned) e.currentTarget.style.transform = 'scale(1.02)' }}
+                onMouseOut={(e) => { if (!isBanned) e.currentTarget.style.transform = 'scale(1)' }}
               >
-                Ask Now →
+                {isBanned ? 'Action Restricted' : 'Ask Now →'}
               </button>
             </div>
 
@@ -412,7 +422,7 @@ const CreatorProfile = () => {
             </div>
 
           </div>
-        ) : step === 'ask' ? (
+        ) : step === 'ask' && (
           // STEP 2: Ask Question Form (Redesigned Checkout)
           <div style={{ width: '100%' }}>
             
@@ -453,6 +463,7 @@ const CreatorProfile = () => {
                 <li><strong style={{ color: '#fff' }}>One question per payment</strong> — keep it specific.</li>
                 <li>100% refund if there's no reply within {creator.responseTime || '24 hours'}.</li>
                 <li>Don't share other people's personal data.</li>
+                <li>By logging in and using Skriibe, you agree to our <span style={{ color: '#38bdf8', cursor: 'pointer' }}>Terms of Service</span> and <span style={{ color: '#38bdf8', cursor: 'pointer' }}>Privacy Policy</span>.</li>
               </ul>
             </div>
 
@@ -544,239 +555,41 @@ const CreatorProfile = () => {
             )}
 
             {/* Submit Button */}
-            <button
-              onClick={() => setStep('payment')}
-              disabled={!agreed || question.length < 20 || !buyerName.trim() || !buyerEmail.trim() || buyerPhone.length !== 10 || submitLoading}
-              style={{
-                background: 'linear-gradient(90deg, #34d399, #10b981)',
-                color: '#000', border: 'none', borderRadius: '16px',
-                padding: '16px', fontWeight: '700', fontSize: '16px',
-                width: '100%',
-                cursor: (!agreed || question.length < 20 || !buyerName.trim() || !buyerEmail.trim() || buyerPhone.length !== 10 || submitLoading) ? 'not-allowed' : 'pointer',
-                opacity: (!agreed || question.length < 20 || !buyerName.trim() || !buyerEmail.trim() || buyerPhone.length !== 10 || submitLoading) ? 0.4 : 1,
-                boxShadow: '0 4px 14px rgba(16, 185, 129, 0.2)'
-              }}
-            >
-              Pay ₹{price} — UPI / Card
-            </button>
-
-            <div style={{ color: '#64748b', fontSize: '12px', marginTop: '20px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px' }}>
-              <span>🔒</span> Secured by Razorpay · India's most trusted payments
-            </div>
-
-          </div>
-        ) : (
-          // STEP 3: Mock Payment Gateway
-          <div style={{ width: '100%', background: '#0a0a0f' }}>
-            
-            {/* Header */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '32px' }}>
+            {isFollowUp ? (
               <button
-                onClick={() => setStep('ask')}
+                onClick={handleSubmit}
+                disabled={!agreed || question.length < 20 || !buyerName.trim() || !buyerEmail.trim() || buyerPhone.length !== 10 || submitLoading}
                 style={{
-                  background: 'rgba(255,255,255,0.05)',
-                  border: '1px solid rgba(255,255,255,0.1)',
-                  borderRadius: '50%',
-                  width: '32px', height: '32px',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  color: '#94a3b8', cursor: 'pointer'
+                  width: '100%',
+                  background: '#10b981',
+                  color: '#0E0E0E',
+                  border: 'none',
+                  borderRadius: '16px',
+                  padding: '18px',
+                  fontSize: '1.1rem',
+                  fontWeight: '800',
+                  cursor: (!agreed || question.length < 20 || !buyerName.trim() || !buyerEmail.trim() || buyerPhone.length !== 10 || submitLoading) ? 'not-allowed' : 'pointer',
+                  opacity: (!agreed || question.length < 20 || !buyerName.trim() || !buyerEmail.trim() || buyerPhone.length !== 10 || submitLoading) ? 0.5 : 1
                 }}
               >
-                ←
+                {submitLoading ? 'Processing...' : 'Ask for free.'}
               </button>
-              <h2 style={{ margin: 0, color: '#fff', fontSize: '20px', fontWeight: '700' }}>
-                Pay ₹{price}
-              </h2>
-            </div>
-
-            {/* Paying To */}
-            <div style={{ textAlign: 'center', marginBottom: '8px', color: '#94a3b8', fontSize: '14px' }}>
-              Paying to <br/>
-              <span style={{ color: '#38bdf8', fontWeight: '700' }}>@{creator.handle}</span> <span style={{ color: '#fff', fontWeight: '700' }}>via skriibe</span>
-            </div>
-
-            {/* Glowing Price */}
-            <div style={{
-              textAlign: 'center',
-              fontSize: '64px',
-              fontWeight: '900',
-              color: '#38bdf8',
-              textShadow: '0 0 40px rgba(56, 189, 248, 0.4)',
-              marginBottom: '32px',
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'flex-start'
-            }}>
-              <span style={{ fontSize: '32px', marginTop: '12px', marginRight: '4px' }}>₹</span>{price}
-            </div>
-
-            {/* Payment Tabs */}
-            <div style={{
-              display: 'flex',
-              background: '#131313',
-              border: '1px solid #1f1f1f',
-              borderRadius: '16px',
-              padding: '6px',
-              marginBottom: '16px'
-            }}>
-              {['UPI', 'Card', 'Net Banking'].map(tab => (
-                <div 
-                  key={tab}
-                  onClick={() => setPaymentTab(tab)}
-                  style={{ 
-                    flex: 1, 
-                    background: paymentTab === tab ? '#38bdf8' : 'transparent', 
-                    color: paymentTab === tab ? '#000' : '#94a3b8', 
-                    textAlign: 'center', 
-                    padding: '12px', 
-                    borderRadius: '12px', 
-                    fontWeight: paymentTab === tab ? '700' : '600', 
-                    fontSize: '14px', 
-                    cursor: 'pointer',
-                    transition: 'all 0.2s'
-                  }}>
-                  {tab}
-                </div>
-              ))}
-            </div>
-
-            {paymentTab === 'UPI' && (
-              <>
-                {/* UPI Input */}
-                <div style={{ background: '#131313', border: '1px solid #1f1f1f', borderRadius: '16px', padding: '16px', marginBottom: '24px' }}>
-                  <div style={{ color: '#64748b', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '8px' }}>UPI ID</div>
-                  <input 
-                    type="text" 
-                    placeholder="e.g. amit@paytm"
-                    style={{ width: '100%', background: 'transparent', border: 'none', color: '#fff', fontSize: '16px', outline: 'none' }}
-                  />
-                </div>
-
-                {/* QR Code Divider */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
-                  <div style={{ flex: 1, height: '1px', background: '#1f1f1f' }} />
-                  <div style={{ color: '#64748b', fontSize: '12px' }}>or scan QR code</div>
-                  <div style={{ flex: 1, height: '1px', background: '#1f1f1f' }} />
-                </div>
-
-                {/* Mock QR Code */}
-                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '32px' }}>
-                  <div style={{
-                    width: '160px', height: '160px',
-                    background: '#fff',
-                    borderRadius: '16px',
-                    padding: '12px',
-                    boxShadow: '0 4px 24px rgba(255,255,255,0.1)'
-                  }}>
-                    <img 
-                      src={`https://api.qrserver.com/v1/create-qr-code/?size=136x136&data=upi://pay?pa=skriibe@okaxis&pn=Skriibe&am=${price}`} 
-                      alt="QR Code"
-                      style={{ width: '100%', height: '100%', display: 'block' }}
-                    />
-                  </div>
-                </div>
-              </>
+            ) : (
+              <PaymentButton 
+                amount={price} 
+                courseName={`Ask @${creator.handle}`} 
+                disabled={!agreed || question.length < 20 || !buyerName.trim() || !buyerEmail.trim() || buyerPhone.length !== 10 || submitLoading}
+                onSuccess={(paymentId) => {
+                  handleSubmit();
+                }}
+              />
             )}
 
-            {paymentTab === 'Card' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
-                <div style={{ background: '#131313', border: '1px solid #1f1f1f', borderRadius: '16px', padding: '16px' }}>
-                  <div style={{ color: '#64748b', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '8px' }}>CARD NUMBER</div>
-                  <input 
-                    type="text" 
-                    placeholder="0000 0000 0000 0000"
-                    maxLength={19}
-                    style={{ width: '100%', background: 'transparent', border: 'none', color: '#fff', fontSize: '16px', outline: 'none', letterSpacing: '1px' }}
-                  />
-                </div>
-                <div style={{ display: 'flex', gap: '16px' }}>
-                  <div style={{ flex: 1, background: '#131313', border: '1px solid #1f1f1f', borderRadius: '16px', padding: '16px' }}>
-                    <div style={{ color: '#64748b', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '8px' }}>EXPIRY</div>
-                    <input 
-                      type="text" 
-                      placeholder="MM/YY"
-                      maxLength={5}
-                      style={{ width: '100%', background: 'transparent', border: 'none', color: '#fff', fontSize: '16px', outline: 'none', letterSpacing: '1px' }}
-                    />
-                  </div>
-                  <div style={{ flex: 1, background: '#131313', border: '1px solid #1f1f1f', borderRadius: '16px', padding: '16px' }}>
-                    <div style={{ color: '#64748b', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '8px' }}>CVV</div>
-                    <input 
-                      type="password" 
-                      placeholder="•••"
-                      maxLength={4}
-                      style={{ width: '100%', background: 'transparent', border: 'none', color: '#fff', fontSize: '16px', outline: 'none', letterSpacing: '2px' }}
-                    />
-                  </div>
-                </div>
-                <div style={{ background: '#131313', border: '1px solid #1f1f1f', borderRadius: '16px', padding: '16px' }}>
-                  <div style={{ color: '#64748b', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '8px' }}>CARDHOLDER NAME</div>
-                  <input 
-                    type="text" 
-                    placeholder="e.g. Amit Kumar"
-                    style={{ width: '100%', background: 'transparent', border: 'none', color: '#fff', fontSize: '16px', outline: 'none' }}
-                  />
-                </div>
+            {!isFollowUp && (
+              <div style={{ color: '#64748b', fontSize: '12px', marginTop: '20px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px' }}>
+                <span>🔒</span> Secured by Razorpay · India's most trusted payments
               </div>
             )}
-
-            {paymentTab === 'Net Banking' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
-                <div style={{ background: '#131313', border: '1px solid #1f1f1f', borderRadius: '16px', padding: '16px' }}>
-                  <div style={{ color: '#64748b', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '16px' }}>SELECT BANK</div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                    {['HDFC Bank', 'ICICI Bank', 'SBI', 'Axis Bank'].map(bank => (
-                      <div key={bank} style={{ background: '#1a1a1a', border: '1px solid #2a2a2a', borderRadius: '12px', padding: '16px 12px', textAlign: 'center', color: '#fff', fontSize: '14px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s' }}
-                           onMouseOver={(e) => { e.currentTarget.style.background = '#2a2a2a'; e.currentTarget.style.borderColor = '#38bdf8'; }}
-                           onMouseOut={(e) => { e.currentTarget.style.background = '#1a1a1a'; e.currentTarget.style.borderColor = '#2a2a2a'; }}>
-                        {bank}
-                      </div>
-                    ))}
-                  </div>
-                  <select style={{ width: '100%', marginTop: '16px', background: '#1a1a1a', border: '1px solid #2a2a2a', borderRadius: '12px', padding: '16px', color: '#fff', fontSize: '14px', outline: 'none', cursor: 'pointer' }}>
-                    <option value="">Search other banks...</option>
-                    <option value="kotak">Kotak Mahindra Bank</option>
-                    <option value="pnb">Punjab National Bank</option>
-                    <option value="yes">Yes Bank</option>
-                    <option value="bob">Bank of Baroda</option>
-                  </select>
-                </div>
-              </div>
-            )}
-
-            {/* Error Area */}
-            {submitError && (
-              <div style={{ color: '#ef4444', fontSize: '14px', marginBottom: '16px', background: 'rgba(239,68,68,0.1)', padding: '12px', borderRadius: '8px', textAlign: 'center' }}>
-                {submitError}
-              </div>
-            )}
-
-            {/* Final Pay Button */}
-            <button
-              onClick={handleSubmit}
-              disabled={submitLoading}
-              style={{
-                background: 'linear-gradient(90deg, #34d399, #10b981)',
-                color: '#000', border: 'none', borderRadius: '16px',
-                padding: '16px', fontWeight: '700', fontSize: '16px',
-                width: '100%',
-                cursor: submitLoading ? 'not-allowed' : 'pointer',
-                opacity: submitLoading ? 0.7 : 1,
-                boxShadow: '0 4px 20px rgba(16, 185, 129, 0.4)'
-              }}
-            >
-              {submitLoading ? 'Processing Payment...' : `Pay ₹${price} →`}
-            </button>
-
-            {/* Footer */}
-            <div style={{ textAlign: 'center', marginTop: '24px' }}>
-              <div style={{ color: '#64748b', fontSize: '12px', marginBottom: '8px' }}>
-                GPay · PhonePe · Paytm · BHIM UPI
-              </div>
-              <div style={{ color: '#64748b', fontSize: '11px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '4px' }}>
-                <span style={{ color: '#fb923c' }}>🔒</span> 256-bit encrypted · Secured by Razorpay
-              </div>
-            </div>
 
           </div>
         )}

@@ -30,7 +30,13 @@ export const Field = ({ label, value, placeholder, onChange, type = 'text', requ
         fontWeight: 700,
         textAlign: 'left'
       }}>
-        {label}
+        {typeof label === 'string' && label.includes('*') ? (
+          <>
+            {label.split('*')[0]}<span style={{ color: '#ef4444' }}>*</span>{label.split('*')[1]}
+          </>
+        ) : (
+          label
+        )}
       </label>
       {onChange || type !== 'text' ? (
         <input

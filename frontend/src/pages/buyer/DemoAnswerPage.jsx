@@ -135,10 +135,10 @@ const DemoAnswerPage = () => {
               <div style={{ fontSize: '1.2rem' }}>💬</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                 <div style={{ color: '#22c55e', fontWeight: '800', fontSize: '0.95rem' }}>1 free follow-up available</div>
-                <div style={{ color: '#475569', fontSize: '0.8rem' }}>Valid for 7 days · Ask now</div>
+                <div style={{ color: '#475569', fontSize: '0.8rem' }}>Valid for 24 hours · Ask now</div>
               </div>
             </div>
-            <button style={{
+            <button onClick={() => window.location.href = `/creator/${handle}?isFollowUp=true`} style={{
               background: '#22c55e',
               color: '#000000',
               border: 'none',

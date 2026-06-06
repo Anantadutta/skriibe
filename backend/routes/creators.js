@@ -13,7 +13,8 @@ const Creator = require('../models/Creator');
 const AdminAlert = require('../models/AdminAlert');
 const otpStore = require('../utils/otpStore');
 const { verifyCreatorToken } = require('../middleware/auth');
-const { sendWelcomeEmail, sendProfileSubmittedEmail } = require('../utils/emailService');
+const { sendWelcomeEmail, sendProfileSubmittedEmail, sendPasswordResetEmail } = require('../utils/emailService');
+const crypto = require('crypto');
 
 // Multer setup for avatar uploads (in-memory for now or local uploads folder)
 const storage = multer.diskStorage({
@@ -154,7 +155,7 @@ router.post('/verify-otp', async (req, res) => {
     maxAge: 7 * 24 * 60 * 60 * 1000
   });
 
-  const onboardingComplete = !!(creator.name && creator.handle && creator.ama_enabled);
+  const onboardingComplete = !!creator.handle;
 
   res.json({
     success: true,
@@ -241,6 +242,8 @@ router.post('/email-login', async (req, res) => {
     return res.status(400).json({ message: 'No account found with this email.' });
   }
 
+
+
   if (creator.password !== password) {
     return res.status(400).json({ message: 'Invalid credentials.' });
   }
@@ -258,7 +261,7 @@ router.post('/email-login', async (req, res) => {
     maxAge: 7 * 24 * 60 * 60 * 1000
   });
 
-  const onboardingComplete = !!(creator.name && creator.handle && creator.ama_enabled);
+  const onboardingComplete = !!creator.handle;
 
   res.json({
     success: true,
@@ -270,6 +273,69 @@ router.post('/email-login', async (req, res) => {
       onboardingComplete
     }
   });
+});
+
+/**
+ * @route POST /api/creators/forgot-password
+ * @desc Request a password reset link
+ */
+router.post('/forgot-password', async (req, res) => {
+  try {
+    await connectDB();
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ message: 'Email required' });
+
+    const creator = await Creator.findOne({ email: email.toLowerCase() });
+    if (creator) {
+      const resetToken = crypto.randomBytes(32).toString('hex');
+      creator.resetPasswordToken = resetToken;
+      creator.resetPasswordExpires = new Date(Date.now() + 30 * 60 * 1000); // 30 mins
+      await creator.save();
+      
+      const resetLink = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/creator/reset-password/${resetToken}`;
+      await sendPasswordResetEmail(creator.email, creator.name, resetLink);
+    }
+
+    res.json({ success: true, message: "If this email exists, you'll receive a link" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+/**
+ * @route POST /api/creators/reset-password
+ * @desc Reset the creator's password
+ */
+router.post('/reset-password', async (req, res) => {
+  try {
+    await connectDB();
+    const { token, password } = req.body;
+    if (!token || !password) return res.status(400).json({ message: 'Token and new password required' });
+
+    if (password.length < 8 || !/[0-9\\W]/.test(password)) {
+      return res.status(400).json({ message: 'Password must be at least 8 characters long and contain at least one number or special character.' });
+    }
+
+    const creator = await Creator.findOne({
+      resetPasswordToken: token,
+      resetPasswordExpires: { $gt: new Date() }
+    });
+
+    if (!creator) {
+      return res.status(400).json({ message: 'Password reset token is invalid or has expired.' });
+    }
+
+    creator.password = password; // Creator's currently save raw passwords
+    creator.resetPasswordToken = undefined;
+    creator.resetPasswordExpires = undefined;
+    await creator.save();
+
+    res.json({ success: true, message: 'Password has been reset successfully.' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
 });
 
 /**
@@ -308,12 +374,13 @@ router.post('/check-handle', async (req, res) => {
  * @desc Save profile data
  */
 router.post('/onboarding/profile', verifyCreatorToken, async (req, res) => {
-  const { name, handle, email, bio, expertise, instagramHandle } = req.body;
+  const { name, handle, email, phone, bio, expertise, instagramHandle } = req.body;
 
   // Validation
   if (!name || name.length < 2 || name.length > 60) return res.status(400).json({ message: 'Invalid name' });
   if (!handle || !/^[a-z0-9_]{3,30}$/.test(handle)) return res.status(400).json({ message: 'Invalid handle' });
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ message: 'Invalid email address' });
+  if (!phone || !/^[0-9]{10}$/.test(phone)) return res.status(400).json({ message: 'Invalid phone number' });
   if (bio && bio.length > 200) return res.status(400).json({ message: 'Bio too long' });
   if (!Array.isArray(expertise) || expertise.length === 0) return res.status(400).json({ message: 'Expertise required' });
 
@@ -327,9 +394,13 @@ router.post('/onboarding/profile', verifyCreatorToken, async (req, res) => {
   const existingEmail = await Creator.findOne({ email, _id: { $ne: req.creator.creatorId } });
   if (existingEmail) return res.status(400).json({ message: 'Email already in use' });
 
+  // Check phone uniqueness excluding current creator
+  const existingPhone = await Creator.findOne({ phone, _id: { $ne: req.creator.creatorId } });
+  if (existingPhone) return res.status(400).json({ message: 'Phone number already in use' });
+
   const updatedCreator = await Creator.findByIdAndUpdate(
     req.creator.creatorId,
-    { name, handle, email, bio, expertise, instagramHandle },
+    { name, handle, email, phone, bio, expertise, instagramHandle },
     { new: true }
   );
 
@@ -350,15 +421,18 @@ router.post('/onboarding/profile', verifyCreatorToken, async (req, res) => {
  * @desc Save pricing data and enable AMA
  */
 router.post('/onboarding/pricing', verifyCreatorToken, async (req, res) => {
-  const { price, dailyCap } = req.body;
+  const { price, dailyCap, weeklyGoal } = req.body;
 
   if (typeof price !== 'number' || price < 10 || price > 9999) return res.status(400).json({ message: 'Invalid price' });
   if (typeof dailyCap !== 'number' || dailyCap < 5 || dailyCap > 100) return res.status(400).json({ message: 'Invalid daily cap' });
 
+  const updateData = { price, dailyCap, ama_enabled: true };
+  if (typeof weeklyGoal === 'number') updateData.weeklyGoal = weeklyGoal;
+
   await connectDB();
   const updatedCreator = await Creator.findByIdAndUpdate(
     req.creator.creatorId,
-    { price, dailyCap, ama_enabled: true },
+    updateData,
     { new: true }
   );
 
@@ -374,10 +448,18 @@ router.post('/onboarding/pricing', verifyCreatorToken, async (req, res) => {
  * @desc Link bank account
  */
 router.post('/link-bank', verifyCreatorToken, async (req, res) => {
+  const { pan, accountName, accountNumber, ifsc, phone } = req.body || {};
   await connectDB();
+  const updateData = { bankLinked: true };
+  if (pan) updateData.pan = pan;
+  if (accountName) updateData.bankAccountName = accountName;
+  if (accountNumber) updateData.bankAccountNumber = accountNumber;
+  if (ifsc) updateData.bankIfsc = ifsc;
+  if (phone) updateData.phone = phone;
+
   const updatedCreator = await Creator.findByIdAndUpdate(
     req.creator.creatorId,
-    { bankLinked: true },
+    updateData,
     { new: true }
   );
 
@@ -411,6 +493,26 @@ router.post('/toggle-live', verifyCreatorToken, async (req, res) => {
 router.post('/logout', (req, res) => {
   res.clearCookie('creator_token');
   res.json({ success: true });
+});
+
+/**
+ * @route POST /api/creators/settings
+ * @desc Update general settings
+ */
+router.post('/settings', verifyCreatorToken, async (req, res) => {
+  const { weeklyGoal, pricePerQuestion, dailyCap, autoPause } = req.body;
+  const updateData = {};
+  if (typeof weeklyGoal === 'number') updateData.weeklyGoal = weeklyGoal;
+  if (typeof pricePerQuestion === 'number') updateData.pricePerQuestion = pricePerQuestion;
+  if (typeof dailyCap === 'number') updateData.dailyCap = dailyCap;
+  if (typeof autoPause === 'boolean') updateData.autoPause = autoPause;
+  await connectDB();
+  const updatedCreator = await Creator.findByIdAndUpdate(
+    req.creator.creatorId,
+    updateData,
+    { new: true }
+  );
+  res.json({ success: true, creator: updatedCreator });
 });
 
 // Instagram OAuth routes

@@ -7,6 +7,10 @@ const DisputeScreen = () => {
   const { id } = useParams();
   const [dispute, setDispute] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isBanning, setIsBanning] = useState(false);
+  const [showBanModal, setShowBanModal] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   useEffect(() => {
     const fetchDispute = async () => {
@@ -25,6 +29,39 @@ const DisputeScreen = () => {
 
   if (loading) return <div style={{ color: '#fff', padding: '40px', textAlign: 'center' }}>Loading dispute details...</div>;
   if (!dispute) return <div style={{ color: '#ef4444', padding: '40px', textAlign: 'center' }}>Dispute not found</div>;
+
+  const handleBanBuyer = () => {
+    setShowBanModal(true);
+  };
+
+  const executeBanBuyer = async () => {
+    setShowBanModal(false);
+    setIsBanning(true);
+    try {
+      await axios.post(`http://localhost:5000/api/admin/buyer-disputes/${id}/ban`, {}, { withCredentials: true });
+      alert('Buyer has been banned successfully.');
+      navigate('/admin/buyer-disputes');
+    } catch (err) {
+      console.error('Error banning buyer:', err);
+      alert('Failed to ban buyer. They might not have an account yet.');
+    } finally {
+      setIsBanning(false);
+    }
+  };
+
+  const executeDeleteDispute = async () => {
+    setShowDeleteModal(false);
+    setIsDeleting(true);
+    try {
+      await axios.delete(`http://localhost:5000/api/admin/buyer-disputes/${id}`, { withCredentials: true });
+      navigate('/admin/buyer-disputes');
+    } catch (err) {
+      console.error('Error deleting dispute:', err);
+      alert('Failed to delete dispute: ' + (err.response?.data?.error || err.message));
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   return (
     <div style={{ padding: '32px 24px', maxWidth: '480px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -142,22 +179,173 @@ const DisputeScreen = () => {
         </button>
       </div>
 
-      <button 
-        onClick={() => navigate('/admin/buyers')}
-        style={{ 
-          background: 'rgba(239, 68, 68, 0.1)', 
-          color: '#EF4444', 
-          border: '1px dashed rgba(239, 68, 68, 0.5)', 
-          padding: '16px', 
-          borderRadius: '12px', 
-          fontWeight: 'bold', 
-          fontSize: '0.9rem',
-          cursor: 'pointer',
-          marginTop: '16px'
-        }}
-      >
-        Ban this buyer
-      </button>
+      <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
+        <button 
+          onClick={handleBanBuyer}
+          disabled={isBanning || isDeleting}
+          style={{ 
+            flex: 1,
+            background: 'rgba(239, 68, 68, 0.1)', 
+            color: '#EF4444', 
+            border: '1px dashed rgba(239, 68, 68, 0.5)', 
+            padding: '16px', 
+            borderRadius: '12px', 
+            fontWeight: 'bold', 
+            fontSize: '0.9rem',
+            cursor: (isBanning || isDeleting) ? 'not-allowed' : 'pointer',
+            opacity: isBanning ? 0.7 : 1
+          }}
+        >
+          {isBanning ? 'Banning...' : 'Ban this buyer'}
+        </button>
+
+        <button 
+          onClick={() => setShowDeleteModal(true)}
+          disabled={isBanning || isDeleting}
+          style={{ 
+            flex: 1,
+            background: 'rgba(239, 68, 68, 0.1)', 
+            color: '#EF4444', 
+            border: '1px solid rgba(239, 68, 68, 0.3)', 
+            padding: '16px', 
+            borderRadius: '12px', 
+            fontWeight: 'bold', 
+            fontSize: '0.9rem',
+            cursor: (isBanning || isDeleting) ? 'not-allowed' : 'pointer',
+            opacity: isDeleting ? 0.7 : 1
+          }}
+        >
+          {isDeleting ? 'Deleting...' : 'Delete Dispute'}
+        </button>
+      </div>
+
+      {showBanModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0,0,0,0.8)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+          padding: '24px'
+        }}>
+          <div style={{
+            background: '#13131A',
+            border: '1px solid #2A2A35',
+            borderRadius: '16px',
+            padding: '24px',
+            width: '100%',
+            maxWidth: '320px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '16px'
+          }}>
+            <h3 style={{ margin: 0, color: '#fff', fontSize: '1.1rem' }}>
+              Are you sure you want to ban this buyer?
+            </h3>
+            <p style={{ margin: 0, color: '#94a3b8', fontSize: '0.9rem', lineHeight: '1.4' }}>
+              They will no longer be able to ask questions to any creators.
+            </p>
+            <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
+              <button
+                onClick={() => setShowBanModal(false)}
+                style={{
+                  flex: 1,
+                  background: 'transparent',
+                  color: '#94a3b8',
+                  border: '1px solid #2A2A35',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  fontWeight: 'bold',
+                  cursor: 'pointer'
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={executeBanBuyer}
+                style={{
+                  flex: 1,
+                  background: 'rgba(239, 68, 68, 0.1)',
+                  color: '#EF4444',
+                  border: '1px solid rgba(239, 68, 68, 0.3)',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  fontWeight: 'bold',
+                  cursor: 'pointer'
+                }}
+              >
+                OK
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showDeleteModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0,0,0,0.8)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+          padding: '24px'
+        }}>
+          <div style={{
+            background: '#13131A',
+            border: '1px solid #2A2A35',
+            borderRadius: '16px',
+            padding: '24px',
+            width: '100%',
+            maxWidth: '320px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '16px'
+          }}>
+            <h3 style={{ margin: 0, color: '#fff', fontSize: '1.1rem' }}>
+              Delete this dispute?
+            </h3>
+            <p style={{ margin: 0, color: '#94a3b8', fontSize: '0.9rem', lineHeight: '1.4' }}>
+              This action cannot be undone. The dispute will be permanently removed.
+            </p>
+            <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                style={{
+                  flex: 1,
+                  background: 'transparent',
+                  color: '#94a3b8',
+                  border: '1px solid #2A2A35',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  fontWeight: 'bold',
+                  cursor: 'pointer'
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={executeDeleteDispute}
+                style={{
+                  flex: 1,
+                  background: 'rgba(239, 68, 68, 0.1)',
+                  color: '#EF4444',
+                  border: '1px solid rgba(239, 68, 68, 0.3)',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  fontWeight: 'bold',
+                  cursor: 'pointer'
+                }}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

@@ -403,7 +403,7 @@ const CreatorSharePage = () => {
         }}>
           {/* Back button */}
           <button
-            onClick={() => navigate('/dashboard')}
+            onClick={() => navigate('/creator/dashboard', { state: { creator } })}
             style={{
               background: 'rgba(255, 255, 255, 0.05)',
               border: '1px solid rgba(255, 255, 255, 0.08)',
@@ -684,7 +684,7 @@ const CreatorSharePage = () => {
 
           <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
             <button
-              onClick={() => navigate('/creator/dashboard')}
+              onClick={() => navigate('/creator/dashboard', { state: { creator } })}
               className="copy-link-btn"
               style={{ flex: 1, background: '#1A1A1A', border: '1px solid #2A2A2A', color: '#ffffff', boxShadow: 'none' }}
             >

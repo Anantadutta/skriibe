@@ -12,6 +12,7 @@ const CreatorCard = ({ creator }) => {
     bio,
     expertise,
     pricePerQuestion,
+    price,
     stats,
     verified,
     isLive,
@@ -20,6 +21,7 @@ const CreatorCard = ({ creator }) => {
   } = creator;
 
   const displayExpertise = expertise && expertise.length > 0 ? expertise[0] : 'General';
+  const displayPrice = pricePerQuestion || price || 99;
   
   // Format reply time (e.g. 1.4h)
   const formatTime = (time) => {
@@ -33,10 +35,10 @@ const CreatorCard = ({ creator }) => {
       background: '#131313',
       border: '1px solid #2a2a2a',
       borderRadius: '20px',
-      padding: '24px',
+      padding: '14px',
       display: 'flex',
       flexDirection: 'column',
-      gap: '16px',
+      gap: '10px',
       color: '#ffffff',
       transition: 'transform 0.2s, box-shadow 0.2s',
     }}
@@ -50,7 +52,7 @@ const CreatorCard = ({ creator }) => {
     }}>
       
       {/* Avatar & Live Badge */}
-      <div style={{ position: 'relative', width: '64px', height: '64px' }}>
+      <div style={{ position: 'relative', width: '56px', height: '56px' }}>
         <div style={{
           width: '100%',
           height: '100%',
@@ -59,7 +61,7 @@ const CreatorCard = ({ creator }) => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          fontSize: '24px',
+          fontSize: '20px',
           fontWeight: '700',
           color: '#ffffff',
           overflow: 'hidden',
@@ -91,16 +93,16 @@ const CreatorCard = ({ creator }) => {
       </div>
 
       {/* Name and Handle */}
-      <div style={{ marginTop: '8px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '700', letterSpacing: '-0.3px' }}>{name}</h3>
+      <div style={{ marginTop: '4px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '700', letterSpacing: '-0.3px' }}>{name}</h3>
           {(verified || true) && ( // Mock verified for now to match screenshot
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M22.5 12L20.4 9.4L20.7 6.1L17.5 5.4L15.6 2.7L12 3.9L8.4 2.7L6.5 5.4L3.3 6.1L3.6 9.4L1.5 12L3.6 14.6L3.3 17.9L6.5 18.6L8.4 21.3L12 20.1L15.6 21.3L17.5 18.6L20.7 17.9L20.4 14.6L22.5 12ZM10.5 16.5L6.8 12.8L8.1 11.5L10.5 13.9L16.2 8.2L17.5 9.5L10.5 16.5Z" fill="#0ea5e9"/>
             </svg>
           )}
         </div>
-        <div style={{ color: '#94a3b8', fontSize: '13px', marginTop: '2px' }}>@{handle}</div>
+        <div style={{ color: '#94a3b8', fontSize: '12px', marginTop: '2px' }}>@{handle}</div>
       </div>
 
       {/* Topic Tag */}
@@ -109,9 +111,9 @@ const CreatorCard = ({ creator }) => {
           display: 'inline-block',
           background: 'rgba(6, 182, 212, 0.1)',
           color: '#06b6d4',
-          fontSize: '11px',
+          fontSize: '10px',
           fontWeight: '600',
-          padding: '4px 10px',
+          padding: '4px 8px',
           borderRadius: '12px',
           border: '1px solid rgba(6, 182, 212, 0.2)'
         }}>
@@ -119,38 +121,43 @@ const CreatorCard = ({ creator }) => {
         </span>
       </div>
 
-      {/* Bio */}
+      {/* Welcome Message / Bio */}
       <div style={{
         color: '#e2e8f0',
-        fontSize: '13px',
-        lineHeight: '1.5',
-        height: '40px', // fixed height to align bottoms
+        fontSize: '12px',
+        lineHeight: '1.4',
+        height: '50px', // 3 lines * 1.4 * 12 = ~50px
         overflow: 'hidden',
         display: '-webkit-box',
-        WebkitLineClamp: 2,
+        WebkitLineClamp: 3,
         WebkitBoxOrient: 'vertical'
       }}>
-        {bio}
+        {bio ? bio : (
+          <>
+            <span style={{ fontWeight: '600' }}>Welcome from {name}</span><br/>
+            Hi, thanks for viewing my account, go ahead and ask a question.
+          </>
+        )}
       </div>
 
       {/* Stats */}
       <div style={{
         display: 'grid',
         gridTemplateColumns: '1fr 1fr 1fr',
-        gap: '8px',
-        marginTop: '8px'
+        gap: '4px',
+        marginTop: '4px'
       }}>
         <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <span style={{ fontSize: '15px', fontWeight: '700' }}>₹{pricePerQuestion}</span>
-          <span style={{ fontSize: '11px', color: '#94a3b8' }}>per Q</span>
+          <span style={{ fontSize: '14px', fontWeight: '700' }}>₹{displayPrice}</span>
+          <span style={{ fontSize: '10px', color: '#94a3b8' }}>per Q</span>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <span style={{ fontSize: '15px', fontWeight: '700' }}>{stats?.replyRate || 95}%</span>
-          <span style={{ fontSize: '11px', color: '#94a3b8' }}>reply rate</span>
+          <span style={{ fontSize: '14px', fontWeight: '700' }}>{stats?.replyRate || 95}%</span>
+          <span style={{ fontSize: '10px', color: '#94a3b8' }}>reply rate</span>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <span style={{ fontSize: '15px', fontWeight: '700' }}>{formatTime(stats?.avgReplyTime || '2h')}</span>
-          <span style={{ fontSize: '11px', color: '#94a3b8' }}>avg reply</span>
+          <span style={{ fontSize: '14px', fontWeight: '700' }}>{formatTime(stats?.avgReplyTime || '2h')}</span>
+          <span style={{ fontSize: '10px', color: '#94a3b8' }}>avg reply</span>
         </div>
       </div>
 
@@ -162,9 +169,9 @@ const CreatorCard = ({ creator }) => {
           color: '#000',
           border: 'none',
           borderRadius: '100px',
-          padding: '12px 24px',
+          padding: '10px 20px',
           fontWeight: '700',
-          fontSize: '14px',
+          fontSize: '13px',
           width: '100%',
           cursor: 'pointer',
           transition: 'transform 0.2s',
