@@ -153,7 +153,7 @@ router.get('/creators', async (req, res) => {
         if (q.status === 'expired' || (q.answeredAt && q.expiresAt && q.answeredAt > q.expiresAt)) slaBreaches++;
       });
 
-      const replyRate = totalQuestions > 0 ? Math.round((answered / totalQuestions) * 100) : 100;
+      const replyRate = totalQuestions > 0 ? Math.round((answered / totalQuestions) * 100) : 0;
       const refundRate = totalQuestions > 0 ? Math.round((refunds / totalQuestions) * 100) : 0;
 
       let healthStatus = 'Healthy';
@@ -228,6 +228,14 @@ router.get('/buyer-disputes', async (req, res) => {
     const disputes = await Question.find({ status: 'flagged' })
       .populate('creatorId', 'name handle avatarUrl email')
       .sort({ updatedAt: -1 }); // Recently flagged first
+
+    for (let d of disputes) {
+      if (d.isBuyerBanned && (!d.adminDecision || d.adminDecision === 'pending')) {
+        d.adminDecision = 'banned';
+        await d.save();
+      }
+    }
+
     res.json(disputes);
   } catch (err) {
     console.error(err);
@@ -398,18 +406,58 @@ router.get('/debug-db', async (req, res) => {
 
 /**
  * @route DELETE /api/admin/buyer-disputes/:id
- * @desc Delete a dispute completely from the database
+ * @desc Soft delete a dispute so it moves to resolved
  */
 router.delete('/buyer-disputes/:id', async (req, res) => {
   try {
     const { id } = req.params;
     await connectDB();
-    const dispute = await Question.findByIdAndDelete(id);
+    const dispute = await Question.findById(id);
     if (!dispute) return res.status(404).json({ error: 'Dispute not found' });
-    res.json({ success: true, message: 'Dispute deleted successfully' });
+    dispute.adminDecision = 'deleted';
+    await dispute.save();
+    res.json({ success: true, message: 'Dispute marked as deleted' });
   } catch (err) {
     console.error('Delete error:', err);
     res.status(500).json({ error: 'Server error deleting dispute: ' + err.message });
+  }
+});
+
+/**
+ * @route POST /api/admin/buyer-disputes/:id/refund
+ * @desc Refund the buyer and resolve dispute
+ */
+router.post('/buyer-disputes/:id/refund', async (req, res) => {
+  try {
+    const { id } = req.params;
+    await connectDB();
+    const dispute = await Question.findById(id);
+    if (!dispute) return res.status(404).json({ error: 'Dispute not found' });
+    dispute.adminDecision = 'fan_wins';
+    await dispute.save();
+    res.json({ success: true, message: 'Refund issued' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+/**
+ * @route POST /api/admin/buyer-disputes/:id/dismiss
+ * @desc Dismiss dispute in favor of creator
+ */
+router.post('/buyer-disputes/:id/dismiss', async (req, res) => {
+  try {
+    const { id } = req.params;
+    await connectDB();
+    const dispute = await Question.findById(id);
+    if (!dispute) return res.status(404).json({ error: 'Dispute not found' });
+    dispute.adminDecision = 'creator_wins';
+    await dispute.save();
+    res.json({ success: true, message: 'Dispute dismissed' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
@@ -452,6 +500,10 @@ router.post('/buyer-disputes/:id/ban', async (req, res) => {
     }
 
     await fan.save();
+    
+    dispute.isBuyerBanned = true;
+    dispute.adminDecision = 'banned';
+    await dispute.save();
 
     res.json({ success: true, message: 'Buyer banned successfully' });
   } catch (err) {

@@ -5,9 +5,15 @@ const RefundDispute = () => {
   const navigate = useNavigate();
   const { id } = useParams();
 
-  const handleConfirm = () => {
-    alert(`Refund issued to buyer for Dispute #${id}`);
-    navigate('/admin/dashboard');
+  const handleConfirm = async () => {
+    try {
+      const axios = require('axios');
+      await axios.post(`http://localhost:5000/api/admin/buyer-disputes/${id}/refund`, {}, { withCredentials: true });
+      navigate('/admin/buyer-disputes');
+    } catch (err) {
+      console.error(err);
+      alert('Error refunding dispute');
+    }
   };
 
   return (

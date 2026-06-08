@@ -197,23 +197,7 @@ const FanDiscovery = () => {
               </div>
             </div>
           </div>
-          <div style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '8px',
-            background: 'rgba(16, 185, 129, 0.1)',
-            border: '1px solid rgba(16, 185, 129, 0.2)',
-            padding: '6px 16px',
-            borderRadius: '20px',
-            color: '#10b981',
-            fontWeight: '700',
-            fontSize: '12px',
-            letterSpacing: '1px',
-            marginBottom: '24px'
-          }}>
-            <div style={{ width: '6px', height: '6px', background: '#10b981', borderRadius: '50%', boxShadow: '0 0 8px #10b981' }} />
-            {creators.length} CREATORS LIVE NOW
-          </div>
+
           
           <h1 style={{ fontSize: '36px', fontWeight: '800', lineHeight: '1.1', margin: '0 0 16px 0', letterSpacing: '-2px', textAlign: 'left', width: 'fit-content', WebkitFontSmoothing: 'antialiased', MozOsxFontSmoothing: 'grayscale' }}>
             Ask anyone.<br />

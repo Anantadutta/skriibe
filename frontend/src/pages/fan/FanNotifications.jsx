@@ -26,10 +26,17 @@ const FanNotifications = () => {
 
   const handleNotificationClick = async (notif) => {
     if (!notif.isRead) {
+      // Optimistically update local state
+      setNotifications(prev => prev.map(n => n._id === notif._id ? { ...n, isRead: true } : n));
+      // Dispatch event to update navbar immediately
+      window.dispatchEvent(new Event('notificationRead'));
+      
       try {
         await api.patch(`/questions/notifications/${notif._id}/read`);
       } catch (err) {
         console.error('Failed to mark as read', err);
+        // Revert on failure
+        setNotifications(prev => prev.map(n => n._id === notif._id ? { ...n, isRead: false } : n));
       }
     }
     // Navigate to history to see the answer

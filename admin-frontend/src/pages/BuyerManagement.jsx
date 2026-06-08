@@ -49,13 +49,27 @@ const BuyerManagement = () => {
                 <div style={{ color: '#64748b', fontSize: '0.75rem' }}>Joined: {new Date(fan.createdAt).toLocaleDateString()}</div>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                <div style={{ color: '#10B981', fontSize: '0.75rem', fontWeight: 'bold', letterSpacing: '1px' }}>Active</div>
-                <button 
-                  onClick={() => alert('Block action pending')}
-                  style={{ background: '#1E1E2D', color: '#f8fafc', border: 'none', padding: '8px 16px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.85rem' }}
-                >
-                  Block
-                </button>
+                {fan.isBanned ? (
+                  <>
+                    <div style={{ color: '#EF4444', fontSize: '0.75rem', fontWeight: 'bold', letterSpacing: '1px' }}>BANNED</div>
+                    <button 
+                      onClick={() => navigate(`/admin/buyers/unban?id=${fan._id}`)}
+                      style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#EF4444', border: '1px solid rgba(239, 68, 68, 0.3)', padding: '8px 16px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.85rem' }}
+                    >
+                      Unblock
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <div style={{ color: '#10B981', fontSize: '0.75rem', fontWeight: 'bold', letterSpacing: '1px' }}>Active</div>
+                    <button 
+                      onClick={() => navigate(`/admin/buyers/confirm-block?id=${fan._id}`)}
+                      style={{ background: '#1E1E2D', color: '#f8fafc', border: 'none', padding: '8px 16px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.85rem' }}
+                    >
+                      Block
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           ))}

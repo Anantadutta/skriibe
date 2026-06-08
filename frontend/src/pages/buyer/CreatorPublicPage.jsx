@@ -252,7 +252,7 @@ const CreatorPublicPage = () => {
         {/* STATS ROW (3 boxes) */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
           <div style={{ background: '#1A1A1A', borderRadius: '14px', padding: '16px 8px', textAlign: 'center' }}>
-            <div style={{ fontSize: '1.4rem', fontWeight: '900', color: '#29C5F6' }}>{creator.replyRate || '94'}%</div>
+            <div style={{ fontSize: '1.4rem', fontWeight: '900', color: '#29C5F6' }}>{creator.replyRate ?? '0'}%</div>
             <div style={{ fontSize: '0.65rem', color: '#64748b', marginTop: '4px', fontWeight: '700', letterSpacing: '1px' }}>REPLY</div>
           </div>
           <div style={{ background: '#1A1A1A', borderRadius: '14px', padding: '16px 8px', textAlign: 'center' }}>
@@ -408,20 +408,22 @@ const CreatorPublicPage = () => {
             <li style={{ display: 'flex', gap: '8px' }}><span style={{ color: '#f97316' }}>·</span> One question per payment — be specific</li>
             <li style={{ display: 'flex', gap: '8px' }}><span style={{ color: '#f97316' }}>·</span> 100% refund if no reply in {creator.responseTime || '24'} hours</li>
             <li style={{ display: 'flex', gap: '8px' }}><span style={{ color: '#f97316' }}>·</span> Do not share others' personal data</li>
-            <li style={{ display: 'flex', gap: '8px' }}><span style={{ color: '#f97316' }}>·</span> <span>By logging in and using Skriibe, you agree to our <span style={{ color: '#29C5F6', cursor: 'pointer' }}>Terms of Service</span> and <span style={{ color: '#29C5F6', cursor: 'pointer' }}>Privacy Policy</span>.</span></li>
           </ul>
           
           <label style={{
-            display: 'flex', alignItems: 'center', gap: '12px', marginTop: '8px',
+            display: 'flex', alignItems: 'flex-start', gap: '12px', marginTop: '8px',
             background: '#131313', padding: '12px 16px', borderRadius: '12px', cursor: 'pointer', border: '1px solid #1A1A1A'
           }}>
             <input 
               type="checkbox" 
               checked={termsAccepted} 
               onChange={e => setTermsAccepted(e.target.checked)} 
-              style={{ width: '20px', height: '20px', accentColor: '#29C5F6', borderRadius: '4px', border: 'none' }} 
+              style={{ width: '20px', height: '20px', accentColor: '#29C5F6', borderRadius: '4px', border: 'none', marginTop: '2px', flexShrink: 0 }} 
             />
-            <span style={{ fontSize: '0.95rem', fontWeight: '600', color: '#ffffff' }}>I understand and agree</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <span style={{ fontSize: '0.95rem', fontWeight: '600', color: '#ffffff' }}>I understand and agree</span>
+              <span style={{ fontSize: '0.75rem', color: '#94a3b8', lineHeight: '1.4' }}>By logging in and using Skriibe, you agree to our <span style={{ color: '#29C5F6', cursor: 'pointer' }}>Terms of Service</span> and <span style={{ color: '#29C5F6', cursor: 'pointer' }}>Privacy Policy</span>.</span>
+            </div>
           </label>
         </div>
 

@@ -214,12 +214,16 @@ router.post('/questions/:id/reply', verifyCreatorToken, async (req, res) => {
     }
 
     if (question.fanId) {
+      const Creator = require('../models/Creator');
+      const creatorData = await Creator.findById(req.creator.creatorId);
+      const creatorName = creatorData ? creatorData.name : 'A creator';
+      
       const Notification = require('../models/Notification');
       await Notification.create({
         fanId: question.fanId,
         questionId: question._id,
         title: 'Question Answered!',
-        message: `@${req.creator.handle} has replied to your question.`
+        message: `${creatorName} has replied to your question.`
       });
     }
 

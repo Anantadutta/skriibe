@@ -105,7 +105,31 @@ router.get('/notifications', verifyFanToken, async (req, res) => {
   try {
     await connectDB();
     const Notification = require('../models/Notification');
-    const notifications = await Notification.find({ fanId: req.fan.fanId }).sort({ createdAt: -1 });
+    const Question = require('../models/Question');
+    const Creator = require('../models/Creator');
+    
+    let notifications = await Notification.find({ fanId: req.fan.fanId }).sort({ createdAt: -1 });
+    
+    // Auto-fix any existing '@undefined' notifications in the DB
+    let modified = false;
+    for (let notif of notifications) {
+      if (notif.message && notif.message.includes('@undefined')) {
+        const q = await Question.findById(notif.questionId);
+        if (q) {
+          const creator = await Creator.findById(q.creatorId);
+          if (creator) {
+            notif.message = notif.message.replace('@undefined', creator.name || creator.handle || 'A creator');
+            await notif.save();
+            modified = true;
+          }
+        }
+      }
+    }
+    
+    if (modified) {
+      notifications = await Notification.find({ fanId: req.fan.fanId }).sort({ createdAt: -1 });
+    }
+
     res.status(200).json({ success: true, notifications });
   } catch (err) {
     console.error(err);

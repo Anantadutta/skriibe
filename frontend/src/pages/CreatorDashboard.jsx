@@ -15,7 +15,7 @@ const CreatorDashboard = () => {
   const navigate = useNavigate();
 
   const [creator, setCreator] = useState(location.state?.creator || mockCreator);
-  const [isLive, setIsLive] = useState(creator.isLive);
+  const [isLive, setIsLive] = useState(creator.isLive !== false);
   const [btnHover, setBtnHover] = useState(false);
   const [questions, setQuestions] = useState([]);
   const [copied, setCopied] = useState(false);
@@ -26,7 +26,7 @@ const CreatorDashboard = () => {
         const res = await getMe();
         if (res.success) {
           setCreator(prev => ({ ...prev, ...res.creator }));
-          setIsLive(res.creator.isLive);
+          setIsLive(res.creator.isLive !== false);
         }
       } catch (error) {
         console.error('Failed to fetch creator:', error);
@@ -108,7 +108,7 @@ const CreatorDashboard = () => {
   const repliedQuestions = questions.filter(q => ['answered', 'rejected'].includes(q.status?.toLowerCase()));
   const dynamicReplyRate = resolvedQuestions.length > 0 
     ? Math.round((repliedQuestions.length / resolvedQuestions.length) * 100)
-    : 100;
+    : 0;
 
   const oneWeekAgo = new Date();
   oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
@@ -378,7 +378,7 @@ const CreatorDashboard = () => {
               </span>
             </div>
             <div style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: '2px' }}>
-              {isLive ? `Accepting questions · ₹${creator.pricePerQuestion || 99}/question` : 'Currently offline'}
+              {isLive ? `Accepting questions · ₹${creator.price || creator.pricePerQuestion || 99}/question` : 'Currently offline'}
             </div>
           </div>
 

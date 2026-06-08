@@ -9,7 +9,7 @@ const QuestionModal = ({ creator, onClose }) => {
   const [error, setError] = useState('');
 
   const price = creator.pricePerQuestion || 99;
-  const replyRate = creator.stats?.replyRate || 94;
+  const replyRate = creator.stats?.replyRate ?? 0;
   const avgReply = creator.stats?.avgReplyTime || 3.2;
   const answeredCount = 247; // Mocked for now to match screenshot
 

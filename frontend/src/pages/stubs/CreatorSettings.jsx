@@ -33,12 +33,12 @@ const CreatorSettings = () => {
     fetchCreator();
   }, [location.state?.creator]);
 
-  const [questionPrice, setQuestionPrice] = useState(creator.pricePerQuestion || creator.price || 99);
+  const [questionPrice, setQuestionPrice] = useState(creator.price || creator.pricePerQuestion || 99);
   const [dailyCap, setDailyCap] = useState(creator.dailyCap || 50);
 
   useEffect(() => {
     if (creator) {
-      if (creator.pricePerQuestion || creator.price) setQuestionPrice(creator.pricePerQuestion || creator.price);
+      if (creator.price || creator.pricePerQuestion) setQuestionPrice(creator.price || creator.pricePerQuestion);
       if (creator.dailyCap) setDailyCap(creator.dailyCap);
       if (creator.weeklyGoal) setWeeklyGoal(creator.weeklyGoal);
       if (creator.bio) setBio(creator.bio);
@@ -141,7 +141,7 @@ const CreatorSettings = () => {
     try {
       await api.post('/creators/settings', { pricePerQuestion: Number(questionPrice) });
       setIsEditingPrice(false);
-      setCreator(prev => ({ ...prev, pricePerQuestion: Number(questionPrice) }));
+      setCreator(prev => ({ ...prev, price: Number(questionPrice), pricePerQuestion: Number(questionPrice) }));
     } catch (err) {
       console.error('Failed to save price', err);
     }

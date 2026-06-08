@@ -5,7 +5,7 @@ export const mockCreator = {
   pricePerQuestion: 99,
   isLive: true,
   weeklyEarnings: 890,
-  replyRate: 94,
+  replyRate: 0,
   bankLinked: false,
 };
 

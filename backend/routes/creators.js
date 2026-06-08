@@ -426,7 +426,7 @@ router.post('/onboarding/pricing', verifyCreatorToken, async (req, res) => {
   if (typeof price !== 'number' || price < 10 || price > 9999) return res.status(400).json({ message: 'Invalid price' });
   if (typeof dailyCap !== 'number' || dailyCap < 5 || dailyCap > 100) return res.status(400).json({ message: 'Invalid daily cap' });
 
-  const updateData = { price, dailyCap, ama_enabled: true };
+  const updateData = { price, pricePerQuestion: price, dailyCap, ama_enabled: true, isLive: true };
   if (typeof weeklyGoal === 'number') updateData.weeklyGoal = weeklyGoal;
 
   await connectDB();
@@ -503,7 +503,10 @@ router.post('/settings', verifyCreatorToken, async (req, res) => {
   const { weeklyGoal, pricePerQuestion, dailyCap, autoPause } = req.body;
   const updateData = {};
   if (typeof weeklyGoal === 'number') updateData.weeklyGoal = weeklyGoal;
-  if (typeof pricePerQuestion === 'number') updateData.pricePerQuestion = pricePerQuestion;
+  if (typeof pricePerQuestion === 'number') {
+    updateData.pricePerQuestion = pricePerQuestion;
+    updateData.price = pricePerQuestion;
+  }
   if (typeof dailyCap === 'number') updateData.dailyCap = dailyCap;
   if (typeof autoPause === 'boolean') updateData.autoPause = autoPause;
   await connectDB();

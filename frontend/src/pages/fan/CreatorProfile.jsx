@@ -91,7 +91,7 @@ const CreatorProfile = () => {
   }
 
   const price = creator.pricePerQuestion || 99;
-  const replyRate = creator.stats?.replyRate || 94;
+  const replyRate = creator.stats?.replyRate ?? 0;
   const avgReply = creator.stats?.avgReplyTime || 3.2;
   const answeredCount = creator.questionsAnswered || 247;
 
@@ -461,15 +461,14 @@ const CreatorProfile = () => {
                 <li><strong style={{ color: '#fff' }}>Answers are personal opinions</strong> — not professional advice.</li>
                 <li>Not a substitute for medical, legal or financial counsel.</li>
                 <li><strong style={{ color: '#fff' }}>One question per payment</strong> — keep it specific.</li>
-                <li>100% refund if there's no reply within {creator.responseTime || '24 hours'}.</li>
+                <li>100% refund if there's no reply within 24 hours.</li>
                 <li>Don't share other people's personal data.</li>
-                <li>By logging in and using Skriibe, you agree to our <span style={{ color: '#38bdf8', cursor: 'pointer' }}>Terms of Service</span> and <span style={{ color: '#38bdf8', cursor: 'pointer' }}>Privacy Policy</span>.</li>
               </ul>
             </div>
 
             {/* Agreement Checkbox */}
             <label style={{
-              display: 'flex', alignItems: 'center', gap: '12px',
+              display: 'flex', alignItems: 'flex-start', gap: '12px',
               background: '#131313', border: '1px solid #1f1f1f',
               borderRadius: '12px', padding: '16px', cursor: 'pointer',
               marginBottom: '32px'
@@ -478,9 +477,12 @@ const CreatorProfile = () => {
                 type="checkbox" 
                 checked={agreed}
                 onChange={(e) => setAgreed(e.target.checked)}
-                style={{ width: '20px', height: '20px', accentColor: '#38bdf8', cursor: 'pointer' }}
+                style={{ width: '20px', height: '20px', accentColor: '#38bdf8', cursor: 'pointer', marginTop: '2px', flexShrink: 0 }}
               />
-              <span style={{ color: '#fff', fontSize: '14px', fontWeight: '600' }}>I understand and agree</span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <span style={{ color: '#fff', fontSize: '14px', fontWeight: '600' }}>I understand and agree</span>
+                <span style={{ color: '#94a3b8', fontSize: '12px', lineHeight: 1.4 }}>By logging in and using Skriibe, you agree to our <span style={{ color: '#38bdf8', cursor: 'pointer' }}>Terms of Service</span> and <span style={{ color: '#38bdf8', cursor: 'pointer' }}>Privacy Policy</span>.</span>
+              </div>
             </label>
 
             <h3 style={{ color: '#fff', fontSize: '18px', margin: '0 0 16px' }}>Your details</h3>

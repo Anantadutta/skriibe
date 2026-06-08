@@ -110,8 +110,15 @@ const BuyerDisputes = () => {
                     <div style={{ color: '#94a3b8', fontSize: '0.85rem' }}>Flagged by buyer: {d.buyerName || d.buyerPhone || 'Anonymous'}</div>
                   </div>
                 </div>
-                <div style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', padding: '4px 12px', borderRadius: '12px', fontSize: '0.8rem', fontWeight: 'bold', alignSelf: 'flex-start' }}>
-                  DISPUTED
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-end' }}>
+                  <div style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', padding: '4px 12px', borderRadius: '12px', fontSize: '0.8rem', fontWeight: 'bold' }}>
+                    DISPUTED
+                  </div>
+                  {d.isBuyerBanned && (
+                    <div style={{ background: '#EF4444', color: '#ffffff', padding: '4px 8px', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 'bold', textTransform: 'uppercase' }}>
+                      {d.buyerName || d.buyerPhone || 'ANONYMOUS BUYER'} HAS BEEN BANNED
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -122,7 +129,7 @@ const BuyerDisputes = () => {
 
               <div style={{ background: '#1A1A24', padding: '16px', borderRadius: '12px', marginBottom: '16px', border: '1px solid #2A2A35' }}>
                 <div style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: 'bold', letterSpacing: '1px', marginBottom: '8px', textTransform: 'uppercase' }}>QUESTION</div>
-                <div style={{ color: '#cbd5e1', fontStyle: 'italic', fontSize: '0.95rem' }}>"{d.questionText}"</div>
+                <div style={{ color: '#cbd5e1', fontStyle: 'italic', fontSize: '0.95rem', overflowWrap: 'anywhere' }}>"{d.questionText}"</div>
               </div>
 
               <div style={{ background: '#0a1922', padding: '16px', borderRadius: '12px', border: '1px solid rgba(56, 189, 248, 0.2)' }}>

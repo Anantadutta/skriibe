@@ -87,7 +87,7 @@ const OpenQuestions = () => {
               </div>
 
               <div style={{ background: '#0a0a0f', padding: '16px', borderRadius: '12px', border: '1px solid #1E1E2D' }}>
-                <div style={{ color: '#e2e8f0', fontSize: '0.95rem', lineHeight: '1.5' }}>
+                <div style={{ color: '#e2e8f0', fontSize: '0.95rem', lineHeight: '1.5', overflowWrap: 'anywhere' }}>
                   "{q.questionText}"
                 </div>
               </div>

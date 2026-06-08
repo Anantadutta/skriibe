@@ -45,7 +45,8 @@ const QuestionSchema = new mongoose.Schema(
     
     // Admin Resolution
     adminNotes: { type: String, default: '' },
-    adminDecision: { type: String, enum: ['pending', 'creator_wins', 'fan_wins'], default: 'pending' }
+    adminDecision: { type: String, enum: ['pending', 'creator_wins', 'fan_wins', 'banned', 'deleted'], default: 'pending' },
+    isBuyerBanned: { type: Boolean, default: false }
   },
   { timestamps: true }
 );

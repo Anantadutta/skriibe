@@ -41,7 +41,7 @@ const CreatorOnboardPricing = () => {
       navigate('/dashboard/share', {
         state: {
           isNewlyLive: true,
-          creator: { ...creatorData, price: Number(price), dailyCap, weeklyGoal }
+          creator: { ...creatorData, price: Number(price), dailyCap, weeklyGoal, isLive: true }
         }
       });
     } catch (err) {
@@ -514,6 +514,25 @@ const CreatorOnboardPricing = () => {
                               fontFamily: 'monospace, var(--font-mono)'
                             }}
                           />
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              document.activeElement?.blur();
+                            }}
+                            style={{
+                              background: 'rgba(6, 182, 212, 0.15)',
+                              border: '1px solid #06b6d4',
+                              color: '#06b6d4',
+                              borderRadius: '8px',
+                              padding: '8px 16px',
+                              fontSize: '12px',
+                              fontWeight: 800,
+                              cursor: 'pointer',
+                              fontFamily: 'monospace, var(--font-mono)'
+                            }}
+                          >
+                            SAVE
+                          </button>
                         </div>
                       )}
                     </div>

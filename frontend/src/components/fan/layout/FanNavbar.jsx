@@ -42,8 +42,17 @@ const FanNavbar = () => {
       } catch (err) {}
     };
 
+    const handleNotificationRead = () => {
+      setUnreadCount(prev => Math.max(0, prev - 1));
+    };
+
     fetchFanProfile();
     fetchNotifications();
+
+    window.addEventListener('notificationRead', handleNotificationRead);
+    return () => {
+      window.removeEventListener('notificationRead', handleNotificationRead);
+    };
   }, []);
 
   return (
@@ -67,7 +76,7 @@ const FanNavbar = () => {
         }
         .fan-nav-links {
           display: flex;
-          gap: 12px;
+          gap: 24px;
           flex-wrap: nowrap;
         }
         .fan-nav-link-item {
@@ -75,11 +84,11 @@ const FanNavbar = () => {
           display: flex;
           align-items: center;
           justify-content: center;
-          width: 44px;
-          height: 44px;
-          border-radius: 14px;
+          width: 50px;
+          height: 50px;
+          border-radius: 16px;
           transition: all 0.2s;
-          font-size: 20px;
+          font-size: 26px;
         }
         .fan-nav-link-item:hover {
           background: rgba(255,255,255,0.05);
@@ -165,20 +174,6 @@ const FanNavbar = () => {
           </nav>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            <div className="fan-avatar" style={{
-              background: '#fb923c',
-              width: '40px',
-              height: '40px',
-              borderRadius: '50%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontWeight: '700',
-              color: '#000',
-              fontSize: '18px'
-            }}>
-            {fanName.charAt(0).toUpperCase()}
-          </div>
           </div>
         </div>
       </header>

@@ -43,12 +43,23 @@ const AdminAlerts = () => {
 
   const handleAlertClick = (alert) => {
     if (!alert.isRead) handleMarkAsRead(alert._id);
-    if (alert.type.includes('reject') || alert.type.includes('flag')) {
-      if (alert.type === 'buyer_flag') {
-        navigate('/admin/buyer-dispute/' + alert.referenceId);
-      } else {
+    
+    switch (alert.type) {
+      case 'buyer_flag':
+        navigate('/admin/dispute/' + alert.referenceId);
+        break;
+      case 'creator_reject':
+      case 'creator_flag':
         navigate('/admin/creator-dispute/' + alert.referenceId);
-      }
+        break;
+      case 'creator_signup':
+        navigate('/admin/creators');
+        break;
+      case 'fan_signup':
+        navigate('/admin/buyers');
+        break;
+      default:
+        break;
     }
   };
 

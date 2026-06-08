@@ -143,59 +143,7 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Recent Activity */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '8px' }}>
-        <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 'bold' }}>Recent activity</h3>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          
-          <div 
-            className="bg-card-dark" 
-            style={{ padding: '16px', borderRadius: '12px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
-            onClick={() => navigate('/admin/dispute/1234')}
-          >
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-              <div style={{ fontSize: '0.85rem', fontWeight: 'bold', color: '#f8fafc' }}>Auto-refund triggered · Q#1234 · SLA breach</div>
-              <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Tap to review dispute · 2 min ago</div>
-            </div>
-            <div style={{ color: '#64748b', fontSize: '1rem' }}>›</div>
-          </div>
-
-          <div 
-            className="bg-card-dark" 
-            style={{ padding: '16px', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
-          >
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-              <div style={{ fontSize: '0.85rem', fontWeight: 'bold', color: '#f8fafc' }}>@priya_fit verified and activated</div>
-              <div style={{ fontSize: '0.75rem', color: '#64748b' }}>5 min ago</div>
-            </div>
-            <div style={{ color: '#64748b', fontSize: '1rem' }}>›</div>
-          </div>
-
-          <div 
-            className="bg-card-dark" 
-            style={{ padding: '16px', borderRadius: '12px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
-            onClick={() => navigate('/admin/verification')}
-          >
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-              <div style={{ fontSize: '0.85rem', fontWeight: 'bold', color: '#f8fafc' }}>New creator signup · @rohan_biz · pending review</div>
-              <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Tap to open verification queue</div>
-            </div>
-            <div style={{ color: '#64748b', fontSize: '1rem' }}>›</div>
-          </div>
-
-          <div 
-            className="bg-card-dark" 
-            style={{ padding: '16px', borderRadius: '12px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
-            onClick={() => navigate('/admin/dispute/1235')}
-          >
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-              <div style={{ fontSize: '0.85rem', fontWeight: 'bold', color: '#f8fafc' }}>Dispute #1235 resolved by admin</div>
-              <div style={{ fontSize: '0.75rem', color: '#64748b' }}>12 min ago</div>
-            </div>
-          </div>
-
-        </div>
-      </div>
+      {/* Removed Recent Activity section */}
     </div>
   );
 };

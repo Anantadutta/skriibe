@@ -162,12 +162,11 @@ const DisclaimerQuestion = () => {
                 <li style={{ marginBottom: '8px' }}>· Not a substitute for medical, legal or financial counsel</li>
                 <li style={{ marginBottom: '8px' }}>· One question per payment — be specific</li>
                 <li style={{ marginBottom: '8px' }}>· 100% refund if no reply in 24 hours</li>
-                <li>· Do not share others' personal data</li>
-                <li>· By logging in and using Skriibe, you agree to our <span style={{ color: 'var(--blue)', cursor: 'pointer' }}>Terms of Service</span> and <span style={{ color: 'var(--blue)', cursor: 'pointer' }}>Privacy Policy</span>.</li>
+                <li style={{ marginBottom: '8px' }}>· Do not share others' personal data</li>
               </ul>
             </div>
 
-            <label style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}>
+            <label style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', cursor: 'pointer' }}>
               <input 
                 type="checkbox" 
                 checked={accepted} 
@@ -176,12 +175,19 @@ const DisclaimerQuestion = () => {
                   width: '20px', 
                   height: '20px', 
                   accentColor: 'var(--blue)',
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  marginTop: '2px',
+                  flexShrink: 0
                 }}
               />
-              <span style={{ fontFamily: 'var(--font-body)', fontSize: '14px', color: 'var(--white)' }}>
-                I understand and agree
-              </span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <span style={{ fontFamily: 'var(--font-body)', fontSize: '14px', color: 'var(--white)' }}>
+                  I understand and agree
+                </span>
+                <span style={{ fontFamily: 'var(--font-body)', fontSize: '12px', color: 'var(--g2)', lineHeight: 1.4 }}>
+                  By logging in and using Skriibe, you agree to our <span style={{ color: 'var(--blue)', cursor: 'pointer' }}>Terms of Service</span> and <span style={{ color: 'var(--blue)', cursor: 'pointer' }}>Privacy Policy</span>.
+                </span>
+              </div>
             </label>
 
             <Button variant="primary" disabled={!accepted} onClick={() => setStep('form')}>

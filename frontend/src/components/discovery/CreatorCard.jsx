@@ -21,7 +21,7 @@ const CreatorCard = ({ creator }) => {
   } = creator;
 
   const displayExpertise = expertise && expertise.length > 0 ? expertise[0] : 'General';
-  const displayPrice = pricePerQuestion || price || 99;
+  const displayPrice = price || pricePerQuestion || 99;
   
   // Format reply time (e.g. 1.4h)
   const formatTime = (time) => {
@@ -152,7 +152,7 @@ const CreatorCard = ({ creator }) => {
           <span style={{ fontSize: '10px', color: '#94a3b8' }}>per Q</span>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <span style={{ fontSize: '14px', fontWeight: '700' }}>{stats?.replyRate || 95}%</span>
+          <span style={{ fontSize: '14px', fontWeight: '700' }}>{stats?.replyRate ?? 0}%</span>
           <span style={{ fontSize: '10px', color: '#94a3b8' }}>reply rate</span>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column' }}>

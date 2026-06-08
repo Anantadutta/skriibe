@@ -87,7 +87,7 @@ const CreatorDisputes = () => {
 
                 <div style={{ background: '#1A1A24', padding: '16px', borderRadius: '12px', marginBottom: d.adminNotes && d.adminDecision ? '16px' : '0', border: '1px solid #2A2A35' }}>
                   <div style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: 'bold', letterSpacing: '1px', marginBottom: '8px', textTransform: 'uppercase' }}>QUESTION</div>
-                  <div style={{ color: '#cbd5e1', fontStyle: 'italic', fontSize: '0.95rem' }}>"{d.questionText}"</div>
+                  <div style={{ color: '#cbd5e1', fontStyle: 'italic', fontSize: '0.95rem', overflowWrap: 'anywhere' }}>"{d.questionText}"</div>
                 </div>
 
                 {d.adminNotes && d.adminDecision && (

@@ -11,6 +11,7 @@ const DisputeScreen = () => {
   const [showBanModal, setShowBanModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [successModal, setSuccessModal] = useState({ show: false, message: '', redirect: '' });
 
   useEffect(() => {
     const fetchDispute = async () => {
@@ -39,11 +40,10 @@ const DisputeScreen = () => {
     setIsBanning(true);
     try {
       await axios.post(`http://localhost:5000/api/admin/buyer-disputes/${id}/ban`, {}, { withCredentials: true });
-      alert('Buyer has been banned successfully.');
-      navigate('/admin/buyer-disputes');
+      setSuccessModal({ show: true, message: 'Buyer has been banned successfully.', redirect: '/admin/buyer-disputes' });
     } catch (err) {
       console.error('Error banning buyer:', err);
-      alert('Failed to ban buyer. They might not have an account yet.');
+      setSuccessModal({ show: true, message: 'Failed to ban buyer. They might not have an account yet.', redirect: '' });
     } finally {
       setIsBanning(false);
     }
@@ -131,6 +131,11 @@ const DisputeScreen = () => {
 
       {/* Info Table */}
       <div className="bg-card-dark" style={{ padding: '20px 16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ color: '#64748b', fontSize: '0.9rem' }}>Buyer/Fan</span>
+          <span style={{ fontWeight: 'bold', fontSize: '0.9rem' }}>{dispute.buyerName || dispute.buyerEmail || 'Anonymous Buyer'}</span>
+        </div>
+        <hr style={{ border: 'none', borderTop: '1px solid #1e1e2d', margin: 0 }} />
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span style={{ color: '#64748b', fontSize: '0.9rem' }}>Creator</span>
           <span style={{ fontWeight: 'bold', fontSize: '0.9rem' }}>{dispute.creatorId?.name ? `@${dispute.creatorId.handle || dispute.creatorId.name.toLowerCase()}` : '@creator'}</span>
@@ -343,6 +348,58 @@ const DisputeScreen = () => {
                 Delete
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {successModal.show && (
+        <div style={{
+          position: 'fixed',
+          top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0,0,0,0.8)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+          padding: '24px'
+        }}>
+          <div style={{
+            background: '#13131A',
+            border: '1px solid #2A2A35',
+            borderRadius: '16px',
+            padding: '24px',
+            width: '100%',
+            maxWidth: '320px',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '16px',
+            textAlign: 'center'
+          }}>
+            <h3 style={{ margin: 0, color: '#fff', fontSize: '1.1rem' }}>
+              {successModal.message}
+            </h3>
+            <button
+              onClick={() => {
+                setSuccessModal({ ...successModal, show: false });
+                if (successModal.redirect) {
+                  navigate(successModal.redirect);
+                }
+              }}
+              style={{
+                width: '100%',
+                background: '#38BDF8',
+                color: '#000',
+                border: 'none',
+                padding: '12px',
+                borderRadius: '8px',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                marginTop: '8px'
+              }}
+            >
+              OK
+            </button>
           </div>
         </div>
       )}
