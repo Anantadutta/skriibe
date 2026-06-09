@@ -4,24 +4,9 @@ import { getFanHistory, flagQuestion } from '../../services/fanApi';
 
 const FanHistory = () => {
   const flagOptions = [
-    { category: "About the answer quality", options: [
-      { label: "Didn't answer my question", desc: "the reply was vague or completely off-topic" },
-      { label: "Copy-pasted / not original", desc: "looks like it was lifted from somewhere else" }
-    ]},
-    { category: "About the content itself", options: [
-      { label: "Spam or self-promotion", desc: "the reply was just plugging their own links/products" },
-      { label: "Undisclosed paid promotion", desc: "looks like a sponsored answer but wasn't labeled" }
-    ]},
-    { category: "About behavior toward the fan", options: [
-      { label: "Rude or dismissive", desc: "the creator was condescending or disrespectful in the reply" },
-      { label: "Ignored the actual question", desc: "replied but deliberately dodged what was asked" }
-    ]},
-    { category: "About authenticity", options: [
-      { label: "This doesn't seem like the real creator", desc: "suspected impersonation or ghost-written" },
-      { label: "AI-generated response", desc: "feels like it wasn't written by the creator at all" }
-    ]},
-    { category: "Catch-all", options: [
-      { label: "Something else", desc: "with a short text box for the fan to explain" }
+    { category: "", options: [
+      { label: "Irrelevant Answer", desc: "The response was vague and off topic" },
+      { label: "Abusive / Vulgar", desc: "The response contained abusive, offensive, hateful, or vulgar content." }
     ]}
   ];
 
@@ -57,6 +42,8 @@ const FanHistory = () => {
       case 'answered': return '#10b981'; // Green
       case 'submitted': return '#fbbf24'; // Yellow
       case 'expired': return '#ef4444'; // Red
+      case 'rejected':
+      case 'flagged': return '#f59e0b'; // Dark yellow for under review
       default: return '#94a3b8'; // Gray
     }
   };
@@ -207,7 +194,7 @@ const FanHistory = () => {
                 fontWeight: 'bold',
                 textTransform: 'uppercase'
               }}>
-                {q.status}
+                {q.status === 'rejected' || q.status === 'flagged' ? 'UNDER REVIEW' : q.status}
               </div>
             </div>
           </div>
@@ -448,10 +435,17 @@ const FanHistory = () => {
                 </div>
             </div>
             
-            <div style={{ textAlign: 'center', padding: '32px', color: '#94a3b8', background: 'rgba(255,255,255,0.02)', borderRadius: '16px' }}>
-                Status: <strong style={{ color: getStatusColor(q.status), textTransform: 'uppercase' }}>{q.status}</strong>
-                <p style={{ marginTop: '8px', fontSize: '14px' }}>Waiting for {creatorName} to reply.</p>
-            </div>
+            {(q.status === 'rejected' || q.status === 'flagged') ? (
+              <div style={{ textAlign: 'center', padding: '32px', color: '#94a3b8', background: 'rgba(255,255,255,0.02)', borderRadius: '16px' }}>
+                  Status: <strong style={{ color: '#fbbf24', textTransform: 'uppercase' }}>UNDER REVIEW</strong>
+                  <p style={{ marginTop: '8px', fontSize: '14px', lineHeight: '1.5' }}>Thanks for reporting. We've removed this question from your open queue and will review it within 48 hours.</p>
+              </div>
+            ) : (
+              <div style={{ textAlign: 'center', padding: '32px', color: '#94a3b8', background: 'rgba(255,255,255,0.02)', borderRadius: '16px' }}>
+                  Status: <strong style={{ color: getStatusColor(q.status), textTransform: 'uppercase' }}>{q.status}</strong>
+                  <p style={{ marginTop: '8px', fontSize: '14px' }}>Waiting for {creatorName} to reply.</p>
+              </div>
+            )}
         </div>
     );
   };
@@ -511,7 +505,7 @@ const FanHistory = () => {
             <div style={{ maxHeight: '55vh', overflowY: 'auto', textAlign: 'left', marginBottom: '24px', paddingRight: '8px' }} className="custom-scrollbar">
               {flagOptions.map((group, idx) => (
                 <div key={idx} style={{ marginBottom: '24px' }}>
-                  <div style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', marginBottom: '12px', letterSpacing: '1px' }}>{group.category}</div>
+                  {group.category && <div style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', marginBottom: '12px', letterSpacing: '1px' }}>{group.category}</div>}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     {group.options.map((opt, oIdx) => (
                       <div key={oIdx} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>

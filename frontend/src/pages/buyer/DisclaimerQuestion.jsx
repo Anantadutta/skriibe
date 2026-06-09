@@ -158,11 +158,10 @@ const DisclaimerQuestion = () => {
                 color: 'var(--g2)', 
                 lineHeight: 1.8 
               }}>
-                <li style={{ marginBottom: '8px' }}>· Answers are personal opinions — not professional advice</li>
-                <li style={{ marginBottom: '8px' }}>· Not a substitute for medical, legal or financial counsel</li>
-                <li style={{ marginBottom: '8px' }}>· One question per payment — be specific</li>
-                <li style={{ marginBottom: '8px' }}>· 100% refund if no reply in 24 hours</li>
-                <li style={{ marginBottom: '8px' }}>· Do not share others' personal data</li>
+                <li style={{ marginBottom: '8px' }}>1. Ask one clear question per payment for the best response.</li>
+                <li style={{ marginBottom: '8px' }}>2. Full refund if there's no reply within 24 hours.</li>
+                <li style={{ marginBottom: '8px' }}>3. Be respectful. Abusive, hateful, or vulgar content is not allowed.</li>
+                <li style={{ marginBottom: '8px' }}>4. Share only what's needed for a helpful answer</li>
               </ul>
             </div>
 

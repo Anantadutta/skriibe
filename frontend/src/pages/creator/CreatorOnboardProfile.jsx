@@ -476,8 +476,9 @@ const CreatorOnboardProfile = () => {
                             </linearGradient>
                           </defs>
                           <rect width="24" height="24" rx="6" fill="url(#ig-btn-grad)"/>
-                          <path d="M12 6.865A5.135 5.135 0 1017.135 12 5.14 5.14 0 0012 6.865zm0 8.469A3.334 3.334 0 1115.334 12 3.338 3.338 0 0112 15.334z" fill="white"/>
-                          <circle cx="17.635" cy="6.365" r="0.635" fill="white"/>
+                          <rect x="4.5" y="4.5" width="15" height="15" rx="4.5" stroke="white" strokeWidth="1.5"/>
+                          <circle cx="12" cy="12" r="3.75" stroke="white" strokeWidth="1.5"/>
+                          <circle cx="16.25" cy="7.75" r="0.9" fill="white"/>
                         </svg>
                       </div>
 
@@ -496,7 +497,10 @@ const CreatorOnboardProfile = () => {
                         margin: '0 0 16px',
                         padding: '0 8px'
                       }}>
-                        Your skriibe profile pulls your photo, handle, and follower count automatically. Builds instant trust with buyers.
+                        Link your Instagram account to quickly set up your profile 
+
+
+We’ll automatically fetch your profile photo, username, and follower count from Instagram.
                       </p>
 
                       {/* Instagram brand gradient connection pill button */}

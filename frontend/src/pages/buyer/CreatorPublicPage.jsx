@@ -403,11 +403,10 @@ const CreatorPublicPage = () => {
             READ BEFORE CONTINUING
           </div>
           <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '8px', color: '#94a3b8', fontSize: '0.85rem', lineHeight: '1.5' }}>
-            <li style={{ display: 'flex', gap: '8px' }}><span style={{ color: '#f97316' }}>·</span> Answers are personal opinions — not professional advice</li>
-            <li style={{ display: 'flex', gap: '8px' }}><span style={{ color: '#f97316' }}>·</span> Not a substitute for medical, legal or financial counsel</li>
-            <li style={{ display: 'flex', gap: '8px' }}><span style={{ color: '#f97316' }}>·</span> One question per payment — be specific</li>
-            <li style={{ display: 'flex', gap: '8px' }}><span style={{ color: '#f97316' }}>·</span> 100% refund if no reply in {creator.responseTime || '24'} hours</li>
-            <li style={{ display: 'flex', gap: '8px' }}><span style={{ color: '#f97316' }}>·</span> Do not share others' personal data</li>
+            <li style={{ display: 'flex', gap: '8px' }}><span style={{ color: '#f97316', fontWeight: 'bold' }}>1.</span> Ask one clear question per payment for the best response.</li>
+            <li style={{ display: 'flex', gap: '8px' }}><span style={{ color: '#f97316', fontWeight: 'bold' }}>2.</span> Full refund if there's no reply within 24 hours.</li>
+            <li style={{ display: 'flex', gap: '8px' }}><span style={{ color: '#f97316', fontWeight: 'bold' }}>3.</span> Be respectful. Abusive, hateful, or vulgar content is not allowed.</li>
+            <li style={{ display: 'flex', gap: '8px' }}><span style={{ color: '#f97316', fontWeight: 'bold' }}>4.</span> Share only what's needed for a helpful answer</li>
           </ul>
           
           <label style={{
@@ -475,27 +474,28 @@ const CreatorPublicPage = () => {
 
           <div style={{ background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '16px', padding: '16px', display: 'flex', flexDirection: 'column' }}>
             <div style={{ color: '#64748b', fontSize: '0.7rem', fontWeight: '800', letterSpacing: '2px', textTransform: 'uppercase' }}>
-              YOUR QUESTION <span style={{ color: '#ef4444' }}>*</span> <span style={{ color: '#64748b' }}>(MIN 20 CHARS)</span>
+              YOUR QUESTION <span style={{ color: '#ef4444' }}>*</span> <span style={{ color: '#64748b' }}>(MIN 20 WORDS, MAX 50 WORDS)</span>
             </div>
             <textarea 
               className="unified-input"
               value={questionText} 
               onChange={e => setQuestionText(e.target.value)} 
               placeholder={`What do you want to ask @${creator.handle}?`}
-              maxLength={500}
               style={{ minHeight: '80px', resize: 'none', lineHeight: '1.4' }}
             />
           </div>
 
         </div>
 
-        {/* COUNTER */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 4px', marginTop: '-8px' }}>
-          <div style={{ fontSize: '0.8rem', color: '#475569', fontWeight: '600' }}>
-            Min 20 characters
-          </div>
-          <div style={{ fontSize: '0.85rem', fontWeight: '700', color: questionText.length >= 20 ? '#22C55E' : '#475569' }}>
-            {questionText.length} / 500 {questionText.length >= 20 && '✓'}
+        {/* WORD COUNT & VALIDATION */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '-8px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 4px' }}>
+            <div style={{ fontSize: '0.8rem', color: '#475569', fontWeight: '600' }}>
+              Min 20 words, Max 50 words
+            </div>
+            <div style={{ fontSize: '0.85rem', fontWeight: '700', color: (questionText.trim() ? questionText.trim().split(/\s+/).length : 0) >= 20 && (questionText.trim() ? questionText.trim().split(/\s+/).length : 0) <= 50 ? '#22C55E' : '#ef4444' }}>
+              {questionText.trim() ? questionText.trim().split(/\s+/).length : 0} / 50 {((questionText.trim() ? questionText.trim().split(/\s+/).length : 0) >= 20 && (questionText.trim() ? questionText.trim().split(/\s+/).length : 0) <= 50) && '✓'}
+            </div>
           </div>
         </div>
 
@@ -510,7 +510,7 @@ const CreatorPublicPage = () => {
               handlePayAndSubmit();
             }
           }}
-          disabled={!termsAccepted || !buyerName || !buyerEmail || buyerPhone.length !== 10 || questionText.length < 20 || submitting}
+          disabled={!termsAccepted || !buyerName || !buyerEmail || buyerPhone.length !== 10 || (questionText.trim() ? questionText.trim().split(/\s+/).length : 0) < 20 || (questionText.trim() ? questionText.trim().split(/\s+/).length : 0) > 50 || submitting}
           style={{
             width: '100%',
             background: '#29C5F6',
@@ -520,8 +520,8 @@ const CreatorPublicPage = () => {
             padding: '18px',
             fontSize: '1.1rem',
             fontWeight: '800',
-            cursor: (!termsAccepted || !buyerName || !buyerEmail || buyerPhone.length !== 10 || questionText.length < 20 || submitting) ? 'not-allowed' : 'pointer',
-            opacity: (!termsAccepted || !buyerName || !buyerEmail || buyerPhone.length !== 10 || questionText.length < 20 || submitting) ? 0.5 : 1,
+            cursor: (!termsAccepted || !buyerName || !buyerEmail || buyerPhone.length !== 10 || (questionText.trim() ? questionText.trim().split(/\s+/).length : 0) < 20 || (questionText.trim() ? questionText.trim().split(/\s+/).length : 0) > 50 || submitting) ? 'not-allowed' : 'pointer',
+            opacity: (!termsAccepted || !buyerName || !buyerEmail || buyerPhone.length !== 10 || (questionText.trim() ? questionText.trim().split(/\s+/).length : 0) < 20 || (questionText.trim() ? questionText.trim().split(/\s+/).length : 0) > 50 || submitting) ? 0.5 : 1,
             marginTop: '8px'
           }}
         >

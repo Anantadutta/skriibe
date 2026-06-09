@@ -80,9 +80,14 @@ const CreatorInbox = () => {
   const { roots, childrenMap } = buildThreads(questions);
 
   const getThreadStatus = (root, children) => {
-     if (root.status?.toLowerCase() === 'flagged' || children.some(c => c.status?.toLowerCase() === 'flagged')) return 'flagged';
-     if (children.length > 0) return children[children.length - 1].status?.toLowerCase();
-     return root.status?.toLowerCase();
+     const isFlaggedOrRejected = (q) => q.status?.toLowerCase() === 'flagged' || q.status?.toLowerCase() === 'rejected';
+     if (isFlaggedOrRejected(root) || children.some(isFlaggedOrRejected)) return 'flagged';
+     if (children.length > 0) {
+       const lastChildStatus = children[children.length - 1].status?.toLowerCase();
+       return lastChildStatus === 'rejected' ? 'flagged' : lastChildStatus;
+     }
+     const rootStatus = root.status?.toLowerCase();
+     return rootStatus === 'rejected' ? 'flagged' : rootStatus;
   };
 
   const pendingRoots = roots.filter(r => getThreadStatus(r, childrenMap[r._id || r.id] || []) === 'submitted');
@@ -143,7 +148,7 @@ const CreatorInbox = () => {
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             <h2 style={{ fontSize: '1.4rem', fontWeight: 700, margin: 0 }}>Question inbox</h2>
             <div style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: '2px' }}>
-              <span style={{ color: '#FBBF24', fontWeight: 600 }}>{pendingQuestions.length}</span> awaiting your reply · ₹{pendingQuestions.length * 99} in escrow
+              <span style={{ color: '#FBBF24', fontWeight: 600 }}>{pendingRoots.length}</span> awaiting your reply · ₹{pendingRoots.length * 99} in escrow
             </div>
           </div>
         </div>
@@ -284,20 +289,7 @@ const CreatorInbox = () => {
                             {qIsPending ? 'Pending' : (qIsReplied ? 'Done' : 'Flagged')}
                           </div>
                         )}
-                        <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(`/creator/inbox/delete/${q._id || q.id}`, { state: { question: q } });
-                          }}
-                          style={{
-                            background: 'transparent', border: 'none', color: '#64748b', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'color 0.2s', borderRadius: '4px'
-                          }}
-                          onMouseEnter={(e) => e.currentTarget.style.color = '#EF4444'}
-                          onMouseLeave={(e) => e.currentTarget.style.color = '#64748b'}
-                          title="Delete Question"
-                        >
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2 2v2"></path></svg>
-                        </button>
+
                       </div>
                     </div>
 
@@ -331,11 +323,11 @@ const CreatorInbox = () => {
                     )}
 
                     {/* Replied Section */}
-                    {qIsReplied && (
+                    {qIsReplied && q.answerText && (
                       <div style={{ marginTop: '4px' }}>
                         <span style={{ color: '#22C55E', fontWeight: 700, fontSize: '0.9rem' }}>You replied:</span>
                         <span style={{ color: '#94a3b8', fontSize: '0.9rem', marginLeft: '4px' }}>
-                          {q.replyText || 'Start with HTML & CSS, then JavaScript fundamentals before any framework. DM me if you want a 30-day plan!'}
+                          {q.answerText}
                         </span>
                       </div>
                     )}

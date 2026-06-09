@@ -103,7 +103,8 @@ const CreatorProfile = () => {
   };
 
   const handleSubmit = async () => {
-    if (!question.trim() || question.length < 20 || question.length > 500) return;
+    const wordCount = question.trim() ? question.trim().split(/\s+/).length : 0;
+    if (wordCount < 20 || wordCount > 50) return;
     if (!agreed || !buyerName.trim() || !buyerEmail.trim() || !buyerPhone.trim()) return;
 
     setSubmitLoading(true);
@@ -457,13 +458,12 @@ const CreatorProfile = () => {
               <div style={{ color: '#fb923c', fontSize: '12px', fontWeight: '800', letterSpacing: '1px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span>⚠️</span> READ BEFORE CONTINUING
               </div>
-              <ul style={{ color: '#d1d5db', fontSize: '13px', lineHeight: '1.6', margin: 0, paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <li><strong style={{ color: '#fff' }}>Answers are personal opinions</strong> — not professional advice.</li>
-                <li>Not a substitute for medical, legal or financial counsel.</li>
-                <li><strong style={{ color: '#fff' }}>One question per payment</strong> — keep it specific.</li>
-                <li>100% refund if there's no reply within 24 hours.</li>
-                <li>Don't share other people's personal data.</li>
-              </ul>
+              <ol style={{ color: '#d1d5db', fontSize: '13px', lineHeight: '1.6', margin: 0, paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '12px', listStyleType: 'decimal' }}>
+                <li style={{ paddingLeft: '4px' }}>Ask one clear question, per payment for the best response.</li>
+                <li style={{ paddingLeft: '4px' }}>Full refund if there's no reply within 24 hours.</li>
+                <li style={{ paddingLeft: '4px' }}>Be respectful. Abusive, hateful, or vulgar content is not allowed.</li>
+                <li style={{ paddingLeft: '4px' }}>Share only what's needed for a helpful answer</li>
+              </ol>
             </div>
 
             {/* Agreement Checkbox */}
@@ -532,22 +532,25 @@ const CreatorProfile = () => {
 
               {/* Question */}
               <div style={{ background: '#131313', border: '1px solid #2a2a2a', borderRadius: '16px', padding: '12px 16px' }}>
-                <div style={{ color: '#64748b', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '8px' }}>YOUR QUESTION <span style={{ color: '#ef4444' }}>*</span> <span style={{ color: '#475569', fontWeight: 'normal' }}>(MIN 20 CHARS)</span></div>
+                <div style={{ color: '#64748b', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '8px' }}>YOUR QUESTION <span style={{ color: '#ef4444' }}>*</span> <span style={{ color: '#475569', fontWeight: 'normal' }}>(MIN 20 WORDS, MAX 50 WORDS)</span></div>
                 <textarea 
                   value={question}
                   onChange={(e) => setQuestion(e.target.value)}
                   placeholder={`What do you want to ask @${creator.handle}?`}
-                  maxLength={500}
                   style={{ width: '100%', height: '100px', background: 'transparent', border: 'none', color: '#fff', fontSize: '15px', outline: 'none', resize: 'none', fontFamily: 'inherit' }}
                 />
               </div>
 
             </div>
 
-            {/* Character Count */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', color: '#64748b', fontSize: '12px', marginBottom: '24px', padding: '0 4px' }}>
-              <span>Min 20 characters</span>
-              <span style={{ color: question.length >= 20 ? '#10b981' : '#64748b' }}>{question.length}/500</span>
+            {/* Word Count & Validation */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '24px', padding: '0 4px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', color: '#64748b', fontSize: '12px' }}>
+                <span>Min 20 words, Max 50 words</span>
+                <span style={{ color: (question.trim() ? question.trim().split(/\s+/).length : 0) >= 20 && (question.trim() ? question.trim().split(/\s+/).length : 0) <= 50 ? '#10b981' : '#ef4444' }}>
+                  {question.trim() ? question.trim().split(/\s+/).length : 0}/50 Words
+                </span>
+              </div>
             </div>
 
             {submitError && (
@@ -560,7 +563,7 @@ const CreatorProfile = () => {
             {isFollowUp ? (
               <button
                 onClick={handleSubmit}
-                disabled={!agreed || question.length < 20 || !buyerName.trim() || !buyerEmail.trim() || buyerPhone.length !== 10 || submitLoading}
+                disabled={!agreed || (question.trim() ? question.trim().split(/\s+/).length : 0) < 20 || (question.trim() ? question.trim().split(/\s+/).length : 0) > 50 || !buyerName.trim() || !buyerEmail.trim() || buyerPhone.length !== 10 || submitLoading}
                 style={{
                   width: '100%',
                   background: '#10b981',
@@ -570,8 +573,8 @@ const CreatorProfile = () => {
                   padding: '18px',
                   fontSize: '1.1rem',
                   fontWeight: '800',
-                  cursor: (!agreed || question.length < 20 || !buyerName.trim() || !buyerEmail.trim() || buyerPhone.length !== 10 || submitLoading) ? 'not-allowed' : 'pointer',
-                  opacity: (!agreed || question.length < 20 || !buyerName.trim() || !buyerEmail.trim() || buyerPhone.length !== 10 || submitLoading) ? 0.5 : 1
+                  cursor: (!agreed || (question.trim() ? question.trim().split(/\s+/).length : 0) < 20 || (question.trim() ? question.trim().split(/\s+/).length : 0) > 50 || !buyerName.trim() || !buyerEmail.trim() || buyerPhone.length !== 10 || submitLoading) ? 'not-allowed' : 'pointer',
+                  opacity: (!agreed || (question.trim() ? question.trim().split(/\s+/).length : 0) < 20 || (question.trim() ? question.trim().split(/\s+/).length : 0) > 50 || !buyerName.trim() || !buyerEmail.trim() || buyerPhone.length !== 10 || submitLoading) ? 0.5 : 1
                 }}
               >
                 {submitLoading ? 'Processing...' : 'Ask for free.'}
@@ -580,7 +583,7 @@ const CreatorProfile = () => {
               <PaymentButton 
                 amount={price} 
                 courseName={`Ask @${creator.handle}`} 
-                disabled={!agreed || question.length < 20 || !buyerName.trim() || !buyerEmail.trim() || buyerPhone.length !== 10 || submitLoading}
+                disabled={!agreed || (question.trim() ? question.trim().split(/\s+/).length : 0) < 20 || (question.trim() ? question.trim().split(/\s+/).length : 0) > 50 || !buyerName.trim() || !buyerEmail.trim() || buyerPhone.length !== 10 || submitLoading}
                 onSuccess={(paymentId) => {
                   handleSubmit();
                 }}

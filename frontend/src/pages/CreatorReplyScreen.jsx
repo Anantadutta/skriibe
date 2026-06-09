@@ -30,6 +30,7 @@ const CreatorReplyScreen = () => {
   // View states: 'reply', 'reject', 'success'
   const [view, setView] = useState('reply');
   const [rejectReason, setRejectReason] = useState('expertise');
+  const [flagReason, setFlagReason] = useState('nudity');
 
   // Scroll to top when view changes
   useEffect(() => {
@@ -51,9 +52,8 @@ const CreatorReplyScreen = () => {
 
   if (!question) return null;
 
-  const charCount = replyText.length;
-  const isMinMet = charCount >= 100;
-  const charsRemaining = 100 - charCount;
+  const wordCount = replyText.trim() ? replyText.trim().split(/\s+/).length : 0;
+  const isMinMet = wordCount >= 100 && wordCount <= 1000;
 
   const handleSend = async () => {
     if (!isMinMet) return;
@@ -86,7 +86,7 @@ const CreatorReplyScreen = () => {
 
   const handleConfirmFlag = async () => {
     try {
-      await api.post(`/creator/questions/${question._id || question.id}/flag`);
+      await api.post(`/creator/questions/${question._id || question.id}/flag`, { reason: flagReason });
       setView('success_flag');
     } catch (err) {
       console.error('Failed to flag', err);
@@ -203,7 +203,7 @@ const CreatorReplyScreen = () => {
             {/* Reply Editor */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <label style={{ fontSize: '0.95rem', color: '#ffffff', fontWeight: 800 }}>
-                Your reply <span style={{ color: '#94a3b8', fontWeight: 500 }}>(minimum 100 characters)</span> <span style={{ color: '#38BDF8' }}>*</span>
+                Your reply <span style={{ color: '#94a3b8', fontWeight: 500 }}>(Min 100 words, Max 1000 words)</span> <span style={{ color: '#38BDF8' }}>*</span>
               </label>
               
               {/* Quick Reply Chips */}
@@ -236,9 +236,19 @@ const CreatorReplyScreen = () => {
                 }}
               />
 
-              {/* Character Count Validator */}
-              <div style={{ display: 'flex', justifyContent: 'flex-end', fontSize: '0.85rem', fontWeight: 700, color: '#94a3b8' }}>
-                {charCount} characters — {isMinMet ? <span style={{ color: '#34D399' }}>minimum met ✓</span> : `${charsRemaining} left to minimum`}
+              {/* Word Count Validator */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', fontSize: '0.85rem', fontWeight: 700, color: '#94a3b8' }}>
+                <div style={{ color: isMinMet ? '#34D399' : (replyText.trim().length > 0 ? '#ef4444' : '#94a3b8') }}>
+                  {wordCount}/1000 words
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
+                  <div>
+                    {isMinMet ? <span style={{ color: '#34D399' }}>valid ✓</span> : (wordCount < 100 ? `${100 - wordCount} left to minimum` : `${wordCount - 1000} over maximum`)}
+                  </div>
+                  <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 500 }}>
+                    100 words minimum
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -402,13 +412,7 @@ const CreatorReplyScreen = () => {
               })}
             </div>
 
-            {/* Notice */}
-            <div style={{ background: '#1A1A1A', borderRadius: '12px', padding: '16px' }}>
-              <span style={{ color: '#64748b', fontSize: '0.9rem' }}>Buyer receives: </span>
-              <span style={{ color: '#e2e8f0', fontSize: '0.9rem', fontStyle: 'italic' }}>
-                "The creator could not answer your question. A full refund of Rs.{question.amountPaid || question.pricePaid} has been issued."
-              </span>
-            </div>
+
 
             {/* Action Buttons */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '8px' }}>
@@ -500,7 +504,9 @@ const CreatorReplyScreen = () => {
 
             {/* Info Banner */}
             <div style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: '12px', padding: '16px', color: '#EF4444', fontSize: '0.9rem', lineHeight: '1.5' }}>
-              Flagging this question will report the user, issue a full refund to the buyer, and remove the question from your queue.
+               Flagging this question will send it for review by the Skriibe team and 
+appropriate action may be taken. You'll be notified once the review is 
+complete.
             </div>
 
             {/* Reasons List */}
@@ -510,12 +516,14 @@ const CreatorReplyScreen = () => {
               </h3>
               
               {[
-                { id: 'expertise', title: 'Outside my expertise', subtitle: 'Cannot answer accurately' }
+                { id: 'nudity', title: 'Nudity / Sexual Content', subtitle: 'Contains nudity or sexual content' },
+                { id: 'abusive', title: 'Abusive Language', subtitle: 'Contains insults, threats, hate speech, or harassment.' }
               ].map((reason) => {
-                const isActive = true; // Only one option, so it's always active
+                const isActive = flagReason === reason.id;
                 return (
                   <div 
                     key={reason.id}
+                    onClick={() => setFlagReason(reason.id)}
                     style={{
                       background: '#1A1A1A',
                       border: isActive ? '1px solid #f59e0b' : '1px solid #2A2A2A',
@@ -524,7 +532,7 @@ const CreatorReplyScreen = () => {
                       display: 'flex',
                       alignItems: 'center',
                       gap: '16px',
-                      cursor: 'default',
+                      cursor: 'pointer',
                       transition: 'all 0.2s ease'
                     }}
                   >
@@ -546,13 +554,7 @@ const CreatorReplyScreen = () => {
               })}
             </div>
 
-            {/* Notice */}
-            <div style={{ background: '#1A1A1A', borderRadius: '12px', padding: '16px' }}>
-              <span style={{ color: '#64748b', fontSize: '0.9rem' }}>Buyer receives: </span>
-              <span style={{ color: '#e2e8f0', fontSize: '0.9rem', fontStyle: 'italic' }}>
-                "The creator could not answer your question. A full refund of Rs.{question.amountPaid || question.pricePaid} has been issued."
-              </span>
-            </div>
+
 
             {/* Action Buttons */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '8px' }}>
@@ -572,7 +574,7 @@ const CreatorReplyScreen = () => {
                   width: '100%'
                 }}
               >
-                Confirm flag abuse — issue refund
+                Raise Flag
               </button>
               <button
                 onClick={() => setView('reply')}
@@ -592,7 +594,7 @@ const CreatorReplyScreen = () => {
                 onMouseEnter={(e) => e.target.style.background = '#2A2A2A'}
                 onMouseLeave={(e) => e.target.style.background = '#1A1A1A'}
               >
-                Cancel — go back to reply
+                Cancel & Return to Question
               </button>
             </div>
           </>
