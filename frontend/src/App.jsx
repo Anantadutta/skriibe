@@ -7,8 +7,10 @@ import FlowGraphic from './components/FlowGraphic';
 import Calculator from './components/Calculator';
 import WaitlistForm from './components/WaitlistForm';
 import Footer from './components/Footer';
-
 import ProofMarquee from './components/ProofMarquee';
+
+// 1. Import Vercel Analytics here
+
 
 function App() {
   const [theme, setTheme] = useState(() => {
@@ -39,6 +41,8 @@ function App() {
       <FlowGraphic />
       <WaitlistForm />
       <Footer theme={theme} />
+      
+      {/* 2. Inject Analytics right here inside the component */}
     </div>
   );
 }
