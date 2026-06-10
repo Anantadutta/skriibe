@@ -31,7 +31,8 @@ const PaymentButton = ({ amount, courseName, onSuccess, disabled }) => {
 
     try {
       // 1. Create order on backend
-      const orderResponse = await axios.post('http://localhost:5000/api/create-order', {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      const orderResponse = await axios.post(`${apiUrl}/create-order`, {
         amount: amount * 100, // converting ₹ to paise
       });
 
@@ -48,7 +49,8 @@ const PaymentButton = ({ amount, courseName, onSuccess, disabled }) => {
         handler: async function (response) {
           try {
             // 3. Verify payment on backend
-            const verifyResponse = await axios.post('http://localhost:5000/api/verify-payment', {
+            const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+            const verifyResponse = await axios.post(`${apiUrl}/verify-payment`, {
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature,
