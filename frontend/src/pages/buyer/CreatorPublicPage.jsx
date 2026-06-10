@@ -474,7 +474,7 @@ const CreatorPublicPage = () => {
 
           <div style={{ background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '16px', padding: '16px', display: 'flex', flexDirection: 'column' }}>
             <div style={{ color: '#64748b', fontSize: '0.7rem', fontWeight: '800', letterSpacing: '2px', textTransform: 'uppercase' }}>
-              YOUR QUESTION <span style={{ color: '#ef4444' }}>*</span> <span style={{ color: '#64748b' }}>(MIN 20 WORDS, MAX 50 WORDS)</span>
+              YOUR QUESTION <span style={{ color: '#ef4444' }}>*</span> <span style={{ color: '#64748b' }}>(MIN 20 WORDS, MAX 500 WORDS)</span>
             </div>
             <textarea 
               className="unified-input"
@@ -491,10 +491,10 @@ const CreatorPublicPage = () => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '-8px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 4px' }}>
             <div style={{ fontSize: '0.8rem', color: '#475569', fontWeight: '600' }}>
-              Min 20 words, Max 50 words
+              Min 20 words, Max 500 words
             </div>
-            <div style={{ fontSize: '0.85rem', fontWeight: '700', color: (questionText.trim() ? questionText.trim().split(/\s+/).length : 0) >= 20 && (questionText.trim() ? questionText.trim().split(/\s+/).length : 0) <= 50 ? '#22C55E' : '#ef4444' }}>
-              {questionText.trim() ? questionText.trim().split(/\s+/).length : 0} / 50 {((questionText.trim() ? questionText.trim().split(/\s+/).length : 0) >= 20 && (questionText.trim() ? questionText.trim().split(/\s+/).length : 0) <= 50) && '✓'}
+            <div style={{ fontSize: '0.85rem', fontWeight: '700', color: (questionText.trim() ? questionText.trim().split(/\s+/).length : 0) >= 20 && (questionText.trim() ? questionText.trim().split(/\s+/).length : 0) <= 500 ? '#22C55E' : '#ef4444' }}>
+              {questionText.trim() ? questionText.trim().split(/\s+/).length : 0} / 500 {((questionText.trim() ? questionText.trim().split(/\s+/).length : 0) >= 20 && (questionText.trim() ? questionText.trim().split(/\s+/).length : 0) <= 500) && '✓'}
             </div>
           </div>
         </div>
@@ -510,7 +510,7 @@ const CreatorPublicPage = () => {
               handlePayAndSubmit();
             }
           }}
-          disabled={!termsAccepted || !buyerName || !buyerEmail || buyerPhone.length !== 10 || (questionText.trim() ? questionText.trim().split(/\s+/).length : 0) < 20 || (questionText.trim() ? questionText.trim().split(/\s+/).length : 0) > 50 || submitting}
+          disabled={!termsAccepted || !buyerName || !buyerEmail || buyerPhone.length !== 10 || (questionText.trim() ? questionText.trim().split(/\s+/).length : 0) < 20 || (questionText.trim() ? questionText.trim().split(/\s+/).length : 0) > 500 || submitting}
           style={{
             width: '100%',
             background: '#29C5F6',
@@ -520,8 +520,8 @@ const CreatorPublicPage = () => {
             padding: '18px',
             fontSize: '1.1rem',
             fontWeight: '800',
-            cursor: (!termsAccepted || !buyerName || !buyerEmail || buyerPhone.length !== 10 || (questionText.trim() ? questionText.trim().split(/\s+/).length : 0) < 20 || (questionText.trim() ? questionText.trim().split(/\s+/).length : 0) > 50 || submitting) ? 'not-allowed' : 'pointer',
-            opacity: (!termsAccepted || !buyerName || !buyerEmail || buyerPhone.length !== 10 || (questionText.trim() ? questionText.trim().split(/\s+/).length : 0) < 20 || (questionText.trim() ? questionText.trim().split(/\s+/).length : 0) > 50 || submitting) ? 0.5 : 1,
+            cursor: (!termsAccepted || !buyerName || !buyerEmail || buyerPhone.length !== 10 || (questionText.trim() ? questionText.trim().split(/\s+/).length : 0) < 20 || (questionText.trim() ? questionText.trim().split(/\s+/).length : 0) > 500 || submitting) ? 'not-allowed' : 'pointer',
+            opacity: (!termsAccepted || !buyerName || !buyerEmail || buyerPhone.length !== 10 || (questionText.trim() ? questionText.trim().split(/\s+/).length : 0) < 20 || (questionText.trim() ? questionText.trim().split(/\s+/).length : 0) > 500 || submitting) ? 0.5 : 1,
             marginTop: '8px'
           }}
         >

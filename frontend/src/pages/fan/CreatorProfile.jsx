@@ -110,7 +110,7 @@ const CreatorProfile = () => {
 
   const handleSubmit = async () => {
     const wordCount = question.trim() ? question.trim().split(/\s+/).length : 0;
-    if (wordCount < 20 || wordCount > 50) return;
+    if (wordCount < 20 || wordCount > 500) return;
     if (!agreed || !buyerName.trim() || !buyerEmail.trim() || !buyerPhone.trim()) return;
 
     setSubmitLoading(true);
@@ -538,7 +538,7 @@ const CreatorProfile = () => {
 
               {/* Question */}
               <div style={{ background: '#131313', border: '1px solid #2a2a2a', borderRadius: '16px', padding: '12px 16px' }}>
-                <div style={{ color: '#64748b', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '8px' }}>YOUR QUESTION <span style={{ color: '#ef4444' }}>*</span> <span style={{ color: '#475569', fontWeight: 'normal' }}>(MIN 20 WORDS, MAX 50 WORDS)</span></div>
+                <div style={{ color: '#64748b', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '8px' }}>YOUR QUESTION <span style={{ color: '#ef4444' }}>*</span> <span style={{ color: '#475569', fontWeight: 'normal' }}>(MIN 20 WORDS, MAX 500 WORDS)</span></div>
                 <textarea 
                   value={question}
                   onChange={(e) => setQuestion(e.target.value)}
@@ -552,9 +552,9 @@ const CreatorProfile = () => {
             {/* Word Count & Validation */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '24px', padding: '0 4px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', color: '#64748b', fontSize: '12px' }}>
-                <span>Min 20 words, Max 50 words</span>
-                <span style={{ color: (question.trim() ? question.trim().split(/\s+/).length : 0) >= 20 && (question.trim() ? question.trim().split(/\s+/).length : 0) <= 50 ? '#10b981' : '#ef4444' }}>
-                  {question.trim() ? question.trim().split(/\s+/).length : 0}/50 Words
+                <span>Min 20 words, Max 500 words</span>
+                <span style={{ color: (question.trim() ? question.trim().split(/\s+/).length : 0) >= 20 && (question.trim() ? question.trim().split(/\s+/).length : 0) <= 500 ? '#10b981' : '#ef4444' }}>
+                  {question.trim() ? question.trim().split(/\s+/).length : 0}/500 Words
                 </span>
               </div>
             </div>
@@ -569,7 +569,7 @@ const CreatorProfile = () => {
             {isFollowUp ? (
               <button
                 onClick={handleSubmit}
-                disabled={!agreed || (question.trim() ? question.trim().split(/\s+/).length : 0) < 20 || (question.trim() ? question.trim().split(/\s+/).length : 0) > 50 || !buyerName.trim() || !buyerEmail.trim() || buyerPhone.length !== 10 || submitLoading}
+                disabled={!agreed || (question.trim() ? question.trim().split(/\s+/).length : 0) < 20 || (question.trim() ? question.trim().split(/\s+/).length : 0) > 500 || !buyerName.trim() || !buyerEmail.trim() || buyerPhone.length !== 10 || submitLoading}
                 style={{
                   width: '100%',
                   background: '#10b981',
@@ -579,8 +579,8 @@ const CreatorProfile = () => {
                   padding: '18px',
                   fontSize: '1.1rem',
                   fontWeight: '800',
-                  cursor: (!agreed || (question.trim() ? question.trim().split(/\s+/).length : 0) < 20 || (question.trim() ? question.trim().split(/\s+/).length : 0) > 50 || !buyerName.trim() || !buyerEmail.trim() || buyerPhone.length !== 10 || submitLoading) ? 'not-allowed' : 'pointer',
-                  opacity: (!agreed || (question.trim() ? question.trim().split(/\s+/).length : 0) < 20 || (question.trim() ? question.trim().split(/\s+/).length : 0) > 50 || !buyerName.trim() || !buyerEmail.trim() || buyerPhone.length !== 10 || submitLoading) ? 0.5 : 1
+                  cursor: (!agreed || (question.trim() ? question.trim().split(/\s+/).length : 0) < 20 || (question.trim() ? question.trim().split(/\s+/).length : 0) > 500 || !buyerName.trim() || !buyerEmail.trim() || buyerPhone.length !== 10 || submitLoading) ? 'not-allowed' : 'pointer',
+                  opacity: (!agreed || (question.trim() ? question.trim().split(/\s+/).length : 0) < 20 || (question.trim() ? question.trim().split(/\s+/).length : 0) > 500 || !buyerName.trim() || !buyerEmail.trim() || buyerPhone.length !== 10 || submitLoading) ? 0.5 : 1
                 }}
               >
                 {submitLoading ? 'Processing...' : 'Ask for free.'}
@@ -589,7 +589,7 @@ const CreatorProfile = () => {
               <PaymentButton 
                 amount={price} 
                 courseName={`Ask @${creator.handle}`} 
-                disabled={!agreed || (question.trim() ? question.trim().split(/\s+/).length : 0) < 20 || (question.trim() ? question.trim().split(/\s+/).length : 0) > 50 || !buyerName.trim() || !buyerEmail.trim() || buyerPhone.length !== 10 || submitLoading}
+                disabled={!agreed || (question.trim() ? question.trim().split(/\s+/).length : 0) < 20 || (question.trim() ? question.trim().split(/\s+/).length : 0) > 500 || !buyerName.trim() || !buyerEmail.trim() || buyerPhone.length !== 10 || submitLoading}
                 onSuccess={(paymentId) => {
                   handleSubmit();
                 }}
