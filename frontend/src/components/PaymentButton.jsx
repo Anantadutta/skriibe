@@ -16,7 +16,7 @@ const loadRazorpayScript = () => {
   });
 };
 
-const PaymentButton = ({ amount, courseName, onSuccess, disabled }) => {
+const PaymentButton = ({ amount, courseName, onSuccess, disabled, buyerName = '', buyerEmail = '', buyerPhone = '' }) => {
   const [loading, setLoading] = useState(false);
 
   const handlePayment = async () => {
@@ -70,9 +70,9 @@ const PaymentButton = ({ amount, courseName, onSuccess, disabled }) => {
           }
         },
         prefill: {
-          name: '',
-          email: '',
-          contact: '',
+          name: buyerName,
+          email: buyerEmail,
+          contact: buyerPhone,
         },
         notes: {
           address: 'skriibe Corporate Office',

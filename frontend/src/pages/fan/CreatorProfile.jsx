@@ -589,6 +589,9 @@ const CreatorProfile = () => {
               <PaymentButton 
                 amount={price} 
                 courseName={`Ask @${creator.handle}`} 
+                buyerName={buyerName}
+                buyerEmail={buyerEmail}
+                buyerPhone={buyerPhone}
                 disabled={!agreed || (question.trim() ? question.trim().split(/\s+/).length : 0) < 20 || (question.trim() ? question.trim().split(/\s+/).length : 0) > 500 || !buyerName.trim() || !buyerEmail.trim() || buyerPhone.length !== 10 || submitLoading}
                 onSuccess={(paymentId) => {
                   handleSubmit();
