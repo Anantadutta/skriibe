@@ -52,9 +52,26 @@ const sendWhatsAppMessage = async (phone, name) => {
 
 const app = express();
 const server = http.createServer(app);
+
+const allowedOrigins = [
+  "https://www.skriibe.com", 
+  "https://skriibe.com",
+  "http://localhost:5173", "http://localhost:5713", "http://localhost:3000", "http://localhost:5174", 
+  "http://127.0.0.1:5173", "http://127.0.0.1:5713", "http://127.0.0.1:3000", "http://127.0.0.1:5174"
+];
+if (process.env.FRONTEND_URL) allowedOrigins.push(process.env.FRONTEND_URL);
+
+const originCheck = function (origin, callback) {
+  if (!origin || allowedOrigins.indexOf(origin) !== -1 || (origin && origin.endsWith('.vercel.app'))) {
+    callback(null, true);
+  } else {
+    callback(new Error('Not allowed by CORS'));
+  }
+};
+
 const io = new Server(server, {
   cors: {
-    origin: ["https://www.skriibe.com", "https://skriibe.com", "http://localhost:5173", "http://localhost:5713", "http://localhost:3000", "http://localhost:5174", "http://127.0.0.1:5173", "http://127.0.0.1:5713", "http://127.0.0.1:3000", "http://127.0.0.1:5174"],
+    origin: originCheck,
     methods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
     credentials: true
   }
@@ -75,17 +92,8 @@ app.use((req, res, next) => {
 });
 
 // Middleware
-// Middleware
-const allowedOrigins = ["https://www.skriibe.com", "https://skriibe.com","http://localhost:5173", "http://localhost:5713", "http://localhost:3000", "http://localhost:5174", "http://127.0.0.1:5173", "http://127.0.0.1:5713", "http://127.0.0.1:3000", "http://127.0.0.1:5174"];
-
 app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
+  origin: originCheck,
   methods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
   credentials: true,
   allowedHeaders: ["Content-Type", "Authorization"]
