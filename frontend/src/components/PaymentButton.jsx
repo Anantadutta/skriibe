@@ -40,7 +40,7 @@ const PaymentButton = ({ amount, courseName, onSuccess, disabled }) => {
 
       // 2. Setup Razorpay options
       const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID, // Use env var safely in frontend
+        key: orderData.key_id || import.meta.env.VITE_RAZORPAY_KEY_ID, // Use backend provided key
         amount: orderData.amount,
         currency: orderData.currency,
         name: 'skriibe',
