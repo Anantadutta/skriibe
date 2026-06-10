@@ -405,9 +405,7 @@ router.post('/onboarding/profile', verifyCreatorToken, async (req, res) => {
   );
 
   // Send Welcome Emails asynchronously (don't block the response)
-  sendProfileSubmittedEmail(email, name).catch(err => {
-    console.error('Failed to send profile submitted email:', err);
-  });
+
   
   sendWelcomeEmail(email, name, handle).catch(err => {
     console.error('Failed to send onboarding welcome email:', err);

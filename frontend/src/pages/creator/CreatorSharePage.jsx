@@ -40,6 +40,8 @@ const CreatorSharePage = () => {
   const [showBanner, setShowBanner] = useState(false);
 
   const qrRef = useRef(null);
+  const qrRef2 = useRef(null);
+  const [qrSlide, setQrSlide] = useState(0);
 
   useEffect(() => {
     if (location.state?.isNewlyLive) {
@@ -111,6 +113,14 @@ const CreatorSharePage = () => {
 
   const openWhatsApp = () => {
     window.open(`https://wa.me/?text=${encodeURIComponent(shareUrl)}`, '_blank');
+  };
+
+  const openLinkedIn = () => {
+    window.open(`https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(fullShareUrl)}`, '_blank');
+  };
+
+  const openX = () => {
+    window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(fullShareUrl)}`, '_blank');
   };
 
   const handleNativeShare = async () => {
@@ -456,111 +466,7 @@ const CreatorSharePage = () => {
           </div>
         </div>
 
-        {/* SUCCESS BANNER */}
-        {showBanner && (
-          <div style={{
-            background: 'rgba(255, 255, 255, 0.04)',
-            backdropFilter: 'blur(12px)',
-            border: '1px solid rgba(6, 182, 212, 0.25)',
-            borderRadius: '16px',
-            padding: '20px',
-            position: 'relative',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '8px',
-            boxSizing: 'border-box',
-            textAlign: 'left',
-            boxShadow: '0 4px 20px rgba(6, 182, 212, 0.1)'
-          }}>
-            {/* Close Button */}
-            <button
-              onClick={() => setShowBanner(false)}
-              style={{
-                position: 'absolute',
-                top: '12px',
-                right: '12px',
-                background: 'transparent',
-                border: 'none',
-                color: '#94a3b8',
-                fontSize: '20px',
-                lineHeight: '1',
-                cursor: 'pointer',
-                padding: '4px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                transition: 'color 0.2s'
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.color = '#ffffff'}
-              onMouseLeave={(e) => e.currentTarget.style.color = '#94a3b8'}
-            >
-              &times;
-            </button>
-
-            {/* Title */}
-            <h2 style={{
-              background: 'linear-gradient(90deg, #00e5ff, #a855f7)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-              fontSize: '1.4rem',
-              fontWeight: '700',
-              margin: 0,
-            }}>
-              You're live! <span style={{ WebkitTextFillColor: 'initial' }}>🎉</span>
-            </h2>
-
-            {/* Sub-text */}
-            <p style={{
-              margin: 0,
-              color: '#94a3b8',
-              fontSize: '12px',
-              fontWeight: 500
-            }}>
-              Your Skriibe page is now active.
-            </p>
-
-            {/* Link + Live Pill */}
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              marginTop: '4px',
-              flexWrap: 'wrap'
-            }}>
-              <span style={{
-                fontFamily: 'var(--font-mono), monospace',
-                fontSize: '13px',
-                fontWeight: 700,
-                color: '#ffffff'
-              }}>
-                {shareUrl}
-              </span>
-              
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                background: 'rgba(34, 197, 94, 0.08)',
-                border: '1px solid rgba(34, 197, 94, 0.2)',
-                borderRadius: '6px',
-                padding: '2px 8px'
-              }}>
-                <div className="live-dot-pulse" />
-                <span style={{
-                  color: '#22c55e',
-                  fontSize: '9px',
-                  fontWeight: 800,
-                  fontFamily: 'monospace, var(--font-mono)'
-                }}>
-                  LIVE
-                </span>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* TOP CARD: SKRIIBE PAGE CARD */}
+        {/* CONSOLIDATED TOP CARD */}
         <div style={{
           background: 'rgba(255, 255, 255, 0.05)',
           backdropFilter: 'blur(12px)',
@@ -571,110 +477,44 @@ const CreatorSharePage = () => {
           flexDirection: 'column',
           gap: '16px',
           position: 'relative',
-          overflow: 'hidden'
+          overflow: 'hidden',
+          boxShadow: showBanner ? '0 0 25px rgba(124, 58, 237, 0.2)' : 'none'
         }}>
-          {/* Username / URL with copy icon next to it */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxWidth: '75%' }}>
-            <span style={{
-              fontFamily: 'monospace, var(--font-mono)',
-              fontSize: '10px',
-              color: '#94a3b8',
-              letterSpacing: '0.1em',
-              fontWeight: 700
-            }}>
+          {showBanner && (
+            <div style={{ position: 'relative', marginBottom: '8px' }}>
+              <button
+                onClick={() => setShowBanner(false)}
+                style={{
+                  position: 'absolute', top: '-10px', right: '-10px', background: 'transparent',
+                  border: 'none', color: '#94a3b8', fontSize: '20px', cursor: 'pointer'
+                }}
+              >&times;</button>
+              <h2 style={{
+                background: 'linear-gradient(90deg, #7c3aed, #a855f7)', WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent', fontSize: '1.4rem', fontWeight: '800', margin: 0
+              }}>You're live! <span style={{ WebkitTextFillColor: 'initial' }}>🎉</span></h2>
+            </div>
+          )}
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxWidth: '85%' }}>
+            <span style={{ fontFamily: 'monospace', fontSize: '10px', color: '#94a3b8', letterSpacing: '0.1em', fontWeight: 700 }}>
               YOUR LINK
             </span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span 
-                onClick={() => navigate(`/@${username}`)}
-                style={{
-                  fontFamily: 'var(--font-mono), monospace',
-                  fontSize: '16px',
-                  fontWeight: 800,
-                  color: '#ffffff',
-                  wordBreak: 'break-all',
-                  cursor: 'pointer'
-                }}
-              >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', background: 'rgba(0,0,0,0.3)', padding: '8px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)' }}>
+              <span style={{ fontFamily: 'monospace', fontSize: '15px', fontWeight: 600, color: '#ffffff', wordBreak: 'break-all' }}>
                 {shareUrl}
               </span>
-              <button
-                onClick={copyLinkToClipboard}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: '#06b6d4',
-                  cursor: 'pointer',
-                  padding: '2px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  transition: 'transform 0.15s ease'
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.15)'}
-                onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
-                title="Copy URL"
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                </svg>
+              <button onClick={copyLinkToClipboard} style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', display: 'flex', padding: '2px' }}>
+                📋
               </button>
             </div>
           </div>
 
-          {/* 3D Link illustration top-right with floating sparkles */}
-          <div style={{
-            position: 'absolute',
-            top: '20px',
-            right: '20px',
-            width: '60px',
-            height: '60px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            pointerEvents: 'none'
-          }}>
-            {/* Sparkles around link */}
-            <div className="card-sparkle" style={{ top: '-4px', left: '10px', animationDelay: '0.3s' }} />
-            <div className="card-sparkle" style={{ bottom: '2px', right: '-4px', animationDelay: '1.2s' }} />
-            <div className="card-sparkle" style={{ bottom: '16px', left: '-6px', animationDelay: '2.5s' }} />
-            
-            {/* SVG Link icon */}
-            <svg width="46" height="46" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <defs>
-                <linearGradient id="glow-link-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#7c3aed" />
-                  <stop offset="100%" stopColor="#06b6d4" />
-                </linearGradient>
-                <filter id="link-shadow" x="-30%" y="-30%" width="160%" height="160%">
-                  <feGaussianBlur stdDeviation="3" result="blur" />
-                  <feComposite in="SourceGraphic" in2="blur" operator="over" />
-                </filter>
-              </defs>
-              <g filter="url(#link-shadow)" transform="rotate(-15 12 12)">
-                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" stroke="url(#glow-link-grad)" strokeWidth="3" strokeLinecap="round" />
-                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" stroke="url(#glow-link-grad)" strokeWidth="3" strokeLinecap="round" />
-              </g>
-            </svg>
+          <div style={{ fontSize: '13px', color: '#94a3b8', lineHeight: '1.5', marginTop: '4px' }}>
+            Anyone with this link can ask you a <span style={{ color: '#a855f7', fontWeight: 700 }}>paid question</span>
           </div>
 
-          {/* Subtext emphasizing paid question in cyan */}
-          <div style={{
-            fontSize: '13px',
-            color: '#94a3b8',
-            lineHeight: '1.5',
-            marginTop: '8px',
-            textAlign: 'left'
-          }}>
-            Anyone with this link can ask you a <span style={{ color: '#06b6d4', fontWeight: 700 }}>paid question</span>
-          </div>
-
-          {/* "Copy link" button within the card, full width */}
-          <button
-            onClick={copyLinkToClipboard}
-            className="copy-link-btn"
-            style={{ marginTop: '4px' }}
-          >
+          <button onClick={copyLinkToClipboard} className="copy-link-btn" style={{ marginTop: '8px' }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
               <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
@@ -682,19 +522,11 @@ const CreatorSharePage = () => {
             <span>{copiedLink ? 'Copied Link! ✓' : 'Copy link'}</span>
           </button>
 
-          <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
-            <button
-              onClick={() => navigate('/creator/dashboard', { state: { creator } })}
-              className="copy-link-btn"
-              style={{ flex: 1, background: '#1A1A1A', border: '1px solid #2A2A2A', color: '#ffffff', boxShadow: 'none' }}
-            >
+          <div style={{ display: 'flex', gap: '10px', marginTop: '4px' }}>
+            <button onClick={() => navigate('/creator/dashboard', { state: { creator } })} className="copy-link-btn" style={{ flex: 1, background: '#1A1A1A', border: '1px solid #2A2A2A', color: '#ffffff', boxShadow: 'none' }}>
               <span>Open Dashboard</span>
             </button>
-            <button
-              onClick={() => navigate(`/${username}`)}
-              className="copy-link-btn"
-              style={{ flex: 1, background: 'linear-gradient(90deg, #7c3aed, #00e5ff)' }}
-            >
+            <button onClick={() => navigate(`/@${username}`)} className="copy-link-btn" style={{ flex: 1, background: 'linear-gradient(90deg, #7c3aed, #06b6d4)' }}>
               <span>View My Page →</span>
             </button>
           </div>
@@ -702,308 +534,78 @@ const CreatorSharePage = () => {
 
         {/* SHARE YOUR LINK SECTION */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <div style={{
-            color: '#94a3b8',
-            fontSize: '11px',
-            fontWeight: 700,
-            textTransform: 'uppercase',
-            letterSpacing: '0.1em',
-            textAlign: 'left',
-            paddingLeft: '4px'
-          }}>
-            Share your link
+          <div style={{ color: '#94a3b8', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', paddingLeft: '4px' }}>
+            SHARE ON
           </div>
 
-          {/* 2x2 GRID OF BRAND CARDS */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(2, 1fr)',
-            gap: '12px'
-          }}>
+          <div style={{ display: 'flex', gap: '48px', padding: '16px', background: 'rgba(255, 255, 255, 0.03)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)', justifyContent: 'center' }}>
             
-            {/* Instagram Bio */}
-            <div
-              onClick={openInstagram}
-              className="grid-share-card ig-card"
-            >
-              {/* Brand icon top-left (40px proper SVG) */}
-              <div style={{ width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <defs>
-                    <linearGradient id="ig-gradient-svg" x1="0%" y1="100%" x2="100%" y2="0%">
-                      <stop offset="0%" stopColor="#f09433"/>
-                      <stop offset="25%" stopColor="#e6683c"/>
-                      <stop offset="50%" stopColor="#dc2743"/>
-                      <stop offset="75%" stopColor="#cc2366"/>
-                      <stop offset="100%" stopColor="#bc1888"/>
-                    </linearGradient>
-                  </defs>
-                  <rect width="24" height="24" rx="6" fill="url(#ig-gradient-svg)"/>
-                  <path d="M12 6.865A5.135 5.135 0 1017.135 12 5.14 5.14 0 0012 6.865zm0 8.469A3.334 3.334 0 1115.334 12 3.338 3.338 0 0112 15.334z" fill="white"/>
-                  <circle cx="17.635" cy="6.365" r="0.635" fill="white"/>
+            <div onClick={openWhatsApp} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+              <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'rgba(37, 211, 102, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(37, 211, 102, 0.2)' }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12.012 5.5a6.477 6.477 0 00-5.632 9.68l-.74 2.701 2.766-.726a6.467 6.467 0 003.606 1.085h.003a6.48 6.48 0 006.478-6.475 6.48 6.48 0 00-6.481-6.465zm3.435 8.784c-.147.414-.737.76-1.012.808-.25.044-.575.08-.925-.033a5.522 5.522 0 01-2.483-1.636 5.86 5.86 0 01-1.282-2.128c-.148-.445-.443-.9-.42-1.391.025-.522.285-.776.388-.88.103-.105.227-.156.34-.156.113 0 .227.006.326.012.103.006.242-.038.379.293.137.331.472 1.15.513 1.233.041.083.067.18.012.289-.053.11-.12.22-.24.36-.12.14-.242.313-.36.42-.12.12-.247.25-.106.491.14.241.625 1.026 1.34 1.662.923.82 1.7.172 1.942.062.242-.11.267-.282.4-.44.133-.158.267-.34.4-.51.133-.17.267-.14.4-.083.133.057.84.396.984.468.144.072.24.11.276.172.036.062.036.363-.11.777z" fill="#25D366"/>
                 </svg>
               </div>
-              {/* Title below icon */}
-              <div style={{ marginTop: 'auto', fontWeight: 'bold', fontSize: '13px', color: '#ffffff' }}>
-                Instagram bio
-              </div>
-              {/* Muted description below title */}
-              <div style={{ color: '#94a3b8', fontSize: '11px', marginTop: '2px' }}>
-                Auto-opens IG
-              </div>
-              {/* Arrow bottom-right */}
-              <div style={{ position: 'absolute', bottom: '16px', right: '16px', fontSize: '14px', color: '#94a3b8', fontWeight: 600 }}>
-                ↗
-              </div>
+              <span style={{ fontSize: '11px', color: '#94a3b8' }}>WhatsApp</span>
             </div>
 
-            {/* YouTube Description */}
-            <div
-              onClick={openYouTube}
-              className="grid-share-card yt-card"
-            >
-              <div style={{ width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <rect width="24" height="24" rx="6" fill="#FF0000"/>
-                  <path d="M9.5 8v8l6.5-4-6.5-4z" fill="white"/>
-                </svg>
+            <div onClick={openLinkedIn} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+              <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'rgba(10, 102, 194, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(10, 102, 194, 0.2)' }}>
+                <span style={{ color: '#0a66c2', fontWeight: 800, fontSize: '20px' }}>in</span>
               </div>
-              <div style={{ marginTop: 'auto', fontWeight: 'bold', fontSize: '13px', color: '#ffffff' }}>
-                YouTube
-              </div>
-              <div style={{ color: '#94a3b8', fontSize: '11px', marginTop: '2px' }}>
-                Opens YouTube Studio
-              </div>
-              <div style={{ position: 'absolute', bottom: '16px', right: '16px', fontSize: '14px', color: '#94a3b8', fontWeight: 600 }}>
-                ↗
-              </div>
+              <span style={{ fontSize: '11px', color: '#94a3b8' }}>LinkedIn</span>
             </div>
 
-            {/* WhatsApp */}
-            <div
-              onClick={openWhatsApp}
-              className="grid-share-card wa-card"
-            >
-              <div style={{ width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <rect width="24" height="24" rx="6" fill="#25D366"/>
-                  <path d="M12.012 5.5a6.477 6.477 0 00-5.632 9.68l-.74 2.701 2.766-.726a6.467 6.467 0 003.606 1.085h.003a6.48 6.48 0 006.478-6.475 6.48 6.48 0 00-6.481-6.465zm3.435 8.784c-.147.414-.737.76-1.012.808-.25.044-.575.08-.925-.033a5.522 5.522 0 01-2.483-1.636 5.86 5.86 0 01-1.282-2.128c-.148-.445-.443-.9-.42-1.391.025-.522.285-.776.388-.88.103-.105.227-.156.34-.156.113 0 .227.006.326.012.103.006.242-.038.379.293.137.331.472 1.15.513 1.233.041.083.067.18.012.289-.053.11-.12.22-.24.36-.12.14-.242.313-.36.42-.12.12-.247.25-.106.491.14.241.625 1.026 1.34 1.662.923.82 1.7.172 1.942.062.242-.11.267-.282.4-.44.133-.158.267-.34.4-.51.133-.17.267-.14.4-.083.133.057.84.396.984.468.144.072.24.11.276.172.036.062.036.363-.11.777z" fill="white"/>
+            <div onClick={openYouTube} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+              <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'rgba(255, 0, 0, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(255, 0, 0, 0.2)' }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M9.5 8v8l6.5-4-6.5-4z" fill="#FF0000"/>
                 </svg>
               </div>
-              <div style={{ marginTop: 'auto', fontWeight: 'bold', fontSize: '13px', color: '#ffffff' }}>
-                WhatsApp
-              </div>
-              <div style={{ color: '#94a3b8', fontSize: '11px', marginTop: '2px' }}>
-                Share with audience
-              </div>
-              <div style={{ position: 'absolute', bottom: '16px', right: '16px', fontSize: '14px', color: '#94a3b8', fontWeight: 600 }}>
-                ↗
-              </div>
+              <span style={{ fontSize: '11px', color: '#94a3b8' }}>YouTube</span>
             </div>
 
-            {/* Other Apps */}
-            <div
-              onClick={handleNativeShare}
-              className="grid-share-card other-card"
-            >
-              <div style={{ width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <rect width="24" height="24" rx="6" fill="#7C3AED"/>
-                  {/* Clean purple grid icon */}
-                  <rect x="6" y="6" width="4" height="4" rx="1" fill="white"/>
-                  <rect x="14" y="6" width="4" height="4" rx="1" fill="white"/>
-                  <rect x="6" y="14" width="4" height="4" rx="1" fill="white"/>
-                  <rect x="14" y="14" width="4" height="4" rx="1" fill="white"/>
-                </svg>
+            <div onClick={openX} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+              <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'rgba(255, 255, 255, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(255, 255, 255, 0.2)' }}>
+                <span style={{ color: '#ffffff', fontWeight: 800, fontSize: '20px', fontFamily: 'sans-serif' }}>𝕏</span>
               </div>
-              <div style={{ marginTop: 'auto', fontWeight: 'bold', fontSize: '13px', color: '#ffffff' }}>
-                Other apps
-              </div>
-              <div style={{ color: '#94a3b8', fontSize: '11px', marginTop: '2px' }}>
-                System share sheet
-              </div>
-              <div style={{ position: 'absolute', bottom: '16px', right: '16px', fontSize: '14px', color: '#94a3b8', fontWeight: 600 }}>
-                ↗
-              </div>
+              <span style={{ fontSize: '11px', color: '#94a3b8' }}>X</span>
             </div>
 
           </div>
         </div>
 
-        {/* READY-TO-USE BIO TEXT SECTION */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <div style={{
-            color: '#94a3b8',
-            fontSize: '11px',
-            fontWeight: 700,
-            textTransform: 'uppercase',
-            letterSpacing: '0.1em',
-            textAlign: 'left',
-            paddingLeft: '4px'
-          }}>
-            Ready-to-use bio text
-          </div>
 
-          {/* Bio card */}
-          <div style={{
-            background: '#0f0f1a',
-            border: '1px solid rgba(6, 182, 212, 0.4)',
-            borderRadius: '16px',
-            padding: '24px 20px 20px',
-            boxShadow: 'inset 0 2px 8px rgba(0, 0, 0, 0.6), 0 0 15px rgba(6, 182, 212, 0.05)',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '14px',
-            position: 'relative'
-          }}>
-            {/* Large cyan quotation mark top-left */}
-            <span style={{
-              position: 'absolute',
-              top: '-4px',
-              left: '12px',
-              fontFamily: 'Georgia, serif',
-              fontSize: '64px',
-              fontWeight: 'bold',
-              color: 'rgba(6, 182, 212, 0.15)',
-              lineHeight: 1,
-              pointerEvents: 'none'
-            }}>
-              “
-            </span>
-
-            <pre style={{
-              margin: 0,
-              whiteSpace: 'pre-wrap',
-              fontFamily: 'monospace, var(--font-mono)',
-              fontSize: '12px',
-              color: '#06b6d4',
-              lineHeight: '1.6',
-              textAlign: 'left',
-              position: 'relative',
-              zIndex: 1,
-              paddingTop: '16px'
-            }}>
-              {bioText}
-            </pre>
-
-            {/* Copy bio text as a small pill button bottom-right */}
-            <div style={{ display: 'flex', justifyContent: 'flex-end', zIndex: 2 }}>
-              <button
-                onClick={copyBioToClipboard}
-                className="copy-bio-btn"
-              >
-                <span>📋</span>
-                <span>{copiedBio ? 'Copied Bio! ✓' : 'Copy bio text'}</span>
-              </button>
-            </div>
-          </div>
-        </div>
 
         {/* QR CODE SECTION */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <div style={{
-            color: '#94a3b8',
-            fontSize: '11px',
-            fontWeight: 700,
-            textTransform: 'uppercase',
-            letterSpacing: '0.1em',
-            textAlign: 'left',
-            paddingLeft: '4px'
-          }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', position: 'relative' }}>
+          <div style={{ color: '#94a3b8', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', paddingLeft: '4px' }}>
             QR code
           </div>
 
-          <div style={{
-            background: 'rgba(255, 255, 255, 0.05)',
-            backdropFilter: 'blur(12px)',
-            border: '1px solid rgba(255, 255, 255, 0.08)',
-            borderRadius: '16px',
-            padding: '20px',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '20px'
-          }}>
-            
-            {/* QR details row */}
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '20px',
-              textAlign: 'left'
-            }}>
-              {/* Canvas container with ref */}
-              <div
-                ref={qrRef}
-                style={{
-                  background: '#ffffff',
-                  padding: '10px',
-                  borderRadius: '12px',
-                  width: '80px',
-                  height: '80px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  boxSizing: 'content-box',
-                  flexShrink: 0,
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
-                }}
-              >
-                <QRCodeCanvas
-                  value={fullShareUrl}
-                  size={80}
-                  bgColor="#ffffff"
-                  fgColor="#000000"
-                  level="H"
-                />
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <div style={{
-                  fontFamily: 'monospace, var(--font-mono)',
-                  fontSize: '13px',
-                  fontWeight: 700,
-                  color: '#ffffff',
-                  wordBreak: 'break-all'
-                }}>
-                  {shareUrl}
-                </div>
-                <div style={{
-                  fontSize: '11px',
-                  color: '#94a3b8'
-                }}>
-                  Scan to visit your page
-                </div>
+          <div style={{ background: 'linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)', borderRadius: '16px', padding: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
+            <div ref={qrRef2} style={{ background: '#ffffff', padding: '20px', borderRadius: '16px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', width: '100%', boxSizing: 'border-box' }}>
+              <QRCodeCanvas value={fullShareUrl} size={150} bgColor="#ffffff" fgColor="#e6683c" level="H" />
+              <div style={{ color: '#e6683c', fontSize: '16px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                @{handle}
               </div>
             </div>
-
-            {/* Download CTA */}
-            <button
-              onClick={downloadQRCode}
-              className="download-btn"
-            >
-              Download PNG
-            </button>
-
-            <button 
-              onClick={() => navigate(`/@${username}`)}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: '#00e5ff',
-                textDecoration: 'underline',
-                cursor: 'pointer',
-                fontSize: '13px',
-                fontWeight: 600,
-                marginTop: '12px',
-                padding: 0,
-                width: 'auto',
-                display: 'inline-block',
-                alignSelf: 'center'
-              }}
-            >
-              Click here to open your page →
-            </button>
-
+            <div style={{ display: 'flex', gap: '8px', width: '100%', justifyContent: 'space-between' }}>
+              <button onClick={handleNativeShare} style={{ flex: 1, background: '#ffffff', color: '#000', border: 'none', padding: '10px 4px', borderRadius: '8px', fontSize: '11px', fontWeight: 700, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+                <span style={{ fontSize: '16px' }}>↑</span> Share profile
+              </button>
+              <button onClick={copyLinkToClipboard} style={{ flex: 1, background: '#ffffff', color: '#000', border: 'none', padding: '10px 4px', borderRadius: '8px', fontSize: '11px', fontWeight: 700, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+                <span style={{ fontSize: '16px' }}>🔗</span> {copiedLink ? 'Copied! ✓' : 'Copy link'}
+              </button>
+              <button onClick={() => {
+                const canvas = qrRef2.current?.querySelector('canvas');
+                if (canvas) {
+                  const link = document.createElement('a'); link.download = `qr-ig.png`; link.href = canvas.toDataURL(); link.click();
+                }
+              }} style={{ flex: 1, background: '#ffffff', color: '#000', border: 'none', padding: '10px 4px', borderRadius: '8px', fontSize: '11px', fontWeight: 700, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+                <span style={{ fontSize: '16px' }}>↓</span> Download
+              </button>
+            </div>
           </div>
         </div>
 

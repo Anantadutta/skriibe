@@ -54,7 +54,13 @@ const CreatorProfile = () => {
         if (res.data?.fan) {
           setBuyerName(res.data.fan.name || '');
           setBuyerEmail(res.data.fan.email || '');
-          setIsBanned(res.data.fan.isBanned || false);
+          let activeBan = res.data.fan.isBanned || false;
+          if (activeBan && res.data.fan.banExpiresAt) {
+            if (new Date(res.data.fan.banExpiresAt) < new Date()) {
+              activeBan = false;
+            }
+          }
+          setIsBanned(activeBan);
         }
       } catch (err) {
         try {

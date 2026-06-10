@@ -287,4 +287,117 @@ const sendPasswordResetEmail = async (email, name, resetLink) => {
   }
 };
 
-module.exports = { sendWaitlistWelcomeEmail, sendCreatorWelcomeEmail, sendWelcomeEmail, sendProfileSubmittedEmail, sendPasswordResetEmail };
+const sendQuestionAnsweredEmail = async (email, name, creatorName, answerLink) => {
+  const resend = getResendClient();
+  if (!resend) return;
+
+  try {
+    const { data, error } = await resend.emails.send({
+      from: 'skriibe <founder@skriibe.com>',
+      to: [email],
+      subject: `${creatorName} answered your question!`,
+      html: `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff; color: #1A1A1A;">
+          <h2>Hi ${name || 'there'},</h2>
+          <p>Great news! <strong>${creatorName}</strong> has just answered your question.</p>
+          <p>Click the link below to have access to the answer given by your favourite creator.</p>
+          <div style="margin: 30px 0;">
+            <a href="${answerLink}" style="background-color: #06b6d4; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">View Answer</a>
+          </div>
+          <p style="font-size: 12px; color: #888;">— Team skriibe</p>
+        </div>
+      `
+    });
+    if (error) console.error('Question answered email error:', error);
+    return data;
+  } catch (err) {
+    console.error('sendQuestionAnsweredEmail error:', err);
+  }
+};
+
+const sendBan7DaysEmail = async (email, name, restrictionEndDate) => {
+  const resend = getResendClient();
+  if (!resend) return;
+
+  const formattedDate = new Date(restrictionEndDate).toLocaleDateString('en-US', {
+    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+  });
+
+  try {
+    const { data, error } = await resend.emails.send({
+      from: 'skriibe <founder@skriibe.com>',
+      to: [email],
+      subject: 'A Quick Reminder About Keeping Skriibe Respectful',
+      html: `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff; color: #1A1A1A; line-height: 1.6;">
+          <h2>Hi ${name || 'there'},</h2>
+          <p>We reviewed a recent question sent from your account and noticed language that doesn't align with our Community Guidelines. We understand that conversations can sometimes get emotional, but Skriibe works best when creators and fans interact respectfully.</p>
+          <p>As a result, your account has been placed under a <strong>7-day messaging restriction.</strong></p>
+          
+          <h3 style="margin-top: 30px; font-size: 18px;">What does this mean?</h3>
+          <ol style="margin-bottom: 20px;">
+            <li style="margin-bottom: 8px;">You will not be able to send paid questions or messages to any creator on Skriibe for the next 7 days.</li>
+            <li style="margin-bottom: 8px;">You can still access your account and view your existing activity.</li>
+            <li style="margin-bottom: 8px;">Your access will automatically be restored on <strong>${formattedDate}</strong>.</li>
+          </ol>
+          
+          <p>Think of this as an opportunity to reset.</p>
+          
+          <div style="background-color: #fff3cd; padding: 15px; border-left: 4px solid #ffc107; margin: 25px 0;">
+            <p style="margin: 0; color: #856404;"><strong>Important Note:</strong><br>
+            Repeated violations may result in a permanent suspension from the platform.</p>
+          </div>
+          
+          <p>If you believe this action was taken in error, you can contact us at <a href="mailto:support@skriibe.com" style="color: #06b6d4;">support@skriibe.com</a> for a review.</p>
+          
+          <p style="margin-top: 30px; margin-bottom: 5px;">Thank you for helping us maintain a respectful community.</p>
+          <p style="font-weight: bold; margin-top: 0;">Team Skriibe.</p>
+        </div>
+      `
+    });
+    if (error) console.error('Ban 7 days email error:', error);
+    return data;
+  } catch (err) {
+    console.error('sendBan7DaysEmail error:', err);
+  }
+};
+
+const sendBanPermanentEmail = async (email, name) => {
+  const resend = getResendClient();
+  if (!resend) return;
+
+  try {
+    const { data, error } = await resend.emails.send({
+      from: 'skriibe <support@skriibe.com>',
+      to: [email],
+      subject: 'Your Skriibe Account Has Been Permanently Suspended',
+      html: `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff; color: #1A1A1A; line-height: 1.6;">
+          <h2>Hi ${name || 'there'},</h2>
+          <p>Following a previous warning, we identified further violations of our Community Guidelines involving abusive, hateful, offensive, or inappropriate language.</p>
+          <p>As a result, your account has been <strong>permanently suspended</strong> from Skriibe.</p>
+          
+          <h3 style="margin-top: 30px; font-size: 18px;">What this means</h3>
+          <ul style="margin-bottom: 20px;">
+            <li style="margin-bottom: 8px;">You can no longer send questions or messages to creators.</li>
+            <li style="margin-bottom: 8px;">Access to creator interactions and future purchases has been disabled.</li>
+            <li style="margin-bottom: 8px;">Any future accounts created to bypass this suspension may also be restricted.</li>
+          </ul>
+          
+          <p>We strive to maintain a respectful and safe environment for both creators and fans. Unfortunately, repeated violations of our guidelines leave us unable to continue providing access to the platform.</p>
+          
+          <p style="margin-top: 25px;">If you believe this decision was made in error, you may contact us at <a href="mailto:support@skriibe.com" style="color: #06b6d4;">support@skriibe.com</a> within 7 days of receiving this notice.</p>
+          
+          <p style="margin-top: 30px; margin-bottom: 5px;">Thank you for your understanding.</p>
+          <p style="font-weight: bold; margin-top: 0;">Team Skriibe</p>
+        </div>
+      `
+    });
+    if (error) console.error('Ban permanent email error:', error);
+    return data;
+  } catch (err) {
+    console.error('sendBanPermanentEmail error:', err);
+  }
+};
+
+module.exports = { sendWaitlistWelcomeEmail, sendCreatorWelcomeEmail, sendWelcomeEmail, sendProfileSubmittedEmail, sendPasswordResetEmail, sendQuestionAnsweredEmail, sendBan7DaysEmail, sendBanPermanentEmail };

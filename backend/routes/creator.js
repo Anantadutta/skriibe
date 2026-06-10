@@ -11,7 +11,8 @@ const mongoose = require('mongoose');
 const Creator = require('../models/Creator');
 const Question = require('../models/Question');
 const AdminAlert = require('../models/AdminAlert');
-const { sendWelcomeEmail, sendProfileSubmittedEmail } = require('../utils/emailService');
+const { sendWelcomeEmail, sendProfileSubmittedEmail,
+ sendQuestionAnsweredEmail } = require('../utils/emailService');
 
 // Middleware to verify creator JWT
 const verifyCreatorToken = (req, res, next) => {
@@ -83,7 +84,6 @@ router.post('/profile', verifyCreatorToken, async (req, res) => {
       { new: true }
     );
 
-    sendProfileSubmittedEmail(updatedCreator.email, updatedCreator.name).catch(e => console.error("Failed to send profile email", e));
 
     // Send Welcome Email
     sendWelcomeEmail(updatedCreator.email, updatedCreator.name, updatedCreator.handle).catch(e => console.error("Failed to send welcome email", e));
@@ -225,6 +225,13 @@ router.post('/questions/:id/reply', verifyCreatorToken, async (req, res) => {
         title: 'Question Answered!',
         message: `${creatorName} has replied to your question.`
       });
+
+      if (question.buyerEmail) {
+        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+        const answerLink = `${frontendUrl}/fan/history`;
+        sendQuestionAnsweredEmail(question.buyerEmail, question.buyerName, creatorName, answerLink)
+          .catch(e => console.error("Failed to send question answered email", e));
+      }
     }
 
     res.json({ success: true, question });

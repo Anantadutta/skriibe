@@ -10,6 +10,7 @@ const FanSchema = new mongoose.Schema({
   password: { type: String, required: true },
   name: { type: String, default: '' },
   isBanned: { type: Boolean, default: false },
+  banExpiresAt: { type: Date, default: null },
   authProvider: { type: String, default: 'local' },
   resetPasswordToken: { type: String },
   resetPasswordExpires: { type: Date },

@@ -43,6 +43,21 @@ router.post('/', verifyFanToken, async (req, res) => {
 
     await connectDB();
 
+    const Fan = require('../models/Fan');
+    const fanUser = await Fan.findById(req.fan.fanId);
+    if (fanUser && fanUser.isBanned) {
+      let activeBan = true;
+      if (fanUser.banExpiresAt && new Date(fanUser.banExpiresAt) < new Date()) {
+        activeBan = false;
+        fanUser.isBanned = false;
+        fanUser.banExpiresAt = null;
+        await fanUser.save();
+      }
+      if (activeBan) {
+        return res.status(403).json({ message: 'Your account is currently restricted from sending questions.' });
+      }
+    }
+
     const creator = await Creator.findById(creatorId);
     if (!creator) {
       return res.status(404).json({ message: 'Creator not found.' });

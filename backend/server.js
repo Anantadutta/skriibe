@@ -1,4 +1,7 @@
 require('dotenv').config();
+const fs = require('fs');
+process.on('uncaughtException', (err) => { fs.writeFileSync('crash.log', 'Uncaught: ' + (err.stack || err.toString())); process.exit(1); });
+process.on('unhandledRejection', (err) => { fs.writeFileSync('crash.log', 'Unhandled: ' + (err.stack || err.toString())); process.exit(1); });
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');

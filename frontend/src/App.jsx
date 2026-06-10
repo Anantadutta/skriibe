@@ -12,6 +12,9 @@ import Footer from './components/Footer';
 import { CreatorOnboardingProvider } from './context/CreatorOnboardingContext';
 
 // Pages
+import About from './pages/About';
+import Mission from './pages/Mission';
+import Vision from './pages/Vision';
 import ComponentShowcase from './pages/dev/ComponentShowcase';
 import CreatorSignup from './pages/creator/CreatorSignup';
 import CreatorLogin from './pages/creator/CreatorLogin';
@@ -130,6 +133,9 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<LandingPage theme={theme} toggleTheme={toggleTheme} />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/mission" element={<Mission />} />
+          <Route path="/vision" element={<Vision />} />
           
           {/* Creator Onboarding */}
           <Route path="/creator/signup" element={<CreatorSignup />} />

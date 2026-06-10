@@ -22,8 +22,13 @@ const Footer = ({ theme }) => {
           </text>
         </svg>
       </div>
-      <div className="text-[12px] text-gray-600 font-medium">
-        © {new Date().getFullYear()} skriibe · Made in India · For India
+      <div className="flex flex-col items-center gap-3 text-[12px] text-gray-600 font-medium text-center">
+        <div>
+          Learn more <a href="/about" className="text-[#55afe2] hover:underline">About Us</a>, our driving <a href="/mission" className="text-[#55afe2] hover:underline">Mission</a>, and our ultimate <a href="/vision" className="text-[#55afe2] hover:underline">Vision</a> for the future.
+        </div>
+        <div>
+          © {new Date().getFullYear()} skriibe · Made in India · For India
+        </div>
       </div>
     </footer>
   );

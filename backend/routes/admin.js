@@ -468,6 +468,7 @@ router.post('/buyer-disputes/:id/dismiss', async (req, res) => {
 router.post('/buyer-disputes/:id/ban', async (req, res) => {
   try {
     const { id } = req.params;
+    const { duration } = req.body;
     await connectDB();
     const Question = require('../models/Question');
     const Fan = require('../models/Fan');
@@ -482,6 +483,11 @@ router.post('/buyer-disputes/:id/ban', async (req, res) => {
       fan = await Fan.findOne({ email: dispute.buyerEmail.toLowerCase() });
     }
 
+    let banExpiresAt = null;
+    if (duration === '7days') {
+      banExpiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    }
+
     if (!fan) {
       let dummyEmail = dispute.buyerEmail || (dispute.buyerPhone ? `${dispute.buyerPhone}@banned.skriibe.com` : `anon_${Date.now()}@banned.skriibe.com`);
       fan = await Fan.findOne({ email: dummyEmail.toLowerCase() });
@@ -490,14 +496,19 @@ router.post('/buyer-disputes/:id/ban', async (req, res) => {
           email: dummyEmail.toLowerCase(),
           name: dispute.buyerName || 'Banned Buyer',
           password: 'banned_stub_account',
-          isBanned: true
+          isBanned: true,
+          banExpiresAt
         });
       } else {
         fan.isBanned = true;
+        fan.banExpiresAt = banExpiresAt;
       }
     } else {
       fan.isBanned = true;
+      fan.banExpiresAt = banExpiresAt;
     }
+
+    const { sendBan7DaysEmail, sendBanPermanentEmail } = require('../utils/emailService');
 
     await fan.save();
     
@@ -505,7 +516,13 @@ router.post('/buyer-disputes/:id/ban', async (req, res) => {
     dispute.adminDecision = 'banned';
     await dispute.save();
 
-    res.json({ success: true, message: 'Buyer banned successfully' });
+    if (duration === '7days' && fan.email) {
+      await sendBan7DaysEmail(fan.email, fan.name, banExpiresAt);
+    } else if (duration === 'permanent' && fan.email) {
+      await sendBanPermanentEmail(fan.email, fan.name);
+    }
+
+    res.json({ success: true, message: `Buyer banned successfully${duration === '7days' ? ' for 7 days' : ''}` });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Server error banning buyer' });

@@ -9,6 +9,7 @@ const DisputeScreen = () => {
   const [loading, setLoading] = useState(true);
   const [isBanning, setIsBanning] = useState(false);
   const [showBanModal, setShowBanModal] = useState(false);
+  const [banType, setBanType] = useState('permanent');
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [successModal, setSuccessModal] = useState({ show: false, message: '', redirect: '' });
@@ -31,7 +32,8 @@ const DisputeScreen = () => {
   if (loading) return <div style={{ color: '#fff', padding: '40px', textAlign: 'center' }}>Loading dispute details...</div>;
   if (!dispute) return <div style={{ color: '#ef4444', padding: '40px', textAlign: 'center' }}>Dispute not found</div>;
 
-  const handleBanBuyer = () => {
+  const handleBanBuyer = (type) => {
+    setBanType(type);
     setShowBanModal(true);
   };
 
@@ -39,8 +41,8 @@ const DisputeScreen = () => {
     setShowBanModal(false);
     setIsBanning(true);
     try {
-      await axios.post(`http://localhost:5000/api/admin/buyer-disputes/${id}/ban`, {}, { withCredentials: true });
-      setSuccessModal({ show: true, message: 'Buyer has been banned successfully.', redirect: '/admin/buyer-disputes' });
+      await axios.post(`http://localhost:5000/api/admin/buyer-disputes/${id}/ban`, { duration: banType }, { withCredentials: true });
+      setSuccessModal({ show: true, message: `Buyer has been banned successfully${banType === '7days' ? ' for 7 days' : ''}.`, redirect: '/admin/buyer-disputes' });
     } catch (err) {
       console.error('Error banning buyer:', err);
       setSuccessModal({ show: true, message: 'Failed to ban buyer. They might not have an account yet.', redirect: '' });
@@ -133,7 +135,12 @@ const DisputeScreen = () => {
       <div className="bg-card-dark" style={{ padding: '20px 16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span style={{ color: '#64748b', fontSize: '0.9rem' }}>Buyer/Fan</span>
-          <span style={{ fontWeight: 'bold', fontSize: '0.9rem' }}>{dispute.buyerName || dispute.buyerEmail || 'Anonymous Buyer'}</span>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+            <span style={{ fontWeight: 'bold', fontSize: '0.9rem' }}>{dispute.buyerName || 'Anonymous Buyer'}</span>
+            {dispute.buyerEmail && (
+              <span style={{ color: '#94a3b8', fontSize: '0.8rem', marginTop: '2px' }}>{dispute.buyerEmail}</span>
+            )}
+          </div>
         </div>
         <hr style={{ border: 'none', borderTop: '1px solid #1e1e2d', margin: 0 }} />
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -186,7 +193,7 @@ const DisputeScreen = () => {
 
       <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
         <button 
-          onClick={handleBanBuyer}
+          onClick={() => handleBanBuyer('7days')}
           disabled={isBanning || isDeleting}
           style={{ 
             flex: 1,
@@ -201,17 +208,38 @@ const DisputeScreen = () => {
             opacity: isBanning ? 0.7 : 1
           }}
         >
-          {isBanning ? 'Banning...' : 'Ban this buyer'}
+          {isBanning && banType === '7days' ? 'Banning...' : 'Ban buyer for 7 days'}
         </button>
 
         <button 
-          onClick={() => setShowDeleteModal(true)}
+          onClick={() => handleBanBuyer('permanent')}
           disabled={isBanning || isDeleting}
           style={{ 
             flex: 1,
             background: 'rgba(239, 68, 68, 0.1)', 
             color: '#EF4444', 
             border: '1px solid rgba(239, 68, 68, 0.3)', 
+            padding: '16px', 
+            borderRadius: '12px', 
+            fontWeight: 'bold', 
+            fontSize: '0.9rem',
+            cursor: (isBanning || isDeleting) ? 'not-allowed' : 'pointer',
+            opacity: isBanning ? 0.7 : 1
+          }}
+        >
+          {isBanning && banType === 'permanent' ? 'Banning...' : 'Ban buyer permanently'}
+        </button>
+      </div>
+
+      <div style={{ display: 'flex', gap: '12px', marginTop: '12px' }}>
+        <button 
+          onClick={() => setShowDeleteModal(true)}
+          disabled={isBanning || isDeleting}
+          style={{ 
+            flex: 1,
+            background: 'rgba(239, 68, 68, 0.05)', 
+            color: '#EF4444', 
+            border: '1px solid rgba(239, 68, 68, 0.2)', 
             padding: '16px', 
             borderRadius: '12px', 
             fontWeight: 'bold', 
@@ -247,10 +275,10 @@ const DisputeScreen = () => {
             gap: '16px'
           }}>
             <h3 style={{ margin: 0, color: '#fff', fontSize: '1.1rem' }}>
-              Are you sure you want to ban this buyer?
+              Are you sure you want to ban this buyer {banType === '7days' ? 'for 7 days' : 'permanently'}?
             </h3>
             <p style={{ margin: 0, color: '#94a3b8', fontSize: '0.9rem', lineHeight: '1.4' }}>
-              They will no longer be able to ask questions to any creators.
+              {banType === '7days' ? 'They will not be able to ask questions for the next 7 days.' : 'They will permanently lose the ability to ask questions.'}
             </p>
             <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
               <button

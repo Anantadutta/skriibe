@@ -25,7 +25,7 @@ const AdminLayout = () => {
     { name: 'Dashboard', path: '/admin/dashboard', icon: '📊' },
     { name: 'Alerts', path: '/admin/alerts', icon: '🔔', badge: unreadCount > 0 ? unreadCount : null },
     { name: 'Creator Health', path: '/admin/creators', icon: '👥' },
-    { name: 'Buyers', path: '/admin/buyers', icon: '🛒' },
+    { name: 'Buyer Health', path: '/admin/buyers', icon: '🛒' },
     { name: 'Creator Disputes', path: '/admin/creator-disputes', icon: '⚔️' },
     { name: 'Buyer Disputes', path: '/admin/buyer-disputes', icon: '⚖️' },
     { name: 'Analytics', path: '/admin/analytics', icon: '📈' },

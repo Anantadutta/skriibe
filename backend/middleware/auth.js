@@ -6,7 +6,10 @@ const verifyCreatorToken = (req, res, next) => {
   try {
     req.creator = jwt.verify(token, process.env.JWT_SECRET);
     next();
-  } catch { return res.status(401).json({ success: false, message: 'Invalid token' }); }
+  } catch { 
+    res.clearCookie('creator_token');
+    return res.status(401).json({ success: false, message: 'Invalid token' }); 
+  }
 };
 
 const verifyAdminToken = (req, res, next) => {
