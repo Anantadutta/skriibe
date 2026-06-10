@@ -136,7 +136,7 @@ const issueToken = (res, creator) => {
   res.cookie('creator_token', token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
+    sameSite: 'none',
     maxAge: 7 * 24 * 60 * 60 * 1000
   });
 };
@@ -240,7 +240,7 @@ router.get('/google/callback', passport.authenticate('google', { failureRedirect
     res.cookie('fan_token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      sameSite: 'none',
       maxAge: 7 * 24 * 60 * 60 * 1000
     });
     return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/explore`);
@@ -270,7 +270,7 @@ router.get('/facebook/callback', passport.authenticate('facebook', { failureRedi
     res.cookie('fan_token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      sameSite: 'none',
       maxAge: 7 * 24 * 60 * 60 * 1000
     });
     return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/explore`);
