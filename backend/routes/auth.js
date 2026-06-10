@@ -31,7 +31,7 @@ passport.deserializeUser((user, done) => done(null, user));
 passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID || 'mock',
     clientSecret: process.env.GOOGLE_CLIENT_SECRET || 'mock',
-    callbackURL: "http://localhost:5000/api/auth/google/callback",
+    callbackURL: `${process.env.BACKEND_URL || 'http://localhost:5000'}/api/auth/google/callback`,
     passReqToCallback: true
   },
   async (req, accessToken, refreshToken, profile, done) => {
@@ -80,7 +80,7 @@ passport.use(new GoogleStrategy({
 passport.use(new FacebookStrategy({
     clientID: process.env.FACEBOOK_CLIENT_ID || 'mock',
     clientSecret: process.env.FACEBOOK_CLIENT_SECRET || 'mock',
-    callbackURL: "http://localhost:5000/api/auth/facebook/callback",
+    callbackURL: `${process.env.BACKEND_URL || 'http://localhost:5000'}/api/auth/facebook/callback`,
     profileFields: ['id', 'emails', 'name', 'picture.type(large)'],
     passReqToCallback: true
   },
@@ -243,14 +243,14 @@ router.get('/google/callback', passport.authenticate('google', { failureRedirect
       sameSite: 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000
     });
-    return res.redirect('http://localhost:5173/explore');
+    return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/explore`);
   } else {
     issueToken(res, req.user);
     const hasCompletedOnboarding = !!req.user.handle;
     if (req.user.isNewCreator || !hasCompletedOnboarding) {
-      return res.redirect('http://localhost:5173/onboard/profile');
+      return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/onboard/profile`);
     } else {
-      return res.redirect('http://localhost:5173/creator/dashboard');
+      return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/creator/dashboard`);
     }
   }
 });
@@ -273,14 +273,14 @@ router.get('/facebook/callback', passport.authenticate('facebook', { failureRedi
       sameSite: 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000
     });
-    return res.redirect('http://localhost:5173/explore');
+    return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/explore`);
   } else {
     issueToken(res, req.user);
     const hasCompletedOnboarding = !!req.user.handle;
     if (req.user.isNewCreator || !hasCompletedOnboarding) {
-      return res.redirect('http://localhost:5173/onboard/profile');
+      return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/onboard/profile`);
     } else {
-      return res.redirect('http://localhost:5173/creator/dashboard');
+      return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/creator/dashboard`);
     }
   }
 });
@@ -297,7 +297,7 @@ router.get('/instagram', (req, res) => {
 router.get('/instagram/callback', async (req, res) => {
   try {
     const { code } = req.query;
-    if (!code) return res.redirect('http://localhost:5173/creator/connect-instagram?error=nocode');
+    if (!code) return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/creator/connect-instagram?error=nocode`);
 
     // MOCK INSTAGRAM FETCH FOR NOW if no credentials provided
     let igData = {
@@ -358,11 +358,11 @@ router.get('/instagram/callback', async (req, res) => {
       bio: igData.bio,
       avatarUrl: igData.avatarUrl
     }));
-    res.redirect(`http://localhost:5173/onboard/profile?igData=${dataString}`);
+    res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/onboard/profile?igData=${dataString}`);
 
   } catch (err) {
     console.error(err);
-    res.redirect('http://localhost:5173/creator/connect-instagram?error=failed');
+    res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/creator/connect-instagram?error=failed`);
   }
 });
 

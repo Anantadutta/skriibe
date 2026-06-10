@@ -382,7 +382,7 @@ const CreatorLogin = () => {
                 or continue with
               </div>
               
-              <a href="http://localhost:5000/api/auth/google"
+              <a href={`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/auth/google`}
                  className="social-btn"
                  style={{
                    display: 'flex',
@@ -412,7 +412,7 @@ const CreatorLogin = () => {
                 Continue with Google
               </a>
 
-              <a href="http://localhost:5000/api/auth/facebook"
+              <a href={`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/auth/facebook`}
                  className="social-btn"
                  style={{
                    display: 'flex',

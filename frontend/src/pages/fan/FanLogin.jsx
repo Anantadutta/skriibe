@@ -347,7 +347,7 @@ const FanLogin = () => {
                 or sign in with
               </div>
               
-              <a href="http://localhost:5000/api/auth/google?role=fan"
+              <a href={`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/auth/google?role=fan`}
                  className="social-btn"
                  style={{
                    display: 'flex',
@@ -377,7 +377,7 @@ const FanLogin = () => {
                 Continue with Google
               </a>
 
-              <a href="http://localhost:5000/api/auth/facebook?role=fan"
+              <a href={`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/auth/facebook?role=fan`}
                  className="social-btn"
                  style={{
                    display: 'flex',

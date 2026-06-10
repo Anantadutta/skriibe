@@ -49,7 +49,7 @@ const issueToken = (res, fan) => {
 passport.use('google-fan', new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID || 'mock',
     clientSecret: process.env.GOOGLE_CLIENT_SECRET || 'mock',
-    callbackURL: "http://localhost:5000/api/fan-auth/google/callback"
+    callbackURL: `${process.env.BACKEND_URL || 'http://localhost:5000'}/api/fan-auth/google/callback`
   },
   async (accessToken, refreshToken, profile, done) => {
     try {
@@ -83,7 +83,7 @@ passport.use('google-fan', new GoogleStrategy({
 passport.use('facebook-fan', new FacebookStrategy({
     clientID: process.env.FACEBOOK_CLIENT_ID || 'mock',
     clientSecret: process.env.FACEBOOK_CLIENT_SECRET || 'mock',
-    callbackURL: "http://localhost:5000/api/fan-auth/facebook/callback",
+    callbackURL: `${process.env.BACKEND_URL || 'http://localhost:5000'}/api/fan-auth/facebook/callback`,
     profileFields: ['id', 'emails', 'name']
   },
   async (accessToken, refreshToken, profile, done) => {
@@ -145,13 +145,13 @@ router.get('/me', verifyFanToken, async (req, res) => {
 router.get('/google', passport.authenticate('google-fan', { scope: ['profile', 'email'], prompt: 'select_account' }));
 router.get('/google/callback', passport.authenticate('google-fan', { failureRedirect: '/fan/login' }), (req, res) => {
   issueToken(res, req.user);
-  res.redirect('http://localhost:5173/explore');
+  res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/explore`);
 });
 
 router.get('/facebook', passport.authenticate('facebook-fan', { scope: ['email', 'public_profile'] }));
 router.get('/facebook/callback', passport.authenticate('facebook-fan', { failureRedirect: '/fan/login' }), (req, res) => {
   issueToken(res, req.user);
-  res.redirect('http://localhost:5173/explore');
+  res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/explore`);
 });
 
 router.post('/signup', async (req, res) => {
