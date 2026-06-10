@@ -93,7 +93,7 @@ const PaymentButton = ({ amount, courseName, onSuccess, disabled, buyerName = ''
       paymentObject.open();
     } catch (error) {
       console.error('Error in payment flow:', error);
-      alert('Could not initiate payment. Please try again later.');
+      alert(`Could not initiate payment: ${error.message || 'Please try again later'}`);
     } finally {
       setLoading(false);
     }

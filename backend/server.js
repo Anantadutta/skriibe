@@ -204,7 +204,8 @@ app.post('/api/create-order', async (req, res) => {
     };
 
     const order = await razorpay.orders.create(options);
-    res.json({ ...order, key_id: process.env.RAZORPAY_KEY_ID });
+    order.key_id = process.env.RAZORPAY_KEY_ID;
+    res.json(order);
   } catch (error) {
     console.error('Error creating razorpay order:', error);
     res.status(500).json({ error: 'Something went wrong' });
