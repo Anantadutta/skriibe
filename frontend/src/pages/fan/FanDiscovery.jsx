@@ -76,7 +76,8 @@ const FanDiscovery = () => {
     fetchFanProfile();
 
     // Socket.IO setup
-    const socket = io('http://localhost:5000');
+    const socketUrl = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : 'http://localhost:5000';
+    const socket = io(socketUrl);
     socket.on('creator-status-changed', ({ creatorId, isLive }) => {
       setCreators(prev => prev.map(c => 
         c.id === creatorId ? { ...c, isLive } : c
