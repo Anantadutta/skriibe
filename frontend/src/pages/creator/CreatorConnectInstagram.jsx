@@ -40,7 +40,8 @@ const CreatorConnectInstagram = () => {
   const handleConnect = () => {
     setLoading(true);
     // Redirect to backend instagram auth route
-    window.location.href = 'http://localhost:5000/api/auth/instagram';
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+    window.location.href = `${apiUrl}/auth/instagram`;
   };
 
   const handleSkip = () => {
