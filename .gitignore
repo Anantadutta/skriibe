@@ -6,3 +6,4 @@ backend/.env
 frontend/.env
 backend/msg91_debug.txt
 backend/test_msg91.js
+.vercel
