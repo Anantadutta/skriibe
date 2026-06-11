@@ -11,24 +11,29 @@ const CreatorConnectInstagram = () => {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    // Check if we just redirected back from backend instagram callback with igData in query params
     const params = new URLSearchParams(location.search);
-    const igDataStr = params.get('igData');
+    const instagramStatus = params.get('instagram');
+    const reason = params.get('reason');
     const err = params.get('error');
 
-    if (igDataStr) {
-      try {
-        const parsed = JSON.parse(decodeURIComponent(igDataStr));
-        setIgData(parsed);
-        // Clean URL
-        window.history.replaceState({}, document.title, '/creator/connect-instagram');
-        // Proceed to next step
-        navigate('/onboard/profile', { state: { creator: location.state?.creator } });
-      } catch (e) {
-        console.error(e);
-      }
-    } else if (err) {
-      setError('Failed to connect Instagram. Please try again.');
+    if (instagramStatus === 'success') {
+      const username = params.get('username');
+      const followers = params.get('followers');
+      const pic = params.get('pic');
+      
+      setIgData({
+        handle: username,
+        followers: followers ? parseInt(followers, 10) : 0,
+        avatarUrl: pic ? decodeURIComponent(pic) : ''
+      });
+      
+      // Clean URL
+      window.history.replaceState({}, document.title, '/creator/connect-instagram');
+      
+      // Proceed to next step
+      navigate('/onboard/profile', { state: { creator: location.state?.creator } });
+    } else if (instagramStatus === 'error' || err) {
+      setError(`Failed to connect Instagram. Please try again. ${reason ? `(${reason})` : ''}`);
     }
   }, [location, navigate, setIgData]);
 

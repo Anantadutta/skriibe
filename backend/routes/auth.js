@@ -288,81 +288,75 @@ router.get('/facebook/callback', passport.authenticate('facebook', { failureRedi
 // -- INSTAGRAM ROUTES --
 
 router.get('/instagram', (req, res) => {
-  const clientId = process.env.INSTAGRAM_CLIENT_ID;
+  const clientId = process.env.INSTAGRAM_APP_ID;
   const redirectUri = process.env.INSTAGRAM_REDIRECT_URI || 'http://localhost:5000/api/auth/instagram/callback';
-  const url = `https://api.instagram.com/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&scope=user_profile,user_media&response_type=code`;
+  const url = `https://www.instagram.com/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&scope=instagram_business_basic,instagram_business_manage_messages,instagram_business_manage_comments&response_type=code`;
   res.redirect(url);
 });
 
 router.get('/instagram/callback', async (req, res) => {
+  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
   try {
     const { code } = req.query;
-    if (!code) return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/creator/connect-instagram?error=nocode`);
-
-    // MOCK INSTAGRAM FETCH FOR NOW if no credentials provided
-    let igData = {
-      handle: 'mock_handle',
-      name: 'Mock Creator',
-      followers: 12500,
-      bio: 'This is a mock bio from Instagram',
-      accessToken: 'mock_access_token'
-    };
-
-    if (process.env.INSTAGRAM_CLIENT_ID) {
-      const redirectUri = process.env.INSTAGRAM_REDIRECT_URI || 'http://localhost:5000/api/auth/instagram/callback';
-      const tokenRes = await axios.post('https://api.instagram.com/oauth/access_token', new URLSearchParams({
-        client_id: process.env.INSTAGRAM_CLIENT_ID,
-        client_secret: process.env.INSTAGRAM_CLIENT_SECRET,
-        grant_type: 'authorization_code',
-        redirect_uri: redirectUri,
-        code
-      }));
-      const shortLivedToken = tokenRes.data.access_token;
-      
-      const userRes = await axios.get(`https://graph.instagram.com/me?fields=id,username,name,biography,profile_picture_url&access_token=${shortLivedToken}`);
-      igData = {
-        handle: userRes.data.username,
-        name: userRes.data.name || '',
-        bio: userRes.data.biography || '',
-        avatarUrl: userRes.data.profile_picture_url || '',
-        accessToken: shortLivedToken,
-        followers: 0 // Instagram Basic API does not provide follower count, usually requires graph api
-      };
+    if (!code) {
+      return res.redirect(`${frontendUrl}/creator/connect-instagram?instagram=error&reason=auth_failed`);
     }
+
+    const clientId = process.env.INSTAGRAM_APP_ID;
+    const clientSecret = process.env.INSTAGRAM_APP_SECRET;
+    const redirectUri = process.env.INSTAGRAM_REDIRECT_URI || 'http://localhost:5000/api/auth/instagram/callback';
+
+    // Step 1 - Exchange code for short-lived access token
+    const tokenRes = await axios.post('https://api.instagram.com/oauth/access_token', new URLSearchParams({
+      client_id: clientId,
+      client_secret: clientSecret,
+      grant_type: 'authorization_code',
+      redirect_uri: redirectUri,
+      code
+    }));
+    const shortLivedToken = tokenRes.data.access_token;
+
+    // Step 2 - Exchange for long-lived access token
+    const longTokenRes = await axios.get(`https://graph.instagram.com/access_token?grant_type=ig_exchange_token&client_secret=${clientSecret}&access_token=${shortLivedToken}`);
+    const longLivedToken = longTokenRes.data.access_token;
+
+    // Step 3 - Fetch Instagram profile
+    const userRes = await axios.get(`https://graph.instagram.com/v19.0/me?fields=id,username,name,profile_picture_url,followers_count&access_token=${longLivedToken}`);
+    
+    const { username, name, profile_picture_url, followers_count } = userRes.data;
 
     // Encrypt token
     const cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(process.env.ENCRYPTION_KEY || '12345678901234567890123456789012'), Buffer.alloc(16, 0));
-    let encryptedToken = cipher.update(igData.accessToken, 'utf8', 'hex');
+    let encryptedToken = cipher.update(longLivedToken, 'utf8', 'hex');
     encryptedToken += cipher.final('hex');
 
-    // Pass data back to frontend via redirect with short-lived query params to be read by context
-    // In a real app, you might save this directly to DB if you know who the user is, but here the user hasn't finished onboarding.
-    // Wait, the prompt says "On successful connect: auto-fetch... Store instagramAccessToken (encrypted), instagramHandle, instagramFollowers, instagramConnected: true in DB".
-    // We can do this if the user is authenticated. Let's get the user from JWT.
-    
+    // Step 4 - Update DB if user is logged in
     const token = req.cookies.creator_token;
     if (token) {
       const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret');
       await connectDB();
       await Creator.findByIdAndUpdate(decoded.creatorId, {
         instagramConnected: true,
-        instagramHandle: igData.handle,
-        instagramFollowers: igData.followers,
+        instagramHandle: username,
+        instagramFollowers: followers_count || 0,
         instagramAccessToken: encryptedToken
       });
     }
 
-    const dataString = encodeURIComponent(JSON.stringify({
-      handle: igData.handle,
-      name: igData.name,
-      bio: igData.bio,
-      avatarUrl: igData.avatarUrl
-    }));
-    res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/onboard/profile?igData=${dataString}`);
+    // Redirect to frontend
+    let redirectUrl = `${frontendUrl}/creator/connect-instagram?instagram=success&username=${username}`;
+    if (followers_count !== undefined) {
+      redirectUrl += `&followers=${followers_count}`;
+    }
+    if (profile_picture_url) {
+      redirectUrl += `&pic=${encodeURIComponent(profile_picture_url)}`;
+    }
+    
+    res.redirect(redirectUrl);
 
   } catch (err) {
-    console.error(err);
-    res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/creator/connect-instagram?error=failed`);
+    console.error('Instagram auth error:', err.response?.data || err.message);
+    res.redirect(`${frontendUrl}/creator/connect-instagram?instagram=error&reason=fetch_failed`);
   }
 });
 
