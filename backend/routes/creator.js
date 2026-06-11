@@ -232,6 +232,28 @@ router.post('/questions/:id/reply', verifyCreatorToken, async (req, res) => {
         sendQuestionAnsweredEmail(question.buyerEmail, question.buyerName, creatorName, answerLink)
           .catch(e => console.error("Failed to send question answered email", e));
       }
+
+      try {
+        const Fan = require('../models/Fan');
+        const fanData = await Fan.findById(question.fanId);
+        
+        if (fanData && fanData.whatsappPhone && fanData.whatsappConsent) {
+          const { sendCreatorReplyNotification } = require('../lib/whatsapp');
+          const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+          const answerLink = `${frontendUrl}/fan/history`;
+          const snippet = replyText.substring(0, 80);
+          
+          sendCreatorReplyNotification({
+            fanPhone: fanData.whatsappPhone,
+            fanName: fanData.name || question.buyerName || 'Fan',
+            creatorName: creatorName,
+            snippet: snippet,
+            replyUrl: answerLink
+          }).catch(e => console.error("Failed to send WhatsApp reply notification", e));
+        }
+      } catch (waLookupError) {
+        console.error("Failed looking up fan for WhatsApp notification", waLookupError);
+      }
     }
 
     res.json({ success: true, question });

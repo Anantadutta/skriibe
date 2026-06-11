@@ -9,11 +9,14 @@ const FanSignup = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [whatsappPhone, setWhatsappPhone] = useState('');
+  const [whatsappConsent, setWhatsappConsent] = useState(false);
   
   const [focusedName, setFocusedName] = useState(false);
   const [focusedEmail, setFocusedEmail] = useState(false);
   const [focusedPassword, setFocusedPassword] = useState(false);
   const [focusedConfirmPassword, setFocusedConfirmPassword] = useState(false);
+  const [focusedWhatsappPhone, setFocusedWhatsappPhone] = useState(false);
   const navigate = useNavigate();
   
   console.log("FanSignup rendered");
@@ -41,7 +44,7 @@ const FanSignup = () => {
     setLoading(true);
     setError('');
     try {
-      const res = await fanSignup(name, email, password);
+      const res = await fanSignup(name, email, password, whatsappPhone, whatsappConsent);
       if (res.data.success) {
         // Just redirect to explore page for now after successful signup
         navigate('/explore');
@@ -54,7 +57,7 @@ const FanSignup = () => {
     }
   };
 
-  const isInvalid = !name || !email || !password || !confirmPassword || password !== confirmPassword || !checkPasswordStrength(password);
+  const isInvalid = !name || !email || !password || !confirmPassword || password !== confirmPassword || !checkPasswordStrength(password) || (whatsappConsent && !whatsappPhone);
 
   return (
     <div style={{
@@ -397,6 +400,69 @@ const FanSignup = () => {
                   Passwords do not match
                 </div>
               )}
+
+              <label style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: '9px',
+                color: '#06b6d4',
+                textTransform: 'uppercase',
+                display: 'block',
+                marginBottom: '10px',
+                letterSpacing: '1.5px',
+                fontWeight: '600'
+              }}>
+                WHATSAPP NUMBER {whatsappConsent ? <span style={{ color: '#ef4444' }}>*</span> : '(OPTIONAL)'}
+              </label>
+
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                background: 'rgba(255, 255, 255, 0.03)',
+                border: focusedWhatsappPhone ? '1px solid #7c3aed' : '1px solid rgba(255, 255, 255, 0.08)',
+                borderRadius: '12px',
+                boxShadow: focusedWhatsappPhone ? '0 0 15px rgba(124, 58, 237, 0.3)' : 'none',
+                transition: 'all 0.25s ease',
+                overflow: 'hidden',
+                marginBottom: '16px'
+              }}>
+                <input
+                  type="tel"
+                  placeholder=""
+                  value={whatsappPhone}
+                  onChange={(e) => {
+                    setWhatsappPhone(e.target.value.replace(/[^0-9\+\-\s\(\)]/g, ''));
+                    if (error) setError('');
+                  }}
+                  onFocus={() => setFocusedWhatsappPhone(true)}
+                  onBlur={() => setFocusedWhatsappPhone(false)}
+                  style={{
+                    flex: 1,
+                    background: 'transparent',
+                    border: 'none',
+                    outline: 'none',
+                    padding: '16px 20px',
+                    fontSize: '16px',
+                    color: '#ffffff',
+                    fontFamily: 'var(--font-mono)',
+                    letterSpacing: '1px'
+                  }}
+                />
+              </div>
+
+              <label style={{
+                display: 'flex', alignItems: 'flex-start', gap: '10px',
+                cursor: 'pointer', marginBottom: '16px'
+              }}>
+                <input 
+                  type="checkbox" 
+                  checked={whatsappConsent}
+                  onChange={(e) => setWhatsappConsent(e.target.checked)}
+                  style={{ width: '16px', height: '16px', accentColor: '#06b6d4', marginTop: '2px', cursor: 'pointer' }}
+                />
+                <span style={{ color: '#94a3b8', fontSize: '12px', lineHeight: '1.4' }}>
+                  Notify me on WhatsApp when a creator replies to my question
+                </span>
+              </label>
 
               {error && (
                 <div style={{

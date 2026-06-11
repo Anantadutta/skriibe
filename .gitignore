@@ -7,3 +7,5 @@ frontend/.env
 backend/msg91_debug.txt
 backend/test_msg91.js
 .vercel
+admin-frontend/node_modules/
+admin-frontend/.env

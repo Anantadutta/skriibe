@@ -14,6 +14,8 @@ const FanSchema = new mongoose.Schema({
   authProvider: { type: String, default: 'local' },
   resetPasswordToken: { type: String },
   resetPasswordExpires: { type: Date },
+  whatsappPhone: { type: String, default: '' },
+  whatsappConsent: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now }
 });
 

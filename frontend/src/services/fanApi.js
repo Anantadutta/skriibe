@@ -5,8 +5,8 @@ const api = axios.create({
   withCredentials: true
 });
 
-export const fanSignup = (name, email, password) => {
-  return api.post('/fan-auth/signup', { name, email, password });
+export const fanSignup = (name, email, password, whatsappPhone, whatsappConsent) => {
+  return api.post('/fan-auth/signup', { name, email, password, whatsappPhone, whatsappConsent });
 };
 
 export const fanLogin = (email, password) => {

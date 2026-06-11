@@ -37,7 +37,7 @@ const CreatorDashboard = () => {
 
     const fetchQuestions = async () => {
       try {
-        const res = await api.get('/creator/questions');
+        const res = await api.get(`/creator/questions?t=${Date.now()}`);
         if (res.data.success) {
           setQuestions(res.data.questions);
         }

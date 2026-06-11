@@ -157,10 +157,30 @@ router.get('/facebook/callback', passport.authenticate('facebook-fan', { failure
 router.post('/signup', async (req, res) => {
   try {
     await connectDB();
-    const { name, email, password } = req.body;
+    const { name, email, password, whatsappPhone, whatsappConsent } = req.body;
     
     if (!email || !password) {
       return res.status(400).json({ message: 'Email and password are required' });
+    }
+
+    let normalizedPhone = '';
+    let finalConsent = false;
+
+    if (whatsappPhone) {
+      normalizedPhone = whatsappPhone.replace(/[\+\s\-\(\)]/g, '');
+      if (normalizedPhone.startsWith('0')) {
+        normalizedPhone = normalizedPhone.substring(1);
+      }
+      if (normalizedPhone.length === 10) {
+        normalizedPhone = '91' + normalizedPhone;
+      }
+      if (!/^\d{10,15}$/.test(normalizedPhone)) {
+        return res.status(400).json({ message: 'Invalid WhatsApp number format. Please provide a valid number.' });
+      }
+      
+      if (whatsappConsent) {
+        finalConsent = true;
+      }
     }
 
     const existingFan = await Fan.findOne({ email: email.toLowerCase() });
@@ -173,7 +193,9 @@ router.post('/signup', async (req, res) => {
     const newFan = new Fan({
       name,
       email: email.toLowerCase(),
-      password: hashedPassword
+      password: hashedPassword,
+      whatsappPhone: normalizedPhone,
+      whatsappConsent: finalConsent
     });
     
     await newFan.save();
