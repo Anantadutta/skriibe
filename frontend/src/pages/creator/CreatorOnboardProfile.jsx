@@ -87,6 +87,7 @@ const CreatorOnboardProfile = () => {
         setForm(prev => ({
           ...prev,
           instagramHandle: data.handle || prev.instagramHandle,
+          instagramFollowers: data.followers || prev.instagramFollowers,
           instagramConnected: true,
           name: data.name || prev.name,
           bio: data.bio || prev.bio,

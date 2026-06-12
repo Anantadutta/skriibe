@@ -21,17 +21,17 @@ const CreatorConnectInstagram = () => {
       const followers = params.get('followers');
       const pic = params.get('pic');
       
-      setIgData({
+      const igDataObj = {
         handle: username,
         followers: followers ? parseInt(followers, 10) : 0,
         avatarUrl: pic ? decodeURIComponent(pic) : ''
-      });
+      };
       
-      // Clean URL
-      window.history.replaceState({}, document.title, '/creator/connect-instagram');
+      setIgData(igDataObj);
       
-      // Proceed to next step
-      navigate('/onboard/profile', { state: { creator: location.state?.creator } });
+      // Redirect to profile with igData in URL so it can pre-fill
+      const encodedData = encodeURIComponent(JSON.stringify(igDataObj));
+      navigate(`/onboard/profile?igData=${encodedData}`, { state: { creator: location.state?.creator }, replace: true });
     } else if (instagramStatus === 'error' || err) {
       setError(`Failed to connect Instagram. Please try again. ${reason ? `(${reason})` : ''}`);
     }
