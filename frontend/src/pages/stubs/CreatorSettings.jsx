@@ -78,7 +78,7 @@ const CreatorSettings = () => {
   const [isPausedFeedback, setIsPausedFeedback] = useState(false);
   const [isSignOutModalOpen, setIsSignOutModalOpen] = useState(false);
   const [deleteModalStep, setDeleteModalStep] = useState(0); // 0: closed, 1: confirm, 2: deleting
-  const [deleteInput, setDeleteInput] = useState('');
+  const [deleteInputValue, setDeleteInputValue] = useState('');
   
   const [isAccountDeleted, setIsAccountDeleted] = useState(false);
 
@@ -208,15 +208,15 @@ const CreatorSettings = () => {
             style={{
               width: '40px',
               height: '40px',
-              borderRadius: '50%',
-              background: '#1A1A1A',
+              borderRadius: '12px',
+              border: '1px solid #2A2A2A',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               cursor: 'pointer'
             }}
           >
-            <span style={{ fontSize: '1.2rem', color: '#94a3b8' }}>‹</span>
+            <span style={{ fontSize: '1.2rem', color: '#94a3b8', marginTop: '-2px' }}>‹</span>
           </div>
           <h2 style={{ fontSize: '1.25rem', fontWeight: 700, margin: '0 auto', paddingRight: '40px' }}>
             Settings
@@ -224,88 +224,119 @@ const CreatorSettings = () => {
         </div>
 
         {/* Profile Card */}
-        <div style={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          gap: '20px', 
-          padding: '12px 0 24px',
-          borderBottom: '1px solid transparent'
+        <div style={{
+          background: 'linear-gradient(135deg, #1A2235 0%, #0F172A 100%)',
+          borderRadius: '24px',
+          padding: '24px',
+          position: 'relative',
+          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '20px',
+          border: '1px solid rgba(255, 255, 255, 0.05)',
+          boxShadow: '0 10px 30px rgba(0,0,0,0.3)'
         }}>
-          {/* Avatar with edit icon */}
-          <div style={{ position: 'relative', cursor: 'pointer' }} onClick={handleEditAvatar}>
-            <div style={{
-              width: '84px',
-              height: '84px',
-              borderRadius: '50%',
-              background: 'linear-gradient(135deg, #38BDF8 0%, #34D399 100%)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              overflow: 'hidden'
-            }}>
-              {creator.avatarUrl && (
-                <img src={creator.avatarUrl} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              )}
+          {/* Abstract circles */}
+          <div style={{ position: 'absolute', top: '-40px', right: '-40px', width: '150px', height: '150px', borderRadius: '50%', background: '#253B75', opacity: 0.5 }} />
+          <div style={{ position: 'absolute', bottom: '-40px', left: '-40px', width: '120px', height: '120px', borderRadius: '50%', background: '#0F2C3A', opacity: 0.6 }} />
+          
+          <div style={{ display: 'flex', gap: '16px', alignItems: 'center', position: 'relative', zIndex: 1 }}>
+            {/* Avatar */}
+            <div style={{ position: 'relative', cursor: 'pointer' }} onClick={handleEditAvatar}>
+              <div style={{
+                width: '72px', height: '72px', borderRadius: '50%', background: 'linear-gradient(135deg, #4ADE80 0%, #2DD4BF 100%)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
+                color: '#0E0E0E', fontWeight: '900', fontSize: '24px'
+              }}>
+                {creator.avatarUrl ? (
+                  <img src={creator.avatarUrl} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : (
+                  avatar.toUpperCase()
+                )}
+              </div>
+              <div style={{
+                position: 'absolute', bottom: '0px', right: '0px', width: '24px', height: '24px', borderRadius: '50%',
+                background: '#6366F1', border: '2px solid #0F172A', display: 'flex', alignItems: 'center', justifyContent: 'center'
+              }}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#FFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 20h9"></path>
+                  <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                </svg>
+              </div>
             </div>
-            {/* Edit icon */}
-            <div style={{
-              position: 'absolute',
-              bottom: '0px',
-              right: '0px',
-              width: '28px',
-              height: '28px',
-              borderRadius: '50%',
-              background: '#38BDF8',
-              border: '3px solid #0E0E0E',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0E0E0E" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 20h9"></path>
-                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
-              </svg>
+
+            {/* Info */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '1.4rem', fontWeight: 800, color: '#fff' }}>
+                {creator.name || creator.displayName || 'okayyy'}
+                <div style={{ width: '18px', height: '18px', background: '#6366F1', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#FFF" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                </div>
+              </div>
+              <div style={{ color: '#94A3B8', fontSize: '0.95rem' }}>
+                skriibe.com/@{creator.handle || creator.username || 'ok_90'}
+              </div>
+              <div style={{ 
+                background: 'rgba(99, 102, 241, 0.1)', border: '1px solid rgba(99, 102, 241, 0.2)',
+                borderRadius: '12px', padding: '4px 10px', display: 'inline-flex', alignItems: 'center', gap: '6px',
+                color: '#A5B4FC', fontSize: '0.85rem', fontWeight: 600, width: 'fit-content', marginTop: '4px'
+              }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                </svg>
+                {creator.expertise && creator.expertise.length > 0 ? creator.expertise[0] : 'Finance'}
+              </div>
             </div>
           </div>
-          
-          {/* Info */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#ffffff', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              {creator.name || creator.displayName || 'Ananta Dutta'}
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+
+          <div style={{ height: '1px', background: 'rgba(255,255,255,0.08)', width: '100%', position: 'relative', zIndex: 1 }} />
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', position: 'relative', zIndex: 1, padding: '4px 0' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1, gap: '4px' }}>
+              <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#FFF' }}>{formattedFollowers}</span>
+              <span style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: 600 }}>Followers</span>
             </div>
-            <div style={{ 
-              background: 'rgba(56, 189, 248, 0.1)',
-              border: '1px solid rgba(56, 189, 248, 0.2)',
-              borderRadius: '16px',
-              padding: '6px 12px',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
-              color: '#38BDF8',
-              fontSize: '0.85rem',
-              fontWeight: 600,
-              width: 'fit-content',
-              cursor: 'pointer'
-            }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
-                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
-              </svg>
-              skriibe.com/@{creator.handle || creator.username || 'anantadutta'}
+            <div style={{ width: '1px', background: 'rgba(255,255,255,0.08)' }} />
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1, gap: '4px' }}>
+              <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#FFF' }}>₹{questionPrice}</span>
+              <span style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: 600 }}>Per question</span>
             </div>
-            <div 
-              onClick={handleEditBio}
-              style={{ fontSize: '0.85rem', color: '#94a3b8', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}
-            >
-              {bio}
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 20h9"></path>
-                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
-              </svg>
+            <div style={{ width: '1px', background: 'rgba(255,255,255,0.08)' }} />
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1, gap: '4px' }}>
+              <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#FFF' }}>{dailyCap}</span>
+              <span style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: 600 }}>Daily cap</span>
             </div>
           </div>
         </div>
+
+        {/* VIEW MY PAGE CTA */}
+        <button 
+          onClick={() => {
+            const username = creator?.username || creator?.handle;
+            if (username) navigate(`/@${username}`);
+          }}
+          style={{
+            background: '#202020',
+            border: '1px solid #333',
+            borderRadius: '12px',
+            padding: '16px',
+            color: '#ffffff',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
+            transition: 'background 0.2s',
+            width: '100%',
+            boxSizing: 'border-box'
+          }}
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+            <circle cx="12" cy="12" r="3"></circle>
+          </svg>
+          <span style={{ fontSize: '1.1rem', fontWeight: '700' }}>View my page</span>
+        </button>
 
         {/* AMA SETTINGS SECTION */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -440,7 +471,7 @@ const CreatorSettings = () => {
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                  <div style={{ color: '#ffffff', fontSize: '0.95rem', fontWeight: 700 }}>Weekly earnings goal</div>
+                  <div style={{ color: '#ffffff', fontSize: '0.95rem', fontWeight: 700 }}>Set your Weekly Earnings Goal</div>
                   <div style={{ color: '#64748b', fontSize: '0.8rem' }}>Set your target</div>
                 </div>
               </div>

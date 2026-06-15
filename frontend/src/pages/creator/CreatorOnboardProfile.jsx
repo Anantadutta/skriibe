@@ -119,7 +119,7 @@ const CreatorOnboardProfile = () => {
           expertise: prev.expertise.filter(t => t !== tag)
         };
       } else {
-        if (prev.expertise.length >= 3) return prev; // Limit to max 3 tags
+        if (prev.expertise.length >= 2) return prev; // Limit to max 2 tags
         return {
           ...prev,
           expertise: [...prev.expertise, tag]
@@ -154,7 +154,7 @@ const CreatorOnboardProfile = () => {
     if (!form.name || !form.handle || !form.email || !form.phone || form.expertise.length === 0) {
       const missing = [];
       if (!form.name || form.name.trim().length < 2) missing.push('Full Name');
-      if (!isHandleValid) missing.push('Username (3–30 chars, lowercase letters/numbers/underscore only)');
+      if (!isHandleValid) missing.push('Username (3–30 chars, letters/numbers/underscore/period only)');
       if (!isEmailValid) missing.push('Valid Email');
       if (!isPhoneValid) missing.push('10-digit Phone Number');
       if (form.expertise.length === 0) missing.push('Field of Expertise (pick at least 1)');
@@ -188,14 +188,14 @@ const CreatorOnboardProfile = () => {
   };
 
   const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email);
-  const isHandleValid = /^[a-z0-9_]{3,30}$/.test(form.handle);
+  const isHandleValid = /^[a-zA-Z0-9_.]{3,30}$/.test(form.handle);
   const isPhoneValid = /^[0-9]{10}$/.test(form.phone);
   const canContinue = form.name.trim().length >= 2 &&
     isHandleValid &&
     isEmailValid &&
     isPhoneValid &&
     form.expertise.length >= 1 &&
-    form.expertise.length <= 3;
+    form.expertise.length <= 2;
 
   if (loadingCreator) {
     return (
@@ -658,7 +658,7 @@ We’ll automatically fetch your profile photo, username, and follower count fro
                 <Field
                   label="USERNAME *"
                   value={form.handle}
-                  onChange={(e) => handleInputChange('handle', e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
+                  onChange={(e) => handleInputChange('handle', e.target.value.replace(/[^a-zA-Z0-9_.]/g, ''))}
                   placeholder=""
                   required
                 />
@@ -675,7 +675,7 @@ We’ll automatically fetch your profile photo, username, and follower count fro
                     marginBottom: '10px',
                     fontWeight: 700
                   }}>
-                    FIELD OF EXPERTISE <span style={{ color: '#ef4444' }}>*</span> (1–3)
+                    FIELD OF EXPERTISE <span style={{ color: '#ef4444' }}>*</span> (1–2)
                   </label>
 
                   {/* Selected tags */}
@@ -930,7 +930,7 @@ We’ll automatically fetch your profile photo, username, and follower count fro
           marginTop: '24px',
           opacity: 0.75
         }}>
-          Made with 🤍 for bold conversations
+          Made with 🤍 from Skriibe
         </div>
 
       </div>

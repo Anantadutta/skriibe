@@ -29,6 +29,7 @@ const CreatorPublicPage = () => {
   const [paymentTab, setPaymentTab] = useState('UPI');
   const [buyerUpiId, setBuyerUpiId] = useState('');
   const [submittedQuestionId, setSubmittedQuestionId] = useState(null);
+  const [showCvv, setShowCvv] = useState(false);
   
   // Status
   const [error, setError] = useState('');
@@ -178,8 +179,24 @@ const CreatorPublicPage = () => {
         gap: '24px'
       }}>
         
-        {/* TOP BAR: Logo only */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', paddingBottom: '8px' }}>
+        {/* TOP BAR: Back button and Logo */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '8px' }}>
+          <div 
+            onClick={() => navigate(-1)}
+            style={{
+              width: '32px',
+              height: '32px',
+              borderRadius: '50%',
+              background: 'rgba(255,255,255,0.05)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              border: '1px solid rgba(255,255,255,0.1)'
+            }}
+          >
+            <span style={{ fontSize: '1.2rem', color: '#94a3b8', marginTop: '-2px' }}>‹</span>
+          </div>
           <div style={{ fontSize: '1.2rem', fontWeight: '600', letterSpacing: '-0.03em', color: '#333' }}>
             skr<span style={{ color: '#29C5F6' }}>ii</span>be
           </div>
@@ -849,16 +866,50 @@ const CreatorPublicPage = () => {
                   maxLength={5}
                 />
               </div>
-              <div style={{ flex: 1, background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '16px', padding: '16px' }}>
+              <div style={{ flex: 1, background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '16px', padding: '16px', position: 'relative' }}>
                 <div style={{ color: '#64748b', fontSize: '0.7rem', fontWeight: '800', letterSpacing: '2px', textTransform: 'uppercase' }}>
                   CVV
                 </div>
                 <input 
-                  type="password"
+                  type={showCvv ? "text" : "password"}
                   className="unified-input" 
                   placeholder="•••" 
                   maxLength={4}
+                  style={{ width: 'calc(100% - 24px)' }}
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowCvv(!showCvv)}
+                  style={{
+                    position: 'absolute',
+                    right: '16px',
+                    bottom: '16px',
+                    background: 'transparent',
+                    border: 'none',
+                    outline: 'none',
+                    padding: 0,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#94a3b8',
+                    transition: 'color 0.2s'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.color = '#ffffff'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = '#94a3b8'}
+                >
+                  {showCvv ? (
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                      <line x1="1" y1="1" x2="23" y2="23"></line>
+                    </svg>
+                  ) : (
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                      <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                  )}
+                </button>
               </div>
             </div>
             <div style={{ background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '16px', padding: '16px' }}>

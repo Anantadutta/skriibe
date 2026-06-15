@@ -175,17 +175,36 @@ const CreatorDashboard = () => {
               zIndex: 0
             }} />
             
-            <div style={{
-              position: 'relative',
-              zIndex: 1,
-              fontSize: '1.6rem',
-              fontWeight: '600',
-              fontStyle: 'normal',
-              letterSpacing: '-0.03em',
-              color: '#fff',
-              lineHeight: '1'
-            }}>
-              skr<span style={{ color: '#29C5F6' }}>ii</span>be
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div 
+                onClick={() => navigate('/dashboard/share')}
+                style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '50%',
+                  background: 'rgba(255,255,255,0.05)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  zIndex: 1,
+                  border: '1px solid rgba(255,255,255,0.1)'
+                }}
+              >
+                <span style={{ fontSize: '1.2rem', color: '#94a3b8', marginTop: '-2px' }}>‹</span>
+              </div>
+              <div style={{
+                position: 'relative',
+                zIndex: 1,
+                fontSize: '1.6rem',
+                fontWeight: '600',
+                fontStyle: 'normal',
+                letterSpacing: '-0.03em',
+                color: '#fff',
+                lineHeight: '1'
+              }}>
+                skr<span style={{ color: '#29C5F6' }}>ii</span>be
+              </div>
             </div>
             <div style={{ position: 'relative', zIndex: 1, color: '#94a3b8', fontSize: '0.85rem', display: 'flex', flexDirection: 'column', gap: '2px' }}>
               Good afternoon

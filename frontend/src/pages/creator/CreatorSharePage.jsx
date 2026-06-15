@@ -524,7 +524,7 @@ const CreatorSharePage = () => {
 
           <div style={{ display: 'flex', gap: '10px', marginTop: '4px' }}>
             <button onClick={() => navigate('/creator/dashboard', { state: { creator } })} className="copy-link-btn" style={{ flex: 1, background: '#1A1A1A', border: '1px solid #2A2A2A', color: '#ffffff', boxShadow: 'none' }}>
-              <span>Open Dashboard</span>
+              <span>Share Profile</span>
             </button>
             <button onClick={() => navigate(`/@${username}`)} className="copy-link-btn" style={{ flex: 1, background: 'linear-gradient(90deg, #7c3aed, #06b6d4)' }}>
               <span>View My Page →</span>
@@ -538,37 +538,48 @@ const CreatorSharePage = () => {
             SHARE ON
           </div>
 
-          <div style={{ display: 'flex', gap: '48px', padding: '16px', background: 'rgba(255, 255, 255, 0.03)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)', justifyContent: 'center' }}>
+          <div style={{ display: 'flex', gap: '32px', padding: '16px', background: 'rgba(255, 255, 255, 0.03)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)', justifyContent: 'center' }}>
             
-            <div onClick={openWhatsApp} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-              <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'rgba(37, 211, 102, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(37, 211, 102, 0.2)' }}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M12.012 5.5a6.477 6.477 0 00-5.632 9.68l-.74 2.701 2.766-.726a6.467 6.467 0 003.606 1.085h.003a6.48 6.48 0 006.478-6.475 6.48 6.48 0 00-6.481-6.465zm3.435 8.784c-.147.414-.737.76-1.012.808-.25.044-.575.08-.925-.033a5.522 5.522 0 01-2.483-1.636 5.86 5.86 0 01-1.282-2.128c-.148-.445-.443-.9-.42-1.391.025-.522.285-.776.388-.88.103-.105.227-.156.34-.156.113 0 .227.006.326.012.103.006.242-.038.379.293.137.331.472 1.15.513 1.233.041.083.067.18.012.289-.053.11-.12.22-.24.36-.12.14-.242.313-.36.42-.12.12-.247.25-.106.491.14.241.625 1.026 1.34 1.662.923.82 1.7.172 1.942.062.242-.11.267-.282.4-.44.133-.158.267-.34.4-.51.133-.17.267-.14.4-.083.133.057.84.396.984.468.144.072.24.11.276.172.036.062.036.363-.11.777z" fill="#25D366"/>
-                </svg>
-              </div>
+            <div onClick={openWhatsApp} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', cursor: 'pointer', transition: 'transform 0.2s', ':hover': { transform: 'scale(1.05)' } }}>
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12.01 2.002c-5.518 0-10 4.48-10 9.998 0 1.754.453 3.42 1.314 4.908L2 22l5.247-1.376a9.966 9.966 0 0 0 4.763 1.206h.004c5.517 0 10-4.48 10-9.998 0-5.518-4.483-9.998-10-9.998z" fill="#25D366"/>
+                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347" fill="#fff"/>
+              </svg>
               <span style={{ fontSize: '11px', color: '#94a3b8' }}>WhatsApp</span>
             </div>
 
             <div onClick={openLinkedIn} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-              <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'rgba(10, 102, 194, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(10, 102, 194, 0.2)' }}>
-                <span style={{ color: '#0a66c2', fontWeight: 800, fontSize: '20px' }}>in</span>
-              </div>
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="24" height="24" rx="4" fill="#0A66C2"/>
+                <path d="M7 20H4V9h3v11zM5.5 7.73a1.74 1.74 0 1 1 0-3.48 1.74 1.74 0 0 1 0 3.48zM20 20h-3v-5.6c0-1.34-.03-3.06-1.87-3.06-1.87 0-2.16 1.46-2.16 2.96V20h-3V9h2.88v1.5h.04c.4-.76 1.38-1.56 2.84-1.56 3.04 0 3.6 2 3.6 4.6V20z" fill="#fff"/>
+              </svg>
               <span style={{ fontSize: '11px', color: '#94a3b8' }}>LinkedIn</span>
             </div>
 
-            <div onClick={openYouTube} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-              <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'rgba(255, 0, 0, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(255, 0, 0, 0.2)' }}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M9.5 8v8l6.5-4-6.5-4z" fill="#FF0000"/>
-                </svg>
-              </div>
-              <span style={{ fontSize: '11px', color: '#94a3b8' }}>YouTube</span>
+            <div onClick={openInstagram} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <linearGradient id="ig-grad2" x1="20%" y1="100%" x2="80%" y2="0%">
+                    <stop offset="0%" stopColor="#f09433" />
+                    <stop offset="25%" stopColor="#e6683c" />
+                    <stop offset="50%" stopColor="#dc2743" />
+                    <stop offset="75%" stopColor="#cc2366" />
+                    <stop offset="100%" stopColor="#bc1888" />
+                  </linearGradient>
+                </defs>
+                <rect width="24" height="24" rx="5" fill="url(#ig-grad2)"/>
+                <rect x="5" y="5" width="14" height="14" rx="4" stroke="#fff" strokeWidth="1.5" />
+                <circle cx="12" cy="12" r="3.5" stroke="#fff" strokeWidth="1.5" />
+                <circle cx="16.5" cy="7.5" r="1.1" fill="#fff" />
+              </svg>
+              <span style={{ fontSize: '11px', color: '#94a3b8' }}>Instagram</span>
             </div>
 
             <div onClick={openX} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-              <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'rgba(255, 255, 255, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(255, 255, 255, 0.2)' }}>
-                <span style={{ color: '#ffffff', fontWeight: 800, fontSize: '20px', fontFamily: 'sans-serif' }}>𝕏</span>
-              </div>
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="24" height="24" rx="4" fill="#000000"/>
+                <path d="M16 4h2.5l-5.5 6.5L19 20h-4.5l-3.5-4.5-4 4.5H4.5l6-7L5 4h4.5l3 4.5L16 4Zm-1.5 14h1.5L8.5 5.5h-1.5L14.5 18Z" fill="#ffffff"/>
+              </svg>
               <span style={{ fontSize: '11px', color: '#94a3b8' }}>X</span>
             </div>
 
@@ -619,7 +630,7 @@ const CreatorSharePage = () => {
           marginBottom: '24px',
           opacity: 0.75
         }}>
-          Made with 🤍 for bold conversations
+          Made with 🤍 from Skriibe
         </div>
 
         {/* PERSISTENT BOTTOM NAVIGATION (HIDDEN/NULL YET RENDERED FOR COMPATIBILITY) */}

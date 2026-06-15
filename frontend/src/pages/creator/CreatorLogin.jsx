@@ -11,6 +11,7 @@ import { Button } from '../../components/ama/ui/Button';
 const CreatorLogin = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const location = useLocation();
@@ -150,7 +151,7 @@ const CreatorLogin = () => {
           backdropFilter: 'blur(12px)',
           border: '1px solid rgba(255, 255, 255, 0.08)',
           borderRadius: '16px',
-          padding: '32px 24px',
+          padding: '20px',
           display: 'flex',
           flexDirection: 'column',
           boxSizing: 'border-box'
@@ -160,7 +161,7 @@ const CreatorLogin = () => {
             display: 'flex',
             alignItems: 'center',
             position: 'relative',
-            marginBottom: '20px'
+            marginBottom: '12px'
           }}>
             <Link to="/" style={{
               position: 'absolute',
@@ -192,7 +193,7 @@ const CreatorLogin = () => {
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <div style={{ textAlign: 'center', marginTop: '10px' }}>
+            <div style={{ textAlign: 'center', marginTop: '0px' }}>
               <div style={{
                 width: '120px',
                 margin: '0 auto 8px',
@@ -217,7 +218,7 @@ const CreatorLogin = () => {
               </div>
             </div>
 
-            <div style={{ marginTop: '40px' }}>
+            <div style={{ marginTop: '20px' }}>
               {successMessage && (
                 <div style={{
                   color: '#22c55e',
@@ -239,7 +240,7 @@ const CreatorLogin = () => {
                 color: '#06b6d4',
                 textTransform: 'uppercase',
                 display: 'block',
-                marginBottom: '10px',
+                marginBottom: '6px',
                 letterSpacing: '1.5px',
                 fontWeight: '600'
               }}>
@@ -255,7 +256,7 @@ const CreatorLogin = () => {
                 boxShadow: focusedEmail ? '0 0 15px rgba(124, 58, 237, 0.3)' : 'none',
                 transition: 'all 0.25s ease',
                 overflow: 'hidden',
-                marginBottom: '16px'
+                marginBottom: '12px'
               }}>
                 <input
                   type="email"
@@ -272,7 +273,7 @@ const CreatorLogin = () => {
                     background: 'transparent',
                     border: 'none',
                     outline: 'none',
-                    padding: '16px 20px',
+                    padding: '10px 14px',
                     fontSize: '16px',
                     color: '#ffffff',
                     fontFamily: 'var(--font-mono)',
@@ -287,7 +288,7 @@ const CreatorLogin = () => {
                 color: '#06b6d4',
                 textTransform: 'uppercase',
                 display: 'block',
-                marginBottom: '10px',
+                marginBottom: '6px',
                 letterSpacing: '1.5px',
                 fontWeight: '600'
               }}>
@@ -305,7 +306,7 @@ const CreatorLogin = () => {
                 overflow: 'hidden'
               }}>
                 <input
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   placeholder=""
                   value={password}
                   onChange={(e) => {
@@ -319,13 +320,43 @@ const CreatorLogin = () => {
                     background: 'transparent',
                     border: 'none',
                     outline: 'none',
-                    padding: '16px 20px',
+                    padding: '12px 16px',
                     fontSize: '16px',
                     color: '#ffffff',
                     fontFamily: 'var(--font-mono)',
                     letterSpacing: '1px'
                   }}
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    outline: 'none',
+                    padding: '0 16px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#94a3b8',
+                    transition: 'color 0.2s'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.color = '#ffffff'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = '#94a3b8'}
+                >
+                  {showPassword ? (
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                      <line x1="1" y1="1" x2="23" y2="23"></line>
+                    </svg>
+                  ) : (
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                      <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                  )}
+                </button>
               </div>
 
               <div style={{
@@ -360,7 +391,7 @@ const CreatorLogin = () => {
                 style={{
                   width: '100%',
                   maxWidth: '280px',
-                  padding: '14px 28px',
+                  padding: '12px 24px',
                   borderRadius: '9999px',
                   background: 'linear-gradient(90deg, #7c3aed 0%, #06b6d4 100%)',
                   color: '#ffffff',
@@ -372,15 +403,21 @@ const CreatorLogin = () => {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  margin: '24px auto 0',
+                  margin: '12px auto 0',
                   boxShadow: '0 4px 12px rgba(124, 58, 237, 0.2)'
                 }}
               >
                 {loading ? 'Logging in...' : 'Login →'}
               </button>
+
+              {/* LINK TO SIGNUP */}
+              <div style={{ textAlign: 'center', marginTop: '12px', fontSize: '13px' }}>
+                <span style={{ color: '#94a3b8' }}>Don't have an account? </span>
+                <Link to="/creator/signup" onClick={() => localStorage.removeItem('isReturningCreator')} style={{ color: '#06b6d4', textDecoration: 'none', fontWeight: '600' }}>Register here</Link>
+              </div>
             </div>
 
-            <div style={{ marginTop: '24px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
               <div style={{ textAlign: 'center', color: '#94a3b8', fontSize: '12px', marginBottom: '8px' }}>
                 or continue with
               </div>
@@ -392,7 +429,7 @@ const CreatorLogin = () => {
                    alignItems: 'center',
                    justifyContent: 'center',
                    gap: '10px',
-                   padding: '12px 24px',
+                   padding: '10px 20px',
                    background: 'rgba(255, 255, 255, 0.03)',
                    border: '1px solid rgba(255, 255, 255, 0.08)',
                    borderRadius: '9999px',
@@ -422,7 +459,7 @@ const CreatorLogin = () => {
                    alignItems: 'center',
                    justifyContent: 'center',
                    gap: '10px',
-                   padding: '12px 24px',
+                   padding: '10px 20px',
                    background: 'rgba(24, 119, 242, 0.1)',
                    border: '1px solid rgba(24, 119, 242, 0.2)',
                    borderRadius: '9999px',
@@ -442,17 +479,11 @@ const CreatorLogin = () => {
                 Continue with Meta
               </a>
             </div>
-            
-            {/* LINK TO SIGNUP */}
-            <div style={{ textAlign: 'center', marginTop: '24px', fontSize: '13px' }}>
-              <span style={{ color: '#94a3b8' }}>Don't have an account? </span>
-              <Link to="/creator/signup" onClick={() => localStorage.removeItem('isReturningCreator')} style={{ color: '#06b6d4', textDecoration: 'none', fontWeight: '600' }}>Register here</Link>
-            </div>
           </div>
 
           <div style={{
             textAlign: 'center',
-            marginTop: '32px',
+            marginTop: '16px',
             color: '#94a3b8',
             fontSize: '11px',
             fontFamily: 'var(--font-mono)',
@@ -460,8 +491,8 @@ const CreatorLogin = () => {
           }}>
             By logging in and using Skriibe, you agree to our<br />
             <span style={{ color: '#06b6d4', cursor: 'pointer' }}>Terms of Service</span> and <span style={{ color: '#06b6d4', cursor: 'pointer' }}>Privacy Policy</span>.
-            <div style={{ marginTop: '24px', opacity: 0.5, fontSize: '9px', textTransform: 'uppercase', letterSpacing: '1px' }}>
-              Made with 🤍 for bold conversations
+            <div style={{ marginTop: '8px', opacity: 0.5, fontSize: '9px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+              Made with 🤍 from Skriibe
             </div>
           </div>
         </div>

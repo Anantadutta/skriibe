@@ -100,7 +100,7 @@ const Hero = () => {
       {/* Persona Selector (New Buttons) */}
       <div className="animate-fade-up [animation-delay:300ms] flex flex-col sm:flex-row gap-4 justify-center mb-10 w-full max-w-2xl mx-auto px-4 z-10 relative">
         <Link
-          to={localStorage.getItem('isReturningCreator') === 'true' ? '/creator/login' : '/creator/signup'}
+          to="/creator/login"
           className="flex-1 flex items-center justify-center sm:justify-center gap-3 px-6 py-3.5 rounded-full bg-[#5bc5e3] text-black hover:bg-[#4ab8d6] transform hover:-translate-y-0.5 transition-all"
         >
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">

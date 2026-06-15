@@ -19,6 +19,8 @@ const CreatorOnboardPricing = () => {
   const [loading, setLoading] = useState(false);
   const [isCustom, setIsCustom] = useState(false);
   const [customPrice, setCustomPrice] = useState('');
+  const [showSaveSuccess, setShowSaveSuccess] = useState(false);
+  const [isInputFocused, setIsInputFocused] = useState(false);
 
   useEffect(() => {
     if (!creatorData) {
@@ -213,7 +215,7 @@ const CreatorOnboardPricing = () => {
         
         <PhoneFrame>
           <div style={{
-            padding: '16px 20px 80px',
+            padding: '16px 20px 100px',
             display: 'flex',
             flexDirection: 'column',
             height: '100%',
@@ -485,7 +487,8 @@ const CreatorOnboardPricing = () => {
                             gap: '8px',
                             paddingLeft: '32px',
                             width: '100%',
-                            boxSizing: 'border-box'
+                            boxSizing: 'border-box',
+                            position: 'relative'
                           }}
                         >
                           <span style={{
@@ -496,52 +499,84 @@ const CreatorOnboardPricing = () => {
                           }}>
                             ₹
                           </span>
-                          <input
-                            type="number"
-                            placeholder="Enter amount"
-                            autoFocus
-                            value={customPrice}
-                            onChange={(e) => {
-                              const val = e.target.value;
-                              if (val === '' || /^\d+$/.test(val)) {
-                                setCustomPrice(val);
-                                setPrice(val ? Number(val) : '');
-                              }
-                            }}
-                            style={{
-                              background: 'rgba(255, 255, 255, 0.05)',
-                              border: '1px solid rgba(255, 255, 255, 0.1)',
-                              borderRadius: '8px',
-                              padding: '8px 12px',
-                              color: '#ffffff',
-                              fontSize: '14px',
-                              fontWeight: 700,
-                              outline: 'none',
-                              width: '100%',
-                              maxWidth: '140px',
-                              boxSizing: 'border-box',
-                              fontFamily: 'monospace, var(--font-mono)'
-                            }}
-                          />
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              document.activeElement?.blur();
-                            }}
-                            style={{
-                              background: 'rgba(6, 182, 212, 0.15)',
-                              border: '1px solid #06b6d4',
-                              color: '#06b6d4',
-                              borderRadius: '8px',
-                              padding: '8px 16px',
-                              fontSize: '12px',
-                              fontWeight: 800,
-                              cursor: 'pointer',
-                              fontFamily: 'monospace, var(--font-mono)'
-                            }}
-                          >
-                            SAVE
-                          </button>
+                          <div style={{ display: 'flex', flexDirection: 'column', width: '100%', maxWidth: '140px' }}>
+                            <input
+                              type="number"
+                              placeholder="Enter amount"
+                              autoFocus
+                              value={customPrice}
+                              onFocus={() => {
+                                setIsInputFocused(true);
+                                setShowSaveSuccess(false);
+                              }}
+                              onBlur={() => setIsInputFocused(false)}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                if (val === '' || /^\d+$/.test(val)) {
+                                  setCustomPrice(val);
+                                  setPrice(val ? Number(val) : '');
+                                  setShowSaveSuccess(false);
+                                }
+                              }}
+                              style={{
+                                background: 'rgba(255, 255, 255, 0.05)',
+                                border: '1px solid rgba(255, 255, 255, 0.1)',
+                                borderRadius: '8px',
+                                padding: '8px 12px',
+                                color: '#ffffff',
+                                fontSize: '14px',
+                                fontWeight: 700,
+                                outline: 'none',
+                                width: '100%',
+                                boxSizing: 'border-box',
+                                fontFamily: 'monospace, var(--font-mono)'
+                              }}
+                            />
+                            {customPrice !== '' && Number(customPrice) < 10 && (
+                              <span style={{ color: '#ef4444', fontSize: '10px', marginTop: '4px', position: 'absolute', bottom: '-16px' }}>
+                                Minimum ₹10 required
+                              </span>
+                            )}
+                          </div>
+                          
+                          <div style={{ marginLeft: 'auto' }}>
+                            {showSaveSuccess && !isInputFocused ? (
+                              <span style={{
+                                color: '#10b981',
+                                fontSize: '12px',
+                                fontWeight: 800,
+                                fontFamily: 'monospace, var(--font-mono)'
+                              }}>
+                                Saved!
+                              </span>
+                            ) : (
+                              <button
+                                onMouseDown={(e) => {
+                                  e.preventDefault(); 
+                                  e.stopPropagation();
+                                  if (customPrice !== '' && Number(customPrice) >= 10) {
+                                    setShowSaveSuccess(true);
+                                    document.activeElement?.blur();
+                                  }
+                                }}
+                                disabled={customPrice === '' || Number(customPrice) < 10}
+                                style={{
+                                  background: (customPrice === '' || Number(customPrice) < 10) ? 'transparent' : 'rgba(6, 182, 212, 0.15)',
+                                  border: (customPrice === '' || Number(customPrice) < 10) ? '1px solid rgba(255,255,255,0.1)' : '1px solid #06b6d4',
+                                  color: (customPrice === '' || Number(customPrice) < 10) ? '#94a3b8' : '#06b6d4',
+                                  borderRadius: '8px',
+                                  padding: '8px 16px',
+                                  fontSize: '12px',
+                                  fontWeight: 800,
+                                  cursor: (customPrice === '' || Number(customPrice) < 10) ? 'not-allowed' : 'pointer',
+                                  fontFamily: 'monospace, var(--font-mono)',
+                                  transition: 'all 0.2s'
+                                }}
+                              >
+                                SAVE
+                              </button>
+                            )}
+                          </div>
                         </div>
                       )}
                     </div>
@@ -604,7 +639,7 @@ const CreatorOnboardPricing = () => {
                     letterSpacing: '0.1em',
                     fontWeight: 700
                   }}>
-                    WEEKLY EARNINGS GOAL
+                    Set your Weekly Earnings Goal 
                   </label>
                   <span style={{
                     color: '#ffffff',
@@ -627,50 +662,13 @@ const CreatorOnboardPricing = () => {
                 />
               </div>
 
-              {/* ESTIMATED EARNINGS CARD */}
-              <div style={{
-                background: 'rgba(255, 255, 255, 0.03)',
-                border: '1px solid rgba(255, 255, 255, 0.06)',
-                borderLeft: '4px solid #10b981',
-                borderRadius: '16px',
-                padding: '20px 16px',
-                textAlign: 'center',
-                backdropFilter: 'blur(12px)'
-              }}>
-                <span style={{
-                  fontFamily: 'monospace, var(--font-mono)',
-                  fontSize: '9px',
-                  color: '#10b981',
-                  letterSpacing: '0.08em',
-                  display: 'block',
-                  fontWeight: 700
-                }}>
-                  ESTIMATED MONTHLY EARNINGS
-                </span>
-                <div style={{
-                  color: '#10b981',
-                  fontSize: '34px',
-                  fontWeight: 800,
-                  fontFamily: 'monospace, var(--font-mono)',
-                  margin: '8px 0 4px',
-                  textShadow: '0 0 10px rgba(16, 185, 129, 0.25)'
-                }}>
-                  ₹{(dailyCap * selectedPrice * 0.01 * 30).toLocaleString('en-IN')}
-                </div>
-                <p style={{
-                  color: '#94a3b8',
-                  fontSize: '11px',
-                  margin: 0
-                }}>
-                  Based on 1% conversion · 10K followers
-                </p>
-              </div>
+
             </div>
 
             {/* BOTTOM CTA */}
             <div style={{
               position: 'absolute',
-              bottom: '16px',
+              bottom: '40px',
               left: 0,
               right: 0,
               zIndex: 10,
@@ -697,7 +695,7 @@ const CreatorOnboardPricing = () => {
           marginTop: '24px',
           opacity: 0.75
         }}>
-          Made with 🤍 for bold conversations
+          Made with 🤍 from Skriibe
         </div>
 
       </div>

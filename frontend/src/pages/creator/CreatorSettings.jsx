@@ -3,11 +3,26 @@
  * @description Settings placeholder page.
  */
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { PhoneFrame } from '../../components/ama/layout/PhoneFrame';
 import { BottomNav } from '../../components/ama/layout/BottomNav';
+import { getMe } from '../../services/creatorApi';
 
 const CreatorSettings = () => {
+  const navigate = useNavigate();
+  const [creator, setCreator] = useState(null);
+
+  useEffect(() => {
+    getMe().then(res => {
+      if (res.success && res.creator) {
+        setCreator(res.creator);
+      }
+    }).catch(console.error);
+  }, []);
+
+  const username = creator?.username || creator?.handle || '';
+
   return (
     <div style={{
       minHeight: '100vh',
@@ -41,15 +56,44 @@ const CreatorSettings = () => {
           textAlign: 'center',
           padding: '20px',
           boxSizing: 'border-box',
-          position: 'relative'
+          position: 'relative',
+          gap: '24px'
         }}>
-          <span style={{ fontSize: '40px', marginBottom: '16px' }}>⚙️</span>
-          <h2 style={{ color: '#ffffff', fontSize: '18px', fontWeight: 'bold', margin: '0 0 8px' }}>
-            Account Settings
-          </h2>
-          <p style={{ color: 'var(--g3)', fontSize: '12px', margin: 0 }}>
-            Your settings management is coming soon
-          </p>
+          <div>
+            <span style={{ fontSize: '40px', marginBottom: '16px', display: 'block' }}>⚙️</span>
+            <h2 style={{ color: '#ffffff', fontSize: '18px', fontWeight: 'bold', margin: '0 0 8px' }}>
+              Account Settings
+            </h2>
+            <p style={{ color: 'var(--g3)', fontSize: '12px', margin: 0 }}>
+              Your settings management is coming soon
+            </p>
+          </div>
+
+          <button 
+            onClick={() => {
+              if (username) navigate(`/@${username}`);
+            }}
+            style={{
+              background: 'linear-gradient(90deg, #7c3aed 0%, #06b6d4 100%)',
+              border: 'none',
+              borderRadius: '9999px',
+              padding: '16px 40px',
+              color: '#ffffff',
+              cursor: 'pointer',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '4px',
+              boxShadow: '0 4px 20px rgba(124, 58, 237, 0.3)',
+              transition: 'transform 0.2s',
+              marginTop: '16px'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+            onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+          >
+            <span style={{ fontSize: '18px', fontWeight: '800' }}>View My Page</span>
+            <span style={{ fontSize: '16px', fontWeight: '800' }}>→</span>
+          </button>
 
           <BottomNav activeTab="settings" />
         </div>

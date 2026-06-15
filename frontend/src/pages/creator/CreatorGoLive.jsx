@@ -440,7 +440,7 @@ const CreatorGoLive = () => {
           marginTop: '24px',
           opacity: 0.75
         }}>
-          Made with 🤍 for bold conversations
+          Made with 🤍 from Skriibe
         </div>
 
       </div>

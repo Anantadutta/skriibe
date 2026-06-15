@@ -363,7 +363,7 @@ router.get('/me', verifyCreatorToken, async (req, res) => {
  */
 router.post('/check-handle', async (req, res) => {
   const { handle } = req.body;
-  if (!handle || handle.length < 3 || handle.length > 30 || !/^[a-z0-9_]+$/.test(handle)) {
+  if (!handle || handle.length < 3 || handle.length > 30 || !/^[a-zA-Z0-9_.]+$/.test(handle)) {
     return res.json({ available: false });
   }
 
@@ -381,11 +381,11 @@ router.post('/onboarding/profile', verifyCreatorToken, async (req, res) => {
 
   // Validation
   if (!name || name.length < 2 || name.length > 60) return res.status(400).json({ message: 'Invalid name' });
-  if (!handle || !/^[a-z0-9_]{3,30}$/.test(handle)) return res.status(400).json({ message: 'Invalid handle' });
+  if (!handle || !/^[a-zA-Z0-9_.]{3,30}$/.test(handle)) return res.status(400).json({ message: 'Invalid handle' });
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ message: 'Invalid email address' });
   if (!phone || !/^[0-9]{10}$/.test(phone)) return res.status(400).json({ message: 'Invalid phone number' });
   if (bio && bio.length > 200) return res.status(400).json({ message: 'Bio too long' });
-  if (!Array.isArray(expertise) || expertise.length === 0) return res.status(400).json({ message: 'Expertise required' });
+  if (!Array.isArray(expertise) || expertise.length === 0 || expertise.length > 2) return res.status(400).json({ message: '1 to 2 expertise fields required' });
 
   await connectDB();
   

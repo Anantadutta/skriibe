@@ -155,9 +155,9 @@ if (shareStart !== -1 && shareEnd !== -1) {
 }
 
 
-// 4. Replace QR CODE SECTION (up to {/* Made with 🤍 for bold conversations Footer */})
+// 4. Replace QR CODE SECTION (up to {/* Made with 🤍 from Skriibe Footer */})
 const qrStart = content.indexOf('{/* QR CODE SECTION */}');
-const qrEnd = content.indexOf('{/* Made with 🤍 for bold conversations Footer */}');
+const qrEnd = content.indexOf('{/* Made with 🤍 from Skriibe Footer */}');
 
 const newQrSection = `{/* QR CODE CAROUSEL SECTION */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', position: 'relative' }}>
