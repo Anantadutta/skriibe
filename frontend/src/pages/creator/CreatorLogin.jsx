@@ -13,11 +13,14 @@ const CreatorLogin = () => {
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const urlError = searchParams.get('error');
+  
+  const [error, setError] = useState(urlError || '');
   const [focusedEmail, setFocusedEmail] = useState(false);
   const [focusedPassword, setFocusedPassword] = useState(false);
   const navigate = useNavigate();
-  const location = useLocation();
   const successMessage = location.state?.message;
 
   const handleLogin = async () => {

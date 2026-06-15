@@ -28,6 +28,7 @@ const CreatorOnboardProfile = () => {
   const [avatarFile, setAvatarFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [loadingCreator, setLoadingCreator] = useState(true);
+  const [error, setError] = useState('');
 
   const [bioFocused, setBioFocused] = useState(false);
   const [customExpertise, setCustomExpertise] = useState('');
@@ -149,12 +150,22 @@ const CreatorOnboardProfile = () => {
   };
 
   const handleContinue = async () => {
-    if (!form.name || !form.handle || !form.email || !form.phone || form.expertise.length === 0) return;
-    if (form.expertise.includes('Others') && !customExpertise.trim()) {
-      alert('Please specify your expertise in the text field.');
+    setError('');
+    if (!form.name || !form.handle || !form.email || !form.phone || form.expertise.length === 0) {
+      const missing = [];
+      if (!form.name || form.name.trim().length < 2) missing.push('Full Name');
+      if (!isHandleValid) missing.push('Username (3–30 chars, lowercase letters/numbers/underscore only)');
+      if (!isEmailValid) missing.push('Valid Email');
+      if (!isPhoneValid) missing.push('10-digit Phone Number');
+      if (form.expertise.length === 0) missing.push('Field of Expertise (pick at least 1)');
+      setError('Please fix: ' + missing.join(' · '));
       return;
     }
-    
+    if (form.expertise.includes('Others') && !customExpertise.trim()) {
+      setError('Please specify your expertise in the text field.');
+      return;
+    }
+
     setLoading(true);
     try {
       const finalHandle = form.handle;
@@ -166,10 +177,11 @@ const CreatorOnboardProfile = () => {
         handle: finalHandle,
         avatarUrl: typeof avatarPreview === 'string' && avatarPreview.startsWith('http') ? avatarPreview : null
       });
-      
-      navigate('/onboard/pricing', { state: { creator: res.data.creator } });
+
+      const creatorPayload = res.data?.creator || res.creator || res.data;
+      navigate('/onboard/pricing', { state: { creator: creatorPayload } });
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to save profile');
+      setError(err.response?.data?.message || 'Could not connect to server — make sure the backend is running.');
     } finally {
       setLoading(false);
     }
@@ -878,11 +890,29 @@ We’ll automatically fetch your profile photo, username, and follower count fro
               right: 0,
               zIndex: 10,
               padding: '0 20px',
-              boxSizing: 'border-box'
+              boxSizing: 'border-box',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '10px'
             }}>
+              {error && (
+                <div style={{
+                  background: 'rgba(239, 68, 68, 0.1)',
+                  border: '1px solid rgba(239, 68, 68, 0.4)',
+                  borderRadius: '12px',
+                  padding: '10px 14px',
+                  color: '#f87171',
+                  fontSize: '12px',
+                  lineHeight: '1.5',
+                  fontFamily: 'var(--font-body)',
+                  textAlign: 'center'
+                }}>
+                  {error}
+                </div>
+              )}
               <button
                 onClick={handleContinue}
-                disabled={!canContinue || loading}
+                disabled={loading}
                 className="continue-btn"
               >
                 {loading ? 'Saving...' : 'Continue →'}

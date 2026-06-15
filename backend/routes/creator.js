@@ -42,7 +42,7 @@ const issueToken = (res, creator) => {
   res.cookie('creator_token', token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'none',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
     maxAge: 7 * 24 * 60 * 60 * 1000
   });
 };
@@ -256,6 +256,10 @@ router.post('/questions/:id/reply', verifyCreatorToken, async (req, res) => {
       }
     }
 
+    if (req.io) {
+      req.io.emit('question-status-changed', { creatorId: req.creator.creatorId });
+    }
+
     res.json({ success: true, question });
   } catch (err) {
     console.error(err);
@@ -296,6 +300,10 @@ router.post('/questions/:id/reject', verifyCreatorToken, async (req, res) => {
 
     // In the future: trigger refund logic here
 
+    if (req.io) {
+      req.io.emit('question-status-changed', { creatorId: req.creator.creatorId });
+    }
+
     res.json({ success: true, question });
   } catch (err) {
     console.error(err);
@@ -334,6 +342,10 @@ router.post('/questions/:id/flag', verifyCreatorToken, async (req, res) => {
     });
 
     // In the future: trigger refund and moderation logic here
+
+    if (req.io) {
+      req.io.emit('question-status-changed', { creatorId: req.creator.creatorId });
+    }
 
     res.json({ success: true, question });
   } catch (err) {
@@ -466,6 +478,147 @@ router.post('/delete-account', async (req, res) => {
     // Clear cookie
     res.clearCookie('creator_token');
     res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+/**
+ * @route GET /api/creator/payouts
+ * @desc Calculate real-time payout stats from answered questions
+ *
+ * Rules:
+ *  - Creator earns 80% of amountPaid
+ *  - 7-day escrow starts at answeredAt
+ *  - "Lifetime Paid"  = escrow cleared + no refund/fan-wins dispute
+ *  - "This Month"     = lifetime-paid amounts released this calendar month
+ *  - "In Escrow"      = answered, paid, still inside the 7-day hold
+ */
+router.get('/payouts', verifyCreatorToken, async (req, res) => {
+  try {
+    await connectDB();
+    const CREATOR_SHARE = 0.80;
+    const ESCROW_DAYS   = 7;
+
+    const now = new Date();
+    const lastWednesday = new Date(now);
+    const dayOfWeek = now.getDay(); // 0 is Sunday, 3 is Wednesday
+    const diffToWednesday = (dayOfWeek >= 3) ? (dayOfWeek - 3) : (dayOfWeek + 4);
+    lastWednesday.setDate(now.getDate() - diffToWednesday);
+    lastWednesday.setHours(0, 0, 0, 0);
+
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    const nextWednesday = new Date(lastWednesday);
+    nextWednesday.setDate(lastWednesday.getDate() + 7);
+    nextWednesday.setHours(0, 0, 0, 0);
+
+    // Include questions from both routes:
+    // - fans route sets paymentStatus:'paid' immediately
+    // - buyers route sets paymentStatus:'pending' until Razorpay goes live
+    // So we match on amountPaid > 0 (the actual money) rather than paymentStatus.
+    const answeredPaid = await Question.find({
+      creatorId:    req.creator.creatorId,
+      status:       { $in: ['answered', 'flagged'] },
+      amountPaid:   { $gt: 0 },
+      answeredAt:   { $exists: true, $ne: null },
+      adminDecision: { $nin: ['fan_wins', 'banned'] },
+    }).select('amountPaid answeredAt');
+
+    let lifetimePaid = 0;
+    let thisMonth    = 0;
+    let inEscrow     = 0;
+    let available    = 0;
+
+    let availableQuestions = 0;
+    let availableGross = 0;
+    let inEscrowQuestions = 0;
+
+    for (const q of answeredPaid) {
+      const gross          = q.amountPaid || 0;
+      const creatorEarning = gross * CREATOR_SHARE;
+      const releaseDate    = new Date(q.answeredAt.getTime() + ESCROW_DAYS * 86400000);
+      const answeredMonth  = new Date(q.answeredAt.getFullYear(), q.answeredAt.getMonth(), 1);
+
+      // Weekly cycle logic: questions answered from last Wednesday to now
+      if (q.answeredAt >= lastWednesday) {
+        available += creatorEarning;
+        availableQuestions++;
+        availableGross += gross;
+      } else {
+        // Questions answered before last Tuesday are considered paid out
+        lifetimePaid += creatorEarning;
+        if (answeredMonth >= monthStart) {
+          thisMonth += creatorEarning;
+        }
+      }
+    }
+
+    // New In Escrow logic: unanswered questions
+    const pendingQuestions = await Question.find({
+      creatorId:    req.creator.creatorId,
+      status:       'submitted',
+      amountPaid:   { $gt: 0 }
+    }).select('amountPaid buyerName createdAt isAnonymous').sort({ createdAt: -1 });
+
+    const pendingList = [];
+    for (const q of pendingQuestions) {
+      const gross = q.amountPaid || 0;
+      const earning = gross * CREATOR_SHARE;
+      inEscrow += earning;
+      inEscrowQuestions++;
+
+      pendingList.push({
+        id: q._id.toString(),
+        buyerName: q.isAnonymous ? 'Anonymous' : (q.buyerName || 'Fan'),
+        date: new Date(q.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+        amount: Math.round(earning * 100) / 100
+      });
+    }
+
+    // Under Review logic: flagged questions
+    const flaggedQuestions = await Question.find({
+      creatorId:    req.creator.creatorId,
+      status:       'flagged',
+      amountPaid:   { $gt: 0 }
+    }).select('amountPaid buyerName createdAt isAnonymous').sort({ createdAt: -1 });
+
+    let underReviewAmount = 0;
+    let underReviewQuestionsCount = 0;
+    const underReviewList = [];
+
+    for (const q of flaggedQuestions) {
+      const gross = q.amountPaid || 0;
+      const earning = gross * CREATOR_SHARE;
+      underReviewAmount += earning;
+      underReviewQuestionsCount++;
+
+      underReviewList.push({
+        id: q._id.toString(),
+        buyerName: q.isAnonymous ? 'Anonymous' : (q.buyerName || 'Fan'),
+        date: new Date(q.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+        amount: Math.round(earning * 100) / 100,
+        status: 'Fan Review'
+      });
+    }
+
+    res.json({
+      success:        true,
+      lifetimePaid:   Math.round(lifetimePaid * 100) / 100,
+      thisMonth:      Math.round(thisMonth    * 100) / 100,
+      inEscrow:       Math.round(inEscrow     * 100) / 100,
+      available:      Math.round(available    * 100) / 100,
+      nextPayoutDate: nextWednesday.toISOString(),
+      availableQuestions,
+      availableGross: Math.round(availableGross * 100) / 100,
+      availableFee:   Math.round((availableGross - availableGross * CREATOR_SHARE) * 100) / 100,
+      inEscrowQuestions,
+      pendingList,
+      underReviewAmount: Math.round(underReviewAmount * 100) / 100,
+      underReviewQuestionsCount,
+      underReviewList
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });

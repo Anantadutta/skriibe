@@ -11,7 +11,7 @@ import { PhoneFrame } from '../../components/ama/layout/PhoneFrame';
 const CreatorOnboardPricing = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const creatorData = location.state?.creator;
+  const [creatorData, setCreatorData] = useState(location.state?.creator || null);
 
   const [price, setPrice] = useState(99);
   const [dailyCap, setDailyCap] = useState(50);
@@ -21,9 +21,18 @@ const CreatorOnboardPricing = () => {
   const [customPrice, setCustomPrice] = useState('');
 
   useEffect(() => {
-    // If we don't have creatorData, redirect back to profile setup
     if (!creatorData) {
-      navigate('/onboard/profile');
+      import('../../services/creatorApi').then(({ getMe }) => {
+        getMe().then(res => {
+          if (res.success && res.creator) {
+            setCreatorData(res.creator);
+          } else {
+            navigate('/onboard/profile');
+          }
+        }).catch(() => {
+          navigate('/onboard/profile');
+        });
+      });
     }
   }, [creatorData, navigate]);
 

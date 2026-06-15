@@ -29,7 +29,7 @@ import CreatorDashboard from './pages/CreatorDashboard';
 import CreatorReplyScreen from './pages/CreatorReplyScreen';
 import CreatorInbox from './pages/stubs/CreatorInbox';
 import CreatorAnalytics from './pages/stubs/CreatorAnalytics';
-import CreatorPayouts from './pages/stubs/CreatorPayouts';
+import CreatorPayouts from './pages/creator/CreatorPayouts';
 import CreatorSettings from './pages/stubs/CreatorSettings';
 import CreatorAccountHealth from './pages/stubs/CreatorAccountHealth';
 import CreatorDeleteQuestion from './pages/stubs/CreatorDeleteQuestion';

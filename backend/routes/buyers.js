@@ -198,6 +198,10 @@ router.post('/question/:id/flag', async (req, res) => {
       referenceId: question._id
     });
 
+    if (req.io) {
+      req.io.emit('question-status-changed', { creatorId: question.creatorId });
+    }
+
     return res.json({ success: true, message: 'Question flagged successfully', question });
   } catch (err) {
     console.error('flag-question error:', err.message);

@@ -151,7 +151,7 @@ router.post('/verify-otp', async (req, res) => {
   res.cookie('creator_token', token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'none',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
     maxAge: 7 * 24 * 60 * 60 * 1000
   });
 
@@ -207,7 +207,7 @@ router.post('/email-signup', async (req, res) => {
   res.cookie('creator_token', token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'none',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
     maxAge: 7 * 24 * 60 * 60 * 1000
   });
 
@@ -257,7 +257,7 @@ router.post('/email-login', async (req, res) => {
   res.cookie('creator_token', token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'none',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
     maxAge: 7 * 24 * 60 * 60 * 1000
   });
 
@@ -346,7 +346,10 @@ router.get('/me', verifyCreatorToken, async (req, res) => {
   try {
     await connectDB();
     const creator = await Creator.findById(req.creator.creatorId);
-    if (!creator) return res.status(404).json({ message: 'Creator not found' });
+    if (!creator) {
+      res.clearCookie('creator_token');
+      return res.status(401).json({ message: 'Session expired or user deleted' });
+    }
     
     res.json({ success: true, creator });
   } catch (error) {
@@ -404,6 +407,11 @@ router.post('/onboarding/profile', verifyCreatorToken, async (req, res) => {
     { new: true }
   );
 
+  if (!updatedCreator) {
+    res.clearCookie('creator_token');
+    return res.status(401).json({ message: 'Session expired or user deleted. Please log in again.' });
+  }
+
   // Send Welcome Emails asynchronously (don't block the response)
 
   
@@ -434,6 +442,11 @@ router.post('/onboarding/pricing', verifyCreatorToken, async (req, res) => {
     { new: true }
   );
 
+  if (!updatedCreator) {
+    res.clearCookie('creator_token');
+    return res.status(401).json({ message: 'Session expired or user deleted. Please log in again.' });
+  }
+
   res.json({ 
     success: true, 
     creator: updatedCreator, 
@@ -461,6 +474,11 @@ router.post('/link-bank', verifyCreatorToken, async (req, res) => {
     { new: true }
   );
 
+  if (!updatedCreator) {
+    res.clearCookie('creator_token');
+    return res.status(401).json({ message: 'Session expired or user deleted. Please log in again.' });
+  }
+
   res.json({ success: true, creator: updatedCreator });
 });
 
@@ -478,6 +496,11 @@ router.post('/toggle-live', verifyCreatorToken, async (req, res) => {
     { isLive },
     { new: true }
   );
+
+  if (!updatedCreator) {
+    res.clearCookie('creator_token');
+    return res.status(401).json({ message: 'Session expired or user deleted. Please log in again.' });
+  }
 
   req.io.emit('creator-status-changed', { creatorId: updatedCreator._id.toString(), isLive });
 
@@ -513,6 +536,12 @@ router.post('/settings', verifyCreatorToken, async (req, res) => {
     updateData,
     { new: true }
   );
+  
+  if (!updatedCreator) {
+    res.clearCookie('creator_token');
+    return res.status(401).json({ message: 'Session expired or user deleted. Please log in again.' });
+  }
+
   res.json({ success: true, creator: updatedCreator });
 });
 
