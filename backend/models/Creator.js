@@ -22,6 +22,7 @@ const CreatorSchema = new mongoose.Schema({
   weeklyGoal: { type: Number, default: 1500 },
   autoPause: { type: Boolean, default: true },
   isLive: { type: Boolean, default: true },
+  isPaused: { type: Boolean, default: false },
   ama_enabled: { type: Boolean, default: false },
   verified: { type: Boolean, default: false },
   bankLinked: { type: Boolean, default: false },

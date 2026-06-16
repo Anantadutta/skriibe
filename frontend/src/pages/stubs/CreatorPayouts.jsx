@@ -229,7 +229,7 @@ const CreatorPayouts = () => {
             lineHeight: '1.5',
             letterSpacing: '-0.01em'
           }}>
-            Your bank details are needed to release your Tuesday payouts via RazorpayX. Your page goes live immediately — payouts start next Tuesday.
+            Please add your bank details to receive payouts via Razorpay. Your page is already live, and payouts start next scheduled payout cycle on Tuesday.
           </p>
         </div>
 
@@ -238,6 +238,7 @@ const CreatorPayouts = () => {
           <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: '#ffffff', marginBottom: '4px' }}>
             Bank account
           </h3>
+        
           
           <InputCard 
             label="ACCOUNT HOLDER NAME *" 
@@ -296,28 +297,17 @@ const CreatorPayouts = () => {
             lineHeight: '1.5',
             padding: '0 4px'
           }}>
-            Required only if you earn above ₹5 lakh/year. We deduct 1% TDS as per Section 194-O and file on your behalf.
+            
           </p>
         </div>
 
-        {/* Phone Section */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '8px' }}>
-          <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: '#ffffff', marginBottom: '4px' }}>
-            Contact Details
-          </h3>
-          <InputCard 
-            label="MOBILE NUMBER *" 
-            value={phone} 
-            onChange={(val) => setPhone(val.replace(/[^0-9]/g, '').slice(0, 10))} 
-            placeholder="10 digit mobile number"
-          />
-        </div>
+
 
         {/* Action Buttons */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '16px' }}>
           <button
             onClick={async () => {
-              if (!accountName.trim() || !accountNumber.trim() || !confirmAccount.trim() || !ifsc.trim() || !panNumber.trim() || !phone.trim()) {
+              if (!accountName.trim() || !accountNumber.trim() || !confirmAccount.trim() || !ifsc.trim() || !panNumber.trim()) {
                 setErrorMessage('Please fill in all mandatory fields (marked with a red asterisk) before going live.');
                 setShowErrorModal(true);
                 return;
@@ -326,11 +316,6 @@ const CreatorPayouts = () => {
               const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
               if (!panRegex.test(formattedPan)) {
                 setErrorMessage('Please enter a valid PAN number format (e.g. ABCDE1234F).');
-                setShowErrorModal(true);
-                return;
-              }
-              if (phone.length !== 10) {
-                setErrorMessage('Please enter a valid 10-digit mobile number.');
                 setShowErrorModal(true);
                 return;
               }
@@ -344,8 +329,7 @@ const CreatorPayouts = () => {
                   pan: formattedPan,
                   accountName: accountName.trim(),
                   accountNumber: accountNumber.trim(),
-                  ifsc: ifsc.trim(),
-                  phone: phone.trim()
+                  ifsc: ifsc.trim()
                 });
                 await toggleLive(true); // Automatically turn green (go live)
                 navigate('/creator/dashboard');
@@ -371,7 +355,7 @@ const CreatorPayouts = () => {
             onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(0.98)'; }}
             onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
           >
-            Save & go live — view my page →
+            Save & Go To Dashboard  →
           </button>
 
           <button
@@ -392,7 +376,7 @@ const CreatorPayouts = () => {
             onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(41, 197, 246, 0.05)'; }}
             onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
           >
-            Skip for now — remind me in 7 days
+            Skip for now — remind me in 2 days
           </button>
         </div>
 

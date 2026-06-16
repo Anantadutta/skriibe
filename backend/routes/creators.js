@@ -521,7 +521,7 @@ router.post('/logout', (req, res) => {
  * @desc Update general settings
  */
 router.post('/settings', verifyCreatorToken, async (req, res) => {
-  const { weeklyGoal, pricePerQuestion, dailyCap, autoPause } = req.body;
+  const { weeklyGoal, pricePerQuestion, dailyCap, autoPause, isPaused } = req.body;
   const updateData = {};
   if (typeof weeklyGoal === 'number') updateData.weeklyGoal = weeklyGoal;
   if (typeof pricePerQuestion === 'number') {
@@ -530,6 +530,7 @@ router.post('/settings', verifyCreatorToken, async (req, res) => {
   }
   if (typeof dailyCap === 'number') updateData.dailyCap = dailyCap;
   if (typeof autoPause === 'boolean') updateData.autoPause = autoPause;
+  if (typeof isPaused === 'boolean') updateData.isPaused = isPaused;
   await connectDB();
   const updatedCreator = await Creator.findByIdAndUpdate(
     req.creator.creatorId,

@@ -27,7 +27,7 @@ router.get('/creator/:handle', async (req, res) => {
   try {
     const { handle } = req.params;
     const creator = await Creator.findOne({ handle: new RegExp(`^${handle}$`, 'i') }).select(
-      'name handle avatarUrl bio expertise stats instagramHandle instagramFollowers price pricePerQuestion responseTime questionsAnswered instagramConnected isLive'
+      'name handle avatarUrl bio expertise stats instagramHandle instagramFollowers price pricePerQuestion responseTime questionsAnswered instagramConnected isLive isPaused'
     );
     if (!creator) {
       return res.status(404).json({ success: false, message: 'Creator not found' });
@@ -52,6 +52,7 @@ router.get('/creator/:handle', async (req, res) => {
         questionsAnswered: answeredCount || creator.questionsAnswered || 0,
         instagramLinked: creator.instagramConnected,
         isLive: creator.isLive,
+        isPaused: creator.isPaused || false,
       },
     });
   } catch (err) {
@@ -65,7 +66,7 @@ router.get('/creator/:handle', async (req, res) => {
 router.get('/creators', async (req, res) => {
   try {
     const { live, category, search } = req.query;
-    let query = {};
+    let query = { isPaused: { $ne: true } };
     
     if (live === 'true') query.isLive = true;
     if (category) query.expertise = category;
@@ -77,7 +78,7 @@ router.get('/creators', async (req, res) => {
     }
 
     const creators = await Creator.find(query).select(
-      'name handle avatarUrl bio expertise price pricePerQuestion responseTime stats verified instagramFollowers instagramConnected isLive'
+      'name handle avatarUrl bio expertise price pricePerQuestion responseTime stats verified instagramFollowers instagramConnected isLive isPaused'
     ).lean();
     
     // Sort: Live creators first, then by replyRate descending
@@ -104,7 +105,8 @@ router.get('/creators', async (req, res) => {
         avgReplyTime: c.stats?.avgReplyTime || 0
       },
       verified: c.verified || false,
-      isLive: c.isLive || false
+      isLive: c.isLive || false,
+      isPaused: c.isPaused || false
     }));
 
     return res.json({

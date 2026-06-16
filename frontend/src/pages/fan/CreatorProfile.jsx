@@ -34,7 +34,11 @@ const CreatorProfile = () => {
       try {
         const data = await getCreatorProfile(handle);
         if (data.success && data.creator) {
-          setCreator(data.creator);
+          if (data.creator.isPaused) {
+            setFetchError('This creator is currently paused and unavailable.');
+          } else {
+            setCreator(data.creator);
+          }
         } else {
           setFetchError('Creator not found');
         }

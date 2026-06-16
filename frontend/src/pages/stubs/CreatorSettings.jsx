@@ -8,6 +8,7 @@ const CreatorSettings = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const scrollRef = useRef(null);
+  const avatarInputRef = useRef(null);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -17,6 +18,24 @@ const CreatorSettings = () => {
   }, []);
 
   const [creator, setCreator] = useState(location.state?.creator || mockCreator);
+  const [highlightPause, setHighlightPause] = useState(location.state?.highlightPause || false);
+
+  useEffect(() => {
+    if (highlightPause) {
+      setTimeout(() => {
+        const pauseBtn = document.getElementById('pause-page-container');
+        if (pauseBtn) {
+          pauseBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 100);
+      const timer = setTimeout(() => {
+        setHighlightPause(false);
+        // Clear state so refresh doesn't trigger it again
+        navigate(location.pathname, { replace: true, state: {} });
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [highlightPause, navigate, location.pathname]);
 
   useEffect(() => {
     const fetchCreator = async () => {
@@ -43,14 +62,15 @@ const CreatorSettings = () => {
       if (creator.weeklyGoal) setWeeklyGoal(creator.weeklyGoal);
       if (creator.bio) setBio(creator.bio);
       if (creator.phone) setPhone(creator.phone);
+      if (creator.email) setEmail(creator.email);
       if (creator.instagramHandle) setInstagram(creator.instagramHandle);
       else if (creator.handle) setInstagram(`@${creator.handle}`);
-      if (creator.pan) setPan(creator.pan);
       if (creator.avatarUrl) setAvatar(creator.avatarUrl);
+      if (creator.isPaused !== undefined) setIsPaused(creator.isPaused);
     }
   }, [creator]);
-  const [isLive, setIsLive] = useState(creator.isLive !== undefined ? creator.isLive : true);
-  const [autoPause, setAutoPause] = useState(true);
+  const [isPaused, setIsPaused] = useState(creator.isPaused || false);
+  const [showPauseModal, setShowPauseModal] = useState(false);
   const formattedFollowers = creator.instagramFollowers 
     ? (creator.instagramFollowers >= 1000 ? (creator.instagramFollowers/1000).toFixed(1).replace('.0', '') + 'K' : creator.instagramFollowers) 
     : '12K';
@@ -59,6 +79,7 @@ const CreatorSettings = () => {
   const displayUserName = creator.name || creator.displayName || creator.handle || 'C';
   const [avatar, setAvatar] = useState(creator.avatarUrl || displayUserName[0].toUpperCase());
   
+  const [isEditingBio, setIsEditingBio] = useState(false);
   const [isEditingPrice, setIsEditingPrice] = useState(false);
   const [isEditingCap, setIsEditingCap] = useState(false);
   
@@ -71,8 +92,8 @@ const CreatorSettings = () => {
   const [instagram, setInstagram] = useState(creator.instagramHandle || `@${creator.handle || 'creator'}`);
   const [isEditingInstagram, setIsEditingInstagram] = useState(false);
   
-  const [pan, setPan] = useState(creator.pan || 'ABCDE1234F');
-  const [isEditingPan, setIsEditingPan] = useState(false);
+  const [email, setEmail] = useState(creator.email || '');
+  const [isEditingEmail, setIsEditingEmail] = useState(false);
 
   const [isCopied, setIsCopied] = useState(false);
   const [isPausedFeedback, setIsPausedFeedback] = useState(false);
@@ -117,14 +138,27 @@ const CreatorSettings = () => {
     );
   }
 
-  const handleEditAvatar = () => {
-    const newAvatar = prompt("Enter new avatar initial or emoji:", avatar);
-    if (newAvatar) setAvatar(newAvatar.substring(0,2));
+  const handleEditAvatarClick = () => {
+    avatarInputRef.current?.click();
+  };
+
+  const handleAvatarChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const url = URL.createObjectURL(file);
+      setCreator(prev => ({ ...prev, avatarUrl: url }));
+      setAvatar(url);
+    }
   };
   
-  const handleEditBio = () => {
-    const newBio = prompt("Enter new bio:", bio);
-    if (newBio) setBio(newBio);
+  const handleSaveBio = async () => {
+    try {
+      await api.post('/creators/settings', { bio });
+      setIsEditingBio(false);
+      setCreator(prev => ({ ...prev, bio }));
+    } catch (err) {
+      console.error('Failed to save bio', err);
+    }
   };
 
   const handleSaveGoal = async () => {
@@ -157,14 +191,19 @@ const CreatorSettings = () => {
     }
   };
 
-  const handleToggleAutoPause = async () => {
-    const newVal = !autoPause;
+  const handleTogglePause = () => {
+    setShowPauseModal(true);
+  };
+
+  const handleConfirmPause = async (newPausedState) => {
     try {
-      await api.post('/creators/settings', { autoPause: newVal });
-      setAutoPause(newVal);
-      setCreator(prev => ({ ...prev, autoPause: newVal }));
+      await api.post('/creators/settings', { isPaused: newPausedState });
+      setIsPaused(newPausedState);
+      setCreator(prev => ({ ...prev, isPaused: newPausedState }));
     } catch (err) {
-      console.error('Failed to save autopause', err);
+      console.error('Failed to update pause state', err);
+    } finally {
+      setShowPauseModal(false);
     }
   };
 
@@ -240,9 +279,16 @@ const CreatorSettings = () => {
           <div style={{ position: 'absolute', top: '-40px', right: '-40px', width: '150px', height: '150px', borderRadius: '50%', background: '#253B75', opacity: 0.5 }} />
           <div style={{ position: 'absolute', bottom: '-40px', left: '-40px', width: '120px', height: '120px', borderRadius: '50%', background: '#0F2C3A', opacity: 0.6 }} />
           
-          <div style={{ display: 'flex', gap: '16px', alignItems: 'center', position: 'relative', zIndex: 1 }}>
+          <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start', position: 'relative', zIndex: 1 }}>
             {/* Avatar */}
-            <div style={{ position: 'relative', cursor: 'pointer' }} onClick={handleEditAvatar}>
+            <div style={{ position: 'relative', cursor: 'pointer', flexShrink: 0 }} onClick={handleEditAvatarClick}>
+              <input 
+                type="file" 
+                ref={avatarInputRef} 
+                onChange={handleAvatarChange} 
+                style={{ display: 'none' }} 
+                accept="image/*" 
+              />
               <div style={{
                 width: '72px', height: '72px', borderRadius: '50%', background: 'linear-gradient(135deg, #4ADE80 0%, #2DD4BF 100%)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
@@ -285,6 +331,61 @@ const CreatorSettings = () => {
                   <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
                 </svg>
                 {creator.expertise && creator.expertise.length > 0 ? creator.expertise[0] : 'Finance'}
+              </div>
+
+              {/* Bio Section */}
+              <div style={{ marginTop: '12px' }}>
+                {isEditingBio ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <textarea 
+                      value={bio}
+                      onChange={(e) => setBio(e.target.value)}
+                      style={{
+                        background: 'rgba(255, 255, 255, 0.05)',
+                        border: '1px solid rgba(99, 102, 241, 0.5)',
+                        borderRadius: '8px',
+                        color: '#fff',
+                        padding: '8px',
+                        fontSize: '0.9rem',
+                        lineHeight: '1.4',
+                        width: '100%',
+                        boxSizing: 'border-box',
+                        resize: 'vertical',
+                        minHeight: '60px',
+                        outline: 'none',
+                        fontFamily: 'inherit'
+                      }}
+                      autoFocus
+                    />
+                    <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                      <button 
+                        onClick={() => setIsEditingBio(false)}
+                        style={{ background: 'transparent', border: '1px solid #475569', color: '#94a3b8', borderRadius: '6px', padding: '4px 10px', fontSize: '0.8rem', cursor: 'pointer' }}
+                      >Cancel</button>
+                      <button 
+                        onClick={handleSaveBio}
+                        style={{ background: '#6366F1', border: 'none', color: '#fff', borderRadius: '6px', padding: '4px 10px', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer' }}
+                      >Save</button>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
+                    <div style={{ color: '#E2E8F0', fontSize: '0.9rem', lineHeight: '1.5' }}>
+                      {bio}
+                    </div>
+                    <button 
+                      onClick={() => setIsEditingBio(true)}
+                      style={{
+                        background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '2px', display: 'flex', alignItems: 'center', justifyContent: 'center'
+                      }}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M12 20h9"></path>
+                        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                      </svg>
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -405,7 +506,7 @@ const CreatorSettings = () => {
                       style={{
                         background: '#252530', border: 'none', color: '#ffffff', borderRadius: '12px', padding: '8px 14px', fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer'
                       }}
-                    >Change</button>
+                    >Edit</button>
                   </>
                 )}
               </div>
@@ -514,25 +615,6 @@ const CreatorSettings = () => {
               </div>
             </div>
 
-            {/* Auto-pause Row */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(251, 191, 36, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FBBF24' }}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                  <div style={{ color: '#ffffff', fontSize: '0.95rem', fontWeight: 700 }}>Auto-pause on SLA breach</div>
-                  <div style={{ color: '#64748b', fontSize: '0.8rem' }}>Pause if you fall behind</div>
-                </div>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center' }}>
-                {/* Toggle switch */}
-                <div onClick={handleToggleAutoPause} style={{ width: '52px', height: '30px', background: autoPause ? '#34D399' : '#334155', borderRadius: '15px', position: 'relative', cursor: 'pointer', transition: 'background 0.3s ease' }}>
-                  <div style={{ width: '24px', height: '24px', background: '#ffffff', borderRadius: '50%', position: 'absolute', top: '3px', left: autoPause ? '25px' : '3px', transition: 'left 0.3s ease' }} />
-                </div>
-              </div>
-            </div>
-
           </div>
         </div>
 
@@ -574,7 +656,7 @@ const CreatorSettings = () => {
                     <span style={{ color: '#64748b', fontWeight: 500, fontFamily: 'monospace, Consolas', fontSize: '0.95rem' }}>
                       {phone.length === 10 && !phone.includes('+') ? `+91 ${phone.substring(0, 5)} ${phone.substring(5, 10)}` : phone}
                     </span>
-                    <button style={{ background: '#252530', border: 'none', color: '#ffffff', borderRadius: '12px', padding: '8px 14px', fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer' }} onClick={() => setIsEditingPhone(true)}>Change</button>
+                    <button style={{ background: '#252530', border: 'none', color: '#ffffff', borderRadius: '12px', padding: '8px 14px', fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer' }} onClick={() => setIsEditingPhone(true)}>Edit</button>
                   </>
                 )}
               </div>
@@ -608,38 +690,55 @@ const CreatorSettings = () => {
               </div>
             </div>
 
-            {/* PAN number */}
-            {creator.pan && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', borderBottom: '1px solid #2A2A2A' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                  <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(16, 185, 129, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#10b981' }}>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="16" rx="2" ry="2"></rect><line x1="7" y1="8" x2="11" y2="8"></line><line x1="7" y1="12" x2="17" y2="12"></line><line x1="7" y1="16" x2="17" y2="16"></line></svg>
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                    <div style={{ color: '#ffffff', fontSize: '0.95rem', fontWeight: 700 }}>PAN number</div>
-                  </div>
+            {/* Email account */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', borderBottom: '1px solid #2A2A2A', gap: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexShrink: 0 }}>
+                <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(234, 179, 8, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#eab308' }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  {isEditingPan ? (
-                    <>
-                      <input 
-                        type="text" value={pan} onChange={(e) => setPan(e.target.value)}
-                        style={{ background: '#16161e', border: '1px solid #29C5F6', color: '#ffffff', borderRadius: '8px', padding: '8px', fontSize: '0.95rem', width: '100px', outline: 'none', fontWeight: 500, fontFamily: 'monospace', textTransform: 'uppercase' }} autoFocus
-                      />
-                      <button style={{ background: '#38BDF8', border: 'none', color: '#0E0E0E', borderRadius: '12px', padding: '8px 16px', fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer' }} onClick={() => { setPan(pan.toUpperCase()); setIsEditingPan(false); }}>Save</button>
-                    </>
-                  ) : (
-                    <>
-                      <span style={{ color: '#64748b', fontWeight: 500, fontFamily: 'monospace, Consolas', fontSize: '0.95rem' }}>
-                        {pan && pan.length >= 10 ? pan.substring(0, 5) + '•••' + pan.substring(8, 10) : pan}
-                      </span>
-                      <button style={{ background: '#252530', border: 'none', color: '#ffffff', borderRadius: '12px', padding: '8px 14px', fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer' }} onClick={() => setIsEditingPan(true)}>Edit</button>
-                    </>
-                  )}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                  <div style={{ color: '#ffffff', fontSize: '0.95rem', fontWeight: 700 }}>Email Address</div>
                 </div>
               </div>
-            )}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0, flex: 1, justifyContent: 'flex-end' }}>
+                {isEditingEmail ? (
+                  <>
+                    <input 
+                      type="email" value={email} onChange={(e) => setEmail(e.target.value)}
+                      style={{ background: '#16161e', border: '1px solid #29C5F6', color: '#ffffff', borderRadius: '8px', padding: '8px', fontSize: '0.95rem', width: '100%', maxWidth: '160px', outline: 'none', fontWeight: 500, fontFamily: 'monospace' }} autoFocus
+                    />
+                    <button style={{ background: '#38BDF8', border: 'none', color: '#0E0E0E', borderRadius: '12px', padding: '8px 16px', fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer', flexShrink: 0 }} onClick={() => setIsEditingEmail(false)}>Save</button>
+                  </>
+                ) : (
+                  <>
+                    <span style={{ color: '#64748b', fontWeight: 500, fontFamily: 'monospace, Consolas', fontSize: '0.95rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{email}</span>
+                    <button style={{ background: '#252530', border: 'none', color: '#ffffff', borderRadius: '12px', padding: '8px 14px', fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer', flexShrink: 0 }} onClick={() => setIsEditingEmail(true)}>{email ? 'Edit' : 'Add'}</button>
+                  </>
+                )}
+              </div>
+            </div>
 
+
+            {/* Bank account */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(52, 211, 153, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#34d399' }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="5" width="20" height="14" rx="2" ry="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                  <div style={{ color: '#ffffff', fontSize: '0.95rem', fontWeight: 700 }}>Bank Account</div>
+                  <div style={{ color: '#64748b', fontSize: '0.8rem' }}>{creator.bankLinked ? 'Linked' : 'Not linked'}</div>
+                </div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <button 
+                  onClick={() => navigate('/creator/setup-payouts', { state: { creator } })}
+                  style={{ background: '#252530', border: 'none', color: '#ffffff', borderRadius: '12px', padding: '8px 14px', fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer' }}
+                >
+                  {creator.bankLinked ? 'Edit details' : 'Setup'}
+                </button>
+              </div>
+            </div>
 
           </div>
         </div>
@@ -658,6 +757,25 @@ const CreatorSettings = () => {
             display: 'flex',
             flexDirection: 'column'
           }}>
+
+            {/* Pause my page */}
+            <div id="pause-page-container" style={{ 
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', 
+              borderBottom: '1px solid rgba(239, 68, 68, 0.2)',
+              backgroundColor: highlightPause ? 'rgba(239, 68, 68, 0.2)' : 'transparent',
+              transition: 'background-color 1s ease'
+            }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                <div style={{ color: '#ef4444', fontSize: '0.95rem', fontWeight: 700 }}>Pause my page temporarily</div>
+                <div style={{ color: '#64748b', fontSize: '0.8rem' }}>Hide from discovery</div>
+              </div>
+              <button style={{
+                background: isPaused ? '#ef4444' : 'transparent', border: '1px solid rgba(239, 68, 68, 0.3)', color: isPaused ? '#ffffff' : '#ef4444',
+                borderRadius: '12px', padding: '8px 14px', fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', minWidth: '75px', justifyContent: 'center', transition: 'all 0.2s'
+              }} onClick={handleTogglePause}>
+                {isPaused ? 'Unpause' : 'Pause'}
+              </button>
+            </div>
 
             {/* Delete account */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px' }}>
@@ -731,6 +849,45 @@ const CreatorSettings = () => {
       </div>
 
 
+
+      {/* PAUSE MODAL */}
+      {showPauseModal && (
+        <div style={{
+          position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0, 0, 0, 0.7)', backdropFilter: 'blur(4px)',
+          display: 'flex', alignItems: 'flex-end', zIndex: 200
+        }}>
+          <div style={{
+            background: '#16161e', width: '100%',
+            borderTopLeftRadius: '24px', borderTopRightRadius: '24px',
+            padding: '24px 24px 40px', boxSizing: 'border-box',
+            borderTop: '1px solid #2A2A2A',
+            animation: 'slideUp 0.3s ease-out'
+          }}>
+            <h3 style={{ margin: '0 0 8px', fontSize: '1.2rem', color: '#ffffff' }}>
+              {isPaused ? 'Unpause your page?' : 'Pause your page?'}
+            </h3>
+            <p style={{ margin: '0 0 24px', color: '#94a3b8', fontSize: '0.9rem', lineHeight: '1.5' }}>
+              {isPaused 
+                ? "Are you sure you want to unpause? Your profile will be visible and open for questions."
+                : "Are you sure you want to pause your page? Your profile will be temporarily hidden from the discovery page and you won't be able to receive new questions until you unpause."
+              }
+            </p>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button style={{
+                flex: 1, background: '#2A2A2A', border: 'none', color: '#ffffff',
+                padding: '12px', borderRadius: '12px', fontWeight: 600, fontSize: '0.95rem', cursor: 'pointer'
+              }} onClick={() => setShowPauseModal(false)}>Cancel</button>
+              <button style={{
+                flex: 1, background: isPaused ? '#10B981' : '#ef4444', border: 'none', color: '#ffffff',
+                padding: '12px', borderRadius: '12px', fontWeight: 600, fontSize: '0.95rem', cursor: 'pointer'
+              }} onClick={() => handleConfirmPause(!isPaused)}>
+                {isPaused ? 'Yes, unpause' : 'Yes, pause page'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* DELETE MODAL */}
       {deleteModalStep > 0 && (

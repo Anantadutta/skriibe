@@ -30,6 +30,7 @@ import CreatorReplyScreen from './pages/CreatorReplyScreen';
 import CreatorInbox from './pages/stubs/CreatorInbox';
 import CreatorAnalytics from './pages/stubs/CreatorAnalytics';
 import CreatorPayouts from './pages/creator/CreatorPayouts';
+import CreatorSetupPayouts from './pages/stubs/CreatorPayouts';
 import CreatorSettings from './pages/stubs/CreatorSettings';
 import CreatorAccountHealth from './pages/stubs/CreatorAccountHealth';
 import CreatorDeleteQuestion from './pages/stubs/CreatorDeleteQuestion';
@@ -166,6 +167,7 @@ function App() {
             <Route path="/creator/inbox" element={<CreatorInbox />} />
             <Route path="/creator/analytics" element={<CreatorAnalytics />} />
             <Route path="/creator/payouts" element={<CreatorPayouts />} />
+            <Route path="/creator/setup-payouts" element={<CreatorSetupPayouts />} />
             <Route path="/creator/settings" element={<CreatorSettings />} />
             <Route path="/creator/health" element={<CreatorAccountHealth />} />
             

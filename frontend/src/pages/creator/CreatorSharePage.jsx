@@ -139,17 +139,90 @@ const CreatorSharePage = () => {
     }
   };
 
-  const downloadQRCode = () => {
-    const canvas = qrRef.current ? qrRef.current.querySelector('canvas') : null;
-    if (canvas) {
-      const pngUrl = canvas.toDataURL('image/png');
-      const downloadLink = document.createElement('a');
-      downloadLink.href = pngUrl;
-      downloadLink.download = `skriibe-qr-@${handle}.png`;
-      document.body.appendChild(downloadLink);
-      downloadLink.click();
-      document.body.removeChild(downloadLink);
-    }
+  const downloadSkriibeQRCode = () => {
+    const qrCanvas = qrRef2.current?.querySelector('canvas');
+    if (!qrCanvas) return;
+
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+
+    const width = 1080;
+    const height = 1080;
+    canvas.width = width;
+    canvas.height = height;
+
+    // Background (Black)
+    ctx.fillStyle = '#0a0a0f';
+    ctx.fillRect(0, 0, width, height);
+
+    // skriibe wordmark — white "skr"/"be" with cyan "ii", chained with measured widths so there are no gaps
+    const fontSize = 150;
+    ctx.font = `300 ${fontSize}px "DM Sans", "Segoe UI", Arial, sans-serif`;
+    ctx.textBaseline = 'alphabetic';
+    ctx.textAlign = 'left';
+
+    const part1 = 'skr';
+    const part2 = 'ii';
+    const part3 = 'be';
+    const w1 = ctx.measureText(part1).width;
+    const w2 = ctx.measureText(part2).width;
+    const w3 = ctx.measureText(part3).width;
+    const totalWidth = w1 + w2 + w3;
+    let logoX = (width - totalWidth) / 2;
+    const baselineY = 240;
+
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(part1, logoX, baselineY);
+    logoX += w1;
+
+    ctx.fillStyle = '#3db4f2';
+    ctx.fillText(part2, logoX, baselineY);
+    logoX += w2;
+
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(part3, logoX, baselineY);
+
+    // White rounded card for QR
+    const cardWidth = 700;
+    const cardHeight = 700;
+    const cardX = (width - cardWidth) / 2;
+    const cardY = 300;
+    const radius = 40;
+
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.moveTo(cardX + radius, cardY);
+    ctx.lineTo(cardX + cardWidth - radius, cardY);
+    ctx.quadraticCurveTo(cardX + cardWidth, cardY, cardX + cardWidth, cardY + radius);
+    ctx.lineTo(cardX + cardWidth, cardY + cardHeight - radius);
+    ctx.quadraticCurveTo(cardX + cardWidth, cardY + cardHeight, cardX + cardWidth - radius, cardY + cardHeight);
+    ctx.lineTo(cardX + radius, cardY + cardHeight);
+    ctx.quadraticCurveTo(cardX, cardY + cardHeight, cardX, cardY + cardHeight - radius);
+    ctx.lineTo(cardX, cardY + radius);
+    ctx.quadraticCurveTo(cardX, cardY, cardX + radius, cardY);
+    ctx.closePath();
+    ctx.fill();
+
+    // QR Canvas
+    const qrSize = 520;
+    const qrX = (width - qrSize) / 2;
+    const qrY = cardY + 50;
+    ctx.drawImage(qrCanvas, qrX, qrY, qrSize, qrSize);
+
+    // Handle / Username below QR
+    ctx.font = 'bold 50px "Inter", "Segoe UI", sans-serif';
+    ctx.fillStyle = '#3db4f2'; // Skriibe blue for handle
+    ctx.textAlign = 'center';
+    ctx.fillText(`@${handle}`, width / 2, cardY + cardHeight - 50);
+
+    // Download the generated image
+    const pngUrl = canvas.toDataURL('image/png');
+    const downloadLink = document.createElement('a');
+    downloadLink.href = pngUrl;
+    downloadLink.download = `skriibe-qr-@${handle}.png`;
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+    document.body.removeChild(downloadLink);
   };
 
   if (loading) {
@@ -594,26 +667,21 @@ const CreatorSharePage = () => {
             QR code
           </div>
 
-          <div style={{ background: 'linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)', borderRadius: '16px', padding: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
+          <div style={{ background: '#0a0a0f', border: '1px solid #3db4f2', borderRadius: '16px', padding: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', boxShadow: '0 8px 32px rgba(61, 180, 242, 0.15)' }}>
             <div ref={qrRef2} style={{ background: '#ffffff', padding: '20px', borderRadius: '16px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', width: '100%', boxSizing: 'border-box' }}>
-              <QRCodeCanvas value={fullShareUrl} size={150} bgColor="#ffffff" fgColor="#e6683c" level="H" />
-              <div style={{ color: '#e6683c', fontSize: '16px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              <QRCodeCanvas value={fullShareUrl} size={150} bgColor="#ffffff" fgColor="#000000" level="H" />
+              <div style={{ color: '#3db4f2', fontSize: '16px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                 @{handle}
               </div>
             </div>
             <div style={{ display: 'flex', gap: '8px', width: '100%', justifyContent: 'space-between' }}>
-              <button onClick={handleNativeShare} style={{ flex: 1, background: '#ffffff', color: '#000', border: 'none', padding: '10px 4px', borderRadius: '8px', fontSize: '11px', fontWeight: 700, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+              <button onClick={handleNativeShare} style={{ flex: 1, background: 'rgba(61, 180, 242, 0.1)', color: '#3db4f2', border: '1px solid rgba(61, 180, 242, 0.2)', padding: '10px 4px', borderRadius: '8px', fontSize: '11px', fontWeight: 700, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', transition: 'all 0.2s' }}>
                 <span style={{ fontSize: '16px' }}>↑</span> Share profile
               </button>
-              <button onClick={copyLinkToClipboard} style={{ flex: 1, background: '#ffffff', color: '#000', border: 'none', padding: '10px 4px', borderRadius: '8px', fontSize: '11px', fontWeight: 700, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+              <button onClick={copyLinkToClipboard} style={{ flex: 1, background: 'rgba(61, 180, 242, 0.1)', color: '#3db4f2', border: '1px solid rgba(61, 180, 242, 0.2)', padding: '10px 4px', borderRadius: '8px', fontSize: '11px', fontWeight: 700, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', transition: 'all 0.2s' }}>
                 <span style={{ fontSize: '16px' }}>🔗</span> {copiedLink ? 'Copied! ✓' : 'Copy link'}
               </button>
-              <button onClick={() => {
-                const canvas = qrRef2.current?.querySelector('canvas');
-                if (canvas) {
-                  const link = document.createElement('a'); link.download = `qr-ig.png`; link.href = canvas.toDataURL(); link.click();
-                }
-              }} style={{ flex: 1, background: '#ffffff', color: '#000', border: 'none', padding: '10px 4px', borderRadius: '8px', fontSize: '11px', fontWeight: 700, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+              <button onClick={downloadSkriibeQRCode} style={{ flex: 1, background: '#3db4f2', color: '#0a0a0f', border: 'none', padding: '10px 4px', borderRadius: '8px', fontSize: '11px', fontWeight: 800, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', transition: 'all 0.2s' }}>
                 <span style={{ fontSize: '16px' }}>↓</span> Download
               </button>
             </div>

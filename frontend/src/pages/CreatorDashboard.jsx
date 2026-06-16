@@ -373,36 +373,53 @@ const CreatorDashboard = () => {
         </div>
 
         {/* 4. LIVE STATUS BANNER */}
-        <div style={{
-          background: isLive ? 'rgba(45, 212, 191, 0.04)' : '#13161C',
-          border: isLive ? '1px solid rgba(45, 212, 191, 0.3)' : '1px solid #1F2937',
-          borderRadius: '16px',
-          padding: '14px 16px',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          transition: 'all 0.3s ease'
-        }}>
+        <div 
+          onClick={() => {
+            if (creator?.isPaused) {
+              navigate('/creator/settings', { state: { highlightPause: true } });
+            }
+          }}
+          style={{
+            background: creator?.isPaused ? '#13161C' : (isLive ? 'rgba(45, 212, 191, 0.04)' : '#13161C'),
+            border: creator?.isPaused ? '1px solid #ef4444' : (isLive ? '1px solid rgba(45, 212, 191, 0.3)' : '1px solid #1F2937'),
+            borderRadius: '16px',
+            padding: '14px 16px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            transition: 'all 0.3s ease',
+            cursor: creator?.isPaused ? 'pointer' : 'default'
+          }}
+        >
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px' }}>
               <div style={{
                 width: '8px',
                 height: '8px',
                 borderRadius: '50%',
-                background: isLive ? '#2DD4BF' : '#94a3b8',
+                background: creator?.isPaused ? '#ef4444' : (isLive ? '#2DD4BF' : '#94a3b8'),
                 transition: 'background-color 0.3s ease'
               }} />
-              <span style={{ fontWeight: 800, fontSize: '0.95rem', color: '#ffffff' }}>
-                You're {isLive ? 'LIVE' : 'OFFLINE'}
+              <span style={{ fontWeight: 800, fontSize: '0.95rem', color: creator?.isPaused ? '#ef4444' : '#ffffff' }}>
+                {creator?.isPaused ? 'Account paused by yourself temporarily' : `You're ${isLive ? 'LIVE' : 'OFFLINE'}`}
               </span>
             </div>
             <div style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: '2px' }}>
-              {isLive ? `Accepting questions · ₹${creator.price || creator.pricePerQuestion || 99}/question` : 'Currently offline'}
+              {creator?.isPaused 
+                ? 'Not accepting questions temporarily' 
+                : (isLive ? `Accepting questions · ₹${creator.price || creator.pricePerQuestion || 99}/question` : 'Currently offline')}
             </div>
           </div>
 
           <div 
-            onClick={handleToggle}
+            onClick={(e) => {
+              if (creator?.isPaused) {
+                e.stopPropagation();
+                navigate('/creator/settings', { state: { highlightPause: true } });
+              } else {
+                handleToggle();
+              }
+            }}
             style={{
               width: '44px',
               height: '26px',
@@ -430,7 +447,7 @@ const CreatorDashboard = () => {
         {/* SETUP PAYOUTS */}
         {!creator.bankLinked ? (
           <div 
-            onClick={() => navigate('/creator/payouts')}
+            onClick={() => navigate('/creator/setup-payouts')}
             style={{ 
               background: '#13161C', 
               border: '1px dashed #F59E0B', 
@@ -482,7 +499,7 @@ const CreatorDashboard = () => {
                 Linked
               </div>
               <span 
-                onClick={() => navigate('/creator/payouts', { state: { creator } })}
+                onClick={() => navigate('/creator/setup-payouts', { state: { creator } })}
                 style={{ color: '#94a3b8', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', textDecoration: 'underline' }}
               >
                 Edit details
@@ -498,9 +515,6 @@ const CreatorDashboard = () => {
           style={{ background: '#13161C', border: '1px solid #1F2937', borderRadius: '16px', padding: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
         >
           <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-            <div style={{ width: '48px', height: '48px', minWidth: '48px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '4px solid #10B981', color: '#10B981', fontWeight: 800, fontSize: '1.2rem', boxSizing: 'border-box' }}>
-              86
-            </div>
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span style={{ fontWeight: 800, fontSize: '1.1rem', color: '#fff' }}>Looking strong</span>

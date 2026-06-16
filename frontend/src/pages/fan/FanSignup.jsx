@@ -59,7 +59,7 @@ const FanSignup = () => {
     }
   };
 
-  const isInvalid = !name || !email || !password || !confirmPassword || password !== confirmPassword || !checkPasswordStrength(password) || (whatsappConsent && !whatsappPhone);
+  const isInvalid = !name || !email || !password || !confirmPassword || password !== confirmPassword || !checkPasswordStrength(password) || (whatsappConsent && !whatsappPhone) || (whatsappPhone && whatsappPhone.length !== 10);
 
   return (
     <div style={{
@@ -492,11 +492,12 @@ const FanSignup = () => {
                   placeholder=""
                   value={whatsappPhone}
                   onChange={(e) => {
-                    setWhatsappPhone(e.target.value.replace(/[^0-9\+\-\s\(\)]/g, ''));
+                    setWhatsappPhone(e.target.value.replace(/\D/g, '').slice(0, 10));
                     if (error) setError('');
                   }}
                   onFocus={() => setFocusedWhatsappPhone(true)}
                   onBlur={() => setFocusedWhatsappPhone(false)}
+                  maxLength={10}
                   style={{
                     flex: 1,
                     background: 'transparent',
@@ -510,6 +511,12 @@ const FanSignup = () => {
                   }}
                 />
               </div>
+
+              {whatsappPhone && whatsappPhone.length !== 10 && (
+                <div style={{ color: '#ef4444', fontSize: '10px', fontFamily: 'var(--font-mono)', marginBottom: '16px', marginTop: '-8px' }}>
+                  Must be exactly 10 digits.
+                </div>
+              )}
 
               <label style={{
                 display: 'flex', alignItems: 'flex-start', gap: '10px',

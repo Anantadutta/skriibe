@@ -114,7 +114,7 @@ const FanDiscovery = () => {
   };
 
   // Filter locally so socket updates instantly remove offline creators if filter is active
-  const filteredCreators = isLiveFilter ? creators.filter(c => c.isLive) : creators;
+  const filteredCreators = creators.filter(c => !c.isPaused && (isLiveFilter ? c.isLive : true));
 
   return (
     <div style={{
