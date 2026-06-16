@@ -31,7 +31,7 @@ const CreatorSharePage = () => {
   }, [creator]);
 
   const { state } = useLocation();
-  const username = state?.creator?.username ?? 'yourhandle';
+  const username = (state?.creator?.handle || state?.creator?.username) ?? 'yourhandle';
   const [loading, setLoading] = useState(!creator);
 
   // Success states for clipboard actions
@@ -599,7 +599,7 @@ const CreatorSharePage = () => {
             <button onClick={() => navigate('/creator/dashboard', { state: { creator } })} className="copy-link-btn" style={{ flex: 1, background: '#1A1A1A', border: '1px solid #2A2A2A', color: '#ffffff', boxShadow: 'none' }}>
               <span>Share Profile</span>
             </button>
-            <button onClick={() => navigate(`/@${username}`)} className="copy-link-btn" style={{ flex: 1, background: 'linear-gradient(90deg, #7c3aed, #06b6d4)' }}>
+            <button onClick={() => navigate(`/creator/${username}?preview=true`)} className="copy-link-btn" style={{ flex: 1, background: 'linear-gradient(90deg, #7c3aed, #06b6d4)' }}>
               <span>View My Page →</span>
             </button>
           </div>

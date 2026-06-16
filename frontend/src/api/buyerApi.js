@@ -4,21 +4,14 @@
 import axios from 'axios';
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
-export const getCreatorProfile = (handle) => {
+export const getCreatorProfile = async (handle) => {
   const cleanHandle = handle?.replace('@', '') || 'anantadutta';
-  return Promise.resolve({
-    success: true,
-    creator: {
-      handle: cleanHandle,
-      name: cleanHandle === 'anantadutta' ? 'Ananta Dutta' : cleanHandle,
-      bio: 'Helping India save smarter. 5 yrs at HDFC. SIP, mutual funds, tax planning.',
-      pricePerQuestion: 99,
-      responseTime: '24 hours',
-      questionsAnswered: 42,
-      instagramLinked: true,
-      instagramHandle: cleanHandle
-    }
-  });
+  try {
+    const res = await axios.get(`${API_URL}/public/creator/${cleanHandle}`);
+    return res.data;
+  } catch (err) {
+    throw err;
+  }
 };
 
 export const sendBuyerOTP = (phone) =>

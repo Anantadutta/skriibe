@@ -4,6 +4,21 @@ import { fanLogin } from '../../services/fanApi';
 
 const FanLogin = () => {
   const [email, setEmail] = useState('');
+  const [scale, setScale] = React.useState(1);
+
+  React.useEffect(() => {
+    const handleResize = () => {
+      const formHeight = 950;
+      if (window.innerHeight < formHeight) {
+        setScale(window.innerHeight / formHeight);
+      } else {
+        setScale(1);
+      }
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
@@ -43,14 +58,10 @@ const FanLogin = () => {
 
   return (
     <div style={{
-      minHeight: '100vh',
+      height: '100vh',
       background: '#0a0a0f',
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
       position: 'relative',
-      overflowX: 'hidden'
+      overflow: 'hidden'
     }}>
       {/* Background Shader & Noise */}
       <div style={{
@@ -95,23 +106,40 @@ const FanLogin = () => {
         .gradient-action-btn:active:not(:disabled) {
           transform: translateY(0);
         }
+        input {
+          transition: background-color 5000s ease-in-out 0s;
+        }
+        input:-webkit-autofill,
+        input:-webkit-autofill:hover, 
+        input:-webkit-autofill:focus, 
+        input:-webkit-autofill:active {
+          -webkit-text-fill-color: #ffffff !important;
+          -webkit-background-clip: text !important;
+          background-clip: text !important;
+        }
       `}} />
 
       <div style={{
-        width: '100%',
-        maxWidth: '480px',
-        padding: '0 16px',
+        width: `${100 / scale}%`,
+        maxWidth: `${480 / scale}px`,
+        padding: '12px 16px',
         boxSizing: 'border-box',
         zIndex: 1,
-        position: 'relative',
-        margin: '40px 0'
+        position: 'absolute',
+        top: '48%',
+        left: '50%',
+        transform: `translate(-50%, -50%) scale(${scale})`,
+        transformOrigin: 'center center',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center'
       }}>
         <div style={{
           background: 'rgba(255, 255, 255, 0.05)',
           backdropFilter: 'blur(12px)',
           border: '1px solid rgba(255, 255, 255, 0.08)',
           borderRadius: '16px',
-          padding: '32px 24px',
+          padding: '24px',
           display: 'flex',
           flexDirection: 'column',
           boxSizing: 'border-box'
@@ -121,7 +149,7 @@ const FanLogin = () => {
             display: 'flex',
             alignItems: 'center',
             position: 'relative',
-            marginBottom: '20px'
+            marginBottom: '12px'
           }}>
             <Link to="/" style={{
               position: 'absolute',
@@ -194,14 +222,14 @@ const FanLogin = () => {
               </div>
             )}
 
-            <div style={{ marginTop: '40px' }}>
+            <div style={{ marginTop: '20px' }}>
               <label style={{
                 fontFamily: 'var(--font-mono)',
                 fontSize: '9px',
                 color: '#06b6d4',
                 textTransform: 'uppercase',
                 display: 'block',
-                marginBottom: '10px',
+                marginBottom: '6px',
                 letterSpacing: '1.5px',
                 fontWeight: '600'
               }}>
@@ -217,11 +245,17 @@ const FanLogin = () => {
                 boxShadow: focusedEmail ? '0 0 15px rgba(124, 58, 237, 0.3)' : 'none',
                 transition: 'all 0.25s ease',
                 overflow: 'hidden',
-                marginBottom: '16px'
+                marginBottom: '12px'
               }}>
+                <div style={{ padding: '0 0 0 16px', display: 'flex', alignItems: 'center', color: '#94a3b8' }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                    <polyline points="22,6 12,13 2,6"></polyline>
+                  </svg>
+                </div>
                 <input
                   type="email"
-                  placeholder=""
+                  placeholder="duttananata@gmail.com"
                   value={email}
                   onChange={(e) => {
                     setEmail(e.target.value);
@@ -234,7 +268,7 @@ const FanLogin = () => {
                     background: 'transparent',
                     border: 'none',
                     outline: 'none',
-                    padding: '16px 20px',
+                    padding: '12px 16px 12px 12px',
                     fontSize: '16px',
                     color: '#ffffff',
                     fontFamily: 'var(--font-mono)',
@@ -249,7 +283,7 @@ const FanLogin = () => {
                 color: '#06b6d4',
                 textTransform: 'uppercase',
                 display: 'block',
-                marginBottom: '10px',
+                marginBottom: '6px',
                 letterSpacing: '1.5px',
                 fontWeight: '600'
               }}>
@@ -265,11 +299,17 @@ const FanLogin = () => {
                 boxShadow: focusedPassword ? '0 0 15px rgba(124, 58, 237, 0.3)' : 'none',
                 transition: 'all 0.25s ease',
                 overflow: 'hidden',
-                marginBottom: '16px'
+                marginBottom: '12px'
               }}>
+                <div style={{ padding: '0 0 0 16px', display: 'flex', alignItems: 'center', color: '#94a3b8' }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                  </svg>
+                </div>
                 <input
                   type={showPassword ? "text" : "password"}
-                  placeholder=""
+                  placeholder="••••••••"
                   value={password}
                   onChange={(e) => {
                     setPassword(e.target.value);
@@ -282,7 +322,7 @@ const FanLogin = () => {
                     background: 'transparent',
                     border: 'none',
                     outline: 'none',
-                    padding: '16px 20px',
+                    padding: '12px 16px 12px 12px',
                     fontSize: '16px',
                     color: '#ffffff',
                     fontFamily: 'var(--font-mono)',
@@ -371,9 +411,15 @@ const FanLogin = () => {
               >
                 {loading ? 'Logging in...' : 'Log In →'}
               </button>
+
+              {/* LINK TO SIGNUP */}
+              <div style={{ textAlign: 'center', marginTop: '16px', fontSize: '13px', paddingBottom: '0' }}>
+                <span style={{ color: '#94a3b8' }}>Don't have an account? </span>
+                <Link to="/fan/signup" style={{ color: '#06b6d4', textDecoration: 'none', fontWeight: '500' }}>Sign up</Link>
+              </div>
             </div>
 
-            <div style={{ marginTop: '24px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <div style={{ textAlign: 'center', color: '#94a3b8', fontSize: '12px', marginBottom: '8px' }}>
                 or sign in with
               </div>
@@ -435,24 +481,20 @@ const FanLogin = () => {
                 Continue with Meta
               </a>
             </div>
-            
-            {/* LINK TO SIGNUP */}
-            <div style={{ textAlign: 'center', marginTop: '24px', fontSize: '13px' }}>
-              <span style={{ color: '#94a3b8' }}>Don't have an account? </span>
-              <Link to="/fan/signup" style={{ color: '#06b6d4', textDecoration: 'none', fontWeight: '600' }}>Sign up</Link>
-            </div>
           </div>
 
           <div style={{
             textAlign: 'center',
-            marginTop: '32px',
+            marginTop: '8px',
             color: '#94a3b8',
-            fontSize: '11px',
+            fontSize: '13px',
             fontFamily: 'var(--font-mono)',
             lineHeight: '1.6'
           }}>
-            <div style={{ marginTop: '24px', opacity: 0.5, fontSize: '9px', textTransform: 'uppercase', letterSpacing: '1px' }}>
-              Made with 🤍 for bold conversations
+            By logging in and using Skriibe, you agree to our<br />
+            <span style={{ color: '#06b6d4', cursor: 'pointer' }}>Terms of Service</span> and <span style={{ color: '#06b6d4', cursor: 'pointer' }}>Privacy Policy</span>.
+            <div style={{ marginTop: '16px', opacity: 0.5, fontSize: '9px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+              Made with 🤍 from skriibe
             </div>
           </div>
         </div>

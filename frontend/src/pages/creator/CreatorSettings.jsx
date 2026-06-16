@@ -71,7 +71,7 @@ const CreatorSettings = () => {
 
           <button 
             onClick={() => {
-              if (username) navigate(`/@${username}`);
+              if (username) navigate(`/${username}?preview=true`);
             }}
             style={{
               background: 'linear-gradient(90deg, #7c3aed 0%, #06b6d4 100%)',

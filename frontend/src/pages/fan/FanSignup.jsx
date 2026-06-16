@@ -4,21 +4,31 @@ import { fanSignup } from '../../services/fanApi';
 
 const FanSignup = () => {
   const [name, setName] = useState('');
+  const [scale, setScale] = React.useState(1);
+
+  React.useEffect(() => {
+    const handleResize = () => {
+      const formHeight = 950;
+      if (window.innerHeight < formHeight) {
+        setScale(window.innerHeight / formHeight);
+      } else {
+        setScale(1);
+      }
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [whatsappPhone, setWhatsappPhone] = useState('');
   const [whatsappConsent, setWhatsappConsent] = useState(false);
   
   const [focusedName, setFocusedName] = useState(false);
   const [focusedEmail, setFocusedEmail] = useState(false);
   const [focusedPassword, setFocusedPassword] = useState(false);
-  const [focusedConfirmPassword, setFocusedConfirmPassword] = useState(false);
-  const [focusedWhatsappPhone, setFocusedWhatsappPhone] = useState(false);
   const navigate = useNavigate();
   
   console.log("FanSignup rendered");
@@ -28,13 +38,8 @@ const FanSignup = () => {
   };
 
   const handleRegister = async () => {
-    if (!name || !email || !password || !confirmPassword) {
+    if (!name || !email || !password) {
       setError('Please fill out all fields');
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      setError('Passwords do not match');
       return;
     }
 
@@ -46,7 +51,7 @@ const FanSignup = () => {
     setLoading(true);
     setError('');
     try {
-      const res = await fanSignup(name, email, password, whatsappPhone, whatsappConsent);
+      const res = await fanSignup(name, email, password, '', whatsappConsent);
       if (res.data.success) {
         // Just redirect to explore page for now after successful signup
         navigate('/explore');
@@ -59,18 +64,14 @@ const FanSignup = () => {
     }
   };
 
-  const isInvalid = !name || !email || !password || !confirmPassword || password !== confirmPassword || !checkPasswordStrength(password) || (whatsappConsent && !whatsappPhone) || (whatsappPhone && whatsappPhone.length !== 10);
+  const isInvalid = !name || !email || !password || !checkPasswordStrength(password);
 
   return (
     <div style={{
-      minHeight: '100vh',
+      height: '100vh',
       background: '#0a0a0f',
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
       position: 'relative',
-      overflowX: 'hidden'
+      overflow: 'hidden'
     }}>
       {/* Background Shader & Noise */}
       <div style={{
@@ -115,23 +116,40 @@ const FanSignup = () => {
         .gradient-action-btn:active:not(:disabled) {
           transform: translateY(0);
         }
+        input {
+          transition: background-color 5000s ease-in-out 0s;
+        }
+        input:-webkit-autofill,
+        input:-webkit-autofill:hover, 
+        input:-webkit-autofill:focus, 
+        input:-webkit-autofill:active {
+          -webkit-text-fill-color: #ffffff !important;
+          -webkit-background-clip: text !important;
+          background-clip: text !important;
+        }
       `}} />
 
       <div style={{
-        width: '100%',
-        maxWidth: '480px',
-        padding: '0 16px',
+        width: `${100 / scale}%`,
+        maxWidth: `${480 / scale}px`,
+        padding: '12px 16px',
         boxSizing: 'border-box',
         zIndex: 1,
-        position: 'relative',
-        margin: '40px 0'
+        position: 'absolute',
+        top: '48%',
+        left: '50%',
+        transform: `translate(-50%, -50%) scale(${scale})`,
+        transformOrigin: 'center center',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center'
       }}>
         <div style={{
           background: 'rgba(255, 255, 255, 0.05)',
           backdropFilter: 'blur(12px)',
           border: '1px solid rgba(255, 255, 255, 0.08)',
           borderRadius: '16px',
-          padding: '32px 24px',
+          padding: '24px',
           display: 'flex',
           flexDirection: 'column',
           boxSizing: 'border-box'
@@ -141,7 +159,7 @@ const FanSignup = () => {
             display: 'flex',
             alignItems: 'center',
             position: 'relative',
-            marginBottom: '20px'
+            marginBottom: '12px'
           }}>
             <Link to="/" style={{
               position: 'absolute',
@@ -193,19 +211,22 @@ const FanSignup = () => {
                   </text>
                 </svg>
               </div>
-              <div style={{ color: '#94a3b8', fontSize: '14px', fontFamily: 'var(--font-body)', fontWeight: '500' }}>
+              <div style={{ color: '#ffffff', fontSize: '18px', fontFamily: 'var(--font-body)', fontWeight: '600', marginBottom: '8px' }}>
                 Join as a Fan. Connect with creators.
+              </div>
+              <div style={{ color: '#94a3b8', fontSize: '14px', fontFamily: 'var(--font-body)', fontWeight: '400' }}>
+                Ask questions. Get personal replies.
               </div>
             </div>
 
-            <div style={{ marginTop: '40px' }}>
+            <div style={{ marginTop: '20px' }}>
               <label style={{
                 fontFamily: 'var(--font-mono)',
                 fontSize: '9px',
                 color: '#06b6d4',
                 textTransform: 'uppercase',
                 display: 'block',
-                marginBottom: '10px',
+                marginBottom: '6px',
                 letterSpacing: '1.5px',
                 fontWeight: '600'
               }}>
@@ -221,11 +242,17 @@ const FanSignup = () => {
                 boxShadow: focusedName ? '0 0 15px rgba(124, 58, 237, 0.3)' : 'none',
                 transition: 'all 0.25s ease',
                 overflow: 'hidden',
-                marginBottom: '16px'
+                marginBottom: '12px'
               }}>
+                <div style={{ padding: '0 0 0 16px', display: 'flex', alignItems: 'center', color: '#94a3b8' }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                  </svg>
+                </div>
                 <input
                   type="text"
-                  placeholder=""
+                  placeholder="Jane Smith"
                   value={name}
                   onChange={(e) => {
                     setName(e.target.value);
@@ -238,7 +265,7 @@ const FanSignup = () => {
                     background: 'transparent',
                     border: 'none',
                     outline: 'none',
-                    padding: '16px 20px',
+                    padding: '12px 16px 12px 12px',
                     fontSize: '16px',
                     color: '#ffffff',
                     fontFamily: 'var(--font-mono)',
@@ -253,7 +280,7 @@ const FanSignup = () => {
                 color: '#06b6d4',
                 textTransform: 'uppercase',
                 display: 'block',
-                marginBottom: '10px',
+                marginBottom: '6px',
                 letterSpacing: '1.5px',
                 fontWeight: '600'
               }}>
@@ -269,11 +296,17 @@ const FanSignup = () => {
                 boxShadow: focusedEmail ? '0 0 15px rgba(124, 58, 237, 0.3)' : 'none',
                 transition: 'all 0.25s ease',
                 overflow: 'hidden',
-                marginBottom: '16px'
+                marginBottom: '12px'
               }}>
+                <div style={{ padding: '0 0 0 16px', display: 'flex', alignItems: 'center', color: '#94a3b8' }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                    <polyline points="22,6 12,13 2,6"></polyline>
+                  </svg>
+                </div>
                 <input
                   type="email"
-                  placeholder=""
+                  placeholder="jane.smith@example.com"
                   value={email}
                   onChange={(e) => {
                     setEmail(e.target.value);
@@ -286,7 +319,7 @@ const FanSignup = () => {
                     background: 'transparent',
                     border: 'none',
                     outline: 'none',
-                    padding: '16px 20px',
+                    padding: '12px 16px 12px 12px',
                     fontSize: '16px',
                     color: '#ffffff',
                     fontFamily: 'var(--font-mono)',
@@ -301,7 +334,7 @@ const FanSignup = () => {
                 color: '#06b6d4',
                 textTransform: 'uppercase',
                 display: 'block',
-                marginBottom: '10px',
+                marginBottom: '6px',
                 letterSpacing: '1.5px',
                 fontWeight: '600'
               }}>
@@ -317,11 +350,17 @@ const FanSignup = () => {
                 boxShadow: focusedPassword ? '0 0 15px rgba(124, 58, 237, 0.3)' : 'none',
                 transition: 'all 0.25s ease',
                 overflow: 'hidden',
-                marginBottom: '16px'
+                marginBottom: '12px'
               }}>
+                <div style={{ padding: '0 0 0 16px', display: 'flex', alignItems: 'center', color: '#94a3b8' }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                  </svg>
+                </div>
                 <input
                   type={showPassword ? "text" : "password"}
-                  placeholder=""
+                  placeholder="••••••••"
                   value={password}
                   onChange={(e) => {
                     setPassword(e.target.value);
@@ -334,7 +373,7 @@ const FanSignup = () => {
                     background: 'transparent',
                     border: 'none',
                     outline: 'none',
-                    padding: '16px 20px',
+                    padding: '12px 16px 12px 12px',
                     fontSize: '16px',
                     color: '#ffffff',
                     fontFamily: 'var(--font-mono)',
@@ -373,165 +412,35 @@ const FanSignup = () => {
                 </button>
               </div>
 
-              {password && !checkPasswordStrength(password) && (
-                <div style={{ color: '#ef4444', fontSize: '10px', fontFamily: 'var(--font-mono)', marginBottom: '16px', marginTop: '-8px' }}>
-                  Must be at least 8 chars with 1 number/special char.
-                </div>
-              )}
-
-              <label style={{
-                fontFamily: 'var(--font-mono)',
-                fontSize: '9px',
-                color: '#06b6d4',
-                textTransform: 'uppercase',
-                display: 'block',
-                marginBottom: '10px',
-                letterSpacing: '1.5px',
-                fontWeight: '600'
-              }}>
-                CONFIRM PASSWORD
-              </label>
-
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                background: 'rgba(255, 255, 255, 0.03)',
-                border: focusedConfirmPassword ? '1px solid #7c3aed' : '1px solid rgba(255, 255, 255, 0.08)',
-                borderRadius: '12px',
-                boxShadow: focusedConfirmPassword ? '0 0 15px rgba(124, 58, 237, 0.3)' : 'none',
-                transition: 'all 0.25s ease',
-                overflow: 'hidden',
-                marginBottom: '16px'
-              }}>
-                <input
-                  type={showConfirmPassword ? "text" : "password"}
-                  placeholder=""
-                  value={confirmPassword}
-                  onChange={(e) => {
-                    setConfirmPassword(e.target.value);
-                    if (error) setError('');
-                  }}
-                  onFocus={() => setFocusedConfirmPassword(true)}
-                  onBlur={() => setFocusedConfirmPassword(false)}
-                  style={{
-                    flex: 1,
-                    background: 'transparent',
-                    border: 'none',
-                    outline: 'none',
-                    padding: '16px 20px',
-                    fontSize: '16px',
-                    color: '#ffffff',
-                    fontFamily: 'var(--font-mono)',
-                    letterSpacing: '1px'
-                  }}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  style={{
-                    background: 'transparent',
-                    border: 'none',
-                    outline: 'none',
-                    padding: '0 16px',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: '#94a3b8',
-                    transition: 'color 0.2s'
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.color = '#ffffff'}
-                  onMouseLeave={(e) => e.currentTarget.style.color = '#94a3b8'}
-                >
-                  {showConfirmPassword ? (
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
-                      <line x1="1" y1="1" x2="23" y2="23"></line>
-                    </svg>
-                  ) : (
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                      <circle cx="12" cy="12" r="3"></circle>
-                    </svg>
-                  )}
-                </button>
+              <div style={{ color: '#94a3b8', fontSize: '11px', fontFamily: 'var(--font-mono)', marginBottom: '24px', marginTop: '-4px' }}>
+                Use 8+ characters with a mix of letters, numbers & symbols.
               </div>
 
-              {password && confirmPassword && password !== confirmPassword && (
-                <div style={{ color: '#ef4444', fontSize: '10px', fontFamily: 'var(--font-mono)', marginBottom: '16px', marginTop: '-8px' }}>
-                  Passwords do not match
+              <div 
+                onClick={() => setWhatsappConsent(!whatsappConsent)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  background: 'rgba(37, 211, 102, 0.05)',
+                  border: '1px solid rgba(37, 211, 102, 0.3)',
+                  borderRadius: '12px',
+                  padding: '16px',
+                  cursor: 'pointer',
+                  marginBottom: '24px',
+                  transition: 'all 0.2s ease',
+                  boxShadow: '0 0 15px rgba(37, 211, 102, 0.1)'
+                }}
+              >
+                <div style={{ marginRight: '16px', display: 'flex', alignItems: 'center' }}>
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="#25D366">
+                    <path d="M12.01 2.014c-5.513 0-9.998 4.486-9.998 9.998 0 1.954.545 3.824 1.581 5.437l-1.581 5.568 5.679-1.545a9.966 9.966 0 0 0 4.319.98c5.513 0 9.998-4.486 9.998-9.998s-4.485-9.998-9.998-9.998zm0 18.258c-1.54 0-3.033-.393-4.32-1.134l-.31-.178-3.14.854.87-3.111-.2-.321a8.232 8.232 0 0 1-1.22-4.368c0-4.55 3.702-8.252 8.25-8.252s8.25 3.702 8.25 8.252-3.702 8.25-8.25-8.25z"/>
+                    <path d="M17.18 14.407c-.282-.141-1.666-.822-1.924-.916-.257-.094-.445-.141-.632.141-.188.282-.726.916-.89 1.104-.164.188-.328.211-.61.07-.282-.141-1.189-.438-2.266-1.401-.838-.75-1.403-1.677-1.567-1.959-.164-.282-.017-.435.124-.575.127-.126.282-.329.423-.493.141-.164.188-.282.282-.47.094-.188.047-.353-.024-.494-.07-.141-.632-1.527-.866-2.091-.228-.549-.46-.475-.632-.483-.164-.008-.352-.008-.54-.008s-.493.07-.751.353c-.258.282-.986.963-.986 2.349 0 1.386 1.01 2.725 1.15 2.913.141.188 1.986 3.033 4.811 4.251.672.289 1.196.462 1.606.592.674.214 1.288.183 1.77.111.536-.08 1.666-.681 1.901-1.339.235-.658.235-1.222.164-1.339-.07-.118-.258-.188-.54-.329z"/>
+                  </svg>
                 </div>
-              )}
-
-              <label style={{
-                fontFamily: 'var(--font-mono)',
-                fontSize: '9px',
-                color: '#06b6d4',
-                textTransform: 'uppercase',
-                display: 'block',
-                marginBottom: '10px',
-                letterSpacing: '1.5px',
-                fontWeight: '600'
-              }}>
-                WHATSAPP NUMBER {whatsappConsent ? <span style={{ color: '#ef4444' }}>*</span> : '(OPTIONAL)'}
-              </label>
-
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                background: 'rgba(255, 255, 255, 0.03)',
-                border: focusedWhatsappPhone ? '1px solid #7c3aed' : '1px solid rgba(255, 255, 255, 0.08)',
-                borderRadius: '12px',
-                boxShadow: focusedWhatsappPhone ? '0 0 15px rgba(124, 58, 237, 0.3)' : 'none',
-                transition: 'all 0.25s ease',
-                overflow: 'hidden',
-                marginBottom: '16px'
-              }}>
-                <input
-                  type="tel"
-                  placeholder=""
-                  value={whatsappPhone}
-                  onChange={(e) => {
-                    setWhatsappPhone(e.target.value.replace(/\D/g, '').slice(0, 10));
-                    if (error) setError('');
-                  }}
-                  onFocus={() => setFocusedWhatsappPhone(true)}
-                  onBlur={() => setFocusedWhatsappPhone(false)}
-                  maxLength={10}
-                  style={{
-                    flex: 1,
-                    background: 'transparent',
-                    border: 'none',
-                    outline: 'none',
-                    padding: '16px 20px',
-                    fontSize: '16px',
-                    color: '#ffffff',
-                    fontFamily: 'var(--font-mono)',
-                    letterSpacing: '1px'
-                  }}
-                />
+                <div style={{ flex: 1, color: '#e2e8f0', fontSize: '13px', lineHeight: '1.4' }}>
+                  Get notified on WhatsApp when a creator replies to your question.
+                </div>
               </div>
-
-              {whatsappPhone && whatsappPhone.length !== 10 && (
-                <div style={{ color: '#ef4444', fontSize: '10px', fontFamily: 'var(--font-mono)', marginBottom: '16px', marginTop: '-8px' }}>
-                  Must be exactly 10 digits.
-                </div>
-              )}
-
-              <label style={{
-                display: 'flex', alignItems: 'flex-start', gap: '10px',
-                cursor: 'pointer', marginBottom: '16px'
-              }}>
-                <input 
-                  type="checkbox" 
-                  checked={whatsappConsent}
-                  onChange={(e) => setWhatsappConsent(e.target.checked)}
-                  style={{ width: '16px', height: '16px', accentColor: '#06b6d4', marginTop: '2px', cursor: 'pointer' }}
-                />
-                <span style={{ color: '#94a3b8', fontSize: '12px', lineHeight: '1.4' }}>
-                  Notify me on WhatsApp when a creator replies to my question
-                </span>
-              </label>
 
               {error && (
                 <div style={{
@@ -556,104 +465,41 @@ const FanSignup = () => {
                   borderRadius: '9999px',
                   background: 'linear-gradient(90deg, #7c3aed 0%, #06b6d4 100%)',
                   color: '#ffffff',
-                  fontWeight: '700',
-                  fontSize: '14px',
+                  fontWeight: '600',
+                  fontSize: '15px',
                   border: 'none',
                   cursor: 'pointer',
                   transition: 'all 0.25s ease',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  margin: '24px auto 0',
+                  margin: '8px auto 0',
                   boxShadow: '0 4px 12px rgba(124, 58, 237, 0.2)'
                 }}
               >
-                {loading ? 'Registering...' : 'Sign up as Fan →'}
+                {loading ? 'Registering...' : 'Join as a Fan →'}
               </button>
             </div>
 
-            <div style={{ marginTop: '24px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <div style={{ textAlign: 'center', color: '#94a3b8', fontSize: '12px', marginBottom: '8px' }}>
-                or sign up with
-              </div>
-              
-              <a href={`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/auth/google?role=fan`}
-                 className="social-btn"
-                 style={{
-                   display: 'flex',
-                   alignItems: 'center',
-                   justifyContent: 'center',
-                   gap: '10px',
-                   padding: '12px 24px',
-                   background: 'rgba(255, 255, 255, 0.03)',
-                   border: '1px solid rgba(255, 255, 255, 0.08)',
-                   borderRadius: '9999px',
-                   color: '#ffffff',
-                   textDecoration: 'none',
-                   fontSize: '14px',
-                   fontWeight: '600',
-                   maxWidth: '280px',
-                   width: '100%',
-                   margin: '0 auto',
-                   transition: 'all 0.25s ease'
-                 }}
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                  <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.16v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                  <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.16C1.43 8.55 1 10.22 1 12s.43 3.45 1.16 4.93l3.68-2.84z" fill="#FBBC05"/>
-                  <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.16 7.07l3.68 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-                </svg>
-                Continue with Google
-              </a>
-
-              <a href={`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/auth/facebook?role=fan`}
-                 className="social-btn"
-                 style={{
-                   display: 'flex',
-                   alignItems: 'center',
-                   justifyContent: 'center',
-                   gap: '10px',
-                   padding: '12px 24px',
-                   background: 'rgba(24, 119, 242, 0.1)',
-                   border: '1px solid rgba(24, 119, 242, 0.2)',
-                   borderRadius: '9999px',
-                   color: '#ffffff',
-                   textDecoration: 'none',
-                   fontSize: '14px',
-                   fontWeight: '600',
-                   maxWidth: '280px',
-                   width: '100%',
-                   margin: '0 auto',
-                   transition: 'all 0.25s ease'
-                 }}
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047v-2.66c0-3.025 1.792-4.697 4.533-4.697 1.312 0 2.686.236 2.686.236v2.98h-1.514c-1.49 0-1.956.935-1.956 1.895v2.246h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z" fill="white"/>
-                </svg>
-                Continue with Meta
-              </a>
-            </div>
-            
             {/* LINK TO LOGIN */}
-            <div style={{ textAlign: 'center', marginTop: '24px', fontSize: '13px' }}>
-              <span style={{ color: '#94a3b8' }}>Already a Fan? </span>
-              <Link to="/fan/login" style={{ color: '#06b6d4', textDecoration: 'none', fontWeight: '600' }}>Log in here</Link>
+            <div style={{ textAlign: 'center', marginTop: '20px', fontSize: '13px', paddingBottom: '0' }}>
+              <span style={{ color: '#94a3b8' }}>Already have an account? </span>
+              <Link to="/fan/login" style={{ color: '#06b6d4', textDecoration: 'none', fontWeight: '500' }}>Log in</Link>
             </div>
           </div>
 
           <div style={{
             textAlign: 'center',
-            marginTop: '32px',
+            marginTop: '8px',
             color: '#94a3b8',
-            fontSize: '11px',
+            fontSize: '13px',
             fontFamily: 'var(--font-mono)',
             lineHeight: '1.6'
           }}>
-            By logging in and using Skriibe, you agree to our<br />
+            By signing up and using Skriibe, you agree to our<br />
             <span style={{ color: '#06b6d4', cursor: 'pointer' }}>Terms of Service</span> and <span style={{ color: '#06b6d4', cursor: 'pointer' }}>Privacy Policy</span>.
-            <div style={{ marginTop: '24px', opacity: 0.5, fontSize: '9px', textTransform: 'uppercase', letterSpacing: '1px' }}>
-              Made with 🤍 for bold conversations
+            <div style={{ marginTop: '16px', opacity: 0.5, fontSize: '9px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+              Made with 🤍 from Skriibe
             </div>
           </div>
         </div>

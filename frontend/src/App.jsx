@@ -40,7 +40,6 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminCreators from './pages/admin/AdminCreators';
 import AdminDisputes from './pages/admin/AdminDisputes';
 import AdminAnalytics from './pages/admin/AdminAnalytics';
-import CreatorPublicPage from './pages/buyer/CreatorPublicPage';
 import BuyerHistoryPage from './pages/buyer/BuyerHistoryPage';
 import BuyerQuestionPage from './pages/buyer/BuyerQuestionPage';
 import DemoAnswerPage from './pages/buyer/DemoAnswerPage';
@@ -201,8 +200,8 @@ function App() {
           <Route path="/:handle/demo-answer" element={<DemoAnswerPage />} />
           <Route path="/:handle/flag-submitted" element={<FlagSubmittedPage />} />
 
-          {/* Buyer Flow (Catch-All) */}
-          <Route path="/:handle" element={<CreatorPublicPage />} />
+          {/* Fan Flow (Catch-All) */}
+          <Route path="/:handle" element={<CreatorProfile />} />
         </Routes>
       </BrowserRouter>
     </CreatorOnboardingProvider>

@@ -43,9 +43,12 @@ const CreatorSettings = () => {
         const res = await getMe();
         if (res.success) {
           setCreator(prev => ({ ...prev, ...res.creator }));
+        } else {
+          navigate('/creator/login');
         }
       } catch (error) {
         console.error('Failed to fetch creator:', error);
+        navigate('/creator/login');
       }
     };
     // Always fetch latest data from backend
@@ -413,8 +416,8 @@ const CreatorSettings = () => {
         {/* VIEW MY PAGE CTA */}
         <button 
           onClick={() => {
-            const username = creator?.username || creator?.handle;
-            if (username) navigate(`/@${username}`);
+            const username = creator?.handle || creator?.username;
+            if (username) navigate(`/creator/${username}?preview=true`);
           }}
           style={{
             background: '#202020',

@@ -10,6 +10,7 @@ const CreatorProfile = () => {
   const [searchParams] = useSearchParams();
   const isFollowUp = searchParams.get('isFollowUp') === 'true';
   const parentQuestionId = searchParams.get('parentQuestionId');
+  const isPreview = searchParams.get('preview') === 'true';
   
   const [creator, setCreator] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -93,8 +94,11 @@ const CreatorProfile = () => {
     return (
       <div style={{ minHeight: '100vh', background: '#0a0a0f', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#ef4444' }}>
         <h2>{fetchError || 'Creator not found'}</h2>
-        <button onClick={() => navigate('/explore')} style={{ background: '#38bdf8', color: '#000', padding: '10px 20px', borderRadius: '8px', border: 'none', cursor: 'pointer', marginTop: '16px', fontWeight: 'bold' }}>
-          Back to Explore
+        <button 
+          onClick={() => navigate(isPreview ? '/creator/dashboard' : '/explore')} 
+          style={{ background: '#38bdf8', color: '#000', padding: '10px 20px', borderRadius: '8px', border: 'none', cursor: 'pointer', marginTop: '16px', fontWeight: 'bold' }}
+        >
+          {isPreview ? 'Back to Dashboard' : 'Back to Explore'}
         </button>
       </div>
     );
@@ -163,22 +167,24 @@ const CreatorProfile = () => {
         alignItems: 'center'
       }}>
         {/* Back button */}
-        <button 
-          onClick={() => navigate('/explore')}
-          style={{
-            alignSelf: 'flex-start',
-            marginBottom: '32px',
-            background: 'rgba(255,255,255,0.05)', color: '#94a3b8',
-            border: '1px solid rgba(255,255,255,0.1)', borderRadius: '100px',
-            padding: '8px 16px', fontSize: '14px', cursor: 'pointer',
-            display: 'inline-flex', alignItems: 'center', gap: '8px',
-            transition: 'all 0.2s'
-          }}
-          onMouseOver={(e) => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; }}
-          onMouseOut={(e) => { e.currentTarget.style.color = '#94a3b8'; e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; }}
-        >
-          ← Back to Discovery
-        </button>
+        {!isPreview && (
+          <button 
+            onClick={() => navigate('/explore')}
+            style={{
+              alignSelf: 'flex-start',
+              marginBottom: '32px',
+              background: 'rgba(255,255,255,0.05)', color: '#94a3b8',
+              border: '1px solid rgba(255,255,255,0.1)', borderRadius: '100px',
+              padding: '8px 16px', fontSize: '14px', cursor: 'pointer',
+              display: 'inline-flex', alignItems: 'center', gap: '8px',
+              transition: 'all 0.2s'
+            }}
+            onMouseOver={(e) => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; }}
+            onMouseOut={(e) => { e.currentTarget.style.color = '#94a3b8'; e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; }}
+          >
+            ← Back to Discovery
+          </button>
+        )}
         {success ? (
           <div style={{ width: '100%', maxWidth: '440px', display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '24px' }}>
             
@@ -407,24 +413,24 @@ const CreatorProfile = () => {
 
               <button
                 onClick={() => setStep('ask')}
-                disabled={isBanned}
+                disabled={isBanned || isPreview}
                 style={{
-                  background: isBanned ? '#333' : 'linear-gradient(90deg, #34d399, #10b981)',
-                  color: isBanned ? '#888' : '#000',
+                  background: (isBanned || isPreview) ? '#333' : 'linear-gradient(90deg, #34d399, #10b981)',
+                  color: (isBanned || isPreview) ? '#888' : '#000',
                   border: 'none',
                   borderRadius: '100px',
                   padding: '16px',
                   fontWeight: '700',
                   fontSize: '16px',
                   width: '100%',
-                  cursor: isBanned ? 'not-allowed' : 'pointer',
+                  cursor: (isBanned || isPreview) ? 'not-allowed' : 'pointer',
                   transition: 'transform 0.2s',
-                  boxShadow: isBanned ? 'none' : '0 4px 14px rgba(16, 185, 129, 0.3)',
+                  boxShadow: (isBanned || isPreview) ? 'none' : '0 4px 14px rgba(16, 185, 129, 0.3)',
                 }}
-                onMouseOver={(e) => { if (!isBanned) e.currentTarget.style.transform = 'scale(1.02)' }}
-                onMouseOut={(e) => { if (!isBanned) e.currentTarget.style.transform = 'scale(1)' }}
+                onMouseOver={(e) => { if (!isBanned && !isPreview) e.currentTarget.style.transform = 'scale(1.02)' }}
+                onMouseOut={(e) => { if (!isBanned && !isPreview) e.currentTarget.style.transform = 'scale(1)' }}
               >
-                {isBanned ? 'Action Restricted' : 'Ask Now →'}
+                {isPreview ? 'Preview Mode' : (isBanned ? 'Action Restricted' : 'Ask Now →')}
               </button>
             </div>
 
