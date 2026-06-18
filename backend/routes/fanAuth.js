@@ -172,7 +172,19 @@ router.get('/google/callback', passport.authenticate('google-fan', { failureRedi
 });
 
 router.get('/facebook', passport.authenticate('facebook-fan', { scope: ['email', 'public_profile'] }));
+const usedFanCodes = new Set();
+
 router.get('/facebook/callback', (req, res, next) => {
+  const code = req.query.code;
+  if (code) {
+    if (usedFanCodes.has(code)) {
+      console.log('DUPLICATE FB FAN OAUTH CODE DETECTED. Ignoring.');
+      return res.status(204).end();
+    }
+    usedFanCodes.add(code);
+    setTimeout(() => usedFanCodes.delete(code), 60000);
+  }
+
   passport.authenticate('facebook-fan', { session: false }, (err, user, info) => {
     if (err) {
       const msg = err.message || 'Authentication failed';

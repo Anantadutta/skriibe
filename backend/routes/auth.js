@@ -304,7 +304,19 @@ router.get('/facebook', (req, res, next) => {
   passport.authenticate('facebook', { scope: ['email', 'public_profile'], state })(req, res, next);
 });
 
+const usedCodes = new Set();
+
 router.get('/facebook/callback', (req, res, next) => {
+  const code = req.query.code;
+  if (code) {
+    if (usedCodes.has(code)) {
+      console.log('DUPLICATE FB OAUTH CODE DETECTED. Ignoring to prevent race condition.');
+      return res.status(204).end();
+    }
+    usedCodes.add(code);
+    setTimeout(() => usedCodes.delete(code), 60000); // clear after 60s
+  }
+
   passport.authenticate('facebook', { session: false }, (err, user, info) => {
     if (err) {
       const msg = err.message || 'Authentication failed';
