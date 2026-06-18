@@ -35,7 +35,7 @@ const faqData = [
   },
   {
     question: "Will I be notified when my answer is ready?",
-    answer: "Yes, you'll receive a notification as soon as the creator responds on Email, Skriibe Inbox & WhatsApp."
+    answer: "Yes, you'll receive a notification as soon as the creator responds on Email and Skriibe Inbox "
   },
   {
     question: "How do refunds work?",

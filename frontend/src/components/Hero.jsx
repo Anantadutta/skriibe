@@ -137,20 +137,7 @@ const Hero = () => {
         </button>
       </div>
 
-      <div className="animate-fade-up [animation-delay:500ms] z-10 relative grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-0 max-w-[480px] mx-auto w-full text-center">
-        <div className="flex flex-col">
-          <span className="font-libre text-3xl font-libre text-white">Rs.99</span>
-          <span className="text-xs text-gray-500 font-medium mt-1">per question</span>
-        </div>
-        <div className="flex flex-col">
-          <span className="font-libre text-3xl font-libre text-white">24hr</span>
-          <span className="text-xs text-gray-500 font-medium mt-1">reply window</span>
-        </div>
-        <div className="flex flex-col">
-          <span className="font-libre text-3xl font-libre text-white">0%</span>
-          <span className="text-xs text-gray-500 font-medium mt-1">commission for first 100</span>
-        </div>
-      </div>
+
     </section>
   );
 };

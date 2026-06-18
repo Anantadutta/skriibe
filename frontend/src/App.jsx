@@ -16,7 +16,12 @@ import { AuthProvider } from './context/AuthContext';
 import About from './pages/About';
 import Mission from './pages/Mission';
 import Vision from './pages/Vision';
+import Terms from './pages/Terms';
+import Privacy from './pages/Privacy';
+import Refunds from './pages/Refunds';
 import ComponentShowcase from './pages/dev/ComponentShowcase';
+import Agreement from './pages/Agreement';
+import Guidelines from './pages/Guidelines';
 import CreatorSignup from './pages/creator/CreatorSignup';
 import CreatorLogin from './pages/creator/CreatorLogin';
 import CreatorForgotPassword from './pages/creator/CreatorForgotPassword';
@@ -153,6 +158,11 @@ function App() {
             <Route path="/about" element={<About />} />
             <Route path="/mission" element={<Mission />} />
             <Route path="/vision" element={<Vision />} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/privacy" element={<Privacy />} />
+            <Route path="/refunds" element={<Refunds />} />
+            <Route path="/agreement" element={<Agreement />} />
+            <Route path="/guidelines" element={<Guidelines />} />
             
             {/* Creator Onboarding */}
             <Route path="/creator/signup" element={<CreatorSignup />} />
