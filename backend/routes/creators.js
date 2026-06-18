@@ -565,10 +565,10 @@ router.post('/settings', verifyCreatorToken, async (req, res) => {
   res.json({ success: true, creator: updatedCreator });
 });
 
-// Instagram OAuth routes
-router.get('/connect-instagram', (req, res) => {
+router.get('/connect-instagram', verifyCreatorToken, (req, res) => {
   const redirectUri = `${process.env.INSTAGRAM_REDIRECT_URI}`;
-  const url = `https://api.instagram.com/oauth/authorize?client_id=${process.env.INSTAGRAM_CLIENT_ID}&redirect_uri=${redirectUri}&scope=user_profile&response_type=code`;
+  const token = req.headers.authorization ? req.headers.authorization.split(' ')[1] : '';
+  const url = `https://api.instagram.com/oauth/authorize?client_id=${process.env.INSTAGRAM_CLIENT_ID}&redirect_uri=${redirectUri}&scope=user_profile&response_type=code&state=${token}`;
   res.json({ url });
 });
 

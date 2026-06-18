@@ -7,21 +7,7 @@ const Question = require('../models/Question');
 const Creator = require('../models/Creator');
 const { sendFollowUpAskedEmail, sendNewQuestionEmail } = require('../utils/emailService');
 
-// Middleware to verify fan JWT
-const verifyFanToken = (req, res, next) => {
-  const token = req.cookies.fan_token;
-  if (!token) return res.status(401).json({ message: 'Unauthorized. Please login as a Fan.' });
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret');
-    const roles = decoded.roles || (decoded.role ? [decoded.role] : ['fan']);
-    if (!roles.includes('fan')) return res.status(403).json({ message: 'Forbidden. Only fans can ask questions.' });
-    decoded.roles = roles;
-    req.fan = decoded;
-    next();
-  } catch (err) {
-    res.status(401).json({ message: 'Invalid token' });
-  }
-};
+const { verifyFanToken } = require('../middleware/auth');
 
 const connectDB = async () => {
   if (mongoose.connection.readyState === 1) return;

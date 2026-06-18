@@ -15,18 +15,7 @@ const AdminAlert = require('../models/AdminAlert');
 const { sendWelcomeEmail, sendProfileSubmittedEmail,
  sendQuestionAnsweredEmail, sendFollowUpAnsweredEmail } = require('../utils/emailService');
 
-// Middleware to verify creator JWT
-const verifyCreatorToken = (req, res, next) => {
-  const token = req.cookies.creator_token;
-  if (!token) return res.status(401).json({ message: 'Unauthorized' });
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret');
-    req.creator = decoded;
-    next();
-  } catch (err) {
-    res.status(401).json({ message: 'Invalid token' });
-  }
-};
+const { verifyCreatorToken } = require('../middleware/auth');
 
 const connectDB = async () => {
   if (mongoose.connection.readyState === 1) return;
@@ -490,7 +479,11 @@ router.post('/delete-account', async (req, res) => {
     await connectDB();
     
     let creatorId = null;
-    const token = req.cookies?.creator_token;
+    let token = req.cookies?.creator_token;
+    if (!token && req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
+      token = req.headers.authorization.split(' ')[1];
+    }
+
     if (token) {
       try {
         const jwt = require('jsonwebtoken');

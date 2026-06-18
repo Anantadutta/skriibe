@@ -387,7 +387,7 @@ router.get('/instagram/callback', async (req, res) => {
     encryptedToken += cipher.final('hex');
 
     // Step 4 - Update DB if user is logged in
-    const token = req.cookies.creator_token;
+    const token = req.cookies?.creator_token || req.query.state;
     if (token) {
       const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret');
       await connectDB();

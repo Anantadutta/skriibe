@@ -117,20 +117,7 @@ passport.use('facebook-fan', new FacebookStrategy({
 
 // -- ROUTES --
 
-const verifyFanToken = (req, res, next) => {
-  let token = req.cookies?.fan_token;
-  if (!token && req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
-    token = req.headers.authorization.split(' ')[1];
-  }
-
-  if (!token) return res.status(401).json({ success: false, message: 'Not authenticated' });
-  try {
-    req.fan = jwt.verify(token, process.env.JWT_SECRET || 'secret');
-    next();
-  } catch (err) {
-    res.status(401).json({ success: false, message: 'Invalid token' });
-  }
-};
+const { verifyFanToken } = require('../middleware/auth');
 
 router.get('/me', verifyFanToken, async (req, res) => {
   try {
