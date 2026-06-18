@@ -37,7 +37,7 @@ const UpgradePromptModal = ({ isOpen, onClose }) => {
           marginBottom: '12px',
           fontFamily: 'var(--font-heading)'
         }}>
-          Want to share your own content?
+          Start answering paid questions from your audience
         </h2>
         
         <p style={{

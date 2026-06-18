@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { getImageUrl } from '../../utils/imageUtils';
 
 const CreatorCard = ({ creator }) => {
   const navigate = useNavigate();
@@ -71,7 +72,7 @@ const CreatorCard = ({ creator }) => {
             boxShadow: isLive ? '0 0 14px rgba(0, 255, 163, 0.3)' : 'none'
           }}>
             {avatarUrl ? (
-              <img src={avatarUrl} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              <img src={getImageUrl(avatarUrl)} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             ) : (
               initials || name.substring(0, 2).toUpperCase()
             )}

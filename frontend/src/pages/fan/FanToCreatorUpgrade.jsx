@@ -54,7 +54,7 @@ const FanToCreatorUpgrade = () => {
     try {
       const res = await upgradeToCreator(formData.creator_name, formData.bio, formData.category);
       if (res.success) {
-        setAuthData(res.fan.roles, res.fan.activeRole);
+        setAuthData(['fan', 'creator'], 'creator', res.token);
         setSuccess(true);
       }
     } catch (err) {
