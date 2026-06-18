@@ -4,6 +4,7 @@
  */
 
 const express = require('express');
+const { getCookieOptions, getClearCookieOptions } = require('../utils/cookieConfig');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 const passport = require('passport');
@@ -167,12 +168,7 @@ const issueToken = (res, creator) => {
     process.env.JWT_SECRET || 'secret',
     { expiresIn: '7d' }
   );
-  res.cookie('creator_token', token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-    ...(creator.ama_enabled ? { maxAge: 7 * 24 * 60 * 60 * 1000 } : {})
-  });
+  res.cookie('creator_token', token, getCookieOptions(creator.ama_enabled ? { maxAge: 7 * 24 * 60 * 60 * 1000 } : {}));
 };
 
 // -- OTP ROUTES --
@@ -289,12 +285,7 @@ router.get('/google/callback', (req, res, next) => {
       process.env.JWT_SECRET || 'secret',
       { expiresIn: '7d' }
     );
-    res.cookie('fan_token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000
-    });
+    res.cookie('fan_token', token, getCookieOptions({ maxAge: 7 * 24 * 60 * 60 * 1000 }));
     return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/explore`);
   } else {
     issueToken(res, req.user);
@@ -339,12 +330,7 @@ router.get('/facebook/callback', (req, res, next) => {
       process.env.JWT_SECRET || 'secret',
       { expiresIn: '7d' }
     );
-    res.cookie('fan_token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000
-    });
+    res.cookie('fan_token', token, getCookieOptions({ maxAge: 7 * 24 * 60 * 60 * 1000 }));
     return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/explore`);
   } else {
     issueToken(res, req.user);

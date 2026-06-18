@@ -4,6 +4,7 @@
  */
 
 const express = require('express');
+const { getCookieOptions, getClearCookieOptions } = require('../utils/cookieConfig');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
@@ -39,12 +40,7 @@ const issueToken = (res, creator) => {
     process.env.JWT_SECRET || 'secret',
     { expiresIn: '7d' }
   );
-  res.cookie('creator_token', token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-    ...(creator.ama_enabled ? { maxAge: 7 * 24 * 60 * 60 * 1000 } : {})
-  });
+  res.cookie('creator_token', token, getCookieOptions({ maxAge: 7 * 24 * 60 * 60 * 1000 }));
 };
 
 /**
@@ -531,7 +527,7 @@ router.post('/delete-account', async (req, res) => {
     await Creator.findByIdAndDelete(creatorId);
 
     // Clear cookie
-    res.clearCookie('creator_token');
+    res.clearCookie('creator_token', getClearCookieOptions());
     res.json({ success: true });
   } catch (err) {
     console.error(err);
@@ -685,7 +681,7 @@ router.get('/payouts', verifyCreatorToken, async (req, res) => {
  * @desc Logout creator
  */
 router.post('/logout', (req, res) => {
-  res.clearCookie('creator_token');
+  res.clearCookie('creator_token', getClearCookieOptions());
   res.json({ success: true });
 });
 

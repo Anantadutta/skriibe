@@ -1,4 +1,5 @@
 const express = require('express');
+const { getCookieOptions, getClearCookieOptions } = require('../utils/cookieConfig');
 const router = express.Router();
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
@@ -44,12 +45,7 @@ const issueToken = (res, fan) => {
     process.env.JWT_SECRET || 'secret',
     { expiresIn: '7d' }
   );
-  res.cookie('fan_token', token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-    maxAge: 7 * 24 * 60 * 60 * 1000
-  });
+  res.cookie('fan_token', token, getCookieOptions({ maxAge: 7 * 24 * 60 * 60 * 1000 }));
 };
 
 // Fan Google Strategy
@@ -341,11 +337,7 @@ router.post('/reset-password', async (req, res) => {
   }
 });
 router.post('/logout', (req, res) => {
-  res.clearCookie('fan_token', {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
-  });
+  res.clearCookie('fan_token', getClearCookieOptions());
   res.json({ success: true });
 });
 

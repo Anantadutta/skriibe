@@ -4,6 +4,7 @@
  */
 
 const express = require('express');
+const { getCookieOptions, getClearCookieOptions } = require('../utils/cookieConfig');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 const multer = require('multer');
@@ -170,12 +171,7 @@ router.post('/verify-otp', async (req, res) => {
     { expiresIn: '7d' }
   );
 
-  res.cookie('creator_token', token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-    ...(creator.ama_enabled ? { maxAge: 7 * 24 * 60 * 60 * 1000 } : {})
-  });
+  res.cookie('creator_token', token, getCookieOptions(creator.ama_enabled ? { maxAge: 7 * 24 * 60 * 60 * 1000 } : {}));
 
   const onboardingComplete = !!creator.handle;
 
@@ -226,12 +222,7 @@ router.post('/email-signup', async (req, res) => {
     { expiresIn: '7d' }
   );
 
-  res.cookie('creator_token', token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-    ...(creator.ama_enabled ? { maxAge: 7 * 24 * 60 * 60 * 1000 } : {})
-  });
+  res.cookie('creator_token', token, getCookieOptions(creator.ama_enabled ? { maxAge: 7 * 24 * 60 * 60 * 1000 } : {}));
 
   res.json({
     success: true,
@@ -276,12 +267,7 @@ router.post('/email-login', async (req, res) => {
     { expiresIn: '7d' }
   );
 
-  res.cookie('creator_token', token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-    ...(creator.ama_enabled ? { maxAge: 7 * 24 * 60 * 60 * 1000 } : {})
-  });
+  res.cookie('creator_token', token, getCookieOptions(creator.ama_enabled ? { maxAge: 7 * 24 * 60 * 60 * 1000 } : {}));
 
   const onboardingComplete = !!creator.handle;
 
@@ -369,7 +355,7 @@ router.get('/me', verifyCreatorToken, async (req, res) => {
     await connectDB();
     const creator = await Creator.findById(req.creator.creatorId);
     if (!creator) {
-      res.clearCookie('creator_token');
+      res.clearCookie('creator_token', getClearCookieOptions());
       return res.status(401).json({ message: 'Session expired or user deleted' });
     }
     
@@ -442,7 +428,7 @@ router.post('/onboarding/profile', verifyCreatorToken, async (req, res) => {
   );
 
   if (!updatedCreator) {
-    res.clearCookie('creator_token');
+    res.clearCookie('creator_token', getClearCookieOptions());
     return res.status(401).json({ message: 'Session expired or user deleted. Please log in again.' });
   }
 
@@ -477,7 +463,7 @@ router.post('/onboarding/pricing', verifyCreatorToken, async (req, res) => {
   );
 
   if (!updatedCreator) {
-    res.clearCookie('creator_token');
+    res.clearCookie('creator_token', getClearCookieOptions());
     return res.status(401).json({ message: 'Session expired or user deleted. Please log in again.' });
   }
 
@@ -509,7 +495,7 @@ router.post('/link-bank', verifyCreatorToken, async (req, res) => {
   );
 
   if (!updatedCreator) {
-    res.clearCookie('creator_token');
+    res.clearCookie('creator_token', getClearCookieOptions());
     return res.status(401).json({ message: 'Session expired or user deleted. Please log in again.' });
   }
 
@@ -532,7 +518,7 @@ router.post('/toggle-live', verifyCreatorToken, async (req, res) => {
   );
 
   if (!updatedCreator) {
-    res.clearCookie('creator_token');
+    res.clearCookie('creator_token', getClearCookieOptions());
     return res.status(401).json({ message: 'Session expired or user deleted. Please log in again.' });
   }
 
@@ -546,7 +532,7 @@ router.post('/toggle-live', verifyCreatorToken, async (req, res) => {
  * @desc Logout creator
  */
 router.post('/logout', (req, res) => {
-  res.clearCookie('creator_token');
+  res.clearCookie('creator_token', getClearCookieOptions());
   res.json({ success: true });
 });
 
@@ -577,7 +563,7 @@ router.post('/settings', verifyCreatorToken, async (req, res) => {
   );
   
   if (!updatedCreator) {
-    res.clearCookie('creator_token');
+    res.clearCookie('creator_token', getClearCookieOptions());
     return res.status(401).json({ message: 'Session expired or user deleted. Please log in again.' });
   }
 

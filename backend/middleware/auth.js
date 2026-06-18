@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const { getClearCookieOptions } = require('../utils/cookieConfig');
 
 const verifyCreatorToken = (req, res, next) => {
   const token = req.cookies?.creator_token;
@@ -7,7 +8,7 @@ const verifyCreatorToken = (req, res, next) => {
     req.creator = jwt.verify(token, process.env.JWT_SECRET);
     next();
   } catch { 
-    res.clearCookie('creator_token');
+    res.clearCookie('creator_token', getClearCookieOptions());
     return res.status(401).json({ success: false, message: 'Invalid token' }); 
   }
 };
