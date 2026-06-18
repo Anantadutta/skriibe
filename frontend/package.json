@@ -5,8 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite --force",
-    "build:vite": "vite build",
-    "build": "node build.js",
+    "build": "vite build && npm --prefix ../admin-frontend install && npm --prefix ../admin-frontend run build && mkdir -p dist/admin && cp -R ../admin-frontend/dist/* dist/admin/",
     "lint": "eslint .",
     "preview": "vite preview"
   },
