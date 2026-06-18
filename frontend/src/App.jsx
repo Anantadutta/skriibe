@@ -187,7 +187,7 @@ function App() {
             <Route path="/fan/notifications" element={<FanNotifications />} />
             <Route path="/choose-role" element={<ChooseRole />} />
             <Route path="/discovery" element={<FanDiscovery />} />
-            <Route path="/explore" element={<FanDiscovery />} />
+            <Route path="/explore" element={<FanExplore />} />
             <Route path="/fan/profile" element={<FanProfile />} />
             <Route path="/fan/upgrade" element={<FanToCreatorUpgrade />} />
             <Route path="/creator/:handle" element={<CreatorProfile />} />
