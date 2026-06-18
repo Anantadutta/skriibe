@@ -3,12 +3,12 @@ const fs = require('fs');
 const path = require('path');
 
 console.log('Building main frontend...');
-execSync('npx vite build', { stdio: 'inherit' });
+execSync('npm run build:vite', { stdio: 'inherit' });
 
 console.log('Building admin frontend...');
 const adminDir = path.resolve(__dirname, '../admin-frontend');
 execSync('npm install', { cwd: adminDir, stdio: 'inherit' });
-execSync('npx vite build', { cwd: adminDir, stdio: 'inherit' });
+execSync('npm run build', { cwd: adminDir, stdio: 'inherit' });
 
 console.log('Copying admin frontend to dist/admin...');
 const adminDist = path.join(adminDir, 'dist');

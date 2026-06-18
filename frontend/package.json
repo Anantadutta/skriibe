@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite --force",
+    "build:vite": "vite build",
     "build": "node build.js",
     "lint": "eslint .",
     "preview": "vite preview"
