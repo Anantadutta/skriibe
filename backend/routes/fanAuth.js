@@ -172,34 +172,53 @@ router.get('/google/callback', passport.authenticate('google-fan', { failureRedi
 });
 
 router.get('/facebook', passport.authenticate('facebook-fan', { scope: ['email', 'public_profile'] }));
-const usedFanCodes = new Set();
+const oauthFanCodeCache = new Map();
 
-router.get('/facebook/callback', (req, res, next) => {
+router.get('/facebook/callback', async (req, res, next) => {
   const code = req.query.code;
-  if (code) {
-    if (usedFanCodes.has(code)) {
-      console.log('DUPLICATE FB FAN OAUTH CODE DETECTED. Ignoring.');
-      return res.status(204).end();
+  
+  if (code && oauthFanCodeCache.has(code)) {
+    console.log('Duplicate FB Fan OAuth request detected. Waiting for first request to finish...');
+    try {
+      const token = await oauthFanCodeCache.get(code);
+      if (token) {
+        return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/explore#token=${token}`);
+      }
+    } catch (err) {
+      console.log('First request failed, duplicate falling through.', err);
     }
-    usedFanCodes.add(code);
-    setTimeout(() => usedFanCodes.delete(code), 60000);
+  }
+
+  let resolveToken, rejectToken;
+  if (code) {
+    const promise = new Promise((res, rej) => {
+      resolveToken = res;
+      rejectToken = rej;
+    });
+    oauthFanCodeCache.set(code, promise);
+    setTimeout(() => {
+      oauthFanCodeCache.delete(code);
+      if (rejectToken) rejectToken(new Error('timeout'));
+    }, 60000);
   }
 
   passport.authenticate('facebook-fan', { session: false }, (err, user, info) => {
     if (err) {
-      const msg = err.message || 'Authentication failed';
+      if (rejectToken) rejectToken(err);
+      let msg = err.message || 'Authentication failed';
       if (msg.toLowerCase().includes('authorization code has been used') || msg.toLowerCase().includes('already been used')) {
-        console.log('MULTI-INSTANCE RACE CONDITION CAUGHT. Ignoring.');
-        return res.status(204).end();
+        msg = 'Login timeout or double request. Please click Login with Meta again.';
       }
       return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/fan/login?error=${encodeURIComponent(msg)}`);
     }
     if (!user) {
+      if (rejectToken) rejectToken(new Error('No user'));
       const msg = info && info.message ? info.message : 'Login failed';
       return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/fan/login?error=${encodeURIComponent(msg)}`);
     }
-    const token = issueToken(user);
-    res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/explore#token=${token}`);
+    const generatedToken = issueToken(user);
+    if (resolveToken) resolveToken(generatedToken);
+    res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/explore#token=${generatedToken}`);
   })(req, res, next);
 });
 

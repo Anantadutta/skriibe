@@ -304,32 +304,57 @@ router.get('/facebook', (req, res, next) => {
   passport.authenticate('facebook', { scope: ['email', 'public_profile'], state })(req, res, next);
 });
 
-const usedCodes = new Set();
+const oauthCodeCache = new Map();
 
-router.get('/facebook/callback', (req, res, next) => {
+router.get('/facebook/callback', async (req, res, next) => {
   const code = req.query.code;
-  if (code) {
-    if (usedCodes.has(code)) {
-      console.log('DUPLICATE FB OAUTH CODE DETECTED. Ignoring to prevent race condition.');
-      return res.status(204).end();
+  
+  if (code && oauthCodeCache.has(code)) {
+    console.log('Duplicate OAuth request detected. Waiting for first request to finish...');
+    try {
+      const token = await oauthCodeCache.get(code);
+      if (token) {
+        let role = 'creator';
+        try {
+          const stateObj = JSON.parse(Buffer.from(req.query.state || '', 'base64').toString('utf8'));
+          role = stateObj.role || 'creator';
+        } catch(e) {}
+        
+        if (role === 'fan') {
+          return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/explore#token=${token}`);
+        } else {
+          return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/creator/dashboard#token=${token}`);
+        }
+      }
+    } catch (err) {
+      console.log('First request failed, duplicate falling through.', err);
     }
-    usedCodes.add(code);
-    setTimeout(() => usedCodes.delete(code), 60000); // clear after 60s
+  }
+
+  let resolveToken, rejectToken;
+  if (code) {
+    const promise = new Promise((res, rej) => {
+      resolveToken = res;
+      rejectToken = rej;
+    });
+    oauthCodeCache.set(code, promise);
+    setTimeout(() => {
+      oauthCodeCache.delete(code);
+      if (rejectToken) rejectToken(new Error('timeout'));
+    }, 60000);
   }
 
   passport.authenticate('facebook', { session: false }, (err, user, info) => {
     if (err) {
-      const msg = err.message || 'Authentication failed';
-      // If this is a duplicate request hitting a different server instance, 
-      // the code was already consumed by the first instance. 
-      // We return 204 so the browser ignores this failed response and follows the successful one!
+      if (rejectToken) rejectToken(err);
+      let msg = err.message || 'Authentication failed';
       if (msg.toLowerCase().includes('authorization code has been used') || msg.toLowerCase().includes('already been used')) {
-        console.log('MULTI-INSTANCE RACE CONDITION CAUGHT. Ignoring.');
-        return res.status(204).end();
+        msg = 'Login timeout or double request. Please click Login with Meta again.';
       }
       return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/creator/login?error=${encodeURIComponent(msg)}`);
     }
     if (!user) {
+      if (rejectToken) rejectToken(new Error('No user'));
       let role = 'creator';
       try {
         const stateObj = JSON.parse(Buffer.from(req.query.state || '', 'base64').toString('utf8'));
@@ -343,20 +368,23 @@ router.get('/facebook/callback', (req, res, next) => {
     }
 
     // Process authenticated user
+    let generatedToken = null;
     if (user.isFanLogin) {
-      const token = jwt.sign(
+      generatedToken = jwt.sign(
         { fanId: user._id, email: user.email, roles: ['fan'], activeRole: 'fan' },
         process.env.JWT_SECRET || 'secret',
         { expiresIn: '7d' }
       );
-      return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/explore#token=${token}`);
+      if (resolveToken) resolveToken(generatedToken);
+      return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/explore#token=${generatedToken}`);
     } else {
-      const token = issueToken(user);
+      generatedToken = issueToken(user);
+      if (resolveToken) resolveToken(generatedToken);
       const hasCompletedOnboarding = !!user.handle;
       if (user.isNewCreator || !hasCompletedOnboarding) {
-        return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/onboard/profile#token=${token}`);
+        return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/onboard/profile#token=${generatedToken}`);
       } else {
-        return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/creator/dashboard#token=${token}`);
+        return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/creator/dashboard#token=${generatedToken}`);
       }
     }
   })(req, res, next);
