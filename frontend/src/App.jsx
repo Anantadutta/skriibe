@@ -22,6 +22,7 @@ import Refunds from './pages/Refunds';
 import ComponentShowcase from './pages/dev/ComponentShowcase';
 import Agreement from './pages/Agreement';
 import Guidelines from './pages/Guidelines';
+import FAQPage from './pages/FAQPage';
 import CreatorSignup from './pages/creator/CreatorSignup';
 import CreatorLogin from './pages/creator/CreatorLogin';
 import CreatorForgotPassword from './pages/creator/CreatorForgotPassword';
@@ -158,6 +159,7 @@ function App() {
             <Route path="/about" element={<About />} />
             <Route path="/mission" element={<Mission />} />
             <Route path="/vision" element={<Vision />} />
+            <Route path="/faqs" element={<FAQPage />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/refunds" element={<Refunds />} />

@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
 const Vision = () => {
+  const navigate = useNavigate();
   const [theme, setTheme] = useState(() => {
     return localStorage.getItem('theme') || 'dark';
   });
@@ -48,7 +51,16 @@ const Vision = () => {
         </div>
 
         {/* Vision Header */}
-        <div className="z-10 max-w-4xl text-center space-y-8 p-8 w-full">
+        <div className="z-10 max-w-4xl text-center space-y-8 p-8 w-full" style={{
+          boxShadow: theme === 'light' ? '0 20px 40px rgba(0,0,0,0.05)' : '0 20px 40px rgba(0,0,0,0.3)'
+        }}>
+          <button 
+            onClick={() => navigate(-1)}
+            className={`flex items-center gap-2 mb-6 text-sm font-medium transition-colors ${theme === 'light' ? 'text-gray-500 hover:text-gray-900' : 'text-gray-400 hover:text-white'}`}
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back
+          </button>
           <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-[#55afe2] to-[#7c3aed]">
             VISION
           </h1>

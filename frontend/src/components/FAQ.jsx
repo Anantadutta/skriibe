@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-const faqData = [
+export const faqData = [
   {
     question: "What is Skriibe?",
     answer: "Skriibe is a platform where fans can pay to ask questions directly to creators and receive personalized answers."
@@ -109,13 +110,13 @@ const faqData = [
 
 const FAQ = () => {
   const [openIndex, setOpenIndex] = useState(null);
-  const [showAll, setShowAll] = useState(false);
+  const navigate = useNavigate();
 
   const toggleFAQ = (index) => {
     setOpenIndex(openIndex === index ? null : index);
   };
 
-  const visibleFaqs = showAll ? faqData : faqData.slice(0, 10);
+  const visibleFaqs = faqData.slice(0, 10);
 
   return (
     <div className="w-full bg-black py-20 px-4 flex flex-col items-center font-syne">
@@ -154,10 +155,10 @@ const FAQ = () => {
           ))}
         </div>
 
-        {!showAll && faqData.length > 10 && (
+        {faqData.length > 10 && (
           <div className="mt-8 flex justify-center">
             <button
-              onClick={() => setShowAll(true)}
+              onClick={() => navigate('/faqs')}
               className="px-8 py-3 bg-[#111] border border-[#38265c] text-white rounded-full font-medium hover:bg-[#1a1a1a] transition-colors duration-300 shadow-md"
             >
               View more

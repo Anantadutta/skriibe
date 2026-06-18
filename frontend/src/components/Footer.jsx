@@ -31,13 +31,30 @@ const Footer = ({ theme }) => {
             >
               ✕
             </button>
-            <h3 className="text-xl font-bold text-white mb-3">How does Skriibe work?</h3>
-            <p className="text-[#94a3b8] leading-relaxed">
-              Choose a creator, submit your question, make payment, and wait for their response.
-            </p>
+            <h3 className="text-2xl font-bold text-white mb-6">How does Skriibe work?</h3>
+            
+            <div className="space-y-6 text-left">
+              <div>
+                <h4 className="text-white font-semibold mb-2 text-lg">For Fans</h4>
+                <p className="text-[#94a3b8] leading-relaxed text-sm">
+                  Choose a creator, submit your question, make payment, and wait for their response.
+                </p>
+              </div>
+
+              <div>
+                <h4 className="text-white font-semibold mb-2 text-lg">For Creators</h4>
+                <ul className="text-[#94a3b8] leading-relaxed text-sm list-disc pl-4 space-y-2">
+                  <li>Sign up, set your price, set your terms.</li>
+                  <li>Connect your payout — get paid directly.</li>
+                  <li>Drop your skriibe link in your Instagram bio.</li>
+                  <li>Followers pay, you answer in 24 hours.</li>
+                </ul>
+              </div>
+            </div>
+
             <button 
               onClick={() => setShowHowItWorks(false)}
-              className="mt-6 w-full py-3 bg-[#3BA8D8] text-white rounded-xl font-medium hover:bg-opacity-90 transition-all"
+              className="mt-8 w-full py-3 bg-[#3BA8D8] text-white rounded-xl font-medium hover:bg-opacity-90 transition-all"
             >
               Got it
             </button>
@@ -113,14 +130,14 @@ const Footer = ({ theme }) => {
           </p>
           <div className="flex gap-5 mt-2">
             {/* Instagram */}
-            <a href="#" className="text-[#a3a3a3] hover:text-white transition-colors">
+            <a href="https://www.instagram.com/skriibeofficial?igsh=MTQ2bTY5bXE4eTV4Ng%3D%3D&utm_source=qr" target="_blank" rel="noopener noreferrer" className="text-[#a3a3a3] hover:text-white transition-colors">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 7.5h.01M12 15a3 3 0 100-6 3 3 0 000 6z" />
                 <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25v7.5a2.25 2.25 0 01-2.25 2.25h-10.5a2.25 2.25 0 01-2.25-2.25v-7.5a2.25 2.25 0 012.25-2.25h10.5A2.25 2.25 0 0119.5 8.25z" />
               </svg>
             </a>
             {/* LinkedIn */}
-            <a href="#" className="text-[#a3a3a3] hover:text-white transition-colors">
+            <a href="https://www.linkedin.com/company/skriibe/" target="_blank" rel="noopener noreferrer" className="text-[#a3a3a3] hover:text-white transition-colors">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6z" />
                 <path strokeLinecap="round" strokeLinejoin="round" d="M2 9h4v12H2z" />
@@ -145,7 +162,7 @@ const Footer = ({ theme }) => {
         </div>
 
         <div className="col-span-1 flex flex-col gap-5">
-          <h4 className="text-white font-bold tracking-widest text-xs uppercase mb-2">Creators</h4>
+          <h4 className="text-white font-bold tracking-widest text-xs uppercase mb-2">Product</h4>
           <a href="#" onClick={(e) => { e.preventDefault(); setShowHowItWorks(true); }} className="text-[#a3a3a3] hover:text-white transition-colors text-sm">How it Works</a>
           <a href="#" onClick={(e) => { e.preventDefault(); setShowCreatorFaqs(true); }} className="text-[#a3a3a3] hover:text-white transition-colors text-sm">FAQs</a>
         </div>
