@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { CheckCircle2, ChevronRight, MessageSquare, PlayCircle, Star, PauseCircle } from 'lucide-react';
+import FanBottomNav from '../../components/fan/layout/FanBottomNav';
 import FanNavbar from '../../components/fan/layout/FanNavbar';
 import { getFanHistory, flagQuestion } from '../../services/fanApi';
 
@@ -636,6 +638,7 @@ const FanHistory = () => {
           </div>
         </div>
       )}
+      <FanBottomNav />
     </div>
   );
 };

@@ -37,7 +37,8 @@ const CreatorSharePage = () => {
   // Success states for clipboard actions
   const [copiedLink, setCopiedLink] = useState(false);
   const [copiedBio, setCopiedBio] = useState(false);
-  const [showBanner, setShowBanner] = useState(false);
+  const [showBanner, setShowBanner] = useState(true);
+  const [shareFile, setShareFile] = useState(null);
 
   const qrRef = useRef(null);
   const qrRef2 = useRef(null);
@@ -185,6 +186,21 @@ const CreatorSharePage = () => {
     return canvas;
   };
 
+  useEffect(() => {
+    // Pre-generate the QR file for synchronous native sharing
+    const timer = setTimeout(async () => {
+      const canvas = generateQRCanvas();
+      if (canvas) {
+        const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+        if (blob) {
+          const file = new File([blob], `${handle}-skriibe-qr.png`, { type: 'image/png' });
+          setShareFile(file);
+        }
+      }
+    }, 1000); // Give QRCodeCanvas time to render
+    return () => clearTimeout(timer);
+  }, [handle, fullShareUrl]);
+
   const openWhatsApp = async () => {
     try {
       if (navigator.canShare && navigator.share) {
@@ -237,12 +253,19 @@ const CreatorSharePage = () => {
   const handleNativeShare = async () => {
     if (navigator.share) {
       try {
-        await navigator.share({
-          title: 'skriibe profile',
-          text: 'Ask me anything on skriibe!',
+        const shareData = {
+          title: 'My skriibe',
+          text: `Ask me anything on skriibe! ${fullShareUrl}`,
           url: fullShareUrl
-        });
+        };
+
+        if (shareFile && navigator.canShare && navigator.canShare({ files: [shareFile] })) {
+          shareData.files = [shareFile];
+        }
+
+        await navigator.share(shareData);
       } catch (err) {
+        console.log('Error sharing', err);
         copyLinkToClipboard();
       }
     } else {

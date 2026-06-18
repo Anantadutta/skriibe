@@ -350,18 +350,7 @@ const FanLogin = () => {
                 </button>
               </div>
 
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginTop: '12px'
-              }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: '#94a3b8', fontSize: '12px', fontFamily: 'var(--font-mono)' }}>
-                  <input type="checkbox" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} style={{ accentColor: '#06b6d4' }} />
-                  Remember me
-                </label>
-                <Link to="/fan/forgot-password" style={{ color: '#06b6d4', fontSize: '12px', textDecoration: 'none', fontFamily: 'var(--font-mono)' }}>Forgot Password?</Link>
-              </div>
+
 
               {error && (
                 <div style={{
@@ -481,7 +470,7 @@ const FanLogin = () => {
             lineHeight: '1.6'
           }}>
             By logging in and using Skriibe, you agree to our<br />
-            <span style={{ color: '#06b6d4', cursor: 'pointer' }}>Terms of Service</span> and <span style={{ color: '#06b6d4', cursor: 'pointer' }}>Privacy Policy</span>.
+            <Link to="/terms" style={{ color: '#06b6d4', textDecoration: 'none' }}>Terms of Service</Link> and <Link to="/privacy" style={{ color: '#06b6d4', textDecoration: 'none' }}>Privacy Policy</Link>.
             <div style={{ marginTop: '16px', opacity: 0.5, fontSize: '9px', textTransform: 'uppercase', letterSpacing: '1px' }}>
               Made with 🤍 from skriibe
             </div>

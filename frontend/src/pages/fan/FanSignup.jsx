@@ -405,31 +405,7 @@ const FanSignup = () => {
                 Use 8+ characters with a mix of letters, numbers & symbols.
               </div>
 
-              <div 
-                onClick={() => setWhatsappConsent(!whatsappConsent)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  background: 'rgba(37, 211, 102, 0.05)',
-                  border: '1px solid rgba(37, 211, 102, 0.3)',
-                  borderRadius: '12px',
-                  padding: '16px',
-                  cursor: 'pointer',
-                  marginBottom: '24px',
-                  transition: 'all 0.2s ease',
-                  boxShadow: '0 0 15px rgba(37, 211, 102, 0.1)'
-                }}
-              >
-                <div style={{ marginRight: '16px', display: 'flex', alignItems: 'center' }}>
-                  <svg width="28" height="28" viewBox="0 0 24 24" fill="#25D366">
-                    <path d="M12.01 2.014c-5.513 0-9.998 4.486-9.998 9.998 0 1.954.545 3.824 1.581 5.437l-1.581 5.568 5.679-1.545a9.966 9.966 0 0 0 4.319.98c5.513 0 9.998-4.486 9.998-9.998s-4.485-9.998-9.998-9.998zm0 18.258c-1.54 0-3.033-.393-4.32-1.134l-.31-.178-3.14.854.87-3.111-.2-.321a8.232 8.232 0 0 1-1.22-4.368c0-4.55 3.702-8.252 8.25-8.252s8.25 3.702 8.25 8.252-3.702 8.25-8.25-8.25z"/>
-                    <path d="M17.18 14.407c-.282-.141-1.666-.822-1.924-.916-.257-.094-.445-.141-.632.141-.188.282-.726.916-.89 1.104-.164.188-.328.211-.61.07-.282-.141-1.189-.438-2.266-1.401-.838-.75-1.403-1.677-1.567-1.959-.164-.282-.017-.435.124-.575.127-.126.282-.329.423-.493.141-.164.188-.282.282-.47.094-.188.047-.353-.024-.494-.07-.141-.632-1.527-.866-2.091-.228-.549-.46-.475-.632-.483-.164-.008-.352-.008-.54-.008s-.493.07-.751.353c-.258.282-.986.963-.986 2.349 0 1.386 1.01 2.725 1.15 2.913.141.188 1.986 3.033 4.811 4.251.672.289 1.196.462 1.606.592.674.214 1.288.183 1.77.111.536-.08 1.666-.681 1.901-1.339.235-.658.235-1.222.164-1.339-.07-.118-.258-.188-.54-.329z"/>
-                  </svg>
-                </div>
-                <div style={{ flex: 1, color: '#e2e8f0', fontSize: '13px', lineHeight: '1.4' }}>
-                  Get notified on WhatsApp when a creator replies to your question.
-                </div>
-              </div>
+
 
               {error && (
                 <div style={{
@@ -486,7 +462,7 @@ const FanSignup = () => {
             lineHeight: '1.6'
           }}>
             By signing up and using Skriibe, you agree to our<br />
-            <span style={{ color: '#06b6d4', cursor: 'pointer' }}>Terms of Service</span> and <span style={{ color: '#06b6d4', cursor: 'pointer' }}>Privacy Policy</span>.
+            <Link to="/terms" style={{ color: '#06b6d4', textDecoration: 'none' }}>Terms of Service</Link> and <Link to="/privacy" style={{ color: '#06b6d4', textDecoration: 'none' }}>Privacy Policy</Link>.
             <div style={{ marginTop: '16px', opacity: 0.5, fontSize: '9px', textTransform: 'uppercase', letterSpacing: '1px' }}>
               Made with 🤍 from Skriibe
             </div>

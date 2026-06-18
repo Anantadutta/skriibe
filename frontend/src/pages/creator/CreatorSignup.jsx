@@ -552,7 +552,7 @@ const CreatorSignup = () => {
             lineHeight: '1.6'
           }}>
             By logging in and using Skriibe, you agree to our<br />
-            <span style={{ color: '#06b6d4', cursor: 'pointer' }}>Terms of Service</span> and <span style={{ color: '#06b6d4', cursor: 'pointer' }}>Privacy Policy</span>.
+            <Link to="/terms" style={{ color: '#06b6d4', textDecoration: 'none' }}>Terms of Service</Link> and <Link to="/privacy" style={{ color: '#06b6d4', textDecoration: 'none' }}>Privacy Policy</Link>.
             <div style={{ marginTop: '8px', opacity: 0.5, fontSize: '9px', textTransform: 'uppercase', letterSpacing: '1px' }}>
               Made with 🤍 From Skriibe
             </div>

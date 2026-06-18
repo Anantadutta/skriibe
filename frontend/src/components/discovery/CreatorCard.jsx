@@ -148,7 +148,7 @@ const CreatorCard = ({ creator }) => {
         WebkitBoxOrient: 'vertical',
         overflow: 'hidden',
       }}>
-        {bio || 'Helping people with fitness, nutrition & healthy habits.'}
+        {bio || "Welcome to my skriibe! Ask me anything. I'll get back to you within 24 hours"}
       </div>
 
       {/* Stats Inner Card */}

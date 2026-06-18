@@ -283,7 +283,7 @@ const CreatorPublicPage = () => {
         {/* BIO */}
         <div>
           <p style={{ margin: 0, fontSize: '0.95rem', color: '#94a3b8', lineHeight: '1.5' }}>
-            {creator.bio || 'Helping India save smarter. 5 yrs at HDFC. SIP, mutual funds, tax planning.'}
+            {creator.bio || "Welcome to my skriibe! Ask me anything. I'll get back to you within 24 hours"}
           </p>
         </div>
         

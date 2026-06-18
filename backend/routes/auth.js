@@ -283,7 +283,7 @@ router.get('/google/callback', (req, res, next) => {
       process.env.JWT_SECRET || 'secret',
       { expiresIn: '7d' }
     );
-    return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/explore#token=${token}`);
+    return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/discovery#token=${token}`);
   } else {
     const token = issueToken(req.user);
     const hasCompletedOnboarding = !!req.user.handle;
@@ -321,7 +321,7 @@ router.get('/facebook/callback', async (req, res, next) => {
         } catch(e) {}
         
         if (role === 'fan') {
-          return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/explore#token=${token}`);
+          return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/discovery#token=${token}`);
         } else {
           return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/creator/dashboard#token=${token}`);
         }
