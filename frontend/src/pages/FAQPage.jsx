@@ -13,6 +13,7 @@ const FAQPage = () => {
   const [openIndex, setOpenIndex] = useState(null);
 
   useEffect(() => {
+    window.scrollTo(0, 0);
     if (theme === 'light') {
       document.body.classList.add('light');
       document.documentElement.classList.add('light');

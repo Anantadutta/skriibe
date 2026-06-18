@@ -348,18 +348,7 @@ const CreatorLogin = () => {
                 </button>
               </div>
 
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginTop: '12px'
-              }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: '#94a3b8', fontSize: '12px', fontFamily: 'var(--font-mono)' }}>
-                  <input type="checkbox" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} style={{ accentColor: '#06b6d4' }} />
-                  Remember me
-                </label>
-                <Link to="/creator/forgot-password" style={{ color: '#06b6d4', fontSize: '12px', textDecoration: 'none', fontFamily: 'var(--font-mono)' }}>Forgot Password?</Link>
-              </div>
+
 
               {error && (
                 <div style={{
