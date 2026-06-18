@@ -167,7 +167,7 @@ router.post('/verify-otp', async (req, res) => {
 
   const token = jwt.sign(
     { creatorId: creator._id, phone: creator.phone },
-    process.env.JWT_SECRET,
+    process.env.JWT_SECRET || 'secret',
     { expiresIn: '7d' }
   );
 
@@ -217,7 +217,7 @@ router.post('/email-signup', async (req, res) => {
 
   const token = jwt.sign(
     { creatorId: creator._id, email: creator.email },
-    process.env.JWT_SECRET,
+    process.env.JWT_SECRET || 'secret',
     { expiresIn: '7d' }
   );
 
@@ -261,7 +261,7 @@ router.post('/email-login', async (req, res) => {
 
   const token = jwt.sign(
     { creatorId: creator._id, email: creator.email },
-    process.env.JWT_SECRET,
+    process.env.JWT_SECRET || 'secret',
     { expiresIn: '7d' }
   );
 

@@ -9,7 +9,7 @@ const verifyCreatorToken = (req, res, next) => {
 
   if (!token) return res.status(401).json({ success: false, message: 'Not authenticated' });
   try {
-    req.creator = jwt.verify(token, process.env.JWT_SECRET);
+    req.creator = jwt.verify(token, process.env.JWT_SECRET || 'secret');
     next();
   } catch { 
     res.clearCookie('creator_token', getClearCookieOptions());
@@ -25,7 +25,7 @@ const verifyAdminToken = (req, res, next) => {
 
   if (!token) return res.status(401).json({ success: false, message: 'Not authenticated' });
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret');
     if (decoded.role !== 'admin') return res.status(403).json({ success: false, message: 'Forbidden' });
     req.admin = decoded;
     next();
