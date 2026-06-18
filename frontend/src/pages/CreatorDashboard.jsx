@@ -679,7 +679,7 @@ const CreatorDashboard = () => {
               try {
                 const res = await switchRole('fan');
                 if (res.success) {
-                  setAuthData(roles, res.activeRole);
+                  setAuthData(roles, 'fan', res.token);
                   navigate('/explore');
                 }
               } catch (err) {

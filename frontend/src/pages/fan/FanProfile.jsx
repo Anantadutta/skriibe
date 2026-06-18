@@ -223,7 +223,7 @@ const FanProfile = () => {
                       try {
                         const res = await switchRole('creator');
                         if (res.success) {
-                          setAuthData(roles, res.activeRole);
+                          setAuthData(roles, 'creator', res.token);
                           navigate('/creator/dashboard');
                         }
                       } catch (err) {
