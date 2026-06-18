@@ -5,6 +5,7 @@ const jwt = require('jsonwebtoken');
 
 const Question = require('../models/Question');
 const Creator = require('../models/Creator');
+const { sendFollowUpAskedEmail, sendNewQuestionEmail } = require('../utils/emailService');
 
 // Middleware to verify fan JWT
 const verifyFanToken = (req, res, next) => {
@@ -12,7 +13,9 @@ const verifyFanToken = (req, res, next) => {
   if (!token) return res.status(401).json({ message: 'Unauthorized. Please login as a Fan.' });
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret');
-    if (decoded.role !== 'fan') return res.status(403).json({ message: 'Forbidden. Only fans can ask questions.' });
+    const roles = decoded.roles || (decoded.role ? [decoded.role] : ['fan']);
+    if (!roles.includes('fan')) return res.status(403).json({ message: 'Forbidden. Only fans can ask questions.' });
+    decoded.roles = roles;
     req.fan = decoded;
     next();
   } catch (err) {
@@ -80,6 +83,20 @@ router.post('/', verifyFanToken, async (req, res) => {
     });
 
     await newQuestion.save();
+
+    if (creator.email) {
+      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+      const dashboardLink = `${frontendUrl}/creator/dashboard/reply/${newQuestion._id}`;
+      
+      if (isFollowUp) {
+        sendFollowUpAskedEmail(creator.email, buyerName || req.fan.name || 'A Fan', creator.name || creator.handle, dashboardLink)
+          .catch(e => console.error("Failed to send follow up asked email", e));
+      } else {
+        const amount = creator.pricePerQuestion || creator.price || 99;
+        sendNewQuestionEmail(creator.email, buyerName || req.fan.name || 'A Fan', creator.name || creator.handle, dashboardLink, amount)
+          .catch(e => console.error("Failed to send new question email", e));
+      }
+    }
 
     res.status(201).json({ 
       success: true, 
@@ -153,6 +170,25 @@ router.get('/notifications', verifyFanToken, async (req, res) => {
 });
 
 /**
+ * @route GET /api/questions/unread-count
+ * @desc Get number of unread answered questions for fan
+ */
+router.get('/unread-count', verifyFanToken, async (req, res) => {
+  try {
+    await connectDB();
+    const count = await Question.countDocuments({
+      fanId: req.fan.fanId,
+      status: 'answered',
+      fanRead: false
+    });
+    res.status(200).json({ success: true, count });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+/**
  * @route PATCH /api/questions/notifications/:id/read
  * @desc Mark a notification as read
  */
@@ -170,6 +206,29 @@ router.patch('/notifications/:id/read', verifyFanToken, async (req, res) => {
       return res.status(404).json({ message: 'Notification not found' });
     }
     res.status(200).json({ success: true, notification });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+/**
+ * @route POST /api/questions/:id/read
+ * @desc Mark a question as read by fan
+ */
+router.post('/:id/read', verifyFanToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    await connectDB();
+    const question = await Question.findOneAndUpdate(
+      { _id: id, fanId: req.fan.fanId },
+      { fanRead: true },
+      { new: true }
+    );
+    if (!question) {
+      return res.status(404).json({ message: 'Question not found' });
+    }
+    res.status(200).json({ success: true, question });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });

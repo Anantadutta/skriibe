@@ -4,6 +4,7 @@ const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 const Fan = require('../models/Fan');
+const Creator = require('../models/Creator');
 const AdminAlert = require('../models/AdminAlert');
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
@@ -32,8 +33,14 @@ const verifyPassword = (password, storedHash) => {
 
 // Helper: Issue JWT for fan
 const issueToken = (res, fan) => {
+  let tokenRoles = ['fan'];
+  if (fan.roles && fan.roles.length > 0) {
+    tokenRoles = fan.roles;
+  }
+  if (!tokenRoles.includes('fan')) tokenRoles.push('fan');
+
   const token = jwt.sign(
-    { fanId: fan._id, email: fan.email, role: 'fan' },
+    { fanId: fan._id, email: fan.email, roles: tokenRoles, activeRole: fan.activeRole || 'fan' },
     process.env.JWT_SECRET || 'secret',
     { expiresIn: '7d' }
   );
@@ -142,6 +149,38 @@ router.get('/me', verifyFanToken, async (req, res) => {
   }
 });
 
+router.put('/me', verifyFanToken, async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ success: false, message: 'Email is required' });
+    }
+
+    await connectDB();
+    const existingFan = await Fan.findOne({ email: email.toLowerCase(), _id: { $ne: req.fan.fanId } });
+    if (existingFan) {
+      return res.status(400).json({ success: false, message: 'Email already in use' });
+    }
+
+    const fan = await Fan.findByIdAndUpdate(
+      req.fan.fanId,
+      { email: email.toLowerCase() },
+      { new: true }
+    ).select('-password');
+
+    if (!fan) {
+      return res.status(404).json({ success: false, message: 'Fan not found' });
+    }
+
+    issueToken(res, fan);
+
+    res.json({ success: true, fan });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
 router.get('/google', passport.authenticate('google-fan', { scope: ['profile', 'email'], prompt: 'select_account' }));
 router.get('/google/callback', passport.authenticate('google-fan', { failureRedirect: '/fan/login' }), (req, res) => {
   issueToken(res, req.user);
@@ -239,7 +278,7 @@ router.post('/login', async (req, res) => {
 
     issueToken(res, fan);
     
-    res.json({ success: true, fan: { id: fan._id, name: fan.name, email: fan.email } });
+    res.json({ success: true, fan: { id: fan._id, name: fan.name, email: fan.email, roles: fan.roles, activeRole: fan.activeRole } });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });
@@ -299,6 +338,110 @@ router.post('/reset-password', async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });
+  }
+});
+router.post('/logout', (req, res) => {
+  res.clearCookie('fan_token', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+  });
+  res.json({ success: true });
+});
+
+router.post('/me/upgrade-to-creator', verifyFanToken, async (req, res) => {
+  try {
+    const { creator_name, bio, category } = req.body;
+    if (!creator_name || !bio || !category) {
+      return res.status(400).json({ success: false, message: 'Creator name, bio, and category are required' });
+    }
+
+    await connectDB();
+    const fan = await Fan.findById(req.fan.fanId);
+    if (!fan) return res.status(404).json({ success: false, message: 'Fan not found' });
+
+    if (!fan.roles.includes('creator')) {
+      fan.roles.push('creator');
+      fan.activeRole = 'creator';
+      await fan.save();
+    }
+
+    const CreatorProfile = require('../models/CreatorProfile');
+    let profile = await CreatorProfile.findOne({ user: fan._id });
+    if (!profile) {
+      profile = new CreatorProfile({
+        user: fan._id,
+        creator_name,
+        bio,
+        category
+      });
+      await profile.save();
+    } else {
+      profile.creator_name = creator_name;
+      profile.bio = bio;
+      profile.category = category;
+      await profile.save();
+    }
+
+    let creator = await Creator.findOne({ email: fan.email.toLowerCase() });
+    if (!creator) {
+      let baseHandle = creator_name.toLowerCase().replace(/\s+/g, '');
+      let uniqueHandle = baseHandle;
+      let counter = 1;
+      while (await Creator.findOne({ handle: uniqueHandle })) {
+        uniqueHandle = baseHandle + counter;
+        counter++;
+      }
+
+      creator = new Creator({
+        email: fan.email.toLowerCase(),
+        password: fan.password,
+        name: creator_name,
+        handle: uniqueHandle,
+        bio: bio,
+        expertise: [category],
+        fanId: fan._id
+      });
+      await creator.save();
+    } else {
+      creator.fanId = fan._id;
+      if (!creator.name) creator.name = creator_name;
+      await creator.save();
+    }
+
+    // Issue updated token
+    issueToken(res, fan);
+    res.json({ success: true, message: 'Upgraded successfully' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: 'Server error during upgrade: ' + err.message });
+  }
+});
+
+router.post('/switch-role', verifyFanToken, async (req, res) => {
+  try {
+    const { role } = req.body;
+    if (!['fan', 'creator'].includes(role)) {
+      return res.status(400).json({ success: false, message: 'Invalid role' });
+    }
+
+    await connectDB();
+    const fan = await Fan.findById(req.fan.fanId);
+    if (!fan) return res.status(404).json({ success: false, message: 'Fan not found' });
+
+    if (!fan.roles.includes(role)) {
+      return res.status(403).json({ success: false, message: 'Role not assigned to user' });
+    }
+
+    fan.activeRole = role;
+    await fan.save();
+
+    // Issue updated token
+    issueToken(res, fan);
+    res.json({ success: true, message: `Switched to ${role}` });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: 'Server error switching role' });
   }
 });
 

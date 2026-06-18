@@ -9,6 +9,8 @@ const FanSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true, lowercase: true },
   password: { type: String, required: true },
   name: { type: String, default: '' },
+  roles: { type: [String], enum: ['fan', 'creator'], default: ['fan'] },
+  activeRole: { type: String, enum: ['fan', 'creator'], default: 'fan' },
   isBanned: { type: Boolean, default: false },
   banExpiresAt: { type: Date, default: null },
   authProvider: { type: String, default: 'local' },

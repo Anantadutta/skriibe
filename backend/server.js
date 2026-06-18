@@ -234,6 +234,10 @@ app.post('/api/verify-payment', (req, res) => {
 });
 // -----------------------
 
+// Serve uploaded avatars
+const path = require('path');
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 app.get('/test-route-123', (req, res) => res.json({ hello: 'world' }));
 
 const { verifyAdminToken } = require('./middleware/auth');

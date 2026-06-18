@@ -56,11 +56,11 @@ const CreatorOnboardProfile = () => {
           setForm(prev => ({
             ...prev,
             name: creator.name || '',
-            handle: creator.handle || '',
+            handle: '', // Let user pick
             email: (creator.email && !creator.email.includes('@temp.skriibe.com')) ? creator.email : '',
             phone: creator.phone || '',
-            bio: creator.bio || '',
-            expertise: creator.expertise ? (Array.isArray(creator.expertise) ? creator.expertise : creator.expertise.split(',').map(e => e.trim())) : [],
+            bio: '', // Let user fill
+            expertise: [], // Let user fill
             instagramHandle: creator.instagramHandle || '',
             instagramConnected: creator.instagramConnected || false,
             instagramFollowers: creator.instagramFollowers || 0
@@ -472,151 +472,7 @@ const CreatorOnboardProfile = () => {
               marginBottom: '24px'
             }}>
               
-              {/* INSTAGRAM CONNECT CARD */}
-              <section style={{ padding: '0 16px', boxSizing: 'border-box', width: '100%' }}>
-                <div className="ig-connect-card" style={{ boxSizing: 'border-box', width: '100%', maxWidth: '100%', marginTop: '12px' }}>
-                  {!form.instagramConnected ? (
-                    <>
-                      {/* Proper SVG Instagram Icon (size 40px) */}
-                      <div style={{ width: '40px', height: '40px', margin: '0 auto 12px' }}>
-                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <defs>
-                            <linearGradient id="ig-btn-grad" x1="0%" y1="100%" x2="100%" y2="0%">
-                              <stop offset="0%" stopColor="#f09433"/>
-                              <stop offset="25%" stopColor="#e6683c"/>
-                              <stop offset="50%" stopColor="#dc2743"/>
-                              <stop offset="75%" stopColor="#cc2366"/>
-                              <stop offset="100%" stopColor="#bc1888"/>
-                            </linearGradient>
-                          </defs>
-                          <rect width="24" height="24" rx="6" fill="url(#ig-btn-grad)"/>
-                          <rect x="4.5" y="4.5" width="15" height="15" rx="4.5" stroke="white" strokeWidth="1.5"/>
-                          <circle cx="12" cy="12" r="3.75" stroke="white" strokeWidth="1.5"/>
-                          <circle cx="16.25" cy="7.75" r="0.9" fill="white"/>
-                        </svg>
-                      </div>
 
-                      <h3 style={{
-                        color: '#ffffff',
-                        fontSize: '14px',
-                        fontWeight: 800,
-                        margin: '0 0 6px'
-                      }}>
-                        Connect Instagram
-                      </h3>
-                      <p style={{
-                        color: '#94a3b8',
-                        fontSize: '12px',
-                        lineHeight: '1.5',
-                        margin: '0 0 16px',
-                        padding: '0 8px'
-                      }}>
-                        Link your Instagram account to quickly set up your profile 
-
-
-We’ll automatically fetch your profile photo, username, and follower count from Instagram.
-                      </p>
-
-                      {/* Instagram brand gradient connection pill button */}
-                      <button
-                        type="button"
-                        onClick={handleInstagramConnect}
-                        style={{
-                          width: '100%',
-                          maxWidth: '280px',
-                          padding: '12px 24px',
-                          borderRadius: '9999px',
-                          background: 'linear-gradient(45deg, #f09433, #dc2743, #bc1888)',
-                          color: '#ffffff',
-                          border: 'none',
-                          fontSize: '13px',
-                          fontWeight: 700,
-                          cursor: 'pointer',
-                          transition: 'opacity 0.2s',
-                          margin: '0 auto'
-                        }}
-                        onMouseEnter={(e) => e.target.style.opacity = '0.9'}
-                        onMouseLeave={(e) => e.target.style.opacity = '1'}
-                      >
-                        Connect @instagram
-                      </button>
-                      
-                      <div style={{
-                        fontSize: '10px',
-                        color: '#94a3b8',
-                        marginTop: '10px',
-                        fontFamily: 'monospace, var(--font-mono)',
-                        opacity: 0.8
-                      }}>
-                        Read-only access · We never post on your behalf
-                      </div>
-                    </>
-                  ) : (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '14px', textAlign: 'left' }}>
-                      <div style={{ position: 'relative' }}>
-                        <div style={{
-                          width: '52px',
-                          height: '52px',
-                          borderRadius: '50%',
-                          background: 'linear-gradient(45deg, #06b6d4, #7c3aed)',
-                          color: '#ffffff',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: '18px',
-                          fontWeight: 'bold',
-                          boxShadow: '0 4px 10px rgba(6, 182, 212, 0.3)'
-                        }}>
-                          {avatarPreview === 'T' ? 'T' : '📸'}
-                        </div>
-                        <div style={{
-                          position: 'absolute',
-                          bottom: -2,
-                          right: -2,
-                          background: '#0a0a0f',
-                          width: '18px',
-                          height: '18px',
-                          borderRadius: '50%',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          border: '1px solid rgba(255, 255, 255, 0.15)'
-                        }}>
-                          <span style={{ fontSize: '10px', color: '#06b6d4', fontWeight: 'bold' }}>+</span>
-                        </div>
-                      </div>
-                      <div>
-                        <span style={{
-                          fontFamily: 'monospace, var(--font-mono)',
-                          fontSize: '9px',
-                          color: '#94a3b8',
-                          letterSpacing: '0.05em',
-                          display: 'block',
-                          fontWeight: 700
-                        }}>
-                          INSTAGRAM CONNECTED AS
-                        </span>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
-                          <span style={{ color: '#ffffff', fontSize: '14px', fontWeight: 800 }}>
-                            @{form.instagramHandle}
-                          </span>
-                          <span style={{
-                            background: 'rgba(34,197,94,.1)',
-                            color: '#22C55E',
-                            fontSize: '9px',
-                            fontWeight: 'bold',
-                            padding: '2px 6px',
-                            borderRadius: '12px',
-                            fontFamily: 'monospace, var(--font-mono)'
-                          }}>
-                            ✓ linked
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </section>
 
               {/* AVATAR UPLOAD CIRCLE — violet dashed glowing circle */}
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>

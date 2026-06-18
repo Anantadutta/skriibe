@@ -3,7 +3,7 @@ const { Resend } = require('resend');
 const getResendClient = () => {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
-    console.error('CRITICAL: RESEND_API_KEY missing in .env');
+    console.log('Mock email client initialized');
     return null;
   }
   return new Resend(apiKey);
@@ -295,16 +295,24 @@ const sendQuestionAnsweredEmail = async (email, name, creatorName, answerLink) =
     const { data, error } = await resend.emails.send({
       from: 'skriibe <founder@skriibe.com>',
       to: [email],
-      subject: `${creatorName} answered your question!`,
+      subject: `🎉 ${creatorName} just answered your question!`,
       html: `
-        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff; color: #1A1A1A;">
-          <h2>Hi ${name || 'there'},</h2>
-          <p>Great news! <strong>${creatorName}</strong> has just answered your question.</p>
-          <p>Click the link below to have access to the answer given by your favourite creator.</p>
-          <div style="margin: 30px 0;">
-            <a href="${answerLink}" style="background-color: #06b6d4; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">View Answer</a>
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 30px; background-color: #ffffff; color: #1A1A1A; border-radius: 12px; border: 1px solid #eaeaea;">
+          <h2 style="color: #0F172A; margin-bottom: 20px;">Hi ${name || 'there'}! 👋</h2>
+          <p style="font-size: 16px; line-height: 1.5; color: #334155;">
+            The wait is over! Your favourite creator <strong>${creatorName}</strong> has just responded to your question.
+          </p>
+          <p style="font-size: 16px; line-height: 1.5; color: #334155;">
+            Dive in and see what they had to say. You might even have the option to ask a follow-up if you need more details!
+          </p>
+          <div style="margin: 40px 0; text-align: center;">
+            <a href="${answerLink}" style="background-color: #7C3AED; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; font-size: 16px; box-shadow: 0 4px 6px -1px rgba(124, 58, 237, 0.2);">Read Your Answer</a>
           </div>
-          <p style="font-size: 12px; color: #888;">— Team skriibe</p>
+          <p style="font-size: 14px; color: #64748B; margin-top: 30px; border-top: 1px solid #f1f5f9; padding-top: 20px;">
+            Enjoying the insights? Keep the conversation going on Skriibe.<br><br>
+            Cheers,<br>
+            <strong>The Skriibe Team</strong>
+          </p>
         </div>
       `
     });
@@ -400,4 +408,117 @@ const sendBanPermanentEmail = async (email, name) => {
   }
 };
 
-module.exports = { sendWaitlistWelcomeEmail, sendCreatorWelcomeEmail, sendWelcomeEmail, sendProfileSubmittedEmail, sendPasswordResetEmail, sendQuestionAnsweredEmail, sendBan7DaysEmail, sendBanPermanentEmail };
+const sendFollowUpAskedEmail = async (email, fanName, creatorName, dashboardLink) => {
+  const resend = getResendClient();
+  if (!resend) {
+    console.log(`[MOCK EMAIL] Follow-up Asked Email sent to ${email} (creator: ${creatorName})`);
+    return;
+  }
+
+  try {
+    const { data, error } = await resend.emails.send({
+      from: 'skriibe <founder@skriibe.com>',
+      to: [email],
+      subject: `New FOLLOW-UP Question from ${fanName}`,
+      html: `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff; color: #1A1A1A;">
+          <h2>Hi ${creatorName},</h2>
+          <p><strong>${fanName}</strong> has just asked a <strong>FOLLOW-UP QUESTION</strong> to your recent answer.</p>
+          <p>Please check your inbox to reply to their follow-up.</p>
+          <div style="margin: 30px 0;">
+            <a href="${dashboardLink}" style="background-color: #06b6d4; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">View in Dashboard</a>
+          </div>
+          <p style="font-size: 12px; color: #888;">— Team skriibe</p>
+        </div>
+      `
+    });
+    if (error) console.error('Follow-up asked email error:', error);
+    return data;
+  } catch (err) {
+    console.error('sendFollowUpAskedEmail error:', err);
+  }
+};
+
+const sendFollowUpAnsweredEmail = async (email, fanName, creatorName, answerLink) => {
+  const resend = getResendClient();
+  if (!resend) {
+    console.log(`[MOCK EMAIL] Follow-up Answered Email sent to ${email} (fan: ${fanName})`);
+    return;
+  }
+
+  try {
+    const { data, error } = await resend.emails.send({
+      from: 'skriibe <founder@skriibe.com>',
+      to: [email],
+      subject: `✨ ${creatorName} replied to your follow-up!`,
+      html: `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 30px; background-color: #ffffff; color: #1A1A1A; border-radius: 12px; border: 1px solid #eaeaea;">
+          <h2 style="color: #0F172A; margin-bottom: 20px;">Hi ${fanName || 'there'}!</h2>
+          <p style="font-size: 16px; line-height: 1.5; color: #334155;">
+            The conversation continues! <strong>${creatorName}</strong> has just dropped a reply to your follow-up question.
+          </p>
+          <p style="font-size: 16px; line-height: 1.5; color: #334155;">
+            Go check out the extra details they've shared with you.
+          </p>
+          <div style="margin: 40px 0; text-align: center;">
+            <a href="${answerLink}" style="background-color: #06B6D4; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; font-size: 16px; box-shadow: 0 4px 6px -1px rgba(6, 182, 212, 0.2);">View Follow-Up Answer</a>
+          </div>
+          <p style="font-size: 14px; color: #64748B; margin-top: 30px; border-top: 1px solid #f1f5f9; padding-top: 20px;">
+            Thanks for being an active part of the Skriibe community.<br><br>
+            Best,<br>
+            <strong>The Skriibe Team</strong>
+          </p>
+        </div>
+      `
+    });
+    if (error) console.error('Follow-up answered email error:', error);
+    return data;
+  } catch (err) {
+    console.error('sendFollowUpAnsweredEmail error:', err);
+  }
+};
+
+const sendNewQuestionEmail = async (email, fanName, creatorName, dashboardLink, amountPaid) => {
+  const resend = getResendClient();
+  if (!resend) {
+    console.log(`[MOCK EMAIL] New Question Email sent to ${email} (creator: ${creatorName})`);
+    return;
+  }
+
+  try {
+    const { data, error } = await resend.emails.send({
+      from: 'skriibe <founder@skriibe.com>',
+      to: [email],
+      subject: `🎉 New Question from ${fanName}!`,
+      html: `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff; color: #1A1A1A;">
+          <h2>Hi ${creatorName},</h2>
+          <p>Awesome news! <strong>${fanName}</strong> has just asked you a new question.</p>
+          <p>Please log in to your dashboard to view the question and reply. Remember to answer within 24 hours to keep your reply rate high!</p>
+          <div style="margin: 30px 0;">
+            <a href="${dashboardLink}" style="background-color: #06b6d4; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">View Question & Reply</a>
+          </div>
+          <p style="font-size: 12px; color: #888;">— Team skriibe</p>
+        </div>
+      `
+    });
+    if (error) console.error('New question email error:', error);
+    return data;
+  } catch (err) {
+    console.error('sendNewQuestionEmail error:', err);
+  }
+};
+
+module.exports = { 
+  sendWaitlistWelcomeEmail, 
+  sendCreatorWelcomeEmail, 
+  sendWelcomeEmail, 
+  sendProfileSubmittedEmail, 
+  sendPasswordResetEmail, 
+  sendQuestionAnsweredEmail, 
+  sendBan7DaysEmail, 
+  sendBanPermanentEmail,
+  sendFollowUpAskedEmail,
+  sendFollowUpAnsweredEmail,
+  sendNewQuestionEmail
+};

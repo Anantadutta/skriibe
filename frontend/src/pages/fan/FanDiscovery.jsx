@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import CreatorCard from '../../components/discovery/CreatorCard';
 import FanNavbar from '../../components/fan/layout/FanNavbar';
+import FanBottomNav from '../../components/fan/layout/FanBottomNav';
 import { getLiveCreators } from '../../services/discoveryApi';
 import { getFanMe } from '../../services/fanApi';
 import { io } from 'socket.io-client';
@@ -320,6 +321,7 @@ const FanDiscovery = () => {
         </div>
 
       </main>
+      <FanBottomNav />
     </div>
   );
 };

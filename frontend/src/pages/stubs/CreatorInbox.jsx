@@ -9,6 +9,12 @@ const CreatorInbox = () => {
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expandedThreads, setExpandedThreads] = useState({});
+  const [now, setNow] = useState(Date.now());
+
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 60000);
+    return () => clearInterval(timer);
+  }, []);
 
   const toggleThread = (id) => {
     setExpandedThreads(prev => ({ ...prev, [id]: !prev[id] }));
@@ -21,7 +27,6 @@ const CreatorInbox = () => {
   const navItems = [
     { label: 'HOME', icon: '🏠', route: '/creator/dashboard' },
     { label: 'INBOX', icon: '💬', route: '/creator/inbox' },
-    { label: 'ANALYTICS', icon: '📊', route: '/creator/analytics' },
     { label: 'PAYOUTS', icon: '💰', route: '/creator/payouts' },
     { label: 'SETTINGS', icon: '⚙️', route: '/creator/settings' },
   ];
@@ -148,7 +153,7 @@ const CreatorInbox = () => {
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             <h2 style={{ fontSize: '1.4rem', fontWeight: 700, margin: 0 }}>Question inbox</h2>
             <div style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: '2px' }}>
-              <span style={{ color: '#FBBF24', fontWeight: 600 }}>{pendingRoots.length}</span> awaiting your reply · ₹{pendingRoots.length * 99} in escrow
+              <span style={{ color: '#FBBF24', fontWeight: 600 }}>{pendingRoots.length}</span> awaiting your reply · ₹{pendingRoots.length * 99} protected
             </div>
           </div>
         </div>
@@ -259,14 +264,27 @@ const CreatorInbox = () => {
                 else if (qIsReplied) subtitle = 'replied earlier';
                 else if (qIsFlagged) subtitle = 'reported by you';
 
-                // Mock time for demo matching screenshots
-                let timeText = '39m left';
-                let timeBadgeColor = '#EF4444';
-                let timeBadgeBg = 'rgba(239, 68, 68, 0.15)';
-                if (q.buyerName?.startsWith('S') || q.followerName?.startsWith('S')) {
-                  timeText = '4h 59m left';
-                  timeBadgeColor = '#22C55E';
-                  timeBadgeBg = 'rgba(34, 197, 94, 0.15)';
+                const diffMs = now - new Date(q.createdAt || now).getTime();
+                const hoursAgo = Math.floor(diffMs / (1000 * 60 * 60));
+                const minutesAgo = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+                
+                let timeText = '';
+                if (hoursAgo > 0) {
+                  timeText = `${hoursAgo}h ago`;
+                } else if (minutesAgo > 0) {
+                  timeText = `${minutesAgo}m ago`;
+                } else {
+                  timeText = `Just now`;
+                }
+
+                let timeBadgeColor = '#10B981'; // Green for recent
+                let timeBadgeBg = 'rgba(16, 185, 129, 0.15)';
+                if (hoursAgo > 20) {
+                  timeBadgeColor = '#EF4444'; // Red for urgent (close to 24h limit)
+                  timeBadgeBg = 'rgba(239, 68, 68, 0.15)';
+                } else if (hoursAgo > 12) {
+                  timeBadgeColor = '#F59E0B'; // Yellow
+                  timeBadgeBg = 'rgba(245, 158, 11, 0.15)';
                 }
 
                 return (
@@ -277,10 +295,12 @@ const CreatorInbox = () => {
                           {(q.buyerName || q.followerName || 'A')[0].toUpperCase()}
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column' }}>
-                          <div style={{ fontSize: '1rem', fontWeight: 700, color: '#fff' }}>
-                            {q.buyerName || q.followerName} <span style={{ color: '#38BDF8' }}>· {isChild ? 'Follow-up (Free)' : `₹${q.amountPaid || q.pricePaid || 99}`}</span>
+                          <div style={{ color: '#FBBF24', fontSize: '0.8rem', fontWeight: 600, marginBottom: '2px' }}>
+                            {isChild ? 'Follow-up Question' : (qIsPending ? 'New Question' : (qIsReplied ? 'Replied' : 'Reported by you'))}
                           </div>
-                          <div style={{ color: '#64748b', fontSize: '0.8rem' }}>{isChild ? 'follow-up question' : subtitle}</div>
+                          <div style={{ fontSize: '1rem', fontWeight: 700, color: '#fff' }}>
+                            {q.buyerName || q.followerName} <span style={{ color: '#38BDF8' }}>· {isChild ? 'Free' : `₹${q.amountPaid || q.pricePaid || 99}`}</span>
+                          </div>
                         </div>
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -313,10 +333,16 @@ const CreatorInbox = () => {
                             }}
                             style={{ flex: 1, background: 'linear-gradient(90deg, #38BDF8 0%, #34D399 100%)', border: 'none', borderRadius: '12px', color: '#0F172A', fontWeight: 800, fontSize: '0.95rem', padding: '14px', cursor: 'pointer' }}
                           >
-                            Reply & earn ₹{q.amountPaid || q.pricePaid || (isChild ? 0 : 99)}
+                            Reply
                           </button>
-                          <button style={{ width: '48px', background: '#2a2a35', border: 'none', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg>
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/creator/dashboard/reply/${q._id || q.id}`, { state: { question: q, rootQuestion: rootQ, initialView: 'flag' } });
+                            }}
+                            style={{ width: '48px', background: '#2a2a35', border: 'none', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                          >
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg>
                           </button>
                         </div>
                       </>
@@ -324,7 +350,7 @@ const CreatorInbox = () => {
 
                     {/* Replied Section */}
                     {qIsReplied && q.answerText && (
-                      <div style={{ marginTop: '4px' }}>
+                      <div style={{ marginTop: '4px', wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
                         <span style={{ color: '#22C55E', fontWeight: 700, fontSize: '0.9rem' }}>You replied:</span>
                         <span style={{ color: '#94a3b8', fontSize: '0.9rem', marginLeft: '4px' }}>
                           {q.answerText}
@@ -396,7 +422,7 @@ const CreatorInbox = () => {
                     {children.map(child => (
                       <div key={child._id || child.id} style={{ paddingLeft: '32px', position: 'relative' }}>
                         <div style={{ position: 'absolute', left: '19px', top: '20px', width: '13px', height: '2px', background: 'rgba(255,255,255,0.1)' }} />
-                        {renderMessage(child, true)}
+                        {renderMessage(child, true, rootQuestion)}
                       </div>
                     ))}
                   </div>

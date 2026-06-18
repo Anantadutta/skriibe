@@ -37,9 +37,9 @@ const RefundDispute = () => {
           !
         </div>
         <div>
-          <div style={{ fontWeight: 'bold', fontSize: '1.2rem', color: '#EF4444' }}>Pull Funds from Escrow</div>
+          <div style={{ fontWeight: 'bold', fontSize: '1.2rem', color: '#EF4444' }}>Pull Funds from Protected</div>
           <div className="text-muted" style={{ fontSize: '0.9rem', marginTop: '8px', lineHeight: '1.5' }}>
-            You are about to issue a full refund to the buyer. This action will deduct <strong style={{ color: '#fff' }}>₹99</strong> from the escrow holding and return it to the buyer's original payment method.
+            You are about to issue a full refund to the buyer. This action will deduct <strong style={{ color: '#fff' }}>₹99</strong> from the protected holding and return it to the buyer's original payment method.
           </div>
         </div>
       </div>

@@ -3,12 +3,15 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { mockCreator } from '../../mock/questions';
 import { getMe } from '../../services/creatorApi';
 import api from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
+import { switchRole } from '../../services/fanApi';
 
 const CreatorSettings = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const scrollRef = useRef(null);
   const avatarInputRef = useRef(null);
+  const { setAuthData, roles } = useAuth();
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -70,6 +73,7 @@ const CreatorSettings = () => {
       else if (creator.handle) setInstagram(`@${creator.handle}`);
       if (creator.avatarUrl) setAvatar(creator.avatarUrl);
       if (creator.isPaused !== undefined) setIsPaused(creator.isPaused);
+      if (creator.expertise) setExpertiseList(creator.expertise);
     }
   }, [creator]);
   const [isPaused, setIsPaused] = useState(creator.isPaused || false);
@@ -79,6 +83,12 @@ const CreatorSettings = () => {
     : '12K';
   const defaultBio = `${creator.expertise && creator.expertise.length > 0 ? creator.expertise[0] : 'Finance'} · ${formattedFollowers} followers`;
   const [bio, setBio] = useState(creator.bio || defaultBio);
+  
+  const [expertiseList, setExpertiseList] = useState(creator.expertise || []);
+  const [isEditingExpertise, setIsEditingExpertise] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [customExpertise, setCustomExpertise] = useState('');
+
   const displayUserName = creator.name || creator.displayName || creator.handle || 'C';
   const [avatar, setAvatar] = useState(creator.avatarUrl || displayUserName[0].toUpperCase());
   
@@ -145,12 +155,26 @@ const CreatorSettings = () => {
     avatarInputRef.current?.click();
   };
 
-  const handleAvatarChange = (e) => {
+  const handleAvatarChange = async (e) => {
     const file = e.target.files[0];
     if (file) {
+      // Show local preview immediately
       const url = URL.createObjectURL(file);
-      setCreator(prev => ({ ...prev, avatarUrl: url }));
       setAvatar(url);
+      
+      // Upload to backend
+      try {
+        const formData = new FormData();
+        formData.append('avatar', file);
+        const response = await api.post('/creators/avatar', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        if (response.data.success) {
+          setCreator(prev => ({ ...prev, avatarUrl: response.data.avatarUrl }));
+        }
+      } catch (err) {
+        console.error('Failed to upload avatar', err);
+      }
     }
   };
   
@@ -161,6 +185,18 @@ const CreatorSettings = () => {
       setCreator(prev => ({ ...prev, bio }));
     } catch (err) {
       console.error('Failed to save bio', err);
+    }
+  };
+
+  const handleSaveExpertise = async () => {
+    try {
+      const finalExpertise = expertiseList.map(t => t === 'Others' ? (customExpertise.trim() || 'Others') : t);
+      await api.post('/creators/settings', { expertise: finalExpertise });
+      setIsEditingExpertise(false);
+      setExpertiseList(finalExpertise);
+      setCreator(prev => ({ ...prev, expertise: finalExpertise }));
+    } catch (err) {
+      console.error('Failed to save expertise', err);
     }
   };
 
@@ -217,7 +253,6 @@ const CreatorSettings = () => {
   const navItems = [
     { label: 'HOME', icon: '🏠', route: '/creator/dashboard' },
     { label: 'INBOX', icon: '💬', route: '/creator/inbox' },
-    { label: 'ANALYTICS', icon: '📊', route: '/creator/analytics' },
     { label: 'PAYOUTS', icon: '💰', route: '/creator/payouts' },
     { label: 'SETTINGS', icon: '⚙️', route: '/creator/settings' },
   ];
@@ -318,22 +353,26 @@ const CreatorSettings = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '1.4rem', fontWeight: 800, color: '#fff' }}>
                 {creator.name || creator.displayName || 'okayyy'}
-                <div style={{ width: '18px', height: '18px', background: '#6366F1', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#FFF" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                </div>
               </div>
               <div style={{ color: '#94A3B8', fontSize: '0.95rem' }}>
                 skriibe.com/@{creator.handle || creator.username || 'ok_90'}
               </div>
-              <div style={{ 
-                background: 'rgba(99, 102, 241, 0.1)', border: '1px solid rgba(99, 102, 241, 0.2)',
-                borderRadius: '12px', padding: '4px 10px', display: 'inline-flex', alignItems: 'center', gap: '6px',
-                color: '#A5B4FC', fontSize: '0.85rem', fontWeight: 600, width: 'fit-content', marginTop: '4px'
-              }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
-                </svg>
-                {creator.expertise && creator.expertise.length > 0 ? creator.expertise[0] : 'Finance'}
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '4px' }}>
+                {expertiseList.map((exp, idx) => (
+                  <div 
+                    key={idx}
+                    style={{ 
+                      background: 'rgba(99, 102, 241, 0.1)', border: '1px solid rgba(99, 102, 241, 0.2)',
+                      borderRadius: '12px', padding: '4px 10px', display: 'inline-flex', alignItems: 'center', gap: '6px',
+                      color: '#A5B4FC', fontSize: '0.85rem', fontWeight: 600
+                    }}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                    </svg>
+                    {exp}
+                  </div>
+                ))}
               </div>
 
               {/* Bio Section */}
@@ -396,11 +435,7 @@ const CreatorSettings = () => {
           <div style={{ height: '1px', background: 'rgba(255,255,255,0.08)', width: '100%', position: 'relative', zIndex: 1 }} />
 
           <div style={{ display: 'flex', justifyContent: 'space-between', position: 'relative', zIndex: 1, padding: '4px 0' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1, gap: '4px' }}>
-              <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#FFF' }}>{formattedFollowers}</span>
-              <span style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: 600 }}>Followers</span>
-            </div>
-            <div style={{ width: '1px', background: 'rgba(255,255,255,0.08)' }} />
+
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1, gap: '4px' }}>
               <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#FFF' }}>₹{questionPrice}</span>
               <span style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: 600 }}>Per question</span>
@@ -410,12 +445,22 @@ const CreatorSettings = () => {
               <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#FFF' }}>{dailyCap}</span>
               <span style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: 600 }}>Daily cap</span>
             </div>
+            <div style={{ width: '1px', background: 'rgba(255,255,255,0.08)' }} />
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1, gap: '4px' }}>
+              <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#FFF' }}>₹{weeklyGoal}</span>
+              <span style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: 600 }}>Weekly goal</span>
+            </div>
           </div>
         </div>
 
         {/* VIEW MY PAGE CTA */}
         <button 
-          onClick={() => {
+          onClick={async () => {
+            if (isEditingBio) await handleSaveBio();
+            if (isEditingPrice) await handleSavePrice();
+            if (isEditingCap) await handleSaveCap();
+            if (isEditingGoal) await handleSaveGoal();
+
             const username = creator?.handle || creator?.username;
             if (username) navigate(`/creator/${username}?preview=true`);
           }}
@@ -618,6 +663,116 @@ const CreatorSettings = () => {
               </div>
             </div>
 
+            {/* Expertise Row */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', borderBottom: '1px solid #2A2A2A' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(99, 102, 241, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6366F1' }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                  <div style={{ color: '#ffffff', fontSize: '0.95rem', fontWeight: 700 }}>Expertise</div>
+                  <div style={{ color: '#64748b', fontSize: '0.8rem' }}>Your creator categories</div>
+                </div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                {isEditingExpertise ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px', position: 'relative' }}>
+                    
+                    {/* Custom Dropdown Trigger */}
+                    <div 
+                      onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                      style={{
+                        background: '#16161e', border: '1px solid #29C5F6', color: '#ffffff',
+                        borderRadius: '8px', padding: '8px 12px', fontSize: '0.95rem', width: '200px',
+                        outline: 'none', fontWeight: 600, boxSizing: 'border-box', cursor: 'pointer',
+                        display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+                      }}
+                    >
+                      <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {expertiseList.length > 0 ? expertiseList.join(', ') : 'Select...'}
+                      </span>
+                      <span style={{ fontSize: '0.8rem', marginLeft: '8px', color: '#94a3b8' }}>▼</span>
+                    </div>
+
+                    {/* Dropdown Menu */}
+                    {isDropdownOpen && (
+                      <div style={{
+                        position: 'absolute', top: '44px', right: '0', background: '#16161e',
+                        border: '1px solid #2A2A2A', borderRadius: '8px', padding: '8px',
+                        display: 'flex', flexDirection: 'column', gap: '4px', zIndex: 10, width: '200px',
+                        boxShadow: '0 8px 24px rgba(0,0,0,0.6)'
+                      }}>
+                          {Array.from(new Set([
+                          'Career & Finance', 'Health & Fitness', 'Tech & Skills',
+                          'Fashion & Lifestyle', 'Daily Vlogs & Entertainment',
+                          'Education', 'Business & Entrepreneurship',
+                          'Relationships & Life', 'Spirituality', 'Others',
+                          ...expertiseList
+                        ])).filter(cat => cat !== 'General').map(cat => (
+                          <label key={cat} style={{ 
+                            display: 'flex', alignItems: 'center', gap: '8px', padding: '6px', 
+                            borderRadius: '4px', fontSize: '13px', 
+                            cursor: expertiseList.includes(cat) || expertiseList.length < 2 ? 'pointer' : 'not-allowed',
+                            opacity: !expertiseList.includes(cat) && expertiseList.length >= 2 ? 0.5 : 1,
+                            background: 'rgba(255,255,255,0.02)'
+                          }}>
+                            <input 
+                              type="checkbox" 
+                              checked={expertiseList.includes(cat)}
+                              disabled={!expertiseList.includes(cat) && expertiseList.length >= 2}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  if (expertiseList.length < 2) setExpertiseList([...expertiseList, cat]);
+                                } else {
+                                  setExpertiseList(expertiseList.filter(c => c !== cat));
+                                }
+                              }}
+                            />
+                            {cat}
+                          </label>
+                        ))}
+
+                        {expertiseList.includes('Others') && (
+                          <input
+                            type="text"
+                            placeholder="Type custom expertise..."
+                            value={customExpertise}
+                            onChange={(e) => setCustomExpertise(e.target.value)}
+                            style={{
+                              background: '#16161e', border: '1px solid #29C5F6', color: '#ffffff',
+                              borderRadius: '4px', padding: '6px 8px', fontSize: '13px', marginTop: '4px',
+                              outline: 'none', width: '100%', boxSizing: 'border-box'
+                            }}
+                            autoFocus
+                          />
+                        )}
+                        
+                        {/* Action Buttons Inside Dropdown */}
+                        <div style={{ display: 'flex', gap: '8px', marginTop: '8px', paddingTop: '8px', borderTop: '1px solid #2A2A2A' }}>
+                          <button onClick={() => { setIsEditingExpertise(false); setIsDropdownOpen(false); }} style={{ flex: 1, background: 'transparent', border: '1px solid #475569', color: '#94a3b8', borderRadius: '8px', padding: '6px', fontSize: '0.8rem', cursor: 'pointer' }}>Cancel</button>
+                          <button onClick={() => { handleSaveExpertise(); setIsDropdownOpen(false); }} style={{ flex: 1, background: '#38BDF8', border: 'none', color: '#0E0E0E', borderRadius: '8px', padding: '6px', fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer' }}>Save</button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
+                      <span style={{ color: '#ffffff', fontWeight: 700, fontSize: '0.95rem', textAlign: 'right', maxWidth: '120px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {expertiseList.length > 0 ? expertiseList.join(', ') : 'None'}
+                      </span>
+                    </div>
+                    <button 
+                      onClick={() => { setIsEditingExpertise(true); setIsDropdownOpen(true); }}
+                      style={{
+                        background: '#252530', border: 'none', color: '#ffffff', borderRadius: '12px', padding: '8px 14px', fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer'
+                      }}
+                    >Edit</button>
+                  </>
+                )}
+              </div>
+            </div>
+
           </div>
         </div>
 
@@ -796,12 +951,46 @@ const CreatorSettings = () => {
           </div>
         </div>
 
-        {/* SIGN OUT */}
-        <div style={{ paddingBottom: '100px', paddingTop: '16px', display: 'flex', justifyContent: 'center' }}>
+        {/* ACCOUNT SWITCH & SIGN OUT */}
+        <div style={{ paddingBottom: '100px', paddingTop: '24px', display: 'flex', flexDirection: 'column', gap: '16px', alignItems: 'center' }}>
+          {roles && roles.includes('fan') && (
+            <button 
+              onClick={async () => {
+                try {
+                  const res = await switchRole('fan');
+                  if (res.success) {
+                    setAuthData(roles, res.activeRole);
+                    navigate('/explore');
+                  }
+                } catch (err) {
+                  alert('Failed to switch to Fan mode');
+                }
+              }}
+              style={{
+                background: 'rgba(56, 189, 248, 0.1)',
+                border: '1px solid rgba(56, 189, 248, 0.3)',
+                color: '#38bdf8',
+                padding: '12px 24px',
+                borderRadius: '12px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                transition: 'background 0.2s'
+              }}
+            >
+              <span style={{ fontSize: '18px' }}>👤</span> Switch to Fan Mode →
+            </button>
+          )}
+
           <button style={{
             background: 'transparent', border: 'none', color: '#f87171',
-            fontSize: '1.05rem', fontWeight: 700, cursor: 'pointer'
-          }} onClick={() => navigate('/')}>
+            fontSize: '1.05rem', fontWeight: 700, cursor: 'pointer', marginTop: '8px'
+          }} onClick={() => {
+            localStorage.clear();
+            window.location.href = '/';
+          }}>
             Sign out
           </button>
         </div>

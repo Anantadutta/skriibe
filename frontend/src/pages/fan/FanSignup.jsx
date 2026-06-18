@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import TransparentLogo from '../../components/TransparentLogo';
 import { useNavigate, Link } from 'react-router-dom';
 import { fanSignup } from '../../services/fanApi';
 
@@ -54,7 +55,7 @@ const FanSignup = () => {
       const res = await fanSignup(name, email, password, '', whatsappConsent);
       if (res.data.success) {
         // Just redirect to explore page for now after successful signup
-        navigate('/explore');
+        navigate('/discovery');
       }
     } catch (err) {
       console.error("Signup error:", err);
@@ -194,22 +195,10 @@ const FanSignup = () => {
             <div style={{ textAlign: 'center', marginTop: '10px' }}>
               <div style={{
                 width: '120px',
-                margin: '0 auto 8px',
+                margin: '0 auto -28px',
                 display: 'block'
               }}>
-                <svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2000 520.97">
-                  <defs>
-                    <style>
-                      {`.cls-1{font-size:566.36px;fill:#ffffff;font-family:Syne;font-weight:700;}.cls-3{letter-spacing:-0.02em;}`}
-                    </style>
-                  </defs>
-                  <text className="cls-1" transform="translate(33.52 457.72)">
-                    skr
-                    <tspan x="885.21" y="0" style={{ fill: '#06b6d4', filter: 'drop-shadow(0 0 8px #06b6d4)' }}>ii</tspan>
-                    <tspan x="1184.24" y="0">b</tspan>
-                    <tspan className="cls-3" x="1581.82" y="0">e</tspan>
-                  </text>
-                </svg>
+                <TransparentLogo src="/logo.png" alt="skriibe logo" style={{ width: '100%', height: 'auto', transform: 'scale(1.8)' }} />
               </div>
               <div style={{ color: '#ffffff', fontSize: '18px', fontFamily: 'var(--font-body)', fontWeight: '600', marginBottom: '8px' }}>
                 Join as a Fan. Connect with creators.

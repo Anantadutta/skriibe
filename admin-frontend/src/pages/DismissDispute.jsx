@@ -39,7 +39,7 @@ const DismissDispute = () => {
         <div>
           <div style={{ fontWeight: 'bold', fontSize: '1.2rem', color: '#4ade80' }}>Release Payout</div>
           <div className="text-muted" style={{ fontSize: '0.9rem', marginTop: '8px', lineHeight: '1.5' }}>
-            You are dismissing this dispute in favor of the creator. This action will release <strong style={{ color: '#fff' }}>₹99</strong> from the escrow holding directly into the creator's wallet.
+            You are dismissing this dispute in favor of the creator. This action will release <strong style={{ color: '#fff' }}>₹99</strong> from the protected holding directly into the creator's wallet.
           </div>
         </div>
       </div>

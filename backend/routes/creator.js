@@ -12,7 +12,7 @@ const Creator = require('../models/Creator');
 const Question = require('../models/Question');
 const AdminAlert = require('../models/AdminAlert');
 const { sendWelcomeEmail, sendProfileSubmittedEmail,
- sendQuestionAnsweredEmail } = require('../utils/emailService');
+ sendQuestionAnsweredEmail, sendFollowUpAnsweredEmail } = require('../utils/emailService');
 
 // Middleware to verify creator JWT
 const verifyCreatorToken = (req, res, next) => {
@@ -43,7 +43,7 @@ const issueToken = (res, creator) => {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-    maxAge: 7 * 24 * 60 * 60 * 1000
+    ...(creator.ama_enabled ? { maxAge: 7 * 24 * 60 * 60 * 1000 } : {})
   });
 };
 
@@ -184,6 +184,47 @@ router.get('/questions', verifyCreatorToken, async (req, res) => {
   }
 });
 
+const updateCreatorStats = async (creatorId) => {
+  try {
+    const Question = require('../models/Question');
+    const Creator = require('../models/Creator');
+
+    const stats = await Question.aggregate([
+      { $match: { creatorId: new mongoose.Types.ObjectId(creatorId), status: { $ne: 'pending' } } },
+      { $group: {
+          _id: null,
+          totalReceived: { $sum: 1 },
+          totalAnswered: { $sum: { $cond: [{ $eq: ['$status', 'answered'] }, 1, 0] } },
+          totalTimeDiff: { 
+            $sum: { 
+              $cond: [
+                { $and: [{ $eq: ['$status', 'answered'] }, { $ne: ['$answeredAt', null] }] }, 
+                { $subtract: ['$answeredAt', '$createdAt'] }, 
+                0 
+              ] 
+            } 
+          }
+      }}
+    ]);
+
+    if (stats.length > 0) {
+      const { totalReceived, totalAnswered, totalTimeDiff } = stats[0];
+      const replyRate = totalReceived > 0 ? Math.round((totalAnswered / totalReceived) * 100) : 0;
+      const avgReplyTimeMs = totalAnswered > 0 ? (totalTimeDiff / totalAnswered) : 0;
+      const avgReplyTime = parseFloat((avgReplyTimeMs / (1000 * 60 * 60)).toFixed(1));
+
+      await Creator.findByIdAndUpdate(creatorId, {
+        'stats.totalAnswered': totalAnswered,
+        'stats.replyRate': replyRate,
+        'stats.avgReplyTime': avgReplyTime,
+        questionsAnswered: totalAnswered
+      });
+    }
+  } catch (e) {
+    console.error("Failed to update creator stats:", e);
+  }
+};
+
 /**
  * @route POST /api/creator/questions/:id/reply
  * @desc Reply to a question
@@ -191,7 +232,7 @@ router.get('/questions', verifyCreatorToken, async (req, res) => {
 router.post('/questions/:id/reply', verifyCreatorToken, async (req, res) => {
   try {
     const { id } = req.params;
-    const { replyText } = req.body;
+    const { replyText, followUpAllowed } = req.body;
     
     if (!replyText || replyText.trim().length < 100) {
       return res.status(400).json({ message: 'Reply must be at least 100 characters.' });
@@ -199,19 +240,28 @@ router.post('/questions/:id/reply', verifyCreatorToken, async (req, res) => {
 
     await connectDB();
     const Question = require('../models/Question');
+
+    const updateData = { 
+      status: 'answered',
+      answerText: replyText,
+      answeredAt: new Date()
+    };
+    if (followUpAllowed !== undefined) {
+      updateData.followUpAllowed = followUpAllowed;
+    }
+
     const question = await Question.findOneAndUpdate(
       { _id: id, creatorId: req.creator.creatorId },
-      { 
-        status: 'answered',
-        answerText: replyText,
-        answeredAt: new Date()
-      },
+      updateData,
       { new: true }
     );
 
     if (!question) {
       return res.status(404).json({ message: 'Question not found or unauthorized' });
     }
+    
+    // Asynchronously update the stats for the creator
+    updateCreatorStats(req.creator.creatorId);
 
     if (question.fanId) {
       const Creator = require('../models/Creator');
@@ -229,8 +279,13 @@ router.post('/questions/:id/reply', verifyCreatorToken, async (req, res) => {
       if (question.buyerEmail) {
         const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
         const answerLink = `${frontendUrl}/fan/history`;
-        sendQuestionAnsweredEmail(question.buyerEmail, question.buyerName, creatorName, answerLink)
-          .catch(e => console.error("Failed to send question answered email", e));
+        if (question.isFollowUp) {
+          sendFollowUpAnsweredEmail(question.buyerEmail, question.buyerName, creatorName, answerLink)
+            .catch(e => console.error("Failed to send follow up answered email", e));
+        } else {
+          sendQuestionAnsweredEmail(question.buyerEmail, question.buyerName, creatorName, answerLink)
+            .catch(e => console.error("Failed to send question answered email", e));
+        }
       }
 
       try {

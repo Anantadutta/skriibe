@@ -98,50 +98,17 @@ const CreatorSharePage = () => {
 
   // Deep Link opens
   const openInstagram = () => {
-    const start = Date.now();
-    window.location.href = 'instagram://app';
-    setTimeout(() => {
-      if (Date.now() - start < 1000) {
-        window.open('https://instagram.com', '_blank');
-      }
-    }, 500);
+    // Instagram doesn't support web share intents, so we just open the site
+    window.open('https://instagram.com', '_blank');
   };
 
   const openYouTube = () => {
     window.open('https://studio.youtube.com', '_blank');
   };
 
-  const openWhatsApp = () => {
-    window.open(`https://wa.me/?text=${encodeURIComponent(shareUrl)}`, '_blank');
-  };
-
-  const openLinkedIn = () => {
-    window.open(`https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(fullShareUrl)}`, '_blank');
-  };
-
-  const openX = () => {
-    window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(fullShareUrl)}`, '_blank');
-  };
-
-  const handleNativeShare = async () => {
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: 'skriibe profile',
-          text: 'Ask me anything on skriibe!',
-          url: fullShareUrl
-        });
-      } catch (err) {
-        copyLinkToClipboard();
-      }
-    } else {
-      copyLinkToClipboard();
-    }
-  };
-
-  const downloadSkriibeQRCode = () => {
-    const qrCanvas = qrRef2.current?.querySelector('canvas');
-    if (!qrCanvas) return;
+  const generateQRCanvas = () => {
+    const qrCanvasSrc = qrRef2.current?.querySelector('canvas');
+    if (!qrCanvasSrc) return null;
 
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
@@ -207,7 +174,7 @@ const CreatorSharePage = () => {
     const qrSize = 520;
     const qrX = (width - qrSize) / 2;
     const qrY = cardY + 50;
-    ctx.drawImage(qrCanvas, qrX, qrY, qrSize, qrSize);
+    ctx.drawImage(qrCanvasSrc, qrX, qrY, qrSize, qrSize);
 
     // Handle / Username below QR
     ctx.font = 'bold 50px "Inter", "Segoe UI", sans-serif';
@@ -215,14 +182,72 @@ const CreatorSharePage = () => {
     ctx.textAlign = 'center';
     ctx.fillText(`@${handle}`, width / 2, cardY + cardHeight - 50);
 
+    return canvas;
+  };
+
+  const openWhatsApp = async () => {
+    try {
+      if (navigator.canShare && navigator.share) {
+        const canvas = generateQRCanvas();
+        if (canvas) {
+          const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+          if (blob) {
+            const file = new File([blob], `${handle}-skriibe-qr.png`, { type: 'image/png' });
+            if (navigator.canShare({ files: [file] })) {
+              await navigator.share({
+                title: 'My skriibe',
+                text: shareUrl,
+                files: [file]
+              });
+              return;
+            }
+          }
+        }
+      }
+    } catch (err) {
+      console.log('Web Share API failed', err);
+    }
+    
+    // Fallback
+    window.open(`https://wa.me/?text=${encodeURIComponent(shareUrl)}`, '_blank');
+  };
+
+  const openLinkedIn = () => {
+    window.open(`https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(fullShareUrl)}`, '_blank');
+  };
+
+  const openX = () => {
+    window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(fullShareUrl)}`, '_blank');
+  };
+
+  const downloadSkriibeQRCode = () => {
+    const canvas = generateQRCanvas();
+    if (!canvas) return;
+
     // Download the generated image
     const pngUrl = canvas.toDataURL('image/png');
     const downloadLink = document.createElement('a');
     downloadLink.href = pngUrl;
-    downloadLink.download = `skriibe-qr-@${handle}.png`;
+    downloadLink.download = `${handle}-skriibe-qr.png`;
     document.body.appendChild(downloadLink);
     downloadLink.click();
     document.body.removeChild(downloadLink);
+  };
+
+  const handleNativeShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'skriibe profile',
+          text: 'Ask me anything on skriibe!',
+          url: fullShareUrl
+        });
+      } catch (err) {
+        copyLinkToClipboard();
+      }
+    } else {
+      copyLinkToClipboard();
+    }
   };
 
   if (loading) {
@@ -596,11 +621,18 @@ const CreatorSharePage = () => {
           </button>
 
           <div style={{ display: 'flex', gap: '10px', marginTop: '4px' }}>
-            <button onClick={() => navigate('/creator/dashboard', { state: { creator } })} className="copy-link-btn" style={{ flex: 1, background: '#1A1A1A', border: '1px solid #2A2A2A', color: '#ffffff', boxShadow: 'none' }}>
+            <button onClick={handleNativeShare} className="copy-link-btn" style={{ flex: 1, background: '#1A1A1A', border: '1px solid #2A2A2A', color: '#ffffff', boxShadow: 'none' }}>
               <span>Share Profile</span>
             </button>
             <button onClick={() => navigate(`/creator/${username}?preview=true`)} className="copy-link-btn" style={{ flex: 1, background: 'linear-gradient(90deg, #7c3aed, #06b6d4)' }}>
               <span>View My Page →</span>
+            </button>
+          </div>
+          
+          {/* Open Dashboard Button */}
+          <div style={{ display: 'flex', marginTop: '8px' }}>
+            <button onClick={() => navigate('/creator/dashboard', { state: { creator } })} className="copy-link-btn" style={{ width: '100%', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', color: '#ffffff', boxShadow: 'none' }}>
+              <span>Open Dashboard</span>
             </button>
           </div>
         </div>
@@ -613,22 +645,6 @@ const CreatorSharePage = () => {
 
           <div style={{ display: 'flex', gap: '32px', padding: '16px', background: 'rgba(255, 255, 255, 0.03)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)', justifyContent: 'center' }}>
             
-            <div onClick={openWhatsApp} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', cursor: 'pointer', transition: 'transform 0.2s', ':hover': { transform: 'scale(1.05)' } }}>
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12.01 2.002c-5.518 0-10 4.48-10 9.998 0 1.754.453 3.42 1.314 4.908L2 22l5.247-1.376a9.966 9.966 0 0 0 4.763 1.206h.004c5.517 0 10-4.48 10-9.998 0-5.518-4.483-9.998-10-9.998z" fill="#25D366"/>
-                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347" fill="#fff"/>
-              </svg>
-              <span style={{ fontSize: '11px', color: '#94a3b8' }}>WhatsApp</span>
-            </div>
-
-            <div onClick={openLinkedIn} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect width="24" height="24" rx="4" fill="#0A66C2"/>
-                <path d="M7 20H4V9h3v11zM5.5 7.73a1.74 1.74 0 1 1 0-3.48 1.74 1.74 0 0 1 0 3.48zM20 20h-3v-5.6c0-1.34-.03-3.06-1.87-3.06-1.87 0-2.16 1.46-2.16 2.96V20h-3V9h2.88v1.5h.04c.4-.76 1.38-1.56 2.84-1.56 3.04 0 3.6 2 3.6 4.6V20z" fill="#fff"/>
-              </svg>
-              <span style={{ fontSize: '11px', color: '#94a3b8' }}>LinkedIn</span>
-            </div>
-
             <div onClick={openInstagram} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
               <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <defs>
@@ -646,6 +662,22 @@ const CreatorSharePage = () => {
                 <circle cx="16.5" cy="7.5" r="1.1" fill="#fff" />
               </svg>
               <span style={{ fontSize: '11px', color: '#94a3b8' }}>Instagram</span>
+            </div>
+
+            <div onClick={openLinkedIn} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="24" height="24" rx="4" fill="#0A66C2"/>
+                <path d="M7 20H4V9h3v11zM5.5 7.73a1.74 1.74 0 1 1 0-3.48 1.74 1.74 0 0 1 0 3.48zM20 20h-3v-5.6c0-1.34-.03-3.06-1.87-3.06-1.87 0-2.16 1.46-2.16 2.96V20h-3V9h2.88v1.5h.04c.4-.76 1.38-1.56 2.84-1.56 3.04 0 3.6 2 3.6 4.6V20z" fill="#fff"/>
+              </svg>
+              <span style={{ fontSize: '11px', color: '#94a3b8' }}>LinkedIn</span>
+            </div>
+
+            <div onClick={openWhatsApp} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', cursor: 'pointer', transition: 'transform 0.2s', ':hover': { transform: 'scale(1.05)' } }}>
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12.01 2.002c-5.518 0-10 4.48-10 9.998 0 1.754.453 3.42 1.314 4.908L2 22l5.247-1.376a9.966 9.966 0 0 0 4.763 1.206h.004c5.517 0 10-4.48 10-9.998 0-5.518-4.483-9.998-10-9.998z" fill="#25D366"/>
+                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347" fill="#fff"/>
+              </svg>
+              <span style={{ fontSize: '11px', color: '#94a3b8' }}>WhatsApp</span>
             </div>
 
             <div onClick={openX} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
@@ -684,6 +716,9 @@ const CreatorSharePage = () => {
               <button onClick={downloadSkriibeQRCode} style={{ flex: 1, background: '#3db4f2', color: '#0a0a0f', border: 'none', padding: '10px 4px', borderRadius: '8px', fontSize: '11px', fontWeight: 800, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', transition: 'all 0.2s' }}>
                 <span style={{ fontSize: '16px' }}>↓</span> Download
               </button>
+            </div>
+            <div style={{ color: '#FAFAF8', fontSize: '14px', fontWeight: 600, marginTop: '8px', letterSpacing: '0.02em' }}>
+              Ask me anything
             </div>
           </div>
         </div>

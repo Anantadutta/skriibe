@@ -5,7 +5,7 @@ import { BottomNav } from '../../components/ama/layout/BottomNav';
 import api from '../../services/api';
 import { io } from 'socket.io-client';
 
-const TABS = ['Available', 'In Escrow', 'Under Review', 'Refunded', 'History'];
+const TABS = ['Available', 'Protected', 'Under Review', 'Refunded', 'History'];
 
 const escrowReleases = [
   { date: '17 Jun 2025', amount: '₹316.80', questions: 4 },
@@ -41,7 +41,7 @@ const payoutHistoryGrouped = [
     month: 'MAY 2025',
     items: [
       { date: '28 May 2025', bank: 'HDFC Bank •••• 4821', amount: '₹4,100', status: 'Pending' },
-      { date: '15 May 2025', bank: 'HDFC Bank •••• 4821', amount: '₹3,100', status: 'In Escrow' },
+      { date: '15 May 2025', bank: 'HDFC Bank •••• 4821', amount: '₹3,100', status: 'Protected' },
       { date: '3 May 2025', bank: 'HDFC Bank •••• 4821', amount: '₹3,400', status: 'Paid' },
     ],
   },
@@ -78,7 +78,7 @@ const StatusBadge = ({ status }) => {
   const map = {
     Paid: { bg: 'rgba(34,197,94,0.18)', color: '#22C55E' },
     Pending: { bg: 'rgba(251,146,60,0.18)', color: '#FB923C' },
-    'In Escrow': { bg: 'rgba(59,130,246,0.18)', color: '#60A5FA' },
+    'Protected': { bg: 'rgba(59,130,246,0.18)', color: '#60A5FA' },
   };
   const c = map[status] || { bg: 'rgba(255,255,255,0.08)', color: '#A8A8A0' };
   return (
@@ -184,14 +184,16 @@ const CreatorPayouts = () => {
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
-      justifyContent: 'center',
-      padding: '40px 20px',
+      width: '100%',
+      boxSizing: 'border-box'
     }} className="creator-theme">
-      <PhoneFrame>
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          height: '100%',
+      <div style={{ width: '100%', maxWidth: '480px', margin: '0 auto', display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+        <PhoneFrame>
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            flex: 1,
+            minHeight: '100vh',
           backgroundColor: '#07070E',
           color: '#FAFAF8',
           overflow: 'hidden',
@@ -242,14 +244,8 @@ const CreatorPayouts = () => {
                   <div style={{ fontSize: '10px', color: '#686860', fontWeight: '700', letterSpacing: '0.8px', marginBottom: '7px' }}>THIS MONTH</div>
                   <div style={{ fontSize: '20px', fontWeight: '700', color: '#3DD9FF' }}>{fmt(payoutStats.thisMonth)}</div>
                 </div>
-                <div style={{ flex: 1, backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: '12px', padding: '14px', border: '1px solid rgba(255,255,255,0.06)' }}>
-                  <div style={{ fontSize: '10px', color: '#686860', fontWeight: '700', letterSpacing: '0.8px', marginBottom: '7px' }}>IN ESCROW</div>
-                  <div style={{ fontSize: '20px', fontWeight: '700', color: '#FAFAF8' }}>{fmt(payoutStats.inEscrow)}</div>
-                </div>
               </div>
-            </div>
-
-            {/* ── Tab row (horizontally scrollable) ── */}
+            </div>            {/* ── Tab row (horizontally scrollable) ── */}
             <div style={{ marginBottom: '6px', position: 'relative' }}>
               <div style={{
                 display: 'flex',
@@ -295,7 +291,7 @@ const CreatorPayouts = () => {
               <>
                 <Card style={{ padding: '22px', marginBottom: '12px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '5px', color: '#686860', fontSize: '12px', marginBottom: '8px' }}>
-                    Available for Payout <InfoIcon />
+                    Available for Payout 
                   </div>
                   <div style={{ fontSize: '34px', fontWeight: '800', letterSpacing: '-1px', marginBottom: '14px' }}>{fmt(payoutStats.available)}</div>
                   <div style={{ color: '#686860', fontSize: '12px', marginBottom: '3px' }}>Next Payout</div>
@@ -320,9 +316,9 @@ const CreatorPayouts = () => {
                   <div style={{ fontSize: '10px', fontWeight: '700', color: '#686860', letterSpacing: '1px', marginBottom: '14px' }}>OVERVIEW</div>
                   {[
                     ['Eligible Questions', payoutStats.availableQuestions ? payoutStats.availableQuestions.toString() : '0'],
-                    ['Gross Sales', fmt(payoutStats.availableGross || 0)],
+                    ['Total Revenue', fmt(payoutStats.availableGross || 0)],
                     ['Your Earnings (80%)', fmt(payoutStats.available || 0)],
-                    ['Skriibe Fee (20%)', fmt(payoutStats.availableFee || 0)],
+            
                   ].map(([label, value], i, arr) => (
                     <div key={label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', paddingBottom: i < arr.length - 1 ? '12px' : 0, borderBottom: i < arr.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none', marginBottom: i < arr.length - 1 ? '12px' : 0 }}>
                       <span style={{ color: '#686860' }}>{label}</span>
@@ -333,12 +329,12 @@ const CreatorPayouts = () => {
               </>
             )}
 
-            {/* ── IN ESCROW ── */}
-            {activeTab === 'In Escrow' && (
+            {/* ── PROTECTED ── */}
+            {activeTab === 'Protected' && (
               <>
                 <Card style={{ padding: '22px', marginBottom: '16px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '5px', color: '#686860', fontSize: '12px', marginBottom: '8px' }}>
-                    Potential Earnings (Unanswered) <InfoIcon />
+                    Protected Amount
                   </div>
                   <div style={{ fontSize: '34px', fontWeight: '800', letterSpacing: '-1px', marginBottom: '4px' }}>{fmt(payoutStats.inEscrow)}</div>
                   <div style={{ color: '#686860', fontSize: '12px', marginBottom: '12px' }}>{payoutStats.inEscrowQuestions || 0} Questions</div>
@@ -381,49 +377,55 @@ const CreatorPayouts = () => {
             {/* ── UNDER REVIEW ── */}
             {activeTab === 'Under Review' && (
               <>
-                <Card style={{ padding: '20px', marginBottom: '16px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
-                    <div style={{ backgroundColor: 'rgba(251,146,60,0.13)', color: '#FB923C', borderRadius: '10px', width: '38px', height: '38px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-                        <line x1="12" y1="9" x2="12" y2="13"></line>
-                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
-                      </svg>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '14px', fontWeight: '700' }}>
-                      Under Review <InfoIcon />
-                    </div>
-                  </div>
-                  <div style={{ fontSize: '34px', fontWeight: '800', letterSpacing: '-1px', marginBottom: '4px' }}>{fmt(payoutStats.underReviewAmount)}</div>
-                  <div style={{ color: '#686860', fontSize: '12px', marginBottom: '16px' }}>{payoutStats.underReviewQuestionsCount || 0} Questions</div>
-                  <div style={{ backgroundColor: 'rgba(251,146,60,0.07)', border: '1px solid rgba(251,146,60,0.2)', borderRadius: '12px', padding: '14px', display: 'flex', gap: '10px' }}>
-                    <div style={{ color: '#FB923C', flexShrink: 0, marginTop: '1px' }}><InfoIcon color="#FB923C" /></div>
-                    <div style={{ fontSize: '12px', color: '#A8A8A0', lineHeight: '1.6' }}>
-                      A fan has raised a dispute for these questions. Our team is reviewing it. You will be notified once it's resolved.
-                    </div>
-                  </div>
-                </Card>
-
-                <div style={{ fontSize: '10px', fontWeight: '700', color: '#686860', letterSpacing: '1px', marginBottom: '10px' }}>QUESTIONS UNDER REVIEW</div>
-                <Card style={{ overflow: 'hidden' }}>
-                  {payoutStats.underReviewList && payoutStats.underReviewList.length > 0 ? payoutStats.underReviewList.map((item, i) => (
-                    <div key={item.id} onClick={() => navigate('/creator/inbox')} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderBottom: i < payoutStats.underReviewList.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none', cursor: 'pointer' }}>
-                      <div>
-                        <div style={{ fontSize: '14px', fontWeight: '700', marginBottom: '3px' }}>{item.buyerName}</div>
-                        <div style={{ fontSize: '11px', color: '#FB923C', fontWeight: '600' }}>{item.status}</div>
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <div style={{ textAlign: 'right' }}>
-                          <div style={{ fontSize: '13px', fontWeight: '700' }}>{fmt(item.amount)}</div>
-                          <div style={{ fontSize: '11px', color: '#686860' }}>{item.date}</div>
+                {payoutStats.underReviewQuestionsCount > 0 ? (
+                  <>
+                    <Card style={{ padding: '20px', marginBottom: '16px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+                        <div style={{ backgroundColor: 'rgba(251,146,60,0.13)', color: '#FB923C', borderRadius: '10px', width: '38px', height: '38px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                            <line x1="12" y1="9" x2="12" y2="13"></line>
+                            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                          </svg>
                         </div>
-                        <ChevronRight />
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '14px', fontWeight: '700' }}>
+                          Under Review 
+                        </div>
                       </div>
-                    </div>
-                  )) : (
-                    <div style={{ padding: '20px', textAlign: 'center', color: '#686860', fontSize: '12px' }}>No questions under review.</div>
-                  )}
-                </Card>
+                      <div style={{ fontSize: '34px', fontWeight: '800', letterSpacing: '-1px', marginBottom: '4px' }}>{fmt(payoutStats.underReviewAmount)}</div>
+                      <div style={{ color: '#686860', fontSize: '12px', marginBottom: '16px' }}>{payoutStats.underReviewQuestionsCount || 0} Questions</div>
+                      <div style={{ backgroundColor: 'rgba(251,146,60,0.07)', border: '1px solid rgba(251,146,60,0.2)', borderRadius: '12px', padding: '14px', display: 'flex', gap: '10px' }}>
+                        <div style={{ color: '#FB923C', flexShrink: 0, marginTop: '1px' }}><InfoIcon color="#FB923C" /></div>
+                        <div style={{ fontSize: '12px', color: '#A8A8A0', lineHeight: '1.6' }}>
+                          A fan has raised a dispute for these questions. Our team is reviewing it. You will be notified once it's resolved.
+                        </div>
+                      </div>
+                    </Card>
+
+                    <div style={{ fontSize: '10px', fontWeight: '700', color: '#686860', letterSpacing: '1px', marginBottom: '10px' }}>QUESTIONS UNDER REVIEW</div>
+                    <Card style={{ overflow: 'hidden' }}>
+                      {payoutStats.underReviewList && payoutStats.underReviewList.map((item, i) => (
+                        <div key={item.id} onClick={() => navigate('/creator/inbox')} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderBottom: i < (payoutStats.underReviewList?.length || 0) - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none', cursor: 'pointer' }}>
+                          <div>
+                            <div style={{ fontSize: '14px', fontWeight: '700', marginBottom: '3px' }}>{item.buyerName}</div>
+                            <div style={{ fontSize: '11px', color: '#FB923C', fontWeight: '600' }}>{item.status}</div>
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <div style={{ textAlign: 'right' }}>
+                              <div style={{ fontSize: '13px', fontWeight: '700' }}>{fmt(item.amount)}</div>
+                              <div style={{ fontSize: '11px', color: '#686860' }}>{item.date}</div>
+                            </div>
+                            <ChevronRight />
+                          </div>
+                        </div>
+                      ))}
+                    </Card>
+                  </>
+                ) : (
+                  <Card style={{ padding: '20px', textAlign: 'center', color: '#686860', fontSize: '14px' }}>
+                    No disputes to review.
+                  </Card>
+                )}
               </>
             )}
 
@@ -436,7 +438,7 @@ const CreatorPayouts = () => {
                       <CalendarIcon color="#EF4444" />
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '14px', fontWeight: '700' }}>
-                      Refunded <InfoIcon />
+                      Refunded 
                     </div>
                   </div>
                   <div style={{ fontSize: '34px', fontWeight: '800', letterSpacing: '-1px', color: '#EF4444', marginBottom: '4px' }}>-₹396.00</div>
@@ -521,10 +523,9 @@ const CreatorPayouts = () => {
             )}
 
           </div>
-
-          <BottomNav activeTab="payouts" />
         </div>
       </PhoneFrame>
+      </div>
     </div>
   );
 };

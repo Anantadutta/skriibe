@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom';
+import TransparentLogo from '../../components/TransparentLogo';
 import { getCreatorProfile, sendBuyerOTP, verifyBuyerOTP, submitQuestion } from '../../api/buyerApi';
 import { mockQuestions } from '../../mock/questions';
 import { io } from 'socket.io-client';
@@ -197,8 +198,8 @@ const CreatorPublicPage = () => {
           >
             <span style={{ fontSize: '1.2rem', color: '#94a3b8', marginTop: '-2px' }}>‹</span>
           </div>
-          <div style={{ fontSize: '1.2rem', fontWeight: '600', letterSpacing: '-0.03em', color: '#333' }}>
-            skr<span style={{ color: '#29C5F6' }}>ii</span>be
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <TransparentLogo src="/logo.png" alt="skriibe logo" style={{ height: '20px', width: 'auto', transform: 'scale(4)', transformOrigin: 'left center' }} />
           </div>
         </div>
 
@@ -233,12 +234,9 @@ const CreatorPublicPage = () => {
               <span style={{ fontSize: '1.4rem', fontWeight: '800', letterSpacing: '-0.02em', color: '#ffffff' }}>
                 {creator.name || 'Rahul Finance'}
               </span>
-              <span style={{ color: '#29C5F6', fontSize: '1.1rem' }}>✓</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem' }}>
               <span style={{ color: '#64748b' }}>@{creator.handle}</span>
-              <span style={{ color: '#475569' }}>•</span>
-              <span style={{ color: '#94a3b8', fontWeight: '500' }}><span style={{ color: '#29C5F6', fontWeight: '700' }}>{creator.followers || '12K'}</span> Followers</span>
             </div>
             {/* Instagram linked badge */}
             <div style={{
@@ -269,15 +267,15 @@ const CreatorPublicPage = () => {
         {/* STATS ROW (3 boxes) */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
           <div style={{ background: '#1A1A1A', borderRadius: '14px', padding: '16px 8px', textAlign: 'center' }}>
-            <div style={{ fontSize: '1.4rem', fontWeight: '900', color: '#29C5F6' }}>{creator.replyRate ?? '0'}%</div>
+            <div style={{ fontSize: '1.4rem', fontWeight: '900', color: '#29C5F6' }}>{creator.stats?.replyRate ?? 0}%</div>
             <div style={{ fontSize: '0.65rem', color: '#64748b', marginTop: '4px', fontWeight: '700', letterSpacing: '1px' }}>REPLY</div>
           </div>
           <div style={{ background: '#1A1A1A', borderRadius: '14px', padding: '16px 8px', textAlign: 'center' }}>
-            <div style={{ fontSize: '1.4rem', fontWeight: '900', color: '#29C5F6' }}>{creator.avgReplyTime || '3.2'}h</div>
+            <div style={{ fontSize: '1.4rem', fontWeight: '900', color: '#29C5F6' }}>{creator.stats?.avgReplyTime ?? 0}h</div>
             <div style={{ fontSize: '0.65rem', color: '#64748b', marginTop: '4px', fontWeight: '700', letterSpacing: '1px' }}>AVG</div>
           </div>
           <div style={{ background: '#1A1A1A', borderRadius: '14px', padding: '16px 8px', textAlign: 'center' }}>
-            <div style={{ fontSize: '1.4rem', fontWeight: '900', color: '#29C5F6' }}>{creator.totalAnswered || '247'}</div>
+            <div style={{ fontSize: '1.4rem', fontWeight: '900', color: '#29C5F6' }}>{creator.stats?.totalAnswered ?? creator.questionsAnswered ?? 0}</div>
             <div style={{ fontSize: '0.65rem', color: '#64748b', marginTop: '4px', fontWeight: '700', letterSpacing: '1px' }}>ANSWERED</div>
           </div>
         </div>
@@ -491,7 +489,7 @@ const CreatorPublicPage = () => {
 
           <div style={{ background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '16px', padding: '16px', display: 'flex', flexDirection: 'column' }}>
             <div style={{ color: '#64748b', fontSize: '0.7rem', fontWeight: '800', letterSpacing: '2px', textTransform: 'uppercase' }}>
-              YOUR QUESTION <span style={{ color: '#ef4444' }}>*</span> <span style={{ color: '#64748b' }}>(MIN 20 WORDS, MAX 500 WORDS)</span>
+              YOUR QUESTION <span style={{ color: '#ef4444' }}>*</span> <span style={{ color: '#64748b' }}>(MIN 20 CHARACTERS, MAX 500 CHARACTERS)</span>
             </div>
             <textarea 
               className="unified-input"
@@ -507,11 +505,11 @@ const CreatorPublicPage = () => {
         {/* WORD COUNT & VALIDATION */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '-8px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 4px' }}>
-            <div style={{ fontSize: '0.8rem', color: '#475569', fontWeight: '600' }}>
-              Min 20 words, Max 500 words
-            </div>
-            <div style={{ fontSize: '0.85rem', fontWeight: '700', color: (questionText.trim() ? questionText.trim().split(/\s+/).length : 0) >= 20 && (questionText.trim() ? questionText.trim().split(/\s+/).length : 0) <= 500 ? '#22C55E' : '#ef4444' }}>
-              {questionText.trim() ? questionText.trim().split(/\s+/).length : 0} / 500 {((questionText.trim() ? questionText.trim().split(/\s+/).length : 0) >= 20 && (questionText.trim() ? questionText.trim().split(/\s+/).length : 0) <= 500) && '✓'}
+            <div style={{ display: 'flex', justifyContent: 'space-between', color: '#64748b', fontSize: '13px', marginTop: '12px' }}>
+              Min 20 characters, Max 500 characters
+              <span style={{ color: questionText.length > 500 || (questionText.length > 0 && questionText.length < 20) ? '#ef4444' : '#64748b' }}>
+                {questionText.length}/500 Characters
+              </span>
             </div>
           </div>
         </div>
@@ -527,7 +525,7 @@ const CreatorPublicPage = () => {
               handlePayAndSubmit();
             }
           }}
-          disabled={!termsAccepted || !buyerName || !buyerEmail || buyerPhone.length !== 10 || (questionText.trim() ? questionText.trim().split(/\s+/).length : 0) < 20 || (questionText.trim() ? questionText.trim().split(/\s+/).length : 0) > 500 || submitting}
+          disabled={!termsAccepted || !buyerName || !buyerEmail || buyerPhone.length !== 10 || questionText.length < 20 || questionText.length > 500 || submitting}
           style={{
             width: '100%',
             background: '#29C5F6',
@@ -609,7 +607,7 @@ const CreatorPublicPage = () => {
             Question sent!
           </h2>
           <p style={{ margin: '0 0 4px', fontSize: '1rem', color: '#64748b' }}>
-            {creator.name || creator.displayName} will reply within {creator.responseTime || '24'} hours.
+            {creator.name || creator.displayName} will reply within 24 hours.
           </p>
           <p style={{ margin: 0, fontSize: '1rem', color: '#64748b' }}>
             You'll be notified on both channels.
@@ -631,11 +629,11 @@ const CreatorPublicPage = () => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#22c55e', boxShadow: '0 0 8px #22c55e' }}></div>
-              <span style={{ fontSize: '1rem', color: '#cbd5e1' }}>{buyerEmail || 'amit@gmail.com'}</span>
+              <span style={{ fontSize: '1rem', color: '#cbd5e1' }}>{buyerEmail || 'amit@gmail.com'} <span style={{ color: '#475569', fontSize: '0.85rem' }}>· Email</span></span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#22c55e', boxShadow: '0 0 8px #22c55e' }}></div>
-              <span style={{ fontSize: '1rem', color: '#cbd5e1' }}>{buyerPhone || '+91 98765 43210'} (WhatsApp)</span>
+              <span style={{ fontSize: '1rem', color: '#cbd5e1' }}>Skriibe Inbox <span style={{ color: '#475569', fontSize: '0.85rem' }}>· App</span></span>
             </div>
           </div>
         </div>

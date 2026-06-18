@@ -43,13 +43,16 @@ router.get('/creator/:handle', async (req, res) => {
         avatarUrl: creator.avatarUrl,
         bio: creator.bio || '',
         expertise: creator.expertise || [],
-        stats: creator.stats || { replyRate: 0, avgReplyTime: 3.2, totalAnswered: 0 },
+        stats: {
+          ...(creator.stats || { replyRate: 0, avgReplyTime: 0 }),
+          totalAnswered: answeredCount
+        },
         instagramHandle: creator.instagramHandle || '',
         followers: creator.instagramFollowers || 0,
         price: creator.price || creator.pricePerQuestion || 99,
         pricePerQuestion: creator.price || creator.pricePerQuestion || 99,
         responseTime: creator.responseTime || '48 hours',
-        questionsAnswered: answeredCount || creator.questionsAnswered || 0,
+        questionsAnswered: answeredCount,
         instagramLinked: creator.instagramConnected,
         isLive: creator.isLive,
         isPaused: creator.isPaused || false,

@@ -10,8 +10,8 @@ const QuestionModal = ({ creator, onClose }) => {
 
   const price = creator.pricePerQuestion || 99;
   const replyRate = creator.stats?.replyRate ?? 0;
-  const avgReply = creator.stats?.avgReplyTime || 3.2;
-  const answeredCount = 247; // Mocked for now to match screenshot
+  const avgReply = creator.stats?.avgReplyTime || 0;
+  const answeredCount = creator.stats?.totalAnswered || creator.questionsAnswered || 0;
 
   // Format reply time (e.g. 3.2h)
   const formatTime = (time) => {
@@ -98,10 +98,6 @@ const QuestionModal = ({ creator, onClose }) => {
               <h2 style={{ margin: 0, color: '#ffffff', fontSize: '28px', fontWeight: '800', letterSpacing: '-0.5px' }}>
                 {creator.name}
               </h2>
-              {/* Blue Tick */}
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M22.5 12L20.4 9.4L20.7 6.1L17.5 5.4L15.6 2.7L12 3.9L8.4 2.7L6.5 5.4L3.3 6.1L3.6 9.4L1.5 12L3.6 14.6L3.3 17.9L6.5 18.6L8.4 21.3L12 20.1L15.6 21.3L17.5 18.6L20.7 17.9L20.4 14.6L22.5 12ZM10.5 16.5L6.8 12.8L8.1 11.5L10.5 13.9L16.2 8.2L17.5 9.5L10.5 16.5Z" fill="#38bdf8"/>
-              </svg>
             </div>
             
             <div style={{ color: '#94a3b8', fontSize: '14px', marginBottom: '16px' }}>

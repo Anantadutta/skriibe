@@ -8,7 +8,6 @@ const CreatorAnalytics = () => {
   const navItems = [
     { label: 'HOME', icon: '🏠', route: '/creator/dashboard' },
     { label: 'INBOX', icon: '💬', route: '/creator/inbox' },
-    { label: 'ANALYTICS', icon: '📊', route: '/creator/analytics' },
     { label: 'PAYOUTS', icon: '💰', route: '/creator/payouts' },
     { label: 'SETTINGS', icon: '⚙️', route: '/creator/settings' },
   ];

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import TransparentLogo from '../../TransparentLogo';
 import { getFanMe } from '../../../services/fanApi';
 import api from '../../../services/api';
 
@@ -8,8 +9,6 @@ const FanNavbar = () => {
   const currentPath = location.pathname;
 
   const navItems = [
-    { label: 'Home', path: '/explore', icon: '🏠' },
-    { label: 'History', path: '/fan/history', icon: '🕒' },
     { label: 'Notifications', path: '/fan/notifications', icon: '🔔' }
   ];
 
@@ -34,10 +33,9 @@ const FanNavbar = () => {
     
     const fetchNotifications = async () => {
       try {
-        const res = await api.get('/questions/notifications');
-        if (res.data.success && res.data.notifications) {
-          const unread = res.data.notifications.filter(n => !n.isRead).length;
-          setUnreadCount(unread);
+        const res = await api.get('/questions/unread-count');
+        if (res.data.success) {
+          setUnreadCount(res.data.count);
         }
       } catch (err) {}
     };
@@ -88,7 +86,7 @@ const FanNavbar = () => {
           height: 50px;
           border-radius: 16px;
           transition: all 0.2s;
-          font-size: 26px;
+          font-size: 28px;
         }
         .fan-nav-link-item:hover {
           background: rgba(255,255,255,0.05);
@@ -112,11 +110,11 @@ const FanNavbar = () => {
           }
           .fan-nav-link-item {
             padding: 6px 8px;
-            font-size: 10px;
+            font-size: 20px;
             gap: 4px;
           }
           .fan-nav-link-item span {
-            font-size: 12px;
+            font-size: 22px;
           }
           .fan-avatar {
             width: 32px !important;
@@ -127,9 +125,9 @@ const FanNavbar = () => {
         }
       `}</style>
       <header className="fan-navbar">
-        <Link to="/explore" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
-          <span className="fan-navbar-logo" style={{ fontSize: '24px', fontWeight: '800', letterSpacing: '-0.5px', color: '#ffffff' }}>
-            skr<span style={{ color: '#06b6d4' }}>ii</span>be
+        <Link to="/discovery" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+          <span className="fan-navbar-logo" style={{ display: 'flex', alignItems: 'center' }}>
+            <TransparentLogo src="/logo.png" alt="skriibe logo" style={{ height: '24px', width: 'auto', transform: 'scale(4)', transformOrigin: 'left center' }} />
           </span>
         </Link>
         

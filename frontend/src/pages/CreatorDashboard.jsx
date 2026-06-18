@@ -5,20 +5,30 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
+import TransparentLogo from '../components/TransparentLogo';
 import { mockCreator, mockQuestions } from '../mock/questions';
 import { getMe, toggleLive } from '../services/creatorApi';
 import api from '../services/api';
+import { switchRole } from '../services/fanApi';
+import { useAuth } from '../context/AuthContext';
 
 const CreatorDashboard = () => {
   const { username } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
+  const { roles, setAuthData } = useAuth();
 
   const [creator, setCreator] = useState(location.state?.creator || mockCreator);
   const [isLive, setIsLive] = useState(creator.isLive !== false);
   const [btnHover, setBtnHover] = useState(false);
   const [questions, setQuestions] = useState([]);
   const [copied, setCopied] = useState(false);
+  const [now, setNow] = useState(Date.now());
+
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 60000);
+    return () => clearInterval(timer);
+  }, []);
   
   useEffect(() => {
     const fetchCreator = async () => {
@@ -54,7 +64,6 @@ const CreatorDashboard = () => {
   const navItems = [
     { label: 'HOME', icon: '🏠', route: '/creator/dashboard' },
     { label: 'INBOX', icon: '💬', route: '/creator/inbox' },
-    { label: 'ANALYTICS', icon: '📊', route: '/creator/analytics' },
     { label: 'PAYOUTS', icon: '💰', route: '/creator/payouts' },
     { label: 'SETTINGS', icon: '⚙️', route: '/creator/settings' },
   ];
@@ -140,12 +149,12 @@ const CreatorDashboard = () => {
           100% { box-shadow: 0 0 0 14px rgba(34, 197, 94, 0); }
         }
       `}} />
-      
+
       {/* Container to restrict width */}
       <div style={{
         width: '100%',
         maxWidth: '390px',
-        padding: '24px 20px 120px',
+        padding: '12px 20px 120px',
         boxSizing: 'border-box',
         display: 'flex',
         flexDirection: 'column',
@@ -193,17 +202,8 @@ const CreatorDashboard = () => {
               >
                 <span style={{ fontSize: '1.2rem', color: '#94a3b8', marginTop: '-2px' }}>‹</span>
               </div>
-              <div style={{
-                position: 'relative',
-                zIndex: 1,
-                fontSize: '1.6rem',
-                fontWeight: '600',
-                fontStyle: 'normal',
-                letterSpacing: '-0.03em',
-                color: '#fff',
-                lineHeight: '1'
-              }}>
-                skr<span style={{ color: '#29C5F6' }}>ii</span>be
+              <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center' }}>
+                <TransparentLogo src="/logo.png" alt="skriibe logo" style={{ height: '24px', width: 'auto', transform: 'scale(4)', transformOrigin: 'left center' }} />
               </div>
             </div>
             <div style={{ position: 'relative', zIndex: 1, color: '#94a3b8', fontSize: '0.85rem', display: 'flex', flexDirection: 'column', gap: '2px' }}>
@@ -555,14 +555,25 @@ const CreatorDashboard = () => {
             );
           }
           return pendingQuestions.slice(0, 2).map((q, idx) => {
-            const timeDiff = Math.max(0, 48 - Math.floor((new Date() - new Date(q.createdAt || Date.now())) / (1000 * 60 * 60)));
-            let timerColor = '#10B981'; // Green for > 12h
+            const diffMs = now - new Date(q.createdAt || now).getTime();
+            const hoursAgo = Math.floor(diffMs / (1000 * 60 * 60));
+            const minutesAgo = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+            let timeText = '';
+            if (hoursAgo > 0) {
+              timeText = `${hoursAgo}h ago`;
+            } else if (minutesAgo > 0) {
+              timeText = `${minutesAgo}m ago`;
+            } else {
+              timeText = `Just now`;
+            }
+
+            let timerColor = '#10B981'; // Green for recent
             let timerBg = 'rgba(16, 185, 129, 0.15)';
-            if (timeDiff < 4) {
-              timerColor = '#EF4444'; // Red for urgent
+            if (hoursAgo > 20) {
+              timerColor = '#EF4444'; // Red for urgent (close to 24h limit)
               timerBg = 'rgba(239, 68, 68, 0.15)';
-            } else if (timeDiff < 12) {
-              timerColor = '#F59E0B'; // Yellow for < 12h
+            } else if (hoursAgo > 12) {
+              timerColor = '#F59E0B'; // Yellow
               timerBg = 'rgba(245, 158, 11, 0.15)';
             }
 
@@ -574,14 +585,16 @@ const CreatorDashboard = () => {
                       {(q.buyerName || q.followerName || 'A')[0].toUpperCase()}
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
-                      <span style={{ fontWeight: 700, fontSize: '1rem', color: '#fff' }}>{q.buyerName || q.followerName}</span>
-                      <span style={{ color: '#10B981', fontSize: '0.8rem', fontWeight: 700 }}>
-                        {q.isFollowUp ? 'Follow-up' : `paid ₹${q.amountPaid || q.pricePaid}`}
+                      <div style={{ color: '#FBBF24', fontSize: '0.8rem', fontWeight: 600, marginBottom: '2px' }}>
+                        {q.isFollowUp ? 'Follow-up Question' : 'New Question'}
+                      </div>
+                      <span style={{ fontWeight: 700, fontSize: '1rem', color: '#fff' }}>
+                        {q.buyerName || q.followerName} <span style={{ color: '#38BDF8' }}>· {q.isFollowUp ? 'Free' : `₹${q.amountPaid || q.pricePaid}`}</span>
                       </span>
                     </div>
                   </div>
                   <div style={{ background: timerBg, color: timerColor, padding: '4px 10px', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    ⏱ {timeDiff}h left
+                    ⏱ {timeText}
                   </div>
                 </div>
                 <div style={{ fontSize: '0.95rem', color: '#cbd5e1', lineHeight: '1.5', wordBreak: 'break-all', overflowWrap: 'anywhere' }}>
@@ -595,7 +608,17 @@ const CreatorDashboard = () => {
                     }}
                     style={{ flex: 1, background: 'linear-gradient(90deg, #38BDF8 0%, #34D399 100%)', color: '#0F172A', border: 'none', borderRadius: '12px', padding: '14px', fontWeight: 800, fontSize: '0.95rem', cursor: 'pointer' }}
                   >
-                    {q.isFollowUp ? 'Reply (Free)' : `Reply & earn ₹${q.amountPaid || q.pricePaid}`}
+                    Reply
+                  </button>
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const rootQuestion = q.isFollowUp ? questions.find(r => (r._id || r.id) === q.parentQuestionId) : null;
+                      navigate(`/creator/dashboard/reply/${q._id || q.id}`, { state: { question: q, rootQuestion, initialView: 'flag' } });
+                    }}
+                    style={{ width: '48px', background: '#1F2937', border: 'none', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg>
                   </button>
                 </div>
               </div>
@@ -649,6 +672,40 @@ const CreatorDashboard = () => {
           </button>
         </div>
 
+        {/* 8. SWITCH TO FAN MODE CTA */}
+        {roles && roles.includes('fan') && (
+          <div 
+            onClick={async () => {
+              try {
+                const res = await switchRole('fan');
+                if (res.success) {
+                  setAuthData(roles, res.activeRole);
+                  navigate('/explore');
+                }
+              } catch (err) {
+                alert('Failed to switch to Fan mode');
+              }
+            }}
+            style={{ 
+              background: 'rgba(56, 189, 248, 0.05)', 
+              border: '1px solid rgba(56, 189, 248, 0.3)', 
+              borderRadius: '16px', 
+              padding: '20px', 
+              display: 'flex', 
+              justifyContent: 'center', 
+              alignItems: 'center', 
+              marginTop: '12px',
+              cursor: 'pointer',
+              gap: '12px',
+              transition: 'all 0.2s ease'
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(56, 189, 248, 0.1)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(56, 189, 248, 0.05)'; }}
+          >
+            <span style={{ fontSize: '1.4rem', filter: 'hue-rotate(60deg)' }}>👤</span>
+            <span style={{ fontWeight: 700, fontSize: '1.1rem', color: '#38bdf8' }}>Switch to Fan Mode →</span>
+          </div>
+        )}
 
 
       </div>

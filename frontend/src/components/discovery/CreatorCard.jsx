@@ -20,7 +20,7 @@ const CreatorCard = ({ creator }) => {
     initials
   } = creator;
 
-  const displayExpertise = expertise && expertise.length > 0 ? expertise[0] : 'General';
+  const expertiseList = expertise && expertise.length > 0 ? expertise : [];
   const displayPrice = price || pricePerQuestion || 99;
   
   // Format reply time (e.g. 1.4h)
@@ -32,132 +32,171 @@ const CreatorCard = ({ creator }) => {
 
   return (
     <div style={{
-      background: '#131313',
-      border: '1px solid #2a2a2a',
-      borderRadius: '20px',
-      padding: '14px',
+      background: '#0B0B14',
+      border: '1px solid #1E1E28',
+      borderRadius: '24px',
+      padding: '24px',
       display: 'flex',
       flexDirection: 'column',
-      gap: '10px',
       color: '#ffffff',
       transition: 'transform 0.2s, box-shadow 0.2s',
+      boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
     }}
     onMouseEnter={(e) => {
       e.currentTarget.style.transform = 'translateY(-2px)';
-      e.currentTarget.style.boxShadow = '0 8px 24px rgba(0, 0, 0, 0.4)';
+      e.currentTarget.style.boxShadow = '0 8px 32px rgba(0, 0, 0, 0.4)';
     }}
     onMouseLeave={(e) => {
       e.currentTarget.style.transform = 'none';
-      e.currentTarget.style.boxShadow = 'none';
+      e.currentTarget.style.boxShadow = '0 4px 20px rgba(0,0,0,0.2)';
     }}>
       
-      {/* Avatar & Live Badge */}
-      <div style={{ position: 'relative', width: '56px', height: '56px' }}>
-        <div style={{
-          width: '100%',
-          height: '100%',
-          borderRadius: '50%',
-          background: bgColor || `linear-gradient(135deg, #7c3aed, #06b6d4)`,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: '20px',
-          fontWeight: '700',
-          color: '#ffffff',
-          overflow: 'hidden',
-          border: isLive ? '2px solid #06b6d4' : '2px solid transparent', // The glowing ring only if live
-          boxShadow: isLive ? '0 0 10px rgba(6, 182, 212, 0.3)' : 'none'
-        }}>
-          {avatarUrl ? (
-            <img src={avatarUrl} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-          ) : (
-            initials || name.substring(0, 2).toUpperCase()
+      {/* Top Section: Avatar and Info */}
+      <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+        {/* Avatar & Live Badge */}
+        <div style={{ position: 'relative', width: '76px', height: '76px', flexShrink: 0 }}>
+          <div style={{
+            width: '100%',
+            height: '100%',
+            borderRadius: '50%',
+            background: bgColor || `linear-gradient(135deg, #7c3aed, #06b6d4)`,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '24px',
+            fontWeight: '700',
+            color: '#ffffff',
+            overflow: 'hidden',
+            border: isLive ? '2px solid #00FFA3' : '2px solid transparent',
+            boxShadow: isLive ? '0 0 14px rgba(0, 255, 163, 0.3)' : 'none'
+          }}>
+            {avatarUrl ? (
+              <img src={avatarUrl} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            ) : (
+              initials || name.substring(0, 2).toUpperCase()
+            )}
+          </div>
+          {isLive && (
+            <div style={{
+              position: 'absolute',
+              bottom: '-6px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              background: '#00FFA3',
+              color: '#000000',
+              fontSize: '10px',
+              fontWeight: '800',
+              padding: '3px 8px',
+              borderRadius: '12px',
+              letterSpacing: '0.5px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.5)'
+            }}>
+              <div style={{ width: '4px', height: '4px', background: '#000', borderRadius: '50%' }}></div>
+              LIVE
+            </div>
           )}
         </div>
-        <div style={{
-          position: 'absolute',
-          bottom: '-6px',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          background: isLive ? '#0ea5e9' : '#334155',
-          color: isLive ? '#000000' : '#cbd5e1',
-          fontSize: '10px',
-          fontWeight: '800',
-          padding: '2px 6px',
-          borderRadius: '8px',
-          letterSpacing: '0.5px',
-          border: isLive ? 'none' : '1px solid #1e293b'
-        }}>
-          {isLive ? 'LIVE' : 'OFFLINE'}
+
+        {/* Info */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          <h3 style={{ margin: 0, fontSize: '20px', fontWeight: '800', lineHeight: 1.1, display: 'flex', alignItems: 'center', gap: '6px' }}>
+            {name}
+            {verified !== false && (
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 2L15 4.5L18.5 4L20 7L23 9L21.5 12L23 15L20 17L18.5 20L15 19.5L12 22L9 19.5L5.5 20L4 17L1 15L2.5 12L1 9L4 7L5.5 4L9 4.5L12 2Z" fill="#0066FF"/>
+                <path d="M10 15L7 12L8.41 10.59L10 12.17L15.59 6.58L17 8L10 15Z" fill="white"/>
+              </svg>
+            )}
+          </h3>
+          <div style={{ color: '#64748b', fontSize: '13px' }}>@{handle}</div>
+          <div style={{ marginTop: '2px', display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+            {expertiseList.map((exp, idx) => (
+              <span key={idx} style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+                background: 'rgba(6, 182, 212, 0.1)',
+                color: '#06b6d4',
+                fontSize: '11px',
+                fontWeight: '600',
+                padding: '4px 10px',
+                borderRadius: '100px',
+                border: '1px solid rgba(6, 182, 212, 0.2)'
+              }}>
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M18 3a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3H6a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3V6a3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3h12a3 3 0 0 0 3-3 3 3 0 0 0-3-3z"></path>
+                </svg>
+                {exp}
+              </span>
+            ))}
+          </div>
         </div>
       </div>
 
-      {/* Name and Handle */}
-      <div style={{ marginTop: '4px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-          <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '700', letterSpacing: '-0.3px' }}>{name}</h3>
-          {(verified || true) && ( // Mock verified for now to match screenshot
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M22.5 12L20.4 9.4L20.7 6.1L17.5 5.4L15.6 2.7L12 3.9L8.4 2.7L6.5 5.4L3.3 6.1L3.6 9.4L1.5 12L3.6 14.6L3.3 17.9L6.5 18.6L8.4 21.3L12 20.1L15.6 21.3L17.5 18.6L20.7 17.9L20.4 14.6L22.5 12ZM10.5 16.5L6.8 12.8L8.1 11.5L10.5 13.9L16.2 8.2L17.5 9.5L10.5 16.5Z" fill="#0ea5e9"/>
-            </svg>
-          )}
-        </div>
-        <div style={{ color: '#94a3b8', fontSize: '12px', marginTop: '2px' }}>@{handle}</div>
-      </div>
-
-      {/* Topic Tag */}
-      <div>
-        <span style={{
-          display: 'inline-block',
-          background: 'rgba(6, 182, 212, 0.1)',
-          color: '#06b6d4',
-          fontSize: '10px',
-          fontWeight: '600',
-          padding: '4px 8px',
-          borderRadius: '12px',
-          border: '1px solid rgba(6, 182, 212, 0.2)'
-        }}>
-          {displayExpertise}
-        </span>
-      </div>
-
-      {/* Welcome Message / Bio */}
+      {/* Bio */}
       <div style={{
-        color: '#e2e8f0',
-        fontSize: '12px',
-        lineHeight: '1.4',
-        height: '50px', // 3 lines * 1.4 * 12 = ~50px
-        overflow: 'hidden',
+        color: '#94a3b8',
+        fontSize: '14px',
+        lineHeight: '1.5',
+        marginTop: '20px',
         display: '-webkit-box',
-        WebkitLineClamp: 3,
-        WebkitBoxOrient: 'vertical'
+        WebkitLineClamp: 2,
+        WebkitBoxOrient: 'vertical',
+        overflow: 'hidden',
       }}>
-        {bio ? bio : (
-          <>
-            <span style={{ fontWeight: '600' }}>Welcome from {name}</span><br/>
-            Hi, thanks for viewing my account, go ahead and ask a question.
-          </>
-        )}
+        {bio || 'Helping people with fitness, nutrition & healthy habits.'}
       </div>
 
-      {/* Stats */}
+      {/* Stats Inner Card */}
       <div style={{
-        display: 'grid',
-        gridTemplateColumns: '1fr 1fr 1fr',
-        gap: '4px',
-        marginTop: '4px'
+        background: '#15151D',
+        border: '1px solid #232330',
+        borderRadius: '16px',
+        padding: '16px 12px',
+        marginTop: '20px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.2)'
       }}>
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <span style={{ fontSize: '14px', fontWeight: '700' }}>₹{displayPrice}</span>
-          <span style={{ fontSize: '10px', color: '#94a3b8' }}>per Q</span>
+        {/* Price */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1 }}>
+          <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'rgba(139, 92, 246, 0.15)', color: '#a78bfa', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '8px', fontSize: '13px', fontWeight: '600' }}>
+            ₹
+          </div>
+          <span style={{ fontSize: '18px', fontWeight: '800', color: '#ffffff' }}>₹{displayPrice}</span>
+          <span style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>Per Question</span>
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <span style={{ fontSize: '14px', fontWeight: '700' }}>{stats?.replyRate ?? 0}%</span>
-          <span style={{ fontSize: '10px', color: '#94a3b8' }}>reply rate</span>
+        
+        <div style={{ width: '1px', height: '40px', background: '#2a2a35' }}></div>
+
+        {/* Reply Rate */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1 }}>
+          <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'rgba(16, 185, 129, 0.15)', color: '#34d399', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '8px' }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline>
+              <polyline points="16 7 22 7 22 13"></polyline>
+            </svg>
+          </div>
+          <span style={{ fontSize: '18px', fontWeight: '800', color: '#00FFA3' }}>{stats?.replyRate ?? 0}%</span>
+          <span style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>Reply Rate</span>
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <span style={{ fontSize: '14px', fontWeight: '700' }}>{formatTime(stats?.avgReplyTime || '2h')}</span>
-          <span style={{ fontSize: '10px', color: '#94a3b8' }}>avg reply</span>
+
+        <div style={{ width: '1px', height: '40px', background: '#2a2a35' }}></div>
+
+        {/* Avg Response */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1 }}>
+          <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'rgba(245, 158, 11, 0.15)', color: '#fbbf24', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '8px' }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+          </div>
+          <span style={{ fontSize: '18px', fontWeight: '800', color: '#fbbf24' }}>{formatTime(stats?.avgReplyTime || '2h')}</span>
+          <span style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>Avg Response</span>
         </div>
       </div>
 
@@ -165,23 +204,31 @@ const CreatorCard = ({ creator }) => {
       <button 
         onClick={() => navigate(`/creator/${handle}`)}
         style={{
-          background: 'linear-gradient(90deg, #00e5cc, #38bdf8)',
-          color: '#000',
+          background: 'linear-gradient(90deg, #00FFA3 0%, #00B8FF 100%)',
+          color: '#000000',
           border: 'none',
-          borderRadius: '100px',
-          padding: '10px 20px',
-          fontWeight: '700',
-          fontSize: '13px',
+          borderRadius: '12px',
+          padding: '14px 20px',
+          fontWeight: '800',
+          fontSize: '15px',
           width: '100%',
           cursor: 'pointer',
           transition: 'transform 0.2s',
-          boxShadow: '0 4px 14px rgba(0, 229, 204, 0.25)',
-          marginTop: 'auto'
+          boxShadow: '0 6px 20px rgba(0, 255, 163, 0.25)',
+          marginTop: '20px',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          gap: '6px'
         }}
         onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
         onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
       >
-        Ask a question →
+        Ask a Question
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+          <polyline points="12 5 19 12 12 19"></polyline>
+        </svg>
       </button>
     </div>
   );

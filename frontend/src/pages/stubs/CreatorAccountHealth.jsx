@@ -229,6 +229,14 @@ const CreatorAccountHealth = () => {
               <span style={{ color: '#4ade80', fontWeight: 'bold' }}>·</span>
               <span style={{ color: '#4d7c5b', fontSize: '0.9rem' }}>No complaints for 30 days removes 1 strike</span>
             </li>
+            <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ color: '#4ade80', fontWeight: 'bold' }}>·</span>
+              <span style={{ color: '#4d7c5b', fontSize: '0.9rem' }}>70-89% - Good - Doing Well</span>
+            </li>
+            <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ color: '#4ade80', fontWeight: 'bold' }}>·</span>
+              <span style={{ color: '#4d7c5b', fontSize: '0.9rem' }}>Below 70% - Needs Attention - Action Required</span>
+            </li>
           </ul>
         </div>
 

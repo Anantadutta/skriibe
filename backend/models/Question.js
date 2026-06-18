@@ -18,6 +18,7 @@ const QuestionSchema = new mongoose.Schema(
     // Question
     questionText: { type: String, required: true, minlength: 20, maxlength: 500 },
     isFollowUp: { type: Boolean, default: false },
+    followUpAllowed: { type: Boolean, default: true },
     parentQuestionId: { type: mongoose.Schema.Types.ObjectId, ref: 'Question' },
 
     // Payment
@@ -37,6 +38,7 @@ const QuestionSchema = new mongoose.Schema(
       enum: ['submitted', 'answered', 'expired', 'flagged', 'rejected'],
       default: 'submitted',
     },
+    fanRead: { type: Boolean, default: false },
     flagReason: { type: String, default: '' },
     rejectReason: { type: String, default: '' },
     answerText: { type: String, default: '' },

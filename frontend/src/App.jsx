@@ -10,6 +10,7 @@ import Footer from './components/Footer';
 
 // Context
 import { CreatorOnboardingProvider } from './context/CreatorOnboardingContext';
+import { AuthProvider } from './context/AuthContext';
 
 // Pages
 import About from './pages/About';
@@ -49,9 +50,13 @@ import FanSignup from './pages/fan/FanSignup';
 import FanLogin from './pages/fan/FanLogin';
 import FanForgotPassword from './pages/fan/FanForgotPassword';
 import FanResetPassword from './pages/fan/FanResetPassword';
+import ChooseRole from './pages/fan/ChooseRole';
 import FanDiscovery from './pages/fan/FanDiscovery';
+import FanExplore from './pages/fan/FanExplore';
 import FanHistory from './pages/fan/FanHistory';
 import FanNotifications from './pages/fan/FanNotifications';
+import FanProfile from './pages/fan/FanProfile';
+import FanToCreatorUpgrade from './pages/fan/FanToCreatorUpgrade';
 import CreatorProfile from './pages/fan/CreatorProfile';
 
 const CreatorRoute = () => {
@@ -129,82 +134,88 @@ function App() {
   };
 
   return (
-    <CreatorOnboardingProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<LandingPage theme={theme} toggleTheme={toggleTheme} />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/mission" element={<Mission />} />
-          <Route path="/vision" element={<Vision />} />
-          
-          {/* Creator Onboarding */}
-          <Route path="/creator/signup" element={<CreatorSignup />} />
-          <Route path="/creator/login" element={<CreatorLogin />} />
-          <Route path="/creator/forgot-password" element={<CreatorForgotPassword />} />
-          <Route path="/creator/reset-password/:token" element={<CreatorResetPassword />} />
-          <Route path="/creator/verify-otp" element={<CreatorVerifyOTP />} />
-          <Route path="/creator/connect-instagram" element={<CreatorConnectInstagram />} />
-          <Route path="/onboard/profile" element={<CreatorOnboardProfile />} />
-          <Route path="/creator/onboarding/profile" element={<CreatorOnboardProfile />} />
-          <Route path="/onboard/pricing" element={<CreatorOnboardPricing />} />
-          {/* <Route path="/onboard/live" element={<CreatorGoLive />} /> */}
-
-          {/* Fan Flow */}
-          <Route path="/fan/login" element={<FanLogin />} />
-          <Route path="/fan/signup" element={<FanSignup />} />
-          <Route path="/fan/forgot-password" element={<FanForgotPassword />} />
-          <Route path="/fan/reset-password/:token" element={<FanResetPassword />} />
-          <Route path="/fan/history" element={<FanHistory />} />
-          <Route path="/fan/notifications" element={<FanNotifications />} />
-          <Route path="/explore" element={<FanDiscovery />} />
-          <Route path="/creator/:handle" element={<CreatorProfile />} />
-          
-          <Route element={<CreatorRoute />}>
-            <Route path="/creator/dashboard" element={<CreatorDashboard />} />
-            <Route path="/creator/dashboard/reply/:id" element={<CreatorReplyScreen />} />
-            <Route path="/creator/inbox/delete/:id" element={<CreatorDeleteQuestion />} />
-            <Route path="/creator/inbox" element={<CreatorInbox />} />
-            <Route path="/creator/analytics" element={<CreatorAnalytics />} />
-            <Route path="/creator/payouts" element={<CreatorPayouts />} />
-            <Route path="/creator/setup-payouts" element={<CreatorSetupPayouts />} />
-            <Route path="/creator/settings" element={<CreatorSettings />} />
-            <Route path="/creator/health" element={<CreatorAccountHealth />} />
+    <AuthProvider>
+      <CreatorOnboardingProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<LandingPage theme={theme} toggleTheme={toggleTheme} />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/mission" element={<Mission />} />
+            <Route path="/vision" element={<Vision />} />
             
-            {/* Redirects for legacy routes to keep UX seamless */}
-            <Route path="/dashboard" element={<Navigate to="/creator/dashboard" replace />} />
-            <Route path="/inbox" element={<Navigate to="/creator/inbox" replace />} />
-            <Route path="/analytics" element={<Navigate to="/creator/analytics" replace />} />
-            <Route path="/payouts" element={<Navigate to="/creator/payouts" replace />} />
-            <Route path="/settings" element={<Navigate to="/creator/settings" replace />} />
+            {/* Creator Onboarding */}
+            <Route path="/creator/signup" element={<CreatorSignup />} />
+            <Route path="/creator/login" element={<CreatorLogin />} />
+            <Route path="/creator/forgot-password" element={<CreatorForgotPassword />} />
+            <Route path="/creator/reset-password/:token" element={<CreatorResetPassword />} />
+            <Route path="/creator/verify-otp" element={<CreatorVerifyOTP />} />
+            <Route path="/creator/connect-instagram" element={<CreatorConnectInstagram />} />
+            <Route path="/onboard/profile" element={<CreatorOnboardProfile />} />
+            <Route path="/creator/onboarding/profile" element={<CreatorOnboardProfile />} />
+            <Route path="/onboard/pricing" element={<CreatorOnboardPricing />} />
+            {/* <Route path="/onboard/live" element={<CreatorGoLive />} /> */}
+
+            {/* Fan Flow */}
+            <Route path="/fan/login" element={<FanLogin />} />
+            <Route path="/fan/signup" element={<FanSignup />} />
+            <Route path="/fan/forgot-password" element={<FanForgotPassword />} />
+            <Route path="/fan/reset-password/:token" element={<FanResetPassword />} />
+            <Route path="/fan/history" element={<FanHistory />} />
+            <Route path="/fan/notifications" element={<FanNotifications />} />
+            <Route path="/choose-role" element={<ChooseRole />} />
+            <Route path="/discovery" element={<FanDiscovery />} />
+            <Route path="/explore" element={<FanDiscovery />} />
+            <Route path="/fan/profile" element={<FanProfile />} />
+            <Route path="/fan/upgrade" element={<FanToCreatorUpgrade />} />
+            <Route path="/creator/:handle" element={<CreatorProfile />} />
             
-            <Route path="/dashboard/share" element={<CreatorSharePage />} />
-          </Route>
+            <Route element={<CreatorRoute />}>
+              <Route path="/creator/dashboard" element={<CreatorDashboard />} />
+              <Route path="/creator/dashboard/reply/:id" element={<CreatorReplyScreen />} />
+              <Route path="/creator/inbox/delete/:id" element={<CreatorDeleteQuestion />} />
+              <Route path="/creator/inbox" element={<CreatorInbox />} />
+              <Route path="/creator/analytics" element={<CreatorAnalytics />} />
+              <Route path="/creator/payouts" element={<CreatorPayouts />} />
+              <Route path="/creator/setup-payouts" element={<CreatorSetupPayouts />} />
+              <Route path="/creator/settings" element={<CreatorSettings />} />
+              <Route path="/creator/health" element={<CreatorAccountHealth />} />
+              
+              {/* Redirects for legacy routes to keep UX seamless */}
+              <Route path="/dashboard" element={<Navigate to="/creator/dashboard" replace />} />
+              <Route path="/inbox" element={<Navigate to="/creator/inbox" replace />} />
+              <Route path="/analytics" element={<Navigate to="/creator/analytics" replace />} />
+              <Route path="/payouts" element={<Navigate to="/creator/payouts" replace />} />
+              <Route path="/settings" element={<Navigate to="/creator/settings" replace />} />
+              
+              <Route path="/dashboard/share" element={<CreatorSharePage />} />
+            </Route>
 
-          <Route path="/admin/login" element={<AdminLogin />} />
-          
-          <Route element={<AdminRoute />}>
-            <Route path="/admin/dashboard" element={<AdminDashboard />} />
-            <Route path="/admin/creators" element={<AdminCreators />} />
-            <Route path="/admin/disputes" element={<AdminDisputes />} />
-            <Route path="/admin/analytics" element={<AdminAnalytics />} />
-          </Route>
+            <Route path="/admin/login" element={<AdminLogin />} />
+            
+            <Route element={<AdminRoute />}>
+              <Route path="/admin/dashboard" element={<AdminDashboard />} />
+              <Route path="/admin/creators" element={<AdminCreators />} />
+              <Route path="/admin/disputes" element={<AdminDisputes />} />
+              <Route path="/admin/analytics" element={<AdminAnalytics />} />
+            </Route>
 
-          <Route path="/dev/components" element={<ComponentShowcase />} />
+            <Route path="/dev/components" element={<ComponentShowcase />} />
 
-          {/* Wildcard username dashboard route */}
-          <Route path="/@:username" element={<CreatorDashboard />} />
+            {/* Wildcard username dashboard route */}
+            <Route path="/@:username" element={<CreatorDashboard />} />
 
-          {/* Buyer History & Single Question */}
-          <Route path="/history" element={<BuyerHistoryPage />} />
-          <Route path="/:handle/question/:id" element={<BuyerQuestionPage />} />
-          <Route path="/:handle/demo-answer" element={<DemoAnswerPage />} />
-          <Route path="/:handle/flag-submitted" element={<FlagSubmittedPage />} />
+            {/* Buyer History & Single Question */}
+            <Route path="/history" element={<BuyerHistoryPage />} />
+            <Route path="/:handle/question/:id" element={<BuyerQuestionPage />} />
+            <Route path="/:handle/demo-answer" element={<DemoAnswerPage />} />
+            <Route path="/:handle/flag-submitted" element={<FlagSubmittedPage />} />
 
-          {/* Fan Flow (Catch-All) */}
-          <Route path="/:handle" element={<CreatorProfile />} />
-        </Routes>
-      </BrowserRouter>
-    </CreatorOnboardingProvider>
+            {/* Fan Flow (Catch-All) */}
+            <Route path="/:handle" element={<CreatorProfile />} />
+          </Routes>
+        </BrowserRouter>
+      </CreatorOnboardingProvider>
+    </AuthProvider>
   );
 }
 

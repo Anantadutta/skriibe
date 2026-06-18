@@ -38,6 +38,28 @@ const upload = multer({
   }
 });
 
+// Route to upload avatar
+router.post('/avatar', verifyCreatorToken, upload.single('avatar'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'No file uploaded' });
+    }
+    const avatarUrl = `${process.env.BACKEND_URL || 'http://localhost:5000'}/uploads/${req.file.filename}`;
+    
+    await connectDB();
+    const updatedCreator = await Creator.findByIdAndUpdate(
+      req.creator.creatorId,
+      { avatarUrl },
+      { new: true }
+    );
+    
+    res.json({ success: true, avatarUrl: updatedCreator.avatarUrl });
+  } catch (err) {
+    console.error('Avatar upload error:', err);
+    res.status(500).json({ message: 'Failed to upload avatar' });
+  }
+});
+
 // Rate limiter for OTP
 const otpLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
@@ -152,7 +174,7 @@ router.post('/verify-otp', async (req, res) => {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-    maxAge: 7 * 24 * 60 * 60 * 1000
+    ...(creator.ama_enabled ? { maxAge: 7 * 24 * 60 * 60 * 1000 } : {})
   });
 
   const onboardingComplete = !!creator.handle;
@@ -208,7 +230,7 @@ router.post('/email-signup', async (req, res) => {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-    maxAge: 7 * 24 * 60 * 60 * 1000
+    ...(creator.ama_enabled ? { maxAge: 7 * 24 * 60 * 60 * 1000 } : {})
   });
 
   res.json({
@@ -258,7 +280,7 @@ router.post('/email-login', async (req, res) => {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-    maxAge: 7 * 24 * 60 * 60 * 1000
+    ...(creator.ama_enabled ? { maxAge: 7 * 24 * 60 * 60 * 1000 } : {})
   });
 
   const onboardingComplete = !!creator.handle;
@@ -360,7 +382,6 @@ router.get('/me', verifyCreatorToken, async (req, res) => {
       creator.instagramHandle = 'anantadutta';
       creator.instagramFollowers = 12000;
       creator.instagramConnected = true;
-      creator.stats = { replyRate: 0, avgReplyTime: 3.2, totalAnswered: 247 };
       await creator.save();
     }
     
@@ -534,7 +555,7 @@ router.post('/logout', (req, res) => {
  * @desc Update general settings
  */
 router.post('/settings', verifyCreatorToken, async (req, res) => {
-  const { weeklyGoal, pricePerQuestion, dailyCap, autoPause, isPaused } = req.body;
+  const { weeklyGoal, pricePerQuestion, dailyCap, autoPause, isPaused, bio, phone, instagramHandle, expertise } = req.body;
   const updateData = {};
   if (typeof weeklyGoal === 'number') updateData.weeklyGoal = weeklyGoal;
   if (typeof pricePerQuestion === 'number') {
@@ -544,6 +565,10 @@ router.post('/settings', verifyCreatorToken, async (req, res) => {
   if (typeof dailyCap === 'number') updateData.dailyCap = dailyCap;
   if (typeof autoPause === 'boolean') updateData.autoPause = autoPause;
   if (typeof isPaused === 'boolean') updateData.isPaused = isPaused;
+  if (typeof bio === 'string') updateData.bio = bio;
+  if (typeof phone === 'string') updateData.phone = phone;
+  if (typeof instagramHandle === 'string') updateData.instagramHandle = instagramHandle;
+  if (Array.isArray(expertise)) updateData.expertise = expertise;
   await connectDB();
   const updatedCreator = await Creator.findByIdAndUpdate(
     req.creator.creatorId,

@@ -13,9 +13,26 @@ const CreatorReplyScreen = () => {
     return mockQuestions.find(q => q.id === id) || null;
   });
 
-  const [rootQuestion] = useState(() => {
+  const [rootQuestion, setRootQuestion] = useState(() => {
     return location.state?.rootQuestion || null;
   });
+
+  useEffect(() => {
+    if (question && question.isFollowUp && question.parentQuestionId && !rootQuestion) {
+      const fetchRoot = async () => {
+        try {
+          const res = await api.get(`/creator/questions?t=${Date.now()}`);
+          if (res.data.success) {
+            const root = res.data.questions.find(q => (q._id || q.id) === question.parentQuestionId);
+            if (root) setRootQuestion(root);
+          }
+        } catch (e) {
+          console.error("Failed to fetch root question", e);
+        }
+      };
+      fetchRoot();
+    }
+  }, [question, rootQuestion]);
 
   useEffect(() => {
     if (!question) {
@@ -24,11 +41,14 @@ const CreatorReplyScreen = () => {
   }, [question, navigate]);
 
   const [replyText, setReplyText] = useState('');
+  const [followUpAllowed, setFollowUpAllowed] = useState(false);
   const [rejectHover, setRejectHover] = useState(false);
   const [abuseHover, setAbuseHover] = useState(false);
   
-  // View states: 'reply', 'reject', 'success'
-  const [view, setView] = useState('reply');
+  // View states: 'reply', 'reject', 'success', 'flag'
+  const [view, setView] = useState(() => {
+    return location.state?.initialView || 'reply';
+  });
   const [rejectReason, setRejectReason] = useState('expertise');
   const [flagReason, setFlagReason] = useState('nudity');
 
@@ -52,13 +72,13 @@ const CreatorReplyScreen = () => {
 
   if (!question) return null;
 
-  const wordCount = replyText.trim() ? replyText.trim().split(/\s+/).length : 0;
-  const isMinMet = wordCount >= 100 && wordCount <= 1000;
+  const charCount = replyText.trim().length;
+  const isMinMet = charCount >= 100 && charCount <= 1000;
 
   const handleSend = async () => {
     if (!isMinMet) return;
     try {
-      await api.post(`/creator/questions/${question._id || question.id}/reply`, { replyText });
+      await api.post(`/creator/questions/${question._id || question.id}/reply`, { replyText, followUpAllowed });
       setView('success_reply');
     } catch (err) {
       console.error('Failed to send reply', err);
@@ -92,6 +112,25 @@ const CreatorReplyScreen = () => {
       console.error('Failed to flag', err);
       alert('Failed to flag. Please try again.');
     }
+  };
+
+  const calculateSLARemaining = () => {
+    const createdAt = new Date(question.createdAt || Date.now());
+    const deadline = new Date(createdAt.getTime() + 24 * 60 * 60 * 1000);
+    const now = new Date();
+    
+    if (now > deadline) {
+      return 'Breached';
+    }
+    
+    const diffMs = deadline - now;
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+    
+    if (diffHours > 0) {
+      return `${diffHours}h ${diffMins}m remaining`;
+    }
+    return `${diffMins}m remaining`;
   };
 
   return (
@@ -159,51 +198,71 @@ const CreatorReplyScreen = () => {
             {/* SLA Warning Banner */}
             <div style={{ background: '#291E00', border: '1px solid #B45309', borderRadius: '16px', padding: '16px', display: 'flex', alignItems: 'center', gap: '12px', color: '#FBBF24' }}>
               <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#FBBF24' }} />
-              <span style={{ fontWeight: '800', fontSize: '0.95rem', letterSpacing: '0.01em' }}>SLA: {question.slaHoursLeft || '3'}h 57m remaining</span>
+              <span style={{ fontWeight: '800', fontSize: '0.95rem', letterSpacing: '0.01em' }}>SLA: {calculateSLARemaining()}</span>
             </div>
 
             {/* Context (Original Question and Answer) */}
-            {rootQuestion && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {rootQuestion ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0px' }}>
+                {/* Original Question Card */}
                 <div style={{ background: '#16161E', borderRadius: '16px', padding: '20px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                  <div style={{ color: '#64748b', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '12px', textTransform: 'uppercase' }}>THEIR ORIGINAL QUESTION</div>
-                  <div style={{ color: '#94a3b8', fontSize: '15px', fontStyle: 'italic', lineHeight: '1.5', wordBreak: 'break-all', overflowWrap: 'anywhere' }}>
+                  <div style={{ color: '#64748b', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '12px', textTransform: 'uppercase' }}>ORIGINAL QUESTION</div>
+                  <div style={{ color: '#94a3b8', fontSize: '15px', fontStyle: 'italic', lineHeight: '1.5', wordBreak: 'break-all', overflowWrap: 'anywhere', marginBottom: '16px' }}>
                     "{rootQuestion.questionText}"
                   </div>
-                </div>
-
-                <div style={{ background: '#0a1922', borderRadius: '16px', padding: '20px', border: '1px solid rgba(56, 189, 248, 0.2)' }}>
-                  <div style={{ color: '#38bdf8', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '12px', textTransform: 'uppercase' }}>YOUR PREVIOUS ANSWER</div>
-                  <div style={{ color: '#fff', fontSize: '16px', lineHeight: '1.6', wordBreak: 'break-all', overflowWrap: 'anywhere' }}>
-                    {rootQuestion.answerText}
+                  <div style={{ background: '#0a1922', borderRadius: '12px', padding: '16px', border: '1px solid rgba(56, 189, 248, 0.1)' }}>
+                    <div style={{ color: '#38bdf8', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '8px', textTransform: 'uppercase' }}>YOUR PREVIOUS ANSWER</div>
+                    <div style={{ color: '#fff', fontSize: '14px', lineHeight: '1.5', wordBreak: 'break-all', overflowWrap: 'anywhere' }}>
+                      {rootQuestion.answerText}
+                    </div>
                   </div>
                 </div>
                 
-                <div style={{ height: '20px', display: 'flex', justifyContent: 'center' }}>
+                {/* Connector */}
+                <div style={{ height: '30px', display: 'flex', justifyContent: 'center' }}>
                   <div style={{ width: '2px', height: '100%', background: 'rgba(255,255,255,0.1)' }} />
                 </div>
+
+                {/* Follow-up Question Card */}
+                <div style={{ background: '#1C212A', borderRadius: '16px', padding: '20px', border: '1px solid rgba(52, 211, 153, 0.2)', position: 'relative' }}>
+                  <div style={{ color: '#34d399', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '16px', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    FOLLOW-UP QUESTION
+                    <div style={{ background: 'rgba(52, 211, 153, 0.1)', color: '#34d399', padding: '2px 8px', borderRadius: '12px', fontSize: '9px' }}>FREE</div>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+                    <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(56, 189, 248, 0.1)', color: '#38BDF8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '1rem' }}>
+                      {(question.buyerName || question.followerName || 'A')[0].toUpperCase()}
+                    </div>
+                    <div style={{ fontSize: '0.85rem', color: '#94a3b8', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase' }}>
+                      {question.buyerName || question.followerName || 'AYUSHI'}
+                    </div>
+                  </div>
+                  <p style={{ margin: 0, fontSize: '1.1rem', color: '#ffffff', lineHeight: '1.5', fontStyle: 'italic', fontWeight: 600, wordBreak: 'break-all', overflowWrap: 'anywhere' }}>
+                    "{question.questionText}"
+                  </p>
+                </div>
+              </div>
+            ) : (
+              // Original single question card
+              <div style={{ background: '#16161E', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(56, 189, 248, 0.1)', color: '#38BDF8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '1rem' }}>
+                    {(question.buyerName || question.followerName || 'A')[0].toUpperCase()}
+                  </div>
+                  <div style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase' }}>
+                    {question.buyerName || question.followerName || 'AYUSHI'} · <span style={{ color: '#38BDF8' }}>₹{question.amountPaid || question.pricePaid || 99} PAID</span>
+                  </div>
+                </div>
+                <p style={{ margin: 0, fontSize: '1.1rem', color: '#ffffff', lineHeight: '1.5', fontStyle: 'italic', fontWeight: 600, wordBreak: 'break-all', overflowWrap: 'anywhere' }}>
+                  "{question.questionText}"
+                </p>
               </div>
             )}
-
-            {/* Question Details Card */}
-            <div style={{ background: '#16161E', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(56, 189, 248, 0.1)', color: '#38BDF8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '1rem' }}>
-                  {(question.buyerName || question.followerName || 'A')[0].toUpperCase()}
-                </div>
-                <div style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase' }}>
-                  {question.buyerName || question.followerName || 'AYUSHI'} · <span style={{ color: '#34D399' }}>{question.isFollowUp ? 'FREE FOLLOW-UP' : `₹${question.amountPaid || question.pricePaid || 99} PAID`}</span>
-                </div>
-              </div>
-              <p style={{ margin: 0, fontSize: '1.1rem', color: '#ffffff', lineHeight: '1.5', fontStyle: 'italic', fontWeight: 600, wordBreak: 'break-all', overflowWrap: 'anywhere' }}>
-                "{question.questionText}"
-              </p>
-            </div>
 
             {/* Reply Editor */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <label style={{ fontSize: '0.95rem', color: '#ffffff', fontWeight: 800 }}>
-                Your reply <span style={{ color: '#94a3b8', fontWeight: 500 }}>(Min 100 words, Max 1000 words)</span> <span style={{ color: '#38BDF8' }}>*</span>
+                Your reply <span style={{ color: '#94a3b8', fontWeight: 500 }}>(Min 100 characters, Max 1000 characters)</span> <span style={{ color: '#38BDF8' }}>*</span>
               </label>
               
               {/* Quick Reply Chips */}
@@ -236,21 +295,47 @@ const CreatorReplyScreen = () => {
                 }}
               />
 
-              {/* Word Count Validator */}
+              {/* Character Count Validator */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', fontSize: '0.85rem', fontWeight: 700, color: '#94a3b8' }}>
                 <div style={{ color: isMinMet ? '#34D399' : (replyText.trim().length > 0 ? '#ef4444' : '#94a3b8') }}>
-                  {wordCount}/1000 words
+                  {charCount}/1000 characters
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
                   <div>
-                    {isMinMet ? <span style={{ color: '#34D399' }}>valid ✓</span> : (wordCount < 100 ? `${100 - wordCount} left to minimum` : `${wordCount - 1000} over maximum`)}
+                    {isMinMet ? <span style={{ color: '#34D399' }}>valid ✓</span> : (charCount < 100 ? `${100 - charCount} left to minimum` : `${charCount - 1000} over maximum`)}
                   </div>
                   <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 500 }}>
-                    100 words minimum
+                    100 characters minimum
                   </div>
                 </div>
               </div>
             </div>
+
+            {/* Follow Up Allowed Toggle */}
+            {!question.isFollowUp && (
+              <div style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '12px', 
+                padding: '16px', 
+                marginBottom: '16px',
+                background: followUpAllowed ? 'rgba(56, 189, 248, 0.1)' : 'rgba(255, 255, 255, 0.03)',
+                border: followUpAllowed ? '1px solid rgba(56, 189, 248, 0.4)' : '1px solid rgba(255, 255, 255, 0.1)',
+                borderRadius: '16px',
+                transition: 'all 0.2s ease'
+              }}>
+                <input 
+                  type="checkbox" 
+                  id="followUpAllowed"
+                  checked={followUpAllowed}
+                  onChange={(e) => setFollowUpAllowed(e.target.checked)}
+                  style={{ cursor: 'pointer', width: '20px', height: '20px', accentColor: '#38BDF8' }}
+                />
+                <label htmlFor="followUpAllowed" style={{ color: followUpAllowed ? '#38BDF8' : '#e2e8f0', fontSize: '1rem', fontWeight: '600', cursor: 'pointer', flex: 1 }}>
+                  Allow Fan to ask 1 Free Follow-up Question
+                </label>
+              </div>
+            )}
 
             {/* Send Reply Button */}
             <button
@@ -370,12 +455,10 @@ const CreatorReplyScreen = () => {
               <h3 style={{ fontSize: '1rem', fontWeight: '700', margin: '8px 0 0 0', color: '#ffffff' }}>
                 Why are you rejecting?
               </h3>
-              
               {[
                 { id: 'expertise', title: 'Outside my expertise', subtitle: 'Cannot answer accurately' },
                 { id: 'vague', title: 'Question is too vague', subtitle: 'Not enough detail to help' },
-                { id: 'inappropriate', title: 'Inappropriate question', subtitle: 'Violates my content guidelines' },
-                { id: 'break', title: 'I am on a break', subtitle: 'Availability was not updated' }
+                { id: 'inappropriate', title: 'Inappropriate question', subtitle: 'Violates my content guidelines' }
               ].map((reason) => {
                 const isActive = rejectReason === reason.id;
                 return (
@@ -432,7 +515,7 @@ const CreatorReplyScreen = () => {
                   width: '100%'
                 }}
               >
-                Confirm rejection — issue refund
+                Confirm rejection
               </button>
               <button
                 onClick={() => setView('reply')}
@@ -623,7 +706,7 @@ complete.
                 Reply Sent!
               </h2>
               <p style={{ margin: 0, fontSize: '0.95rem', color: '#94a3b8', lineHeight: '1.5' }}>
-                Your response has been sent to {question.buyerName || question.followerName || 'the buyer'}. {question.isFollowUp ? 'No additional charges applied for this follow-up.' : `₹${question.amountPaid || question.pricePaid || 99} has been credited to your account.`}
+                Your response has been sent to {question.buyerName || question.followerName || 'the buyer'}.
               </p>
             </div>
 
@@ -721,7 +804,7 @@ complete.
                 Question Rejected
               </h2>
               <p style={{ margin: 0, fontSize: '0.95rem', color: '#94a3b8', lineHeight: '1.5' }}>
-                You have rejected the question. A full refund of ₹{question.amountPaid || question.pricePaid} has been automatically processed to the buyer.
+                You have rejected the question.
               </p>
             </div>
 

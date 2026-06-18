@@ -16,7 +16,7 @@ const CreatorProfile = () => {
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState('');
 
-  const [step, setStep] = useState('overview'); // 'overview' | 'ask'
+  const [step, setStep] = useState(isFollowUp ? 'ask' : 'overview'); // 'overview' | 'ask'
   const [question, setQuestion] = useState('');
   const [submitLoading, setSubmitLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -106,8 +106,8 @@ const CreatorProfile = () => {
 
   const price = creator.pricePerQuestion || 99;
   const replyRate = creator.stats?.replyRate ?? 0;
-  const avgReply = creator.stats?.avgReplyTime || 3.2;
-  const answeredCount = creator.questionsAnswered || 247;
+  const avgReply = creator.stats?.avgReplyTime || 0;
+  const answeredCount = creator.stats?.totalAnswered || creator.questionsAnswered || 0;
 
   // Format reply time (e.g. 3.2h)
   const formatTime = (time) => {
@@ -117,8 +117,7 @@ const CreatorProfile = () => {
   };
 
   const handleSubmit = async () => {
-    const wordCount = question.trim() ? question.trim().split(/\s+/).length : 0;
-    if (wordCount < 20 || wordCount > 500) return;
+    if (question.length < 20 || question.length > 500) return;
     if (!agreed || !buyerName.trim() || !buyerEmail.trim() || !buyerPhone.trim()) return;
 
     setSubmitLoading(true);
@@ -167,24 +166,22 @@ const CreatorProfile = () => {
         alignItems: 'center'
       }}>
         {/* Back button */}
-        {!isPreview && (
-          <button 
-            onClick={() => navigate('/explore')}
-            style={{
-              alignSelf: 'flex-start',
-              marginBottom: '32px',
-              background: 'rgba(255,255,255,0.05)', color: '#94a3b8',
-              border: '1px solid rgba(255,255,255,0.1)', borderRadius: '100px',
-              padding: '8px 16px', fontSize: '14px', cursor: 'pointer',
-              display: 'inline-flex', alignItems: 'center', gap: '8px',
-              transition: 'all 0.2s'
-            }}
-            onMouseOver={(e) => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; }}
-            onMouseOut={(e) => { e.currentTarget.style.color = '#94a3b8'; e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; }}
-          >
-            ← Back to Discovery
-          </button>
-        )}
+        <button 
+          onClick={() => isPreview ? navigate(-1) : navigate('/explore')}
+          style={{
+            alignSelf: 'flex-start',
+            marginBottom: '32px',
+            background: 'rgba(255,255,255,0.05)', color: '#94a3b8',
+            border: '1px solid rgba(255,255,255,0.1)', borderRadius: '100px',
+            padding: '8px 16px', fontSize: '14px', cursor: 'pointer',
+            display: 'inline-flex', alignItems: 'center', gap: '8px',
+            transition: 'all 0.2s'
+          }}
+          onMouseEnter={(e) => e.target.style.background = 'rgba(255,255,255,0.1)'}
+          onMouseLeave={(e) => e.target.style.background = 'rgba(255,255,255,0.05)'}
+        >
+          ← Back
+        </button>
         {success ? (
           <div style={{ width: '100%', maxWidth: '440px', display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '24px' }}>
             
@@ -207,7 +204,7 @@ const CreatorProfile = () => {
               Question sent!
             </h2>
             <p style={{ color: '#94a3b8', margin: '0 0 32px', fontSize: '15px', lineHeight: '1.6', textAlign: 'center' }}>
-              <span style={{ color: '#fff', fontWeight: '600' }}>{creator.name}</span> will reply within {creator.responseTime || '24 hours'}. You'll be notified on both channels.
+              <span style={{ color: '#fff', fontWeight: '600' }}>{creator.name}</span> will reply within 24 hours. You'll be notified on both channels.
             </p>
 
             {/* Delivery Channels Box */}
@@ -227,7 +224,7 @@ const CreatorProfile = () => {
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <div style={{ width: '8px', height: '8px', background: '#10b981', borderRadius: '50%', boxShadow: '0 0 8px #10b981' }} />
                 <div style={{ color: '#fff', fontSize: '14px', fontWeight: '600' }}>
-                  +91 {buyerPhone} <span style={{ color: '#475569', fontWeight: '400' }}>· WhatsApp</span>
+                  Skriibe Inbox <span style={{ color: '#475569', fontWeight: '400' }}>· App</span>
                 </div>
               </div>
             </div>
@@ -243,7 +240,7 @@ const CreatorProfile = () => {
                   Order #SKR-{orderId.slice(-8).toUpperCase()}
                 </div>
                 <div style={{ color: '#64748b', fontSize: '13px' }}>
-                  Amount paid · ₹{price}
+                  Amount paid · {isFollowUp ? 'Free' : `₹${price}`}
                 </div>
               </div>
               <div style={{
@@ -251,7 +248,7 @@ const CreatorProfile = () => {
                 padding: '6px 12px', borderRadius: '20px', border: '1px solid rgba(16, 185, 129, 0.2)',
                 display: 'flex', alignItems: 'center', gap: '4px'
               }}>
-                ✓ Paid
+                ✓ {isFollowUp ? 'Claimed' : 'Paid'}
               </div>
             </div>
 
@@ -295,14 +292,10 @@ const CreatorProfile = () => {
               <h2 style={{ margin: 0, color: '#ffffff', fontSize: '28px', fontWeight: '800', letterSpacing: '-0.5px' }}>
                 {creator.name}
               </h2>
-              {/* Blue Tick */}
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M22.5 12L20.4 9.4L20.7 6.1L17.5 5.4L15.6 2.7L12 3.9L8.4 2.7L6.5 5.4L3.3 6.1L3.6 9.4L1.5 12L3.6 14.6L3.3 17.9L6.5 18.6L8.4 21.3L12 20.1L15.6 21.3L17.5 18.6L20.7 17.9L20.4 14.6L22.5 12ZM10.5 16.5L6.8 12.8L8.1 11.5L10.5 13.9L16.2 8.2L17.5 9.5L10.5 16.5Z" fill="#38bdf8"/>
-              </svg>
             </div>
             
             <div style={{ color: '#94a3b8', fontSize: '14px', marginBottom: '16px' }}>
-              @{creator.handle} · <span style={{ color: '#ffffff', fontWeight: '700' }}>{creator.followers || '12K'}</span> followers
+              @{creator.handle}
             </div>
 
             {/* Instagram Linked Pill */}
@@ -326,7 +319,7 @@ const CreatorProfile = () => {
 
             {/* Topic Tags & Live */}
             <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', flexWrap: 'wrap', justifyContent: 'center' }}>
-              {creator.expertise?.slice(0,2).map(exp => (
+              {creator.expertise?.map(exp => (
                 <span key={exp} style={{
                   background: 'rgba(6, 182, 212, 0.1)',
                   color: '#06b6d4',
@@ -403,8 +396,14 @@ const CreatorProfile = () => {
               </div>
               
               <div style={{ display: 'flex', alignItems: 'flex-start', marginBottom: '16px' }}>
-                <span style={{ color: '#fff', fontSize: '24px', fontWeight: '600', marginTop: '6px', marginRight: '4px' }}>₹</span>
-                <span style={{ color: '#fff', fontSize: '56px', fontWeight: '800', lineHeight: '1' }}>{price}</span>
+                {isFollowUp ? (
+                  <span style={{ color: '#10b981', fontSize: '56px', fontWeight: '800', lineHeight: '1' }}>Free</span>
+                ) : (
+                  <>
+                    <span style={{ color: '#fff', fontSize: '24px', fontWeight: '600', marginTop: '6px', marginRight: '4px' }}>₹</span>
+                    <span style={{ color: '#fff', fontSize: '56px', fontWeight: '800', lineHeight: '1' }}>{price}</span>
+                  </>
+                )}
               </div>
 
               <div style={{ color: '#94a3b8', fontSize: '14px', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -430,7 +429,7 @@ const CreatorProfile = () => {
                 onMouseOver={(e) => { if (!isBanned && !isPreview) e.currentTarget.style.transform = 'scale(1.02)' }}
                 onMouseOut={(e) => { if (!isBanned && !isPreview) e.currentTarget.style.transform = 'scale(1)' }}
               >
-                {isPreview ? 'Preview Mode' : (isBanned ? 'Action Restricted' : 'Ask Now →')}
+                {isPreview ? 'Preview Mode' : (isBanned ? 'Action Restricted' : (isFollowUp ? 'Ask for free →' : 'Ask Now →'))}
               </button>
             </div>
 
@@ -548,7 +547,7 @@ const CreatorProfile = () => {
 
               {/* Question */}
               <div style={{ background: '#131313', border: '1px solid #2a2a2a', borderRadius: '16px', padding: '12px 16px' }}>
-                <div style={{ color: '#64748b', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '8px' }}>YOUR QUESTION <span style={{ color: '#ef4444' }}>*</span> <span style={{ color: '#475569', fontWeight: 'normal' }}>(MIN 20 WORDS, MAX 500 WORDS)</span></div>
+                <div style={{ color: '#64748b', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '8px' }}>YOUR QUESTION <span style={{ color: '#ef4444' }}>*</span> <span style={{ color: '#475569', fontWeight: 'normal' }}>(MIN 20 CHARACTERS, MAX 500 CHARACTERS)</span></div>
                 <textarea 
                   value={question}
                   onChange={(e) => setQuestion(e.target.value)}
@@ -562,9 +561,9 @@ const CreatorProfile = () => {
             {/* Word Count & Validation */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '24px', padding: '0 4px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', color: '#64748b', fontSize: '12px' }}>
-                <span>Min 20 words, Max 500 words</span>
-                <span style={{ color: (question.trim() ? question.trim().split(/\s+/).length : 0) >= 20 && (question.trim() ? question.trim().split(/\s+/).length : 0) <= 500 ? '#10b981' : '#ef4444' }}>
-                  {question.trim() ? question.trim().split(/\s+/).length : 0}/500 Words
+                <span>Min 20 characters, Max 500 characters</span>
+                <span style={{ color: question.length > 500 ? '#ef4444' : '#64748b' }}>
+                  {question.length}/500 Characters
                 </span>
               </div>
             </div>
@@ -579,7 +578,7 @@ const CreatorProfile = () => {
             {isFollowUp ? (
               <button
                 onClick={handleSubmit}
-                disabled={!agreed || (question.trim() ? question.trim().split(/\s+/).length : 0) < 20 || (question.trim() ? question.trim().split(/\s+/).length : 0) > 500 || !buyerName.trim() || !buyerEmail.trim() || buyerPhone.length !== 10 || submitLoading}
+                disabled={!agreed || question.length < 20 || question.length > 500 || !buyerName.trim() || !buyerEmail.trim() || buyerPhone.length !== 10 || submitLoading}
                 style={{
                   width: '100%',
                   background: '#10b981',
@@ -602,7 +601,7 @@ const CreatorProfile = () => {
                 buyerName={buyerName}
                 buyerEmail={buyerEmail}
                 buyerPhone={buyerPhone}
-                disabled={!agreed || (question.trim() ? question.trim().split(/\s+/).length : 0) < 20 || (question.trim() ? question.trim().split(/\s+/).length : 0) > 500 || !buyerName.trim() || !buyerEmail.trim() || buyerPhone.length !== 10 || submitLoading}
+                disabled={!agreed || question.length < 20 || question.length > 500 || !buyerName.trim() || !buyerEmail.trim() || buyerPhone.length !== 10 || submitLoading}
                 onSuccess={(paymentId) => {
                   handleSubmit();
                 }}

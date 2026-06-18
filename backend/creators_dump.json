@@ -27,10 +27,31 @@
     "handle": "ana_90"
   },
   {
-    "_id": "6a305d04da80571b7f9ee90a",
-    "name": "okayyy",
-    "price": 22,
-    "pricePerQuestion": 22,
-    "handle": "ok_90"
+    "_id": "6a318b97a4947fb883261067",
+    "name": "Tarun Singh",
+    "price": 1000,
+    "pricePerQuestion": 1000,
+    "handle": "tarun_0592"
+  },
+  {
+    "_id": "6a338715f7107480034a024d",
+    "name": "Jawand Singh",
+    "price": 99,
+    "pricePerQuestion": 99,
+    "handle": "jd_creations24"
+  },
+  {
+    "_id": "6a33b117d634c8f2efccd3b3",
+    "name": "Ananta Dutta",
+    "price": 50,
+    "pricePerQuestion": 50,
+    "handle": "ana_9000"
+  },
+  {
+    "_id": "6a33d5edf0ab3785cef40f64",
+    "name": "Ananta Dutta",
+    "price": 99,
+    "pricePerQuestion": 99,
+    "handle": "anantadutta"
   }
 ]

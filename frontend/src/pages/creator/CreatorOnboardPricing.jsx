@@ -39,9 +39,9 @@ const CreatorOnboardPricing = () => {
   }, [creatorData, navigate]);
 
   const pricingOptions = [
-    { value: 49, label: 'Starter', desc: 'Testing the waters' },
-    { value: 99, label: 'Most popular', desc: 'Sweet spot' },
-    { value: 199, label: 'Premium', desc: '30K–100K followers' },
+    { value: 49, label: 'Starter', desc: 'Get more questions' },
+    { value: 99, label: 'Most popular', desc: 'Most creators start here' },
+    { value: 199, label: 'Premium', desc: 'Higher value responses' },
     { value: 499, label: 'Expert', desc: 'Strong authority' }
   ];
 
