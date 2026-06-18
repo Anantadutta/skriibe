@@ -5,7 +5,7 @@ import Hero from './components/Hero';
 import DMCounter from './components/DMCounter';
 import StorySteps from './components/StorySteps';
 import FlowGraphic from './components/FlowGraphic';
-import WaitlistForm from './components/WaitlistForm';
+import FAQ from './components/FAQ';
 import Footer from './components/Footer';
 
 // Context
@@ -80,7 +80,7 @@ function LandingPage({ theme, toggleTheme }) {
       <DMCounter theme={theme} />
       <StorySteps theme={theme} />
       <FlowGraphic />
-      <WaitlistForm />
+      <FAQ />
       <Footer theme={theme} />
 
       {/* Account Deleted Toast */}
