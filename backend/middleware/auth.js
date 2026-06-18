@@ -2,9 +2,12 @@ const jwt = require('jsonwebtoken');
 const { getClearCookieOptions } = require('../utils/cookieConfig');
 
 const verifyCreatorToken = (req, res, next) => {
-  let token = req.cookies?.creator_token;
-  if (!token && req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
+  let token = null;
+  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
     token = req.headers.authorization.split(' ')[1];
+  }
+  if (!token) {
+    token = req.cookies?.creator_token;
   }
 
   if (!token) return res.status(401).json({ success: false, message: 'Not authenticated' });
@@ -18,9 +21,12 @@ const verifyCreatorToken = (req, res, next) => {
 };
 
 const verifyAdminToken = (req, res, next) => {
-  let token = req.cookies?.admin_token;
-  if (!token && req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
+  let token = null;
+  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
     token = req.headers.authorization.split(' ')[1];
+  }
+  if (!token) {
+    token = req.cookies?.admin_token;
   }
 
   if (!token) return res.status(401).json({ success: false, message: 'Not authenticated' });
@@ -33,9 +39,12 @@ const verifyAdminToken = (req, res, next) => {
 };
 
 const verifyFanToken = (req, res, next) => {
-  let token = req.cookies?.fan_token;
-  if (!token && req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
+  let token = null;
+  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
     token = req.headers.authorization.split(' ')[1];
+  }
+  if (!token) {
+    token = req.cookies?.fan_token;
   }
 
   if (!token) return res.status(401).json({ success: false, message: 'Not authenticated. Please login as a Fan.' });

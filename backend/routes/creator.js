@@ -479,9 +479,12 @@ router.post('/delete-account', async (req, res) => {
     await connectDB();
     
     let creatorId = null;
-    let token = req.cookies?.creator_token;
-    if (!token && req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
+    let token = null;
+    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
       token = req.headers.authorization.split(' ')[1];
+    }
+    if (!token) {
+      token = req.cookies?.creator_token;
     }
 
     if (token) {
