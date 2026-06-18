@@ -1,4 +1,7 @@
 require('dotenv').config();
+console.log('FB APP ID:', process.env.FACEBOOK_APP_ID);
+console.log('FB SECRET exists:', !!process.env.FACEBOOK_APP_SECRET);
+console.log('FB CALLBACK URL:', process.env.FACEBOOK_CALLBACK_URL);
 const fs = require('fs');
 process.on('uncaughtException', (err) => { fs.writeFileSync('crash.log', 'Uncaught: ' + (err.stack || err.toString())); process.exit(1); });
 process.on('unhandledRejection', (err) => { fs.writeFileSync('crash.log', 'Unhandled: ' + (err.stack || err.toString())); process.exit(1); });

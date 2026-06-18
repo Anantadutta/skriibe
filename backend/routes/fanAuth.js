@@ -82,9 +82,9 @@ passport.use('google-fan', new GoogleStrategy({
 
 // Fan Facebook Strategy
 passport.use('facebook-fan', new FacebookStrategy({
-    clientID: process.env.FACEBOOK_CLIENT_ID || 'mock',
-    clientSecret: process.env.FACEBOOK_CLIENT_SECRET || 'mock',
-    callbackURL: `${process.env.BACKEND_URL || 'http://localhost:5000'}/api/fan-auth/facebook/callback`,
+    clientID: process.env.FACEBOOK_APP_ID,
+    clientSecret: process.env.FACEBOOK_APP_SECRET,
+    callbackURL: process.env.FACEBOOK_FAN_CALLBACK_URL,
     profileFields: ['id', 'emails', 'name']
   },
   async (accessToken, refreshToken, profile, done) => {

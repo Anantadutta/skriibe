@@ -96,9 +96,9 @@ passport.use(new GoogleStrategy({
 
 // Facebook Strategy
 passport.use(new FacebookStrategy({
-    clientID: process.env.FACEBOOK_CLIENT_ID || 'mock',
-    clientSecret: process.env.FACEBOOK_CLIENT_SECRET || 'mock',
-    callbackURL: `${process.env.BACKEND_URL || 'http://localhost:5000'}/api/auth/facebook/callback`,
+    clientID: process.env.FACEBOOK_APP_ID,
+    clientSecret: process.env.FACEBOOK_APP_SECRET,
+    callbackURL: process.env.FACEBOOK_CALLBACK_URL,
     profileFields: ['id', 'emails', 'name', 'picture.type(large)'],
     passReqToCallback: true
   },
