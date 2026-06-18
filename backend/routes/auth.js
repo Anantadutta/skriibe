@@ -305,8 +305,11 @@ router.get('/facebook', (req, res, next) => {
 });
 
 router.get('/facebook/callback', (req, res, next) => {
-  passport.authenticate('facebook', (err, user, info) => {
-    if (err) return next(err);
+  passport.authenticate('facebook', { session: false }, (err, user, info) => {
+    if (err) {
+      const msg = err.message || 'Authentication failed';
+      return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/creator/login?error=${encodeURIComponent(msg)}`);
+    }
     if (!user) {
       let role = 'creator';
       try {
@@ -319,25 +322,24 @@ router.get('/facebook/callback', (req, res, next) => {
       const msg = info && info.message ? info.message : 'Login failed';
       return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}${redirectBase}?error=${encodeURIComponent(msg)}`);
     }
-    req.logIn(user, (loginErr) => {
-      if (loginErr) return next(loginErr);
-      if (req.user.isFanLogin) {
-    const token = jwt.sign(
-      { fanId: req.user._id, email: req.user.email, roles: ['fan'], activeRole: 'fan' },
-      process.env.JWT_SECRET || 'secret',
-      { expiresIn: '7d' }
-    );
-    return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/explore#token=${token}`);
-  } else {
-    const token = issueToken(req.user);
-    const hasCompletedOnboarding = !!req.user.handle;
-    if (req.user.isNewCreator || !hasCompletedOnboarding) {
-      return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/onboard/profile#token=${token}`);
+
+    // Process authenticated user
+    if (user.isFanLogin) {
+      const token = jwt.sign(
+        { fanId: user._id, email: user.email, roles: ['fan'], activeRole: 'fan' },
+        process.env.JWT_SECRET || 'secret',
+        { expiresIn: '7d' }
+      );
+      return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/explore#token=${token}`);
     } else {
-      return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/creator/dashboard#token=${token}`);
+      const token = issueToken(user);
+      const hasCompletedOnboarding = !!user.handle;
+      if (user.isNewCreator || !hasCompletedOnboarding) {
+        return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/onboard/profile#token=${token}`);
+      } else {
+        return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/creator/dashboard#token=${token}`);
+      }
     }
-  }
-    });
   })(req, res, next);
 });
 

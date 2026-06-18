@@ -172,9 +172,19 @@ router.get('/google/callback', passport.authenticate('google-fan', { failureRedi
 });
 
 router.get('/facebook', passport.authenticate('facebook-fan', { scope: ['email', 'public_profile'] }));
-router.get('/facebook/callback', passport.authenticate('facebook-fan', { failureRedirect: '/fan/login' }), (req, res) => {
-  const token = issueToken(req.user);
-  res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/explore#token=${token}`);
+router.get('/facebook/callback', (req, res, next) => {
+  passport.authenticate('facebook-fan', { session: false }, (err, user, info) => {
+    if (err) {
+      const msg = err.message || 'Authentication failed';
+      return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/fan/login?error=${encodeURIComponent(msg)}`);
+    }
+    if (!user) {
+      const msg = info && info.message ? info.message : 'Login failed';
+      return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/fan/login?error=${encodeURIComponent(msg)}`);
+    }
+    const token = issueToken(user);
+    res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/explore#token=${token}`);
+  })(req, res, next);
 });
 
 router.post('/signup', async (req, res) => {
