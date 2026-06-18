@@ -114,22 +114,22 @@ function LandingPage({ theme, toggleTheme }) {
 }
 
 function App() {
+  // Extract token synchronously before any child components render
+  if (typeof window !== 'undefined' && window.location.hash.includes('token=')) {
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const token = hashParams.get('token');
+    if (token) {
+      localStorage.setItem('skriibe_token', token);
+      // Clean up the URL
+      window.history.replaceState(null, '', window.location.pathname + window.location.search);
+    }
+  }
+
   const [theme, setTheme] = useState(() => {
     return localStorage.getItem('theme') || 'dark';
   });
 
   useEffect(() => {
-    // Check for token in URL hash (from OAuth redirect)
-    if (window.location.hash.includes('token=')) {
-      const hashParams = new URLSearchParams(window.location.hash.substring(1));
-      const token = hashParams.get('token');
-      if (token) {
-        localStorage.setItem('skriibe_token', token);
-        // Clean up the URL
-        window.history.replaceState(null, '', window.location.pathname + window.location.search);
-      }
-    }
-
     if (theme === 'light') {
       document.body.classList.add('light');
       document.documentElement.classList.add('light');
