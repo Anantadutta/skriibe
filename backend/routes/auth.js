@@ -161,14 +161,12 @@ passport.use(new FacebookStrategy({
   }
 ));
 
-// Helper: Issue JWT
-const issueToken = (res, creator) => {
-  const token = jwt.sign(
+const issueToken = (creator) => {
+  return jwt.sign(
     { creatorId: creator._id, email: creator.email },
     process.env.JWT_SECRET || 'secret',
     { expiresIn: '7d' }
   );
-  res.cookie('creator_token', token, getCookieOptions(creator.ama_enabled ? { maxAge: 7 * 24 * 60 * 60 * 1000 } : {}));
 };
 
 // -- OTP ROUTES --
@@ -246,8 +244,8 @@ router.post('/verify-otp', async (req, res) => {
       await creator.save();
     }
 
-    issueToken(res, creator);
-    res.json({ success: true, creator });
+    const token = issueToken(creator);
+    res.json({ success: true, creator, token });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });
@@ -281,19 +279,18 @@ router.get('/google/callback', (req, res, next) => {
       if (loginErr) return next(loginErr);
       if (req.user.isFanLogin) {
     const token = jwt.sign(
-      { fanId: req.user._id, email: req.user.email, role: 'fan' },
+      { fanId: req.user._id, email: req.user.email, roles: ['fan'], activeRole: 'fan' },
       process.env.JWT_SECRET || 'secret',
       { expiresIn: '7d' }
     );
-    res.cookie('fan_token', token, getCookieOptions({ maxAge: 7 * 24 * 60 * 60 * 1000 }));
-    return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/explore`);
+    return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/explore#token=${token}`);
   } else {
-    issueToken(res, req.user);
+    const token = issueToken(req.user);
     const hasCompletedOnboarding = !!req.user.handle;
     if (req.user.isNewCreator || !hasCompletedOnboarding) {
-      return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/onboard/profile`);
+      return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/onboard/profile#token=${token}`);
     } else {
-      return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/creator/dashboard`);
+      return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/creator/dashboard#token=${token}`);
     }
   }
     });
@@ -326,19 +323,18 @@ router.get('/facebook/callback', (req, res, next) => {
       if (loginErr) return next(loginErr);
       if (req.user.isFanLogin) {
     const token = jwt.sign(
-      { fanId: req.user._id, email: req.user.email, role: 'fan' },
+      { fanId: req.user._id, email: req.user.email, roles: ['fan'], activeRole: 'fan' },
       process.env.JWT_SECRET || 'secret',
       { expiresIn: '7d' }
     );
-    res.cookie('fan_token', token, getCookieOptions({ maxAge: 7 * 24 * 60 * 60 * 1000 }));
-    return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/explore`);
+    return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/explore#token=${token}`);
   } else {
-    issueToken(res, req.user);
+    const token = issueToken(req.user);
     const hasCompletedOnboarding = !!req.user.handle;
     if (req.user.isNewCreator || !hasCompletedOnboarding) {
-      return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/onboard/profile`);
+      return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/onboard/profile#token=${token}`);
     } else {
-      return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/creator/dashboard`);
+      return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/creator/dashboard#token=${token}`);
     }
   }
     });

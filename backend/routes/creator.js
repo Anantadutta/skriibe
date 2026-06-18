@@ -33,14 +33,12 @@ const connectDB = async () => {
   await mongoose.connect(process.env.MONGO_URI);
 };
 
-// Issue JWT helper
-const issueToken = (res, creator) => {
-  const token = jwt.sign(
+const issueToken = (creator) => {
+  return jwt.sign(
     { creatorId: creator._id, email: creator.email, handle: creator.handle },
     process.env.JWT_SECRET || 'secret',
     { expiresIn: '7d' }
   );
-  res.cookie('creator_token', token, getCookieOptions({ maxAge: 7 * 24 * 60 * 60 * 1000 }));
 };
 
 /**
@@ -116,9 +114,9 @@ router.post('/activate', verifyCreatorToken, async (req, res) => {
     );
 
     // Re-issue JWT with full profile context (now it includes handle)
-    issueToken(res, updatedCreator);
+    const token = issueToken(updatedCreator);
 
-    res.json({ success: true, creator: updatedCreator, pageUrl: `/@${updatedCreator.handle}` });
+    res.json({ success: true, creator: updatedCreator, pageUrl: `/@${updatedCreator.handle}`, token });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });
@@ -526,8 +524,6 @@ router.post('/delete-account', async (req, res) => {
     const Creator = require('../models/Creator');
     await Creator.findByIdAndDelete(creatorId);
 
-    // Clear cookie
-    res.clearCookie('creator_token', getClearCookieOptions());
     res.json({ success: true });
   } catch (err) {
     console.error(err);
@@ -681,7 +677,6 @@ router.get('/payouts', verifyCreatorToken, async (req, res) => {
  * @desc Logout creator
  */
 router.post('/logout', (req, res) => {
-  res.clearCookie('creator_token', getClearCookieOptions());
   res.json({ success: true });
 });
 

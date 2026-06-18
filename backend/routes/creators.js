@@ -171,8 +171,6 @@ router.post('/verify-otp', async (req, res) => {
     { expiresIn: '7d' }
   );
 
-  res.cookie('creator_token', token, getCookieOptions(creator.ama_enabled ? { maxAge: 7 * 24 * 60 * 60 * 1000 } : {}));
-
   const onboardingComplete = !!creator.handle;
 
   res.json({
@@ -183,7 +181,8 @@ router.post('/verify-otp', async (req, res) => {
       name: creator.name,
       handle: creator.handle,
       onboardingComplete
-    }
+    },
+    token
   });
 });
 
@@ -222,8 +221,6 @@ router.post('/email-signup', async (req, res) => {
     { expiresIn: '7d' }
   );
 
-  res.cookie('creator_token', token, getCookieOptions(creator.ama_enabled ? { maxAge: 7 * 24 * 60 * 60 * 1000 } : {}));
-
   res.json({
     success: true,
     creator: {
@@ -232,7 +229,8 @@ router.post('/email-signup', async (req, res) => {
       name: creator.name,
       handle: creator.handle,
       onboardingComplete: false
-    }
+    },
+    token
   });
 });
 
@@ -267,8 +265,6 @@ router.post('/email-login', async (req, res) => {
     { expiresIn: '7d' }
   );
 
-  res.cookie('creator_token', token, getCookieOptions(creator.ama_enabled ? { maxAge: 7 * 24 * 60 * 60 * 1000 } : {}));
-
   const onboardingComplete = !!creator.handle;
 
   res.json({
@@ -279,7 +275,8 @@ router.post('/email-login', async (req, res) => {
       name: creator.name,
       handle: creator.handle,
       onboardingComplete
-    }
+    },
+    token
   });
 });
 
@@ -355,7 +352,6 @@ router.get('/me', verifyCreatorToken, async (req, res) => {
     await connectDB();
     const creator = await Creator.findById(req.creator.creatorId);
     if (!creator) {
-      res.clearCookie('creator_token', getClearCookieOptions());
       return res.status(401).json({ message: 'Session expired or user deleted' });
     }
     
@@ -532,7 +528,6 @@ router.post('/toggle-live', verifyCreatorToken, async (req, res) => {
  * @desc Logout creator
  */
 router.post('/logout', (req, res) => {
-  res.clearCookie('creator_token', getClearCookieOptions());
   res.json({ success: true });
 });
 

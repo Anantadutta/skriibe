@@ -3,10 +3,24 @@ import axios from 'axios';
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
   withCredentials: true,
-  // You can add headers or interceptors here if needed
 });
+
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('skriibe_token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // Automatically save token if it's provided in the response payload
+    if (response.data && response.data.token) {
+      localStorage.setItem('skriibe_token', response.data.token);
+    }
+    return response;
+  },
   (error) => {
     if (error.response && error.response.status === 401) {
       // Only redirect if we're not already on a login page to avoid loops

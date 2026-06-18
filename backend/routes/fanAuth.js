@@ -32,20 +32,18 @@ const verifyPassword = (password, storedHash) => {
   return match;
 };
 
-// Helper: Issue JWT for fan
-const issueToken = (res, fan) => {
+const issueToken = (fan) => {
   let tokenRoles = ['fan'];
   if (fan.roles && fan.roles.length > 0) {
     tokenRoles = fan.roles;
   }
   if (!tokenRoles.includes('fan')) tokenRoles.push('fan');
 
-  const token = jwt.sign(
+  return jwt.sign(
     { fanId: fan._id, email: fan.email, roles: tokenRoles, activeRole: fan.activeRole || 'fan' },
     process.env.JWT_SECRET || 'secret',
     { expiresIn: '7d' }
   );
-  res.cookie('fan_token', token, getCookieOptions({ maxAge: 7 * 24 * 60 * 60 * 1000 }));
 };
 
 // Fan Google Strategy
@@ -119,9 +117,12 @@ passport.use('facebook-fan', new FacebookStrategy({
 
 // -- ROUTES --
 
-// Middleware to verify fan JWT
 const verifyFanToken = (req, res, next) => {
-  const token = req.cookies.fan_token;
+  let token = req.cookies?.fan_token;
+  if (!token && req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
+    token = req.headers.authorization.split(' ')[1];
+  }
+
   if (!token) return res.status(401).json({ success: false, message: 'Not authenticated' });
   try {
     req.fan = jwt.verify(token, process.env.JWT_SECRET || 'secret');
@@ -168,9 +169,9 @@ router.put('/me', verifyFanToken, async (req, res) => {
       return res.status(404).json({ success: false, message: 'Fan not found' });
     }
 
-    issueToken(res, fan);
+    const token = issueToken(fan);
 
-    res.json({ success: true, fan });
+    res.json({ success: true, fan, token });
   } catch (err) {
     console.error(err);
     res.status(500).json({ success: false, message: 'Server error' });
@@ -179,14 +180,14 @@ router.put('/me', verifyFanToken, async (req, res) => {
 
 router.get('/google', passport.authenticate('google-fan', { scope: ['profile', 'email'], prompt: 'select_account' }));
 router.get('/google/callback', passport.authenticate('google-fan', { failureRedirect: '/fan/login' }), (req, res) => {
-  issueToken(res, req.user);
-  res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/explore`);
+  const token = issueToken(req.user);
+  res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/explore#token=${token}`);
 });
 
 router.get('/facebook', passport.authenticate('facebook-fan', { scope: ['email', 'public_profile'] }));
 router.get('/facebook/callback', passport.authenticate('facebook-fan', { failureRedirect: '/fan/login' }), (req, res) => {
-  issueToken(res, req.user);
-  res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/explore`);
+  const token = issueToken(req.user);
+  res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/explore#token=${token}`);
 });
 
 router.post('/signup', async (req, res) => {
@@ -242,9 +243,9 @@ router.post('/signup', async (req, res) => {
       referenceId: newFan._id
     });
     
-    issueToken(res, newFan);
+    const token = issueToken(newFan);
     
-    res.status(201).json({ success: true, fan: { id: newFan._id, name: newFan.name, email: newFan.email } });
+    res.status(201).json({ success: true, fan: { id: newFan._id, name: newFan.name, email: newFan.email }, token });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });
@@ -272,9 +273,9 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ message: 'Invalid email or password' });
     }
 
-    issueToken(res, fan);
+    const token = issueToken(fan);
     
-    res.json({ success: true, fan: { id: fan._id, name: fan.name, email: fan.email, roles: fan.roles, activeRole: fan.activeRole } });
+    res.json({ success: true, fan: { id: fan._id, name: fan.name, email: fan.email, roles: fan.roles, activeRole: fan.activeRole }, token });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });
@@ -337,7 +338,6 @@ router.post('/reset-password', async (req, res) => {
   }
 });
 router.post('/logout', (req, res) => {
-  res.clearCookie('fan_token', getClearCookieOptions());
   res.json({ success: true });
 });
 
@@ -402,8 +402,8 @@ router.post('/me/upgrade-to-creator', verifyFanToken, async (req, res) => {
     }
 
     // Issue updated token
-    issueToken(res, fan);
-    res.json({ success: true, message: 'Upgraded successfully' });
+    const token = issueToken(fan);
+    res.json({ success: true, message: 'Upgraded successfully', token });
   } catch (err) {
     console.error(err);
     res.status(500).json({ success: false, message: 'Server error during upgrade: ' + err.message });
@@ -429,8 +429,8 @@ router.post('/switch-role', verifyFanToken, async (req, res) => {
     await fan.save();
 
     // Issue updated token
-    issueToken(res, fan);
-    res.json({ success: true, message: `Switched to ${role}` });
+    const token = issueToken(fan);
+    res.json({ success: true, message: `Switched to ${role}`, token });
   } catch (err) {
     console.error(err);
     res.status(500).json({ success: false, message: 'Server error switching role' });

@@ -1,9 +1,4 @@
-import axios from 'axios';
-
-const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
-  withCredentials: true
-});
+import api from './api';
 
 export const fanSignup = (name, email, password, whatsappPhone, whatsappConsent) => {
   return api.post('/fan-auth/signup', { name, email, password, whatsappPhone, whatsappConsent });

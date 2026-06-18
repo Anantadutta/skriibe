@@ -107,14 +107,13 @@ const cookieParser = require('cookie-parser');
 app.use(cookieParser());
 
 app.set('trust proxy', 1);
-const { isProd } = require('./utils/cookieConfig');
 app.use(session({
   secret: process.env.SESSION_SECRET || 'skriibe_session_secret',
   resave: false,
   saveUninitialized: false,
   cookie: { 
-    secure: isProd,
-    sameSite: isProd ? 'none' : 'lax'
+    secure: true,
+    sameSite: 'none'
   }
 }));
 

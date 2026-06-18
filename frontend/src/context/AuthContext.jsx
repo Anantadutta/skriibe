@@ -13,7 +13,7 @@ export const AuthProvider = ({ children }) => {
     return localStorage.getItem('auth_activeRole') || 'fan';
   });
 
-  const setAuthData = (newRoles, newActiveRole) => {
+  const setAuthData = (newRoles, newActiveRole, token) => {
     let rolesToSave = newRoles;
     if (!rolesToSave || rolesToSave.length === 0) {
       rolesToSave = ['fan'];
@@ -33,10 +33,22 @@ export const AuthProvider = ({ children }) => {
     } else {
       localStorage.removeItem('auth_activeRole');
     }
+
+    if (token) {
+      localStorage.setItem('skriibe_token', token);
+    }
+  };
+
+  const clearAuthData = () => {
+    setRoles(['fan']);
+    setActiveRole('fan');
+    localStorage.removeItem('auth_roles');
+    localStorage.removeItem('auth_activeRole');
+    localStorage.removeItem('skriibe_token');
   };
 
   return (
-    <AuthContext.Provider value={{ roles, activeRole, setAuthData }}>
+    <AuthContext.Provider value={{ roles, activeRole, setAuthData, clearAuthData }}>
       {children}
     </AuthContext.Provider>
   );

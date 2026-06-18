@@ -1,21 +1,23 @@
-const isProd = process.env.NODE_ENV === 'production' || process.env.RENDER === 'true' || (process.env.FRONTEND_URL && !process.env.FRONTEND_URL.includes('localhost'));
-
-const getCookieOptions = (additionalOptions = {}) => ({
-  httpOnly: true,
-  secure: isProd ? true : false,
-  sameSite: isProd ? 'none' : 'lax',
-  path: '/',
-  ...additionalOptions
-});
+const getCookieOptions = (additionalOptions = {}) => {
+  // Always use SameSite=None and Secure=true to guarantee cross-site functionality
+  // on platforms like Vercel and Render. Localhost correctly supports Secure cookies
+  // in modern browsers, so this is safe for local development as well.
+  return {
+    httpOnly: true,
+    secure: true, 
+    sameSite: 'none',
+    path: '/',
+    ...additionalOptions
+  };
+};
 
 const getClearCookieOptions = () => ({
   path: '/',
-  secure: isProd ? true : false,
-  sameSite: isProd ? 'none' : 'lax'
+  secure: true,
+  sameSite: 'none'
 });
 
 module.exports = {
-  isProd,
   getCookieOptions,
   getClearCookieOptions
 };
