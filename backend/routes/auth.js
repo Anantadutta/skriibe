@@ -320,6 +320,13 @@ router.get('/facebook/callback', (req, res, next) => {
   passport.authenticate('facebook', { session: false }, (err, user, info) => {
     if (err) {
       const msg = err.message || 'Authentication failed';
+      // If this is a duplicate request hitting a different server instance, 
+      // the code was already consumed by the first instance. 
+      // We return 204 so the browser ignores this failed response and follows the successful one!
+      if (msg.toLowerCase().includes('authorization code has been used') || msg.toLowerCase().includes('already been used')) {
+        console.log('MULTI-INSTANCE RACE CONDITION CAUGHT. Ignoring.');
+        return res.status(204).end();
+      }
       return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/creator/login?error=${encodeURIComponent(msg)}`);
     }
     if (!user) {
