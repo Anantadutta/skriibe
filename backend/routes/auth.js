@@ -84,6 +84,14 @@ passport.use(new GoogleStrategy({
             authProvider: 'google'
           });
           await creator.save();
+
+          const AdminAlert = require('../models/AdminAlert');
+          await AdminAlert.create({
+            type: 'creator_signup',
+            title: 'New Creator Signup',
+            message: `New creator registered via Google: ${email}`,
+            referenceId: creator._id
+          });
         }
         creator.isNewCreator = isNewCreator;
         return done(null, creator);
@@ -151,6 +159,14 @@ passport.use(new FacebookStrategy({
             authProvider: 'facebook'
           });
           await creator.save();
+
+          const AdminAlert = require('../models/AdminAlert');
+          await AdminAlert.create({
+            type: 'creator_signup',
+            title: 'New Creator Signup',
+            message: `New creator registered via Facebook: ${email}`,
+            referenceId: creator._id
+          });
         }
         creator.isNewCreator = isNewCreator;
         return done(null, creator);
@@ -238,11 +254,23 @@ router.post('/verify-otp', async (req, res) => {
     if (attempt) await OtpAttempt.deleteOne({ phone });
 
     let creator = await Creator.findOne({ phone });
+    let isNewCreator = false;
     if (!creator) {
       // Create partial creator
       creator = new Creator({ phone, email: `${phone}@temp.skriibe.com` });
       await creator.save();
+      isNewCreator = true;
+
+      const AdminAlert = require('../models/AdminAlert');
+      await AdminAlert.create({
+        type: 'creator_signup',
+        title: 'New Creator Signup',
+        message: `New creator registered via Phone: ${phone}`,
+        referenceId: creator._id
+      });
     }
+
+    creator.isNewCreator = isNewCreator;
 
     const token = issueToken(creator);
     res.json({ success: true, creator, token });

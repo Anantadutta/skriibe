@@ -157,10 +157,8 @@ router.get('/creators', async (req, res) => {
       const refundRate = totalQuestions > 0 ? Math.round((refunds / totalQuestions) * 100) : 0;
 
       let healthStatus = 'Healthy';
-      if (replyRate < 50 || refundRate > 20 || slaBreaches >= 5) {
+      if (replyRate < 70) {
         healthStatus = 'Critical';
-      } else if (replyRate < 80 || refundRate > 10 || slaBreaches >= 2) {
-        healthStatus = 'At Risk';
       }
 
       return {

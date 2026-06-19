@@ -209,16 +209,46 @@ const sendWelcomeEmail = async (email, name, handle) => {
       to: [email],
       subject: 'Your skriibe profile is live 🎉',
       html: `
-        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #ffffff; background-color: #06060A;">
-          <h2 style="color: #00C2FF;">Your profile setup is complete!</h2>
-          <p>Hi ${name},</p>
-          <p>We are excited to confirm that your skriibe profile setup was successful and is now live! Your page is active and ready to accept Ask Me Anything questions.</p>
-          <p>You can find your profile at:</p>
-          <div style="text-align: center; margin: 30px 0;">
-            <a href="https://skriibe.com/@${handle}" style="display: inline-block; background: #00C2FF; color: #06060A; text-decoration: none; padding: 14px 28px; border-radius: 24px; font-weight: 600; font-size: 16px;">Go to skriibe.com/@${handle}</a>
-          </div>
-          <p style="font-size: 12px; color: #888888; text-align: center;">Delivered with love from skriibe</p>
-        </div>
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+        </head>
+        <body style="margin: 0; padding: 0; background-color: #f4f4f5;">
+          <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f4f4f5; padding: 40px 20px;">
+            <tr>
+              <td align="center">
+                <table width="100%" max-width="600" border="0" cellspacing="0" cellpadding="0" style="max-width: 600px; background-color: #f8f8f8; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+                  <tr>
+                    <td style="padding: 40px 40px 20px 40px;">
+                      <h1 style="font-family: 'Dancing Script', cursive; font-size: 48px; color: #004F71; margin: 0 0 30px 0; font-weight: 700;">You're welcome</h1>
+                      <h2 style="font-family: 'Inter', sans-serif; font-size: 20px; color: #1a1a1a; margin: 0 0 20px 0; font-weight: 700;">Dear Skriiber</h2>
+                      <p style="font-family: 'Inter', sans-serif; font-size: 16px; color: #333333; line-height: 1.6; margin: 0 0 20px 0; font-style: italic;">
+                        Your Skriibe profile is now live and ready to receive questions from your community.
+                      </p>
+                      <p style="font-family: 'Inter', sans-serif; font-size: 16px; color: #333333; line-height: 1.6; margin: 0 0 20px 0;">
+                        We built Skriibe around a simple idea: meaningful conversations are valuable. Your knowledge, experience, and perspective can help someone move forward, and now there's a dedicated place for those conversations to happen.
+                      </p>
+                      <p style="font-family: 'Inter', sans-serif; font-size: 16px; color: #333333; line-height: 1.6; margin: 0 0 30px 0;">
+                        We're excited to have you on board.
+                      </p>
+                      <p style="font-family: 'Inter', sans-serif; font-size: 16px; color: #1a1a1a; line-height: 1.4; margin: 0; font-weight: 700;">
+                        Warm regards,<br>
+                        Team Skriibe
+                      </p>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 20px 40px 40px 40px; text-align: left;">
+                       <a href="https://skriibe.com/@${handle}" style="display: inline-block; background: #004F71; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-family: 'Inter', sans-serif; font-weight: 600; font-size: 14px;">Go to your profile</a>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+        </body>
+        </html>
       `
     });
 

@@ -7,7 +7,7 @@ const CreatorHealth = () => {
   const navigate = useNavigate();
   const [creators, setCreators] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('Healthy'); // Healthy, At Risk, Critical
+  const [activeTab, setActiveTab] = useState('All'); // All, Healthy, Critical
 
   useEffect(() => {
     const fetchCreators = async () => {
@@ -23,13 +23,13 @@ const CreatorHealth = () => {
     fetchCreators();
   }, []);
 
+  const allCreators = creators;
   const healthy = creators.filter(c => c.calculatedStats?.healthStatus === 'Healthy');
-  const atRisk = creators.filter(c => c.calculatedStats?.healthStatus === 'At Risk');
   const critical = creators.filter(c => c.calculatedStats?.healthStatus === 'Critical');
 
   let currentList = [];
-  if (activeTab === 'Healthy') currentList = healthy;
-  else if (activeTab === 'At Risk') currentList = atRisk;
+  if (activeTab === 'All') currentList = allCreators;
+  else if (activeTab === 'Healthy') currentList = healthy;
   else if (activeTab === 'Critical') currentList = critical;
 
   return (
@@ -55,6 +55,16 @@ const CreatorHealth = () => {
       {/* Tabs */}
       <div style={{ display: 'flex', background: '#13131A', borderRadius: '12px', padding: '4px', width: '100%', border: '1px solid #1E1E2D', gap: '8px' }}>
         <div 
+          onClick={() => setActiveTab('All')}
+          style={{ 
+            flex: 1, textAlign: 'center', padding: '12px 16px', borderRadius: '8px', 
+            background: activeTab === 'All' ? '#2A2A35' : 'transparent', 
+            color: activeTab === 'All' ? '#fff' : '#64748b', 
+            fontSize: '0.9rem', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s'
+          }}>
+          All ({allCreators.length})
+        </div>
+        <div 
           onClick={() => setActiveTab('Healthy')}
           style={{ 
             flex: 1, textAlign: 'center', padding: '12px 16px', borderRadius: '8px', 
@@ -63,16 +73,6 @@ const CreatorHealth = () => {
             fontSize: '0.9rem', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s'
           }}>
           Healthy ({healthy.length})
-        </div>
-        <div 
-          onClick={() => setActiveTab('At Risk')}
-          style={{ 
-            flex: 1, textAlign: 'center', padding: '12px 16px', borderRadius: '8px', 
-            background: activeTab === 'At Risk' ? '#2A2A35' : 'transparent', 
-            color: activeTab === 'At Risk' ? '#fff' : '#64748b', 
-            fontSize: '0.9rem', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s'
-          }}>
-          At Risk ({atRisk.length})
         </div>
         <div 
           onClick={() => setActiveTab('Critical')}
@@ -86,7 +86,7 @@ const CreatorHealth = () => {
         </div>
       </div>
 
-      <div style={{ color: activeTab === 'Healthy' ? '#10B981' : activeTab === 'At Risk' ? '#F59E0B' : '#EF4444', fontWeight: 'bold', fontSize: '0.85rem', letterSpacing: '1px', marginTop: '8px', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '8px' }}>
+      <div style={{ color: activeTab === 'All' ? '#38BDF8' : activeTab === 'Healthy' ? '#10B981' : '#EF4444', fontWeight: 'bold', fontSize: '0.85rem', letterSpacing: '1px', marginTop: '8px', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '8px' }}>
         <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'currentColor' }} />
         {activeTab}
       </div>
