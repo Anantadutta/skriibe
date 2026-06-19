@@ -122,7 +122,21 @@ router.get('/me', verifyCreatorToken, async (req, res) => {
     const creator = await Creator.findById(req.creator.creatorId);
     if (!creator) return res.status(404).json({ message: 'Not found' });
     if (creator.isBanned) return res.status(403).json({ message: 'Account permanently removed' });
-    res.json({ success: true, creator });
+
+    let activeStrikesCount = 0;
+    if (creator.strikes && creator.strikes.length > 0) {
+      const activeStrikes = creator.strikes.filter(s => !s.isExpired);
+      if (activeStrikes.length > 0) {
+        const sortedActive = [...activeStrikes].sort((a, b) => new Date(b.date) - new Date(a.date));
+        const mostRecentStrike = sortedActive[0];
+        const daysSinceLastStrike = (new Date() - new Date(mostRecentStrike.date)) / (1000 * 60 * 60 * 24);
+        if (daysSinceLastStrike <= 90) {
+          activeStrikesCount = activeStrikes.length;
+        }
+      }
+    }
+
+    res.json({ success: true, creator: { ...creator.toObject(), activeStrikesCount } });
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
   }
