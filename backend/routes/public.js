@@ -69,7 +69,15 @@ router.get('/creator/:handle', async (req, res) => {
 router.get('/creators', async (req, res) => {
   try {
     const { live, category, search } = req.query;
-    let query = { isPaused: { $ne: true } };
+    let query = { 
+      isPaused: { $ne: true },
+      isBanned: { $ne: true },
+      $or: [
+        { suspensionUntil: { $exists: false } },
+        { suspensionUntil: null },
+        { suspensionUntil: { $lte: new Date() } }
+      ]
+    };
     
     if (live === 'true') query.isLive = true;
     if (category) query.expertise = category;

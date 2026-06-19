@@ -265,6 +265,8 @@ const PORT = process.env.PORT || 5000;
 server.listen(PORT, async () => {
   await connectDB();
   console.log(`Server running on port ${PORT} - restarted!`);
+  const { initSlaMonitor } = require('./cron/slaMonitor');
+  initSlaMonitor();
   try {
     const creators = await mongoose.model('Creator').find({}).select('handle name price pricePerQuestion').lean();
     fs.writeFileSync('creators_dump.json', JSON.stringify(creators, null, 2));

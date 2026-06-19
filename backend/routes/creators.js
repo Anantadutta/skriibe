@@ -354,6 +354,7 @@ router.get('/me', verifyCreatorToken, async (req, res) => {
     if (!creator) {
       return res.status(401).json({ message: 'Session expired or user deleted' });
     }
+    if (creator.isBanned) return res.status(403).json({ message: 'Account permanently removed' });
     
     // Auto-seed mock data for local testing if handle is missing
     if (!creator.handle) {
@@ -506,21 +507,31 @@ router.post('/toggle-live', verifyCreatorToken, async (req, res) => {
   const { isLive } = req.body;
   if (typeof isLive !== 'boolean') return res.status(400).json({ message: 'Invalid status' });
 
-  await connectDB();
-  const updatedCreator = await Creator.findByIdAndUpdate(
-    req.creator.creatorId,
-    { isLive },
-    { new: true }
-  );
+  try {
+    await connectDB();
+    const currentCreator = await Creator.findById(req.creator.creatorId);
+    if (!currentCreator) return res.status(404).json({ message: 'Not found' });
+    if (isLive && currentCreator.suspensionUntil && new Date() < new Date(currentCreator.suspensionUntil)) {
+      return res.status(403).json({ message: 'Account is currently suspended. You cannot go live.' });
+    }
 
-  if (!updatedCreator) {
-    res.clearCookie('creator_token', getClearCookieOptions());
-    return res.status(401).json({ message: 'Session expired or user deleted. Please log in again.' });
+    const updatedCreator = await Creator.findByIdAndUpdate(
+      req.creator.creatorId,
+      { isLive },
+      { new: true }
+    );
+
+    if (!updatedCreator) {
+      res.clearCookie('creator_token', getClearCookieOptions());
+      return res.status(401).json({ message: 'Session expired or user deleted. Please log in again.' });
+    }
+
+    req.io.emit('creator-status-changed', { creatorId: updatedCreator._id.toString(), isLive });
+    res.json({ success: true, creator: updatedCreator });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
   }
-
-  req.io.emit('creator-status-changed', { creatorId: updatedCreator._id.toString(), isLive });
-
-  res.json({ success: true, creator: updatedCreator });
 });
 
 /**

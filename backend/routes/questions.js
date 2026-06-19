@@ -52,6 +52,15 @@ router.post('/', verifyFanToken, async (req, res) => {
       return res.status(404).json({ message: 'Creator not found.' });
     }
 
+    if (creator.isBanned) {
+      return res.status(403).json({ message: 'Creator is no longer accepting questions.' });
+    }
+
+    const activeStrikesCount = creator.strikes ? creator.strikes.filter(s => !s.isExpired).length : 0;
+    if (activeStrikesCount === 3 && creator.suspensionUntil && new Date() < new Date(creator.suspensionUntil)) {
+      return res.status(403).json({ message: 'Creator is temporarily unable to accept new questions. Please try again later.' });
+    }
+
     const newQuestion = new Question({
       creatorId: creator._id,
       handle: creator.handle,

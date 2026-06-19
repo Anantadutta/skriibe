@@ -10,6 +10,7 @@ import api from '../../services/api';
 
 const CreatorDashboard = () => {
   const [isLive, setIsLive] = useState(false);
+  const [suspensionUntil, setSuspensionUntil] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -18,6 +19,7 @@ const CreatorDashboard = () => {
         const res = await api.get('/creator/me');
         if (res.data && res.data.creator) {
           setIsLive(res.data.creator.isLive || false);
+          setSuspensionUntil(res.data.creator.suspensionUntil);
         }
       } catch (err) {
         console.error('Failed to fetch creator profile', err);
@@ -29,15 +31,22 @@ const CreatorDashboard = () => {
   }, []);
 
   const toggleLiveStatus = async () => {
+    if (isSuspended) {
+      alert('Your account is currently suspended.');
+      return;
+    }
     const newStatus = !isLive;
     setIsLive(newStatus); // optimistic update
     try {
-      await api.patch('/creator/live-status', { isLive: newStatus });
+      await api.post('/creators/toggle-live', { isLive: newStatus });
     } catch (err) {
       console.error('Failed to update live status', err);
       setIsLive(!newStatus); // revert on error
+      if (err.response?.status === 403) alert(err.response.data.message);
     }
   };
+
+  const isSuspended = suspensionUntil && new Date(suspensionUntil) > new Date();
   return (
     <div style={{
       minHeight: '100vh',
@@ -81,6 +90,13 @@ const CreatorDashboard = () => {
             Manage your live presence
           </p>
 
+          {!loading && isSuspended && (
+            <div style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)', color: '#EF4444', padding: '16px', borderRadius: '12px', marginBottom: '24px', width: '100%', fontSize: '13px', lineHeight: '1.4' }}>
+              <strong>Account Suspended</strong><br />
+              Your account is suspended due to an SLA breach. You cannot go live until {new Date(suspensionUntil).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}.
+            </div>
+          )}
+
           {!loading && (
             <div style={{
               background: 'rgba(255, 255, 255, 0.05)',
@@ -109,19 +125,21 @@ const CreatorDashboard = () => {
               
               <button
                 onClick={toggleLiveStatus}
+                disabled={isSuspended}
                 style={{
-                  background: isLive ? 'rgba(255,255,255,0.1)' : 'linear-gradient(90deg, #F93026, #FF6F00)',
-                  color: '#fff',
+                  background: isSuspended ? 'rgba(255,255,255,0.1)' : isLive ? 'rgba(255,255,255,0.1)' : 'linear-gradient(90deg, #F93026, #FF6F00)',
+                  color: isSuspended ? '#94a3b8' : '#fff',
                   border: 'none',
                   padding: '12px 24px',
                   borderRadius: '100px',
                   fontWeight: 'bold',
-                  cursor: 'pointer',
+                  cursor: isSuspended ? 'not-allowed' : 'pointer',
                   width: '100%',
-                  transition: '0.2s ease'
+                  transition: '0.2s ease',
+                  opacity: isSuspended ? 0.5 : 1
                 }}
               >
-                {isLive ? 'Go Offline' : 'Go LIVE Now'}
+                {isSuspended ? 'Suspended' : isLive ? 'Go Offline' : 'Go LIVE Now'}
               </button>
             </div>
           )}

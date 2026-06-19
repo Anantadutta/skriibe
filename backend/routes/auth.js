@@ -93,6 +93,9 @@ passport.use(new GoogleStrategy({
             referenceId: creator._id
           });
         }
+        if (creator.isBanned || creator.blacklisted) {
+          return done(null, false, { message: 'Account permanently removed.' });
+        }
         creator.isNewCreator = isNewCreator;
         return done(null, creator);
       }
@@ -167,6 +170,9 @@ passport.use(new FacebookStrategy({
             message: `New creator registered via Facebook: ${email}`,
             referenceId: creator._id
           });
+        }
+        if (creator.isBanned || creator.blacklisted) {
+          return done(null, false, { message: 'Account permanently removed.' });
         }
         creator.isNewCreator = isNewCreator;
         return done(null, creator);
@@ -271,6 +277,10 @@ router.post('/verify-otp', async (req, res) => {
     }
 
     creator.isNewCreator = isNewCreator;
+
+    if (creator.isBanned || creator.blacklisted) {
+      return res.status(403).json({ message: 'Account permanently removed.' });
+    }
 
     const token = issueToken(creator);
     res.json({ success: true, creator, token });

@@ -34,6 +34,7 @@ const CreatorSchema = new mongoose.Schema({
   instagramHandle: { type: String },
   instagramFollowers: { type: Number },
   instagramAccessToken: { type: String }, // encrypted
+
   stats: {
     totalAnswered: { type: Number, default: 0 },
     replyRate: { type: Number, default: 0 },
@@ -42,7 +43,22 @@ const CreatorSchema = new mongoose.Schema({
   authProvider: { type: String, default: 'local' },
   resetPasswordToken: { type: String },
   resetPasswordExpires: { type: Date },
-  createdAt: { type: Date, default: Date.now }
+  createdAt: { type: Date, default: Date.now },
+  // SLA Strikes System
+  strikes: [{
+    strikeLevel: Number,
+    date: Date,
+    reason: String,
+    questionId: mongoose.Schema.Types.ObjectId,
+    isExpired: { type: Boolean, default: false }
+  }],
+  suspensionUntil: { type: Date },
+  payoutsFrozenUntil: { type: Date },
+  isBanned: { type: Boolean, default: false },
+  blacklisted: { type: Boolean, default: false },
+  pendingEarningsHoldUntil: { type: Date },
+  earningsReleased: { type: Boolean, default: false },
+  payoutAlertSent: { type: Boolean, default: false }
 });
 
 module.exports = mongoose.models.Creator || mongoose.model('Creator', CreatorSchema);

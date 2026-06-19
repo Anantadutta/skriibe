@@ -32,6 +32,26 @@ const CreatorHealth = () => {
   else if (activeTab === 'Healthy') currentList = healthy;
   else if (activeTab === 'Critical') currentList = critical;
 
+  const [expandedStrikeLogId, setExpandedStrikeLogId] = useState(null);
+
+  const handleWarn = async (id) => {
+    try {
+      await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/admin/creators/${id}/warn`, {}, { withCredentials: true });
+      window.location.reload();
+    } catch (err) {
+      alert('Failed to issue warning');
+    }
+  };
+
+  const handleSuspend = async (id) => {
+    try {
+      await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/admin/creators/${id}/suspend`, {}, { withCredentials: true });
+      window.location.reload();
+    } catch (err) {
+      alert('Failed to issue suspension');
+    }
+  };
+
   return (
     <div style={{ padding: '32px 24px', maxWidth: '800px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '24px' }}>
       
@@ -119,15 +139,45 @@ const CreatorHealth = () => {
                       <div style={{ color: '#94a3b8', fontSize: '0.85rem' }}>@{creator.handle || 'unknown'}</div>
                     </div>
                   </div>
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    <button style={{ background: 'transparent', border: '1px solid #78350F', color: '#F59E0B', padding: '6px 16px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 'bold', cursor: 'pointer' }}>
-                      Warn
-                    </button>
-                    <button style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)', color: '#EF4444', padding: '6px 16px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 'bold', cursor: 'pointer' }}>
-                      Suspend
-                    </button>
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <div 
+                      onClick={() => setExpandedStrikeLogId(expandedStrikeLogId === creator._id ? null : creator._id)}
+                      style={{ 
+                        background: stats.healthStatus === 'Permanently Removed' ? 'rgba(239, 68, 68, 0.1)' : stats.healthStatus === 'Account Healthy' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(245, 158, 11, 0.1)',
+                        border: `1px solid ${stats.healthStatus === 'Permanently Removed' ? 'rgba(239, 68, 68, 0.2)' : stats.healthStatus === 'Account Healthy' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(245, 158, 11, 0.2)'}`,
+                        color: stats.healthStatus === 'Permanently Removed' ? '#EF4444' : stats.healthStatus === 'Account Healthy' ? '#10B981' : '#F59E0B',
+                        padding: '6px 16px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px'
+                      }}>
+                      <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'currentColor' }} />
+                      {stats.healthStatus}
+                    </div>
+                    {stats.healthStatus !== 'Permanently Removed' && (
+                      <>
+                        <button onClick={() => handleWarn(creator._id)} style={{ background: 'transparent', border: '1px solid #78350F', color: '#F59E0B', padding: '6px 16px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 'bold', cursor: 'pointer' }}>
+                          Warn
+                        </button>
+                        <button onClick={() => handleSuspend(creator._id)} style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)', color: '#EF4444', padding: '6px 16px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 'bold', cursor: 'pointer' }}>
+                          Suspend
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
+
+                {expandedStrikeLogId === creator._id && (
+                  <div style={{ background: '#13131A', padding: '16px', borderRadius: '8px', border: '1px solid #1E1E2D', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <div style={{ fontSize: '0.85rem', color: '#94a3b8', fontWeight: 'bold', textTransform: 'uppercase' }}>Strike History Log</div>
+                    {(!creator.strikes || creator.strikes.length === 0) ? (
+                      <div style={{ color: '#64748b', fontSize: '0.9rem' }}>No strikes issued.</div>
+                    ) : (
+                      creator.strikes.sort((a,b) => new Date(a.date) - new Date(b.date)).map((strike, index) => (
+                        <div key={index} style={{ color: strike.isExpired ? '#64748b' : '#E2E8F0', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span style={{ color: '#F59E0B' }}>●</span> Strike {strike.strikeLevel} — {new Date(strike.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} {strike.isExpired && <span style={{ color: '#EF4444', fontWeight: 'bold', fontSize: '0.75rem', marginLeft: '4px' }}>— EXPIRED</span>}
+                        </div>
+                      ))
+                    )}
+                  </div>
+                )}
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
                   <div style={{ background: '#15100C', padding: '16px', borderRadius: '12px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>

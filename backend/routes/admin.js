@@ -163,13 +163,31 @@ router.get('/creators', async (req, res) => {
       const refundRate = totalQuestions > 0 ? Math.round((refunds / totalQuestions) * 100) : 0;
       const avgResponseTimeMins = answered > 0 ? Math.round((totalResponseTimeMs / answered) / 60000) : 0;
 
-      let healthStatus = 'Healthy';
-      if (replyRate < 70) {
-        healthStatus = 'Critical';
+      let activeStrikesCount = 0;
+      if (creator.strikes && creator.strikes.length > 0) {
+        const activeStrikes = creator.strikes.filter(s => !s.isExpired);
+        if (activeStrikes.length > 0) {
+          const sortedActive = [...activeStrikes].sort((a, b) => new Date(b.date) - new Date(a.date));
+          const mostRecentStrike = sortedActive[0];
+          const daysSinceLastStrike = (new Date() - new Date(mostRecentStrike.date)) / (1000 * 60 * 60 * 24);
+          if (daysSinceLastStrike <= 90) {
+             activeStrikesCount = activeStrikes.length;
+          }
+        }
+      }
+
+      let healthStatus = 'Account Healthy';
+      if (creator.isBanned) {
+         healthStatus = 'Permanently Removed';
+      } else if (activeStrikesCount === 3) {
+         healthStatus = '3 — Suspended (7 Days)';
+      } else if (activeStrikesCount === 2) {
+         healthStatus = '2 — Warning & Review';
       }
 
       return {
         ...creator,
+        activeStrikesCount,
         calculatedStats: {
           replyRate,
           refundRate,
@@ -185,6 +203,110 @@ router.get('/creators', async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Server error fetching creators' });
+  }
+});
+
+// Helper for manual admin strike creation
+const issueManualStrike = async (creatorId, minLevel) => {
+  const Creator = require('../models/Creator');
+  const { sendStrikeWarningEmail, sendStrikeSuspension48hEmail, sendBan7DaysEmail, sendBanPermanentEmail } = require('../utils/emailService');
+  const creator = await Creator.findById(creatorId);
+  if (!creator || creator.isBanned) return null;
+
+  const now = new Date();
+  const activeStrikes = creator.strikes.filter(s => !s.isExpired);
+  let activeCount = activeStrikes.length;
+  
+  if (activeCount > 0) {
+    const sortedActive = [...activeStrikes].sort((a, b) => new Date(b.date) - new Date(a.date));
+    const mostRecentStrike = sortedActive[0];
+    const daysSinceLastStrike = (now - new Date(mostRecentStrike.date)) / (1000 * 60 * 60 * 24);
+    if (daysSinceLastStrike > 90) {
+      creator.strikes.forEach(s => s.isExpired = true);
+      activeCount = 0;
+    }
+  }
+
+  let newLevel = activeCount + 1;
+  if (newLevel > 4) newLevel = 4;
+
+  creator.strikes.push({
+    strikeLevel: newLevel,
+    date: now,
+    reason: 'manual_admin_action',
+    isExpired: false
+  });
+
+  if (newLevel === 1) {
+    await sendStrikeWarningEmail(creator.email, creator.name);
+  } else if (newLevel === 2) {
+    creator.suspensionUntil = new Date(now.getTime() + 48 * 60 * 60 * 1000);
+    await sendStrikeSuspension48hEmail(creator.email, creator.name);
+  } else if (newLevel === 3) {
+    creator.suspensionUntil = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+    creator.payoutsFrozenUntil = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+    await sendBan7DaysEmail(creator.email, creator.name, creator.suspensionUntil);
+  } else if (newLevel >= 4) {
+    creator.isBanned = true;
+    creator.blacklisted = true;
+    creator.pendingEarningsHoldUntil = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+    await sendBanPermanentEmail(creator.email, creator.name);
+  }
+  await creator.save();
+  return creator;
+};
+
+/**
+ * @route POST /api/admin/creators/:id/warn
+ */
+router.post('/creators/:id/warn', async (req, res) => {
+  try {
+    await connectDB();
+    const creator = await issueManualStrike(req.params.id);
+    if (!creator) return res.status(404).json({ error: 'Creator not found or banned' });
+    res.json({ success: true, message: 'Warning issued.' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+/**
+ * @route POST /api/admin/creators/:id/suspend
+ */
+router.post('/creators/:id/suspend', async (req, res) => {
+  try {
+    await connectDB();
+    const creator = await issueManualStrike(req.params.id);
+    if (!creator) return res.status(404).json({ error: 'Creator not found or banned' });
+    res.json({ success: true, message: 'Suspension issued.' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+router.post('/creators/:id/mark-paid', async (req, res) => {
+  try {
+    await connectDB();
+    const Creator = require('../models/Creator');
+    const creator = await Creator.findById(req.params.id);
+    if (!creator) return res.status(404).json({ error: 'Creator not found' });
+    
+    creator.earningsReleased = true;
+    await creator.save();
+
+    // Optionally dismiss related admin alerts
+    const AdminAlert = require('../models/AdminAlert');
+    await AdminAlert.updateMany(
+      { referenceId: creator._id, type: 'payout_ready', isRead: false },
+      { $set: { isRead: true } }
+    );
+
+    res.json({ success: true, message: 'Earnings marked as paid.' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
   }
 });
 

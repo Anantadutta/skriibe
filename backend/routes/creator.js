@@ -121,6 +121,7 @@ router.get('/me', verifyCreatorToken, async (req, res) => {
     await connectDB();
     const creator = await Creator.findById(req.creator.creatorId);
     if (!creator) return res.status(404).json({ message: 'Not found' });
+    if (creator.isBanned) return res.status(403).json({ message: 'Account permanently removed' });
     res.json({ success: true, creator });
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
@@ -441,7 +442,12 @@ router.patch('/live-status', verifyCreatorToken, async (req, res) => {
       return res.status(400).json({ message: 'isLive boolean is required' });
     }
 
-    await connectDB();
+    const currentCreator = await Creator.findById(req.creator.creatorId);
+    if (!currentCreator) return res.status(404).json({ message: 'Not found' });
+    if (isLive && currentCreator.suspensionUntil && new Date() < new Date(currentCreator.suspensionUntil)) {
+      return res.status(403).json({ message: 'Account is currently suspended. You cannot go live.' });
+    }
+
     const updatedCreator = await Creator.findByIdAndUpdate(
       req.creator.creatorId,
       { isLive },

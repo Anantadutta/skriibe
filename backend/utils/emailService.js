@@ -539,6 +539,55 @@ const sendNewQuestionEmail = async (email, fanName, creatorName, dashboardLink, 
   }
 };
 
+const sendStrikeWarningEmail = async (email, name) => {
+  const resend = getResendClient();
+  if (!resend) return;
+  try {
+    const { data, error } = await resend.emails.send({
+      from: 'skriibe <founder@skriibe.com>',
+      to: [email],
+      subject: `Action Required: SLA Breach Warning`,
+      html: `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff; color: #1A1A1A;">
+          <h2>Hi ${name},</h2>
+          <p>Your reply window expired on one question. The buyer has been refunded automatically. This is a reminder — your next missed reply within 90 days will result in a formal Strike 2.</p>
+          <p>Please log in to your dashboard to view your active questions and reply promptly.</p>
+          <p style="font-size: 12px; color: #888;">— Team skriibe</p>
+        </div>
+      `
+    });
+    if (error) console.error('Strike warning email error:', error);
+    return data;
+  } catch (err) {
+    console.error('sendStrikeWarningEmail error:', err);
+  }
+};
+
+const sendStrikeSuspension48hEmail = async (email, name) => {
+  const resend = getResendClient();
+  if (!resend) return;
+  try {
+    const { data, error } = await resend.emails.send({
+      from: 'skriibe <founder@skriibe.com>',
+      to: [email],
+      subject: `Account Suspended: Strike 2 Issued`,
+      html: `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff; color: #1A1A1A;">
+          <h2>Hi ${name},</h2>
+          <p>Your reply window expired on another question. The buyer has been refunded automatically.</p>
+          <p>Because this is your second missed reply within 90 days, your account has been issued a formal Strike 2 and is temporarily suspended from the public Discovery page for 48 hours.</p>
+          <p>You must still log in to answer any existing pending questions that have already been paid for. Your next missed reply within 90 days will result in Strike 3 (a 7-day suspension and payout freeze).</p>
+          <p style="font-size: 12px; color: #888;">— Team skriibe</p>
+        </div>
+      `
+    });
+    if (error) console.error('Strike suspension email error:', error);
+    return data;
+  } catch (err) {
+    console.error('sendStrikeSuspension48hEmail error:', err);
+  }
+};
+
 module.exports = { 
   sendWaitlistWelcomeEmail, 
   sendCreatorWelcomeEmail, 
@@ -550,5 +599,7 @@ module.exports = {
   sendBanPermanentEmail,
   sendFollowUpAskedEmail,
   sendFollowUpAnsweredEmail,
-  sendNewQuestionEmail
+  sendNewQuestionEmail,
+  sendStrikeWarningEmail,
+  sendStrikeSuspension48hEmail
 };

@@ -72,6 +72,7 @@ const AdminAlerts = () => {
       case 'creator_reject': return { icon: '⚠', bg: 'rgba(245, 158, 11, 0.1)', color: '#F59E0B' };
       case 'creator_flag': return { icon: '🚩', bg: 'rgba(239, 68, 68, 0.1)', color: '#EF4444' };
       case 'buyer_flag': return { icon: '🚩', bg: 'rgba(239, 68, 68, 0.1)', color: '#EF4444' };
+      case 'payout_ready': return { icon: '💰', bg: 'rgba(34, 197, 94, 0.1)', color: '#22C55E' };
       default: return { icon: '🔔', bg: 'rgba(148, 163, 184, 0.1)', color: '#94a3b8' };
     }
   };
@@ -193,7 +194,24 @@ const AdminAlerts = () => {
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
                   <div style={{ color: '#64748b', fontSize: '0.8rem' }}>{formatTime(alert.createdAt)}</div>
-                  {!alert.isRead && (
+                  {alert.type === 'payout_ready' && !alert.isRead && (
+                    <button 
+                      onClick={async (e) => {
+                        e.stopPropagation();
+                        try {
+                          await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/admin/creators/${alert.referenceId}/mark-paid`, {}, { withCredentials: true });
+                          handleMarkAsRead(alert._id);
+                          alert('Earnings successfully marked as Paid.');
+                        } catch (err) {
+                          alert('Failed to mark as paid');
+                        }
+                      }}
+                      style={{ background: 'rgba(34, 197, 94, 0.1)', border: '1px solid rgba(34, 197, 94, 0.2)', color: '#22C55E', fontSize: '0.75rem', fontWeight: 'bold', cursor: 'pointer', padding: '4px 12px', borderRadius: '6px', marginTop: '4px' }}
+                    >
+                      Mark Paid
+                    </button>
+                  )}
+                  {alert.type !== 'payout_ready' && !alert.isRead && (
                     <button 
                       onClick={(e) => handleMarkAsRead(alert._id, e)}
                       style={{ background: 'transparent', border: 'none', color: '#38BDF8', fontSize: '0.75rem', cursor: 'pointer', padding: 0 }}
