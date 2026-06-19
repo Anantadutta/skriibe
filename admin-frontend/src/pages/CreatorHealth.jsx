@@ -115,7 +115,8 @@ const CreatorHealth = () => {
                       {(creator.handle || creator.name || 'C')[0].toUpperCase()}
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
-                      <div style={{ color: '#fff', fontSize: '1.1rem', fontWeight: 'bold' }}>@{creator.handle || 'unknown'}</div>
+                      <div style={{ color: '#fff', fontSize: '1.1rem', fontWeight: 'bold' }}>{creator.name || 'No Name Provided'}</div>
+                      <div style={{ color: '#94a3b8', fontSize: '0.85rem' }}>@{creator.handle || 'unknown'}</div>
                     </div>
                   </div>
                   <div style={{ display: 'flex', gap: '8px' }}>
