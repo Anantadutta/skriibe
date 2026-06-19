@@ -684,7 +684,7 @@ const CreatorDashboard = () => {
                   window.location.href = '/explore';
                 }
               } catch (err) {
-                alert('Failed to switch to Fan mode');
+                alert(`Failed to switch: ${err.response?.data?.message || err.message}`);
               }
             }}
             style={{ 

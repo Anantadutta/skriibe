@@ -84,7 +84,7 @@ const Hero = () => {
 
       <div className="animate-fade-up z-10 relative inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-skriibe-d3 border border-skriibe-d5 text-[13px] font-semibold text-gray-400 tracking-wider uppercase mb-6">
         <div className="w-1.5 h-1.5 rounded-full bg-skriibe-blue animate-pulse" />
-        Creator waitlist now open
+        WE'RE LIVE, JOIN NOW
       </div>
 
       <h1 className="animate-fade-up [animation-delay:100ms] z-10 relative font-libre text-[clamp(40px,7vw,84px)] font-bold leading-[1.15] mb-8 text-white">
