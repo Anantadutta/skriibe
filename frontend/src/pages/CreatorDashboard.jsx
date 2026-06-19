@@ -21,6 +21,7 @@ const CreatorDashboard = () => {
   const [creator, setCreator] = useState(location.state?.creator || mockCreator);
   const [isLive, setIsLive] = useState(creator.isLive !== false);
   const [btnHover, setBtnHover] = useState(false);
+  const [payoutStats, setPayoutStats] = useState({ available: 0 });
   const [questions, setQuestions] = useState([]);
   const [copied, setCopied] = useState(false);
   const [now, setNow] = useState(Date.now());
@@ -55,7 +56,20 @@ const CreatorDashboard = () => {
         console.error('Error fetching questions:', err);
       }
     };
+
+    const fetchPayouts = async () => {
+      try {
+        const res = await api.get('/creator/payouts');
+        if (res.data.success) {
+          setPayoutStats(res.data);
+        }
+      } catch (err) {
+        console.error('Error fetching payouts:', err);
+      }
+    };
+
     fetchQuestions();
+    fetchPayouts();
   }, [location.state?.creator]);
 
   const cleanUsername = username ? username.replace('@', '') : '';
@@ -113,17 +127,17 @@ const CreatorDashboard = () => {
   const displayUserName = creator.name || creator.displayName || creator.handle || 'Tanvi';
   const avatarLetter = (displayUserName[0] || 'T').toUpperCase();
 
-  const resolvedQuestions = questions.filter(q => ['answered', 'rejected', 'expired'].includes(q.status?.toLowerCase()));
+  const totalReceived = questions.length;
   const repliedQuestions = questions.filter(q => ['answered', 'rejected'].includes(q.status?.toLowerCase()));
-  const dynamicReplyRate = resolvedQuestions.length > 0 
-    ? Math.round((repliedQuestions.length / resolvedQuestions.length) * 100)
+  const dynamicReplyRate = totalReceived > 0 
+    ? Math.round((repliedQuestions.length / totalReceived) * 100)
     : 0;
 
   const oneWeekAgo = new Date();
   oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
   const dynamicWeeklyEarnings = questions
-    .filter(q => q.paid === true && new Date(q.createdAt) >= oneWeekAgo)
-    .reduce((sum, q) => sum + (q.amountPaid || 0), 0);
+    .filter(q => q.paid === true && q.status?.toLowerCase() === 'answered' && new Date(q.createdAt) >= oneWeekAgo)
+    .reduce((sum, q) => sum + (q.amountPaid || q.price || creator.pricePerQuestion || 0), 0);
 
   const [abusivePopupQuestion, setAbusivePopupQuestion] = useState(null);
 
@@ -365,7 +379,7 @@ const CreatorDashboard = () => {
             </div>
             <div style={{ display: 'flex', alignItems: 'baseline', marginTop: '4px' }}>
               <span style={{ fontSize: '2.2rem', color: '#29C5F6', marginRight: '4px' }}>₹</span>
-              <span style={{ fontSize: '3rem', fontWeight: 900, color: '#fff', letterSpacing: '-1.5px' }}>{dynamicWeeklyEarnings}</span>
+              <span style={{ fontSize: '3rem', fontWeight: 900, color: '#fff', letterSpacing: '-1.5px' }}>{Math.round(payoutStats.available || 0)}</span>
             </div>
 
           </div>
