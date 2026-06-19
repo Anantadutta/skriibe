@@ -575,6 +575,34 @@ router.delete('/buyer-disputes/:id', async (req, res) => {
 });
 
 /**
+ * @route POST /api/admin/buyer-disputes/:id/resolve
+ * @desc Resolve a buyer dispute with admin notes and decision
+ */
+router.post('/buyer-disputes/:id/resolve', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { decision, notes } = req.body;
+
+    const updateData = { adminNotes: notes || '' };
+    if (decision) updateData.adminDecision = decision;
+
+    await connectDB();
+    const dispute = await Question.findByIdAndUpdate(
+      id,
+      { $set: updateData },
+      { new: true }
+    );
+    
+    if (!dispute) return res.status(404).json({ error: 'Dispute not found' });
+    
+    res.json({ success: true, message: 'Dispute resolved successfully' });
+  } catch (err) {
+    console.error('Error resolving dispute:', err);
+    res.status(500).json({ error: 'Server error resolving dispute: ' + err.message });
+  }
+});
+
+/**
  * @route POST /api/admin/buyer-disputes/:id/refund
  * @desc Refund the buyer and resolve dispute
  */

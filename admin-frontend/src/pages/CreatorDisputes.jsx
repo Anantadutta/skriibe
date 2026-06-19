@@ -127,18 +127,30 @@ const CreatorDisputes = () => {
                   </div>
                 </div>
 
-                <div style={{ background: '#1A1A24', padding: '16px', borderRadius: '12px', marginBottom: d.adminNotes && d.adminDecision ? '16px' : '0', border: '1px solid #2A2A35' }}>
+                <div style={{ background: '#1A1A24', padding: '16px', borderRadius: '12px', marginBottom: d.adminDecision ? '16px' : '0', border: '1px solid #2A2A35' }}>
                   <div style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: 'bold', letterSpacing: '1px', marginBottom: '8px', textTransform: 'uppercase' }}>QUESTION</div>
                   <div style={{ color: '#cbd5e1', fontStyle: 'italic', fontSize: '0.95rem', overflowWrap: 'anywhere' }}>"{d.questionText}"</div>
                 </div>
 
-                {d.adminNotes && d.adminDecision && (
+                {d.adminDecision && (
                   <div style={{ background: 'rgba(56, 189, 248, 0.05)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(56, 189, 248, 0.2)' }}>
-                    <div style={{ color: '#38BDF8', fontSize: '0.75rem', fontWeight: 'bold', letterSpacing: '1px', marginBottom: '8px', textTransform: 'uppercase' }}>
-                      ADMIN NOTES
-                    </div>
-                    <div style={{ color: '#e2e8f0', fontSize: '0.95rem' }}>
-                      {d.adminNotes}
+                    {d.adminNotes && (
+                      <div style={{ marginBottom: '16px' }}>
+                        <div style={{ color: '#38BDF8', fontSize: '0.75rem', fontWeight: 'bold', letterSpacing: '1px', marginBottom: '8px', textTransform: 'uppercase' }}>
+                          ADMIN NOTES
+                        </div>
+                        <div style={{ color: '#e2e8f0', fontSize: '0.95rem' }}>
+                          {d.adminNotes}
+                        </div>
+                      </div>
+                    )}
+                    <div>
+                      <div style={{ color: '#38BDF8', fontSize: '0.75rem', fontWeight: 'bold', letterSpacing: '1px', marginBottom: '8px', textTransform: 'uppercase' }}>
+                        DECISION
+                      </div>
+                      <div style={{ color: '#e2e8f0', fontSize: '0.95rem', fontWeight: '500' }}>
+                        {d.adminDecision === 'fan_wins' ? 'Fan Wins (Refunded)' : d.adminDecision === 'creator_wins' ? 'Creator Wins (Paid)' : d.adminDecision}
+                      </div>
                     </div>
                   </div>
                 )}

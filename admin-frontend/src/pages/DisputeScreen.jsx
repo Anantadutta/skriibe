@@ -7,11 +7,9 @@ const DisputeScreen = () => {
   const { id } = useParams();
   const [dispute, setDispute] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [isBanning, setIsBanning] = useState(false);
-  const [showBanModal, setShowBanModal] = useState(false);
-  const [banType, setBanType] = useState('permanent');
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [adminNotes, setAdminNotes] = useState('');
+  const [decision, setDecision] = useState('');
+  const [isResolving, setIsResolving] = useState(false);
   const [successModal, setSuccessModal] = useState({ show: false, message: '', redirect: '' });
 
   useEffect(() => {
@@ -20,6 +18,8 @@ const DisputeScreen = () => {
         const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/admin/buyer-disputes`, { withCredentials: true });
         const found = res.data.find(d => d._id === id);
         setDispute(found || null);
+        if (found && found.adminNotes) setAdminNotes(found.adminNotes);
+        if (found && found.adminDecision) setDecision(found.adminDecision);
       } catch (err) {
         console.error('Error fetching dispute:', err);
       } finally {
@@ -32,36 +32,20 @@ const DisputeScreen = () => {
   if (loading) return <div style={{ color: '#fff', padding: '40px', textAlign: 'center' }}>Loading dispute details...</div>;
   if (!dispute) return <div style={{ color: '#ef4444', padding: '40px', textAlign: 'center' }}>Dispute not found</div>;
 
-  const handleBanBuyer = (type) => {
-    setBanType(type);
-    setShowBanModal(true);
-  };
-
-  const executeBanBuyer = async () => {
-    setShowBanModal(false);
-    setIsBanning(true);
+  const executeResolve = async () => {
+    if (!decision) return alert('Please select a decision');
+    setIsResolving(true);
     try {
-      await axios.post(`http://localhost:5000/api/admin/buyer-disputes/${id}/ban`, { duration: banType }, { withCredentials: true });
-      setSuccessModal({ show: true, message: `Buyer has been banned successfully${banType === '7days' ? ' for 7 days' : ''}.`, redirect: '/admin/buyer-disputes' });
+      await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/admin/buyer-disputes/${id}/resolve`, {
+        decision,
+        notes: adminNotes
+      }, { withCredentials: true });
+      setSuccessModal({ show: true, message: 'Dispute resolved successfully', redirect: '/admin/buyer-disputes' });
     } catch (err) {
-      console.error('Error banning buyer:', err);
-      setSuccessModal({ show: true, message: 'Failed to ban buyer. They might not have an account yet.', redirect: '' });
+      console.error('Error resolving dispute:', err);
+      alert('Failed to resolve dispute');
     } finally {
-      setIsBanning(false);
-    }
-  };
-
-  const executeDeleteDispute = async () => {
-    setShowDeleteModal(false);
-    setIsDeleting(true);
-    try {
-      await axios.delete(`http://localhost:5000/api/admin/buyer-disputes/${id}`, { withCredentials: true });
-      navigate('/admin/buyer-disputes');
-    } catch (err) {
-      console.error('Error deleting dispute:', err);
-      alert('Failed to delete dispute: ' + (err.response?.data?.error || err.message));
-    } finally {
-      setIsDeleting(false);
+      setIsResolving(false);
     }
   };
 
@@ -154,231 +138,85 @@ const DisputeScreen = () => {
         </div>
       </div>
 
-      {/* Admin Decision */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '8px' }}>
-        <div style={{ color: '#94a3b8', fontSize: '0.9rem', fontWeight: 'bold' }}>
-          Admin decision:
+      {/* Admin Decision Form */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '8px', background: '#13131A', padding: '20px', borderRadius: '12px', border: '1px solid #1E1E2D' }}>
+        <div style={{ color: '#94a3b8', fontSize: '0.9rem', fontWeight: 'bold', marginBottom: '4px' }}>
+          Admin Notes & Decision
         </div>
+        
+        <textarea
+          value={adminNotes}
+          onChange={(e) => setAdminNotes(e.target.value)}
+          placeholder="Enter notes about this decision..."
+          style={{
+            background: '#1A1A24',
+            border: '1px solid #2A2A35',
+            borderRadius: '8px',
+            padding: '12px',
+            color: '#fff',
+            fontFamily: 'inherit',
+            fontSize: '0.95rem',
+            minHeight: '100px',
+            resize: 'vertical',
+            outline: 'none'
+          }}
+        />
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '8px' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', color: '#e2e8f0', fontSize: '0.95rem' }}>
+            <input 
+              type="radio" 
+              name="decision" 
+              value="creator_wins" 
+              checked={decision === 'creator_wins'}
+              onChange={(e) => setDecision(e.target.value)}
+              style={{ accentColor: '#38BDF8', width: '18px', height: '18px', cursor: 'pointer' }}
+            />
+            Dismiss — payout to creator
+          </label>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', color: '#e2e8f0', fontSize: '0.95rem' }}>
+            <input 
+              type="radio" 
+              name="decision" 
+              value="fan_wins" 
+              checked={decision === 'fan_wins'}
+              onChange={(e) => setDecision(e.target.value)}
+              style={{ accentColor: '#38BDF8', width: '18px', height: '18px', cursor: 'pointer' }}
+            />
+            Issue full refund to buyer
+          </label>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', color: '#e2e8f0', fontSize: '0.95rem' }}>
+            <input 
+              type="radio" 
+              name="decision" 
+              value="partial_refund" 
+              checked={decision === 'partial_refund'}
+              onChange={(e) => setDecision(e.target.value)}
+              style={{ accentColor: '#38BDF8', width: '18px', height: '18px', cursor: 'pointer' }}
+            />
+            Partial refund to the buyer/ creator
+          </label>
+        </div>
+
         <button 
-          onClick={() => navigate(`/admin/dispute/${id}/refund`)}
+          onClick={executeResolve}
+          disabled={isResolving || !decision}
           style={{ 
-            background: 'rgba(239, 68, 68, 0.1)', 
-            color: '#EF4444', 
-            border: '1px solid rgba(239, 68, 68, 0.3)', 
+            background: decision ? '#38BDF8' : '#2A2A35', 
+            color: decision ? '#000' : '#64748b', 
+            border: 'none', 
             padding: '16px', 
             borderRadius: '12px', 
             fontWeight: 'bold', 
             fontSize: '1rem',
-            cursor: 'pointer' 
+            cursor: decision && !isResolving ? 'pointer' : 'not-allowed',
+            marginTop: '12px',
+            transition: 'all 0.2s'
           }}
         >
-          Issue full refund to buyer
-        </button>
-        <button 
-          onClick={() => navigate(`/admin/dispute/${id}/dismiss`)}
-          style={{ 
-            background: '#1A1A1A', 
-            color: '#ffffff', 
-            border: '1px solid #2A2A2A', 
-            padding: '16px', 
-            borderRadius: '12px', 
-            fontWeight: 'bold', 
-            fontSize: '1rem',
-            cursor: 'pointer' 
-          }}
-        >
-          Dismiss — release payout
+          {isResolving ? 'Submitting...' : 'Submit'}
         </button>
       </div>
-
-      <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
-        <button 
-          onClick={() => handleBanBuyer('7days')}
-          disabled={isBanning || isDeleting}
-          style={{ 
-            flex: 1,
-            background: 'rgba(239, 68, 68, 0.1)', 
-            color: '#EF4444', 
-            border: '1px dashed rgba(239, 68, 68, 0.5)', 
-            padding: '16px', 
-            borderRadius: '12px', 
-            fontWeight: 'bold', 
-            fontSize: '0.9rem',
-            cursor: (isBanning || isDeleting) ? 'not-allowed' : 'pointer',
-            opacity: isBanning ? 0.7 : 1
-          }}
-        >
-          {isBanning && banType === '7days' ? 'Banning...' : 'Ban buyer for 7 days'}
-        </button>
-
-        <button 
-          onClick={() => handleBanBuyer('permanent')}
-          disabled={isBanning || isDeleting}
-          style={{ 
-            flex: 1,
-            background: 'rgba(239, 68, 68, 0.1)', 
-            color: '#EF4444', 
-            border: '1px solid rgba(239, 68, 68, 0.3)', 
-            padding: '16px', 
-            borderRadius: '12px', 
-            fontWeight: 'bold', 
-            fontSize: '0.9rem',
-            cursor: (isBanning || isDeleting) ? 'not-allowed' : 'pointer',
-            opacity: isBanning ? 0.7 : 1
-          }}
-        >
-          {isBanning && banType === 'permanent' ? 'Banning...' : 'Ban buyer permanently'}
-        </button>
-      </div>
-
-      <div style={{ display: 'flex', gap: '12px', marginTop: '12px' }}>
-        <button 
-          onClick={() => setShowDeleteModal(true)}
-          disabled={isBanning || isDeleting}
-          style={{ 
-            flex: 1,
-            background: 'rgba(239, 68, 68, 0.05)', 
-            color: '#EF4444', 
-            border: '1px solid rgba(239, 68, 68, 0.2)', 
-            padding: '16px', 
-            borderRadius: '12px', 
-            fontWeight: 'bold', 
-            fontSize: '0.9rem',
-            cursor: (isBanning || isDeleting) ? 'not-allowed' : 'pointer',
-            opacity: isDeleting ? 0.7 : 1
-          }}
-        >
-          {isDeleting ? 'Deleting...' : 'Delete Dispute'}
-        </button>
-      </div>
-
-      {showBanModal && (
-        <div style={{
-          position: 'fixed',
-          top: 0, left: 0, right: 0, bottom: 0,
-          background: 'rgba(0,0,0,0.8)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 9999,
-          padding: '24px'
-        }}>
-          <div style={{
-            background: '#13131A',
-            border: '1px solid #2A2A35',
-            borderRadius: '16px',
-            padding: '24px',
-            width: '100%',
-            maxWidth: '320px',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '16px'
-          }}>
-            <h3 style={{ margin: 0, color: '#fff', fontSize: '1.1rem' }}>
-              Are you sure you want to ban this buyer {banType === '7days' ? 'for 7 days' : 'permanently'}?
-            </h3>
-            <p style={{ margin: 0, color: '#94a3b8', fontSize: '0.9rem', lineHeight: '1.4' }}>
-              {banType === '7days' ? 'They will not be able to ask questions for the next 7 days.' : 'They will permanently lose the ability to ask questions.'}
-            </p>
-            <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
-              <button
-                onClick={() => setShowBanModal(false)}
-                style={{
-                  flex: 1,
-                  background: 'transparent',
-                  color: '#94a3b8',
-                  border: '1px solid #2A2A35',
-                  padding: '12px',
-                  borderRadius: '8px',
-                  fontWeight: 'bold',
-                  cursor: 'pointer'
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={executeBanBuyer}
-                style={{
-                  flex: 1,
-                  background: 'rgba(239, 68, 68, 0.1)',
-                  color: '#EF4444',
-                  border: '1px solid rgba(239, 68, 68, 0.3)',
-                  padding: '12px',
-                  borderRadius: '8px',
-                  fontWeight: 'bold',
-                  cursor: 'pointer'
-                }}
-              >
-                OK
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showDeleteModal && (
-        <div style={{
-          position: 'fixed',
-          top: 0, left: 0, right: 0, bottom: 0,
-          background: 'rgba(0,0,0,0.8)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 9999,
-          padding: '24px'
-        }}>
-          <div style={{
-            background: '#13131A',
-            border: '1px solid #2A2A35',
-            borderRadius: '16px',
-            padding: '24px',
-            width: '100%',
-            maxWidth: '320px',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '16px'
-          }}>
-            <h3 style={{ margin: 0, color: '#fff', fontSize: '1.1rem' }}>
-              Delete this dispute?
-            </h3>
-            <p style={{ margin: 0, color: '#94a3b8', fontSize: '0.9rem', lineHeight: '1.4' }}>
-              This action cannot be undone. The dispute will be permanently removed.
-            </p>
-            <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
-              <button
-                onClick={() => setShowDeleteModal(false)}
-                style={{
-                  flex: 1,
-                  background: 'transparent',
-                  color: '#94a3b8',
-                  border: '1px solid #2A2A35',
-                  padding: '12px',
-                  borderRadius: '8px',
-                  fontWeight: 'bold',
-                  cursor: 'pointer'
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={executeDeleteDispute}
-                style={{
-                  flex: 1,
-                  background: 'rgba(239, 68, 68, 0.1)',
-                  color: '#EF4444',
-                  border: '1px solid rgba(239, 68, 68, 0.3)',
-                  padding: '12px',
-                  borderRadius: '8px',
-                  fontWeight: 'bold',
-                  cursor: 'pointer'
-                }}
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {successModal.show && (
         <div style={{
