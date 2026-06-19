@@ -72,18 +72,20 @@ const verifyFanToken = async (req, res, next) => {
         creator = await Creator.findOne({ email: decoded.email.toLowerCase() });
       }
 
+      const creatorEmail = creator && creator.email ? creator.email.toLowerCase() : (creator && creator.phone ? `${creator.phone}@temp.skriibe.com` : null);
+
       let fan = null;
       if (creator && creator.fanId) {
         fan = await Fan.findById(creator.fanId);
-      } else if (creator && creator.email) {
-        fan = await Fan.findOne({ email: creator.email.toLowerCase() });
+      } else if (creatorEmail) {
+        fan = await Fan.findOne({ email: creatorEmail });
       } else if (decoded.email) {
         fan = await Fan.findOne({ email: decoded.email.toLowerCase() });
       }
 
-      if (!fan && creator && creator.email) {
+      if (!fan && creator && creatorEmail) {
         fan = new Fan({
-          email: creator.email.toLowerCase(),
+          email: creatorEmail,
           password: 'auto-generated',
           name: creator.name || 'User',
           roles: ['fan', 'creator'],
@@ -92,6 +94,7 @@ const verifyFanToken = async (req, res, next) => {
         });
         await fan.save();
         creator.fanId = fan._id;
+        if (!creator.email) creator.email = creatorEmail;
         await creator.save();
       }
 
