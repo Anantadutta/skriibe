@@ -521,12 +521,11 @@ const CreatorSharePage = () => {
         width: '100%',
         maxWidth: '480px',
         height: '100dvh',
-        overflowY: 'auto',
-        overflowX: 'hidden',
-        padding: '12px 16px 80px',
+        overflow: 'hidden',
+        padding: '10px 16px',
         display: 'flex',
         flexDirection: 'column',
-        gap: '12px',
+        gap: '6px',
         boxSizing: 'border-box',
         position: 'relative',
         zIndex: 1
@@ -601,10 +600,10 @@ const CreatorSharePage = () => {
           backdropFilter: 'blur(12px)',
           border: '1px solid rgba(255, 255, 255, 0.08)',
           borderRadius: '16px',
-          padding: '12px 16px 12px',
+          padding: '10px 14px',
           display: 'flex',
           flexDirection: 'column',
-          gap: '8px',
+          gap: '6px',
           position: 'relative',
           overflow: 'hidden',
           flexShrink: 0,
@@ -664,15 +663,15 @@ const CreatorSharePage = () => {
         </div>
 
         {/* SHARE YOUR LINK SECTION */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', flexShrink: 0 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flexShrink: 0 }}>
           <div style={{ color: '#94a3b8', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', paddingLeft: '4px' }}>
             SHARE ON
           </div>
 
-          <div style={{ display: 'flex', gap: '24px', padding: '12px', background: 'rgba(255, 255, 255, 0.03)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)', justifyContent: 'center' }}>
+          <div style={{ display: 'flex', gap: '20px', padding: '8px', background: 'rgba(255, 255, 255, 0.03)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)', justifyContent: 'center' }}>
             
-            <div onClick={openInstagram} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <div onClick={openInstagram} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <defs>
                   <linearGradient id="ig-grad2" x1="20%" y1="100%" x2="80%" y2="0%">
                     <stop offset="0%" stopColor="#f09433" />
@@ -687,39 +686,39 @@ const CreatorSharePage = () => {
                 <circle cx="12" cy="12" r="3.5" stroke="#fff" strokeWidth="1.5" />
                 <circle cx="16.5" cy="7.5" r="1.1" fill="#fff" />
               </svg>
-              <span style={{ fontSize: '11px', color: '#94a3b8' }}>Instagram</span>
+              <span style={{ fontSize: '10px', color: '#94a3b8' }}>Instagram</span>
             </div>
 
-            <div onClick={openLinkedIn} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <div onClick={openLinkedIn} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <rect width="24" height="24" rx="4" fill="#0A66C2"/>
                 <path d="M7 20H4V9h3v11zM5.5 7.73a1.74 1.74 0 1 1 0-3.48 1.74 1.74 0 0 1 0 3.48zM20 20h-3v-5.6c0-1.34-.03-3.06-1.87-3.06-1.87 0-2.16 1.46-2.16 2.96V20h-3V9h2.88v1.5h.04c.4-.76 1.38-1.56 2.84-1.56 3.04 0 3.6 2 3.6 4.6V20z" fill="#fff"/>
               </svg>
-              <span style={{ fontSize: '11px', color: '#94a3b8' }}>LinkedIn</span>
+              <span style={{ fontSize: '10px', color: '#94a3b8' }}>LinkedIn</span>
             </div>
 
-            <div onClick={openWhatsApp} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', cursor: 'pointer', transition: 'transform 0.2s', ':hover': { transform: 'scale(1.05)' } }}>
-              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <div onClick={openWhatsApp} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', cursor: 'pointer', transition: 'transform 0.2s', ':hover': { transform: 'scale(1.05)' } }}>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M12.01 2.002c-5.518 0-10 4.48-10 9.998 0 1.754.453 3.42 1.314 4.908L2 22l5.247-1.376a9.966 9.966 0 0 0 4.763 1.206h.004c5.517 0 10-4.48 10-9.998 0-5.518-4.483-9.998-10-9.998z" fill="#25D366"/>
                 <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347" fill="#fff"/>
               </svg>
-              <span style={{ fontSize: '11px', color: '#94a3b8' }}>WhatsApp</span>
+              <span style={{ fontSize: '10px', color: '#94a3b8' }}>WhatsApp</span>
             </div>
 
-            <div onClick={openX} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <div onClick={openX} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <rect width="24" height="24" rx="4" fill="#000000"/>
                 <path d="M16 4h2.5l-5.5 6.5L19 20h-4.5l-3.5-4.5-4 4.5H4.5l6-7L5 4h4.5l3 4.5L16 4Zm-1.5 14h1.5L8.5 5.5h-1.5L14.5 18Z" fill="#ffffff"/>
               </svg>
-              <span style={{ fontSize: '11px', color: '#94a3b8' }}>X</span>
+              <span style={{ fontSize: '10px', color: '#94a3b8' }}>X</span>
             </div>
 
           </div>
         </div>
 
         {/* Go to Dashboard Button */}
-        <div style={{ display: 'flex', marginTop: '4px', marginBottom: '4px' }}>
-          <button onClick={() => navigate('/creator/dashboard', { state: { creator } })} className="copy-link-btn" style={{ width: '100%', background: '#ffffff', border: 'none', color: '#0a0a0f', fontWeight: 800, fontSize: '16px', padding: '16px', borderRadius: '14px', display: 'flex', justifyContent: 'center', alignItems: 'center', boxShadow: '0 4px 20px rgba(255, 255, 255, 0.15)', transition: 'all 0.2s' }}>
+        <div style={{ display: 'flex', marginTop: '0px', marginBottom: '0px' }}>
+          <button onClick={() => navigate('/creator/dashboard', { state: { creator } })} className="copy-link-btn" style={{ width: '100%', background: '#ffffff', border: 'none', color: '#0a0a0f', fontWeight: 800, fontSize: '14px', padding: '12px', borderRadius: '12px', display: 'flex', justifyContent: 'center', alignItems: 'center', boxShadow: '0 4px 20px rgba(255, 255, 255, 0.15)', transition: 'all 0.2s' }}>
             <span>Go to Dashboard →</span>
           </button>
         </div>
@@ -727,30 +726,30 @@ const CreatorSharePage = () => {
 
 
         {/* QR CODE SECTION */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', position: 'relative', flexShrink: 0 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', position: 'relative', flexShrink: 0 }}>
           <div style={{ color: '#94a3b8', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', paddingLeft: '4px' }}>
             QR code
           </div>
 
-          <div style={{ background: '#0a0a0f', border: '1px solid #3db4f2', borderRadius: '16px', padding: '12px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', boxShadow: '0 8px 32px rgba(61, 180, 242, 0.15)' }}>
-            <div ref={qrRef2} style={{ background: '#ffffff', padding: '12px', borderRadius: '12px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', width: '100%', boxSizing: 'border-box' }}>
-              <QRCodeCanvas value={fullShareUrl} size={110} bgColor="#ffffff" fgColor="#000000" level="H" />
-              <div style={{ color: '#3db4f2', fontSize: '16px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          <div style={{ background: '#0a0a0f', border: '1px solid #3db4f2', borderRadius: '16px', padding: '8px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', boxShadow: '0 8px 32px rgba(61, 180, 242, 0.15)' }}>
+            <div ref={qrRef2} style={{ background: '#ffffff', padding: '8px', borderRadius: '12px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', width: '100%', boxSizing: 'border-box' }}>
+              <QRCodeCanvas value={fullShareUrl} size={90} bgColor="#ffffff" fgColor="#000000" level="H" />
+              <div style={{ color: '#3db4f2', fontSize: '14px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                 @{handle}
               </div>
             </div>
-            <div style={{ display: 'flex', gap: '8px', width: '100%', justifyContent: 'space-between' }}>
-              <button onClick={handleNativeShare} style={{ flex: 1, background: 'rgba(61, 180, 242, 0.1)', color: '#3db4f2', border: '1px solid rgba(61, 180, 242, 0.2)', padding: '10px 4px', borderRadius: '8px', fontSize: '11px', fontWeight: 700, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', transition: 'all 0.2s' }}>
-                <span style={{ fontSize: '16px' }}>↑</span> Share profile
+            <div style={{ display: 'flex', gap: '6px', width: '100%', justifyContent: 'space-between' }}>
+              <button onClick={handleNativeShare} style={{ flex: 1, background: 'rgba(61, 180, 242, 0.1)', color: '#3db4f2', border: '1px solid rgba(61, 180, 242, 0.2)', padding: '6px 4px', borderRadius: '8px', fontSize: '10px', fontWeight: 700, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', transition: 'all 0.2s' }}>
+                <span style={{ fontSize: '14px' }}>↑</span> Share profile
               </button>
-              <button onClick={copyLinkToClipboard} style={{ flex: 1, background: 'rgba(61, 180, 242, 0.1)', color: '#3db4f2', border: '1px solid rgba(61, 180, 242, 0.2)', padding: '10px 4px', borderRadius: '8px', fontSize: '11px', fontWeight: 700, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', transition: 'all 0.2s' }}>
-                <span style={{ fontSize: '16px' }}>🔗</span> {copiedLink ? 'Copied! ✓' : 'Copy link'}
+              <button onClick={copyLinkToClipboard} style={{ flex: 1, background: 'rgba(61, 180, 242, 0.1)', color: '#3db4f2', border: '1px solid rgba(61, 180, 242, 0.2)', padding: '6px 4px', borderRadius: '8px', fontSize: '10px', fontWeight: 700, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', transition: 'all 0.2s' }}>
+                <span style={{ fontSize: '14px' }}>🔗</span> {copiedLink ? 'Copied! ✓' : 'Copy link'}
               </button>
-              <button onClick={downloadSkriibeQRCode} style={{ flex: 1, background: '#3db4f2', color: '#0a0a0f', border: 'none', padding: '10px 4px', borderRadius: '8px', fontSize: '11px', fontWeight: 800, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', transition: 'all 0.2s' }}>
-                <span style={{ fontSize: '16px' }}>↓</span> Download
+              <button onClick={downloadSkriibeQRCode} style={{ flex: 1, background: '#3db4f2', color: '#0a0a0f', border: 'none', padding: '6px 4px', borderRadius: '8px', fontSize: '10px', fontWeight: 800, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', transition: 'all 0.2s' }}>
+                <span style={{ fontSize: '14px' }}>↓</span> Download
               </button>
             </div>
-            <div style={{ color: '#FAFAF8', fontSize: '14px', fontWeight: 600, marginTop: '8px', letterSpacing: '0.02em' }}>
+            <div style={{ color: '#FAFAF8', fontSize: '12px', fontWeight: 600, marginTop: '2px', letterSpacing: '0.02em' }}>
               Ask me anything
             </div>
           </div>
