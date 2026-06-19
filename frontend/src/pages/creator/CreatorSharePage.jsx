@@ -521,11 +521,12 @@ const CreatorSharePage = () => {
         width: '100%',
         maxWidth: '480px',
         height: '100dvh',
-        overflow: 'hidden',
-        padding: '12px 16px',
+        overflowY: 'auto',
+        overflowX: 'hidden',
+        padding: '12px 16px 80px',
         display: 'flex',
         flexDirection: 'column',
-        gap: '8px',
+        gap: '12px',
         boxSizing: 'border-box',
         position: 'relative',
         zIndex: 1
@@ -606,6 +607,7 @@ const CreatorSharePage = () => {
           gap: '8px',
           position: 'relative',
           overflow: 'hidden',
+          flexShrink: 0,
           boxShadow: showBanner ? '0 0 25px rgba(124, 58, 237, 0.2)' : 'none'
         }}>
           {showBanner && (
@@ -662,7 +664,7 @@ const CreatorSharePage = () => {
         </div>
 
         {/* SHARE YOUR LINK SECTION */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', flexShrink: 0 }}>
           <div style={{ color: '#94a3b8', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', paddingLeft: '4px' }}>
             SHARE ON
           </div>
@@ -725,7 +727,7 @@ const CreatorSharePage = () => {
 
 
         {/* QR CODE SECTION */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', position: 'relative' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', position: 'relative', flexShrink: 0 }}>
           <div style={{ color: '#94a3b8', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', paddingLeft: '4px' }}>
             QR code
           </div>

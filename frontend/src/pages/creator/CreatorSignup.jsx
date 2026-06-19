@@ -6,6 +6,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import TransparentLogo from '../../components/TransparentLogo';
+import { useAuth } from '../../context/AuthContext';
 import { emailSignup } from '../../services/creatorApi';
 import { Button } from '../../components/ama/ui/Button';
 
@@ -21,6 +22,7 @@ const CreatorSignup = () => {
   const [focusedPassword, setFocusedPassword] = useState(false);
   const [focusedConfirm, setFocusedConfirm] = useState(false);
   const navigate = useNavigate();
+  const { setAuthData } = useAuth();
 
   useEffect(() => {
     if (localStorage.getItem('isReturningCreator') === 'true') {
@@ -29,7 +31,7 @@ const CreatorSignup = () => {
   }, [navigate]);
 
   const checkPasswordStrength = (pwd) => {
-    return pwd.length >= 8 && /[0-9\\W]/.test(pwd);
+    return pwd.length >= 8 && /[0-9\W]/.test(pwd);
   };
 
   const handleRegister = async () => {
@@ -55,7 +57,13 @@ const CreatorSignup = () => {
       if (res.data.success) {
         localStorage.setItem('isReturningCreator', 'true');
         localStorage.removeItem('bankLinked');
-        navigate('/creator/login', { state: { message: 'Registration successful! Please log in.' } });
+        
+        if (res.data.token && res.data.creator) {
+          setAuthData(['creator'], 'creator', res.data.token);
+          navigate('/onboard/profile', { state: { creator: res.data.creator } });
+        } else {
+          navigate('/creator/login', { state: { message: 'Registration successful! Please log in.' } });
+        }
       }
     } catch (err) {
       console.error("Signup error:", err);
