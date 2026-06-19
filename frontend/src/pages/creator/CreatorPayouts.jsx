@@ -22,12 +22,7 @@ const underReviewQuestions = [
   { id: 'SKR114', status: 'Fan Review', amount: '₹79.20', raisedOn: 'Raised on 12 Jun' },
 ];
 
-const refundedItems = [
-  { date: '10 Jun 2025', id: 'SKR101', type: 'Auto Refund', reason: 'No response within 24 hours', amount: '-₹158.40' },
-  { date: '09 Jun 2025', id: 'SKR098', type: 'Auto Refund', reason: 'No response within 24 hours', amount: '-₹79.20' },
-  { date: '06 Jun 2025', id: 'SKR095', type: 'Approved Refund', reason: 'Fan dispute approved', amount: '-₹79.20' },
-  { date: '05 Jun 2025', id: 'SKR093', type: 'Approved Refund', reason: 'Duplicate payment', amount: '-₹79.20' },
-];
+// Removed mock refundedItems array
 
 
 
@@ -392,7 +387,10 @@ const CreatorPayouts = () => {
                         <div key={item.id} onClick={() => navigate('/creator/inbox')} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderBottom: i < (payoutStats.underReviewList?.length || 0) - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none', cursor: 'pointer' }}>
                           <div>
                             <div style={{ fontSize: '14px', fontWeight: '700', marginBottom: '3px' }}>{item.buyerName}</div>
-                            <div style={{ fontSize: '11px', color: '#FB923C', fontWeight: '600' }}>{item.status}</div>
+                            <div style={{ fontSize: '11px', color: item.adminMessage ? '#8b5cf6' : '#FB923C', fontWeight: '600' }}>{item.status}</div>
+                            {item.adminMessage && (
+                              <div style={{ fontSize: '11px', color: '#A8A8A0', marginTop: '4px', maxWidth: '200px', lineHeight: '1.4' }}>{item.adminMessage}</div>
+                            )}
                           </div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                             <div style={{ textAlign: 'right' }}>
@@ -425,8 +423,8 @@ const CreatorPayouts = () => {
                       Refunded 
                     </div>
                   </div>
-                  <div style={{ fontSize: '34px', fontWeight: '800', letterSpacing: '-1px', color: '#EF4444', marginBottom: '4px' }}>-₹396.00</div>
-                  <div style={{ color: '#686860', fontSize: '12px', marginBottom: '16px' }}>5 Questions</div>
+                  <div style={{ fontSize: '34px', fontWeight: '800', letterSpacing: '-1px', color: '#EF4444', marginBottom: '4px' }}>-₹{(payoutStats.refundedAmount || 0).toFixed(2)}</div>
+                  <div style={{ color: '#686860', fontSize: '12px', marginBottom: '16px' }}>{payoutStats.refundedQuestionsCount || 0} Questions</div>
                   <div style={{ backgroundColor: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: '12px', padding: '14px', display: 'flex', gap: '10px' }}>
                     <div style={{ color: '#EF4444', flexShrink: 0, marginTop: '1px' }}><InfoIcon color="#EF4444" /></div>
                     <div style={{ fontSize: '12px', color: '#EF4444', lineHeight: '1.6' }}>
@@ -445,14 +443,14 @@ const CreatorPayouts = () => {
                 </div>
 
                 <Card style={{ overflow: 'hidden' }}>
-                  {refundedItems
+                  {(payoutStats.refundedList || [])
                     .filter(item => refundSubTab === 'All' || (refundSubTab === 'Auto Refunds' && item.type === 'Auto Refund') || (refundSubTab === 'Approved Refunds' && item.type === 'Approved Refund'))
                     .map((item, i, arr) => (
                       <div key={item.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderBottom: i < arr.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none', cursor: 'pointer' }}>
                         <div>
                           <div style={{ fontSize: '12px', color: '#686860', marginBottom: '3px' }}>{item.date}</div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '7px', marginBottom: '3px' }}>
-                            <span style={{ fontSize: '13px', fontWeight: '700' }}>{item.id}</span>
+                            <span style={{ fontSize: '13px', fontWeight: '700' }}>{item.buyerName}</span>
                             <span style={{ fontSize: '10px', fontWeight: '600', padding: '2px 8px', borderRadius: '20px', backgroundColor: item.type === 'Auto Refund' ? 'rgba(59,130,246,0.15)' : 'rgba(168,85,247,0.15)', color: item.type === 'Auto Refund' ? '#60A5FA' : '#C084FC' }}>{item.type}</span>
                           </div>
                           <div style={{ fontSize: '11px', color: '#686860' }}>{item.reason}</div>

@@ -675,7 +675,7 @@ router.get('/payouts', verifyCreatorToken, async (req, res) => {
       creatorId:    req.creator.creatorId,
       status:       'flagged',
       amountPaid:   { $gt: 0 }
-    }).select('amountPaid buyerName createdAt isAnonymous').sort({ createdAt: -1 });
+    }).select('amountPaid buyerName createdAt isAnonymous adminDecision').sort({ createdAt: -1 });
 
     let underReviewAmount = 0;
     let underReviewQuestionsCount = 0;
@@ -692,7 +692,63 @@ router.get('/payouts', verifyCreatorToken, async (req, res) => {
         buyerName: q.isAnonymous ? 'Anonymous' : (q.buyerName || 'Fan'),
         date: new Date(q.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
         amount: Math.round(earning * 100) / 100,
-        status: 'Fan Review'
+        status: q.adminDecision === 'abusive' ? 'Resolved (Fan Banned)' : 'Fan Review',
+        adminMessage: q.adminDecision === 'abusive' ? 'The fan was banned for violating guidelines. You keep the full payment.' : null
+      });
+    }
+
+    // Refunded logic
+    const refundedQuestions = await Question.find({
+      creatorId: req.creator.creatorId,
+      amountPaid: { $gt: 0 },
+      $or: [
+        { status: 'expired' },
+        { status: 'rejected' },
+        { status: 'resolved', adminDecision: { $in: ['fan_wins', 'creator_wins', 'partial_refund'] } }
+      ]
+    }).select('amountPaid buyerName createdAt isAnonymous status adminDecision').sort({ createdAt: -1 });
+
+    let refundedAmount = 0;
+    let refundedQuestionsCount = 0;
+    const refundedList = [];
+
+    for (const q of refundedQuestions) {
+      const gross = q.amountPaid || 0;
+      const earning = gross * CREATOR_SHARE;
+      refundedQuestionsCount++;
+
+      let type = 'Auto Refund';
+      let reason = 'Auto Refund';
+      let refundAmount = earning;
+      
+      if (q.status === 'expired') {
+        reason = 'No response within 24 hours';
+      } else if (q.status === 'rejected') {
+        reason = 'Rejected by creator';
+      } else if (q.status === 'resolved') {
+        if (q.adminDecision === 'creator_wins') {
+          type = 'Dismissed';
+          refundAmount = 0;
+          reason = `Refund of rupees 0 is made.`;
+        } else if (q.adminDecision === 'partial_refund') {
+          type = 'Partial Refund';
+          refundAmount = earning / 2;
+          reason = `Refund of rupees ${Math.round(refundAmount * 100) / 100} is made.`;
+        } else {
+          type = 'Approved Refund';
+          reason = `Refund of rupees ${Math.round(refundAmount * 100) / 100} is made.`;
+        }
+      }
+
+      refundedAmount += refundAmount;
+
+      refundedList.push({
+        id: q._id.toString(),
+        type,
+        reason,
+        buyerName: q.isAnonymous ? 'Anonymous' : (q.buyerName || 'Fan'),
+        date: new Date(q.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+        amount: Math.round(refundAmount * 100) / 100
       });
     }
 
@@ -711,6 +767,9 @@ router.get('/payouts', verifyCreatorToken, async (req, res) => {
       underReviewAmount: Math.round(underReviewAmount * 100) / 100,
       underReviewQuestionsCount,
       underReviewList,
+      refundedAmount: Math.round(refundedAmount * 100) / 100,
+      refundedQuestionsCount,
+      refundedList,
       payoutHistoryGrouped
     });
   } catch (err) {

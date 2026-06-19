@@ -85,7 +85,7 @@ const CreatorInbox = () => {
   const { roots, childrenMap } = buildThreads(questions);
 
   const getThreadStatus = (root, children) => {
-     const isResolvedAbusive = (q) => q.status?.toLowerCase() === 'resolved' && q.adminDecision === 'abusive';
+     const isResolvedAbusive = (q) => q.adminDecision === 'abusive';
      if (isResolvedAbusive(root) || children.some(isResolvedAbusive)) return 'resolved_abusive';
      const isFlaggedOrRejected = (q) => q.status?.toLowerCase() === 'flagged' || q.status?.toLowerCase() === 'rejected';
      if (isFlaggedOrRejected(root) || children.some(isFlaggedOrRejected)) return 'flagged';
