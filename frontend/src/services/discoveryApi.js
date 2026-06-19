@@ -7,7 +7,8 @@ export const getLiveCreators = async (params = {}) => {
 
 export const getCreatorProfile = async (handle) => {
   try {
-    const response = await api.get(`/public/creator/${handle}`);
+    const cleanHandle = handle?.replace(/^@/, '') || handle;
+    const response = await api.get(`/public/creator/${cleanHandle}`);
     return response.data;
   } catch (err) {
     throw err;

@@ -547,7 +547,7 @@ router.post('/logout', (req, res) => {
  * @desc Update general settings
  */
 router.post('/settings', verifyCreatorToken, async (req, res) => {
-  const { weeklyGoal, pricePerQuestion, dailyCap, autoPause, isPaused, bio, phone, instagramHandle, expertise } = req.body;
+  const { weeklyGoal, pricePerQuestion, dailyCap, autoPause, isPaused, bio, phone, instagramHandle, expertise, email } = req.body;
   const updateData = {};
   if (typeof weeklyGoal === 'number') updateData.weeklyGoal = weeklyGoal;
   if (typeof pricePerQuestion === 'number') {
@@ -560,6 +560,7 @@ router.post('/settings', verifyCreatorToken, async (req, res) => {
   if (typeof bio === 'string') updateData.bio = bio;
   if (typeof phone === 'string') updateData.phone = phone;
   if (typeof instagramHandle === 'string') updateData.instagramHandle = instagramHandle;
+  if (typeof email === 'string') updateData.email = email;
   if (Array.isArray(expertise)) updateData.expertise = expertise;
   await connectDB();
   const updatedCreator = await Creator.findByIdAndUpdate(

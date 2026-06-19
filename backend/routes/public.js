@@ -25,7 +25,10 @@ router.get('/debug-questions', async (req, res) => {
 // Returns creator profile for the public buyer page — no auth required
 router.get('/creator/:handle', async (req, res) => {
   try {
-    const { handle } = req.params;
+    let { handle } = req.params;
+    if (handle.startsWith('@')) {
+      handle = handle.substring(1);
+    }
     const creator = await Creator.findOne({ handle: new RegExp(`^${handle}$`, 'i') }).select(
       'name handle avatarUrl bio expertise stats instagramHandle instagramFollowers price pricePerQuestion responseTime questionsAnswered instagramConnected isLive isPaused'
     );

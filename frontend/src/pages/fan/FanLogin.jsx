@@ -46,7 +46,9 @@ const FanLogin = () => {
     try {
       const res = await fanLogin(email, password);
       if (res.data.success) {
-        navigate('/discovery');
+        const queryParams = new URLSearchParams(location.search);
+        const redirect = queryParams.get('redirect');
+        navigate(redirect || '/discovery');
       }
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed. Try again.');

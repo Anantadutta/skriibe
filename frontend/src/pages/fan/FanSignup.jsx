@@ -55,7 +55,9 @@ const FanSignup = () => {
       const res = await fanSignup(name, email, password, '', whatsappConsent);
       if (res.data.success) {
         // Just redirect to explore page for now after successful signup
-        navigate('/discovery');
+        const queryParams = new URLSearchParams(window.location.search);
+        const redirect = queryParams.get('redirect');
+        navigate(redirect || '/discovery');
       }
     } catch (err) {
       console.error("Signup error:", err);

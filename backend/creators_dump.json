@@ -20,13 +20,6 @@
     "handle": "tarungujral05"
   },
   {
-    "_id": "6a2fcf9488880407347d932b",
-    "name": "Ananta",
-    "price": 49,
-    "pricePerQuestion": 49,
-    "handle": "ana_90"
-  },
-  {
     "_id": "6a318b97a4947fb883261067",
     "name": "Tarun Singh",
     "price": 1000,
@@ -41,23 +34,30 @@
     "handle": "jd_creations24"
   },
   {
-    "_id": "6a33b117d634c8f2efccd3b3",
-    "name": "Ananta Dutta",
-    "price": 50,
-    "pricePerQuestion": 50,
-    "handle": "ana_9000"
+    "_id": "6a34e7896e913c8e1b42d1e8",
+    "name": "Annie",
+    "price": 55,
+    "pricePerQuestion": 55,
+    "handle": "iidk_3654"
   },
   {
-    "_id": "6a33d5edf0ab3785cef40f64",
+    "_id": "6a352ec6faea1cefd717ea8f",
     "name": "Ananta Dutta",
     "price": 99,
     "pricePerQuestion": 99,
     "handle": "anantadutta"
   },
   {
-    "_id": "6a342bdffbfa0d623f145c01",
-    "name": "Ananta Dutta",
+    "_id": "6a353085b57bc2da7bd27a84",
+    "name": "",
     "price": 99,
     "pricePerQuestion": 99
+  },
+  {
+    "_id": "6a359583db8e90d9993050da",
+    "name": "Ananta .",
+    "price": 49,
+    "pricePerQuestion": 49,
+    "handle": "2222"
   }
 ]

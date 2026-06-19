@@ -230,6 +230,36 @@ const CreatorSettings = () => {
     }
   };
 
+  const handleSavePhone = async () => {
+    try {
+      await api.post('/creators/settings', { phone });
+      setIsEditingPhone(false);
+      setCreator(prev => ({ ...prev, phone }));
+    } catch (err) {
+      console.error('Failed to save phone', err);
+    }
+  };
+
+  const handleSaveInstagram = async () => {
+    try {
+      await api.post('/creators/settings', { instagramHandle: instagram });
+      setIsEditingInstagram(false);
+      setCreator(prev => ({ ...prev, instagramHandle: instagram }));
+    } catch (err) {
+      console.error('Failed to save instagram', err);
+    }
+  };
+
+  const handleSaveEmail = async () => {
+    try {
+      await api.post('/creators/settings', { email });
+      setIsEditingEmail(false);
+      setCreator(prev => ({ ...prev, email }));
+    } catch (err) {
+      console.error('Failed to save email', err);
+    }
+  };
+
   const handleTogglePause = () => {
     setShowPauseModal(true);
   };
@@ -807,7 +837,7 @@ const CreatorSettings = () => {
                       type="text" value={phone} onChange={(e) => setPhone(e.target.value)}
                       style={{ background: '#16161e', border: '1px solid #29C5F6', color: '#ffffff', borderRadius: '8px', padding: '8px', fontSize: '0.95rem', width: '120px', outline: 'none', fontWeight: 500, fontFamily: 'monospace' }} autoFocus
                     />
-                    <button style={{ background: '#38BDF8', border: 'none', color: '#0E0E0E', borderRadius: '12px', padding: '8px 16px', fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer' }} onClick={() => setIsEditingPhone(false)}>Save</button>
+                    <button style={{ background: '#38BDF8', border: 'none', color: '#0E0E0E', borderRadius: '12px', padding: '8px 16px', fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer' }} onClick={handleSavePhone}>Save</button>
                   </>
                 ) : (
                   <>
@@ -837,7 +867,7 @@ const CreatorSettings = () => {
                       type="text" value={instagram} onChange={(e) => setInstagram(e.target.value)}
                       style={{ background: '#16161e', border: '1px solid #29C5F6', color: '#ffffff', borderRadius: '8px', padding: '8px', fontSize: '0.95rem', width: '120px', outline: 'none', fontWeight: 500, fontFamily: 'monospace' }} autoFocus
                     />
-                    <button style={{ background: '#38BDF8', border: 'none', color: '#0E0E0E', borderRadius: '12px', padding: '8px 16px', fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer' }} onClick={() => setIsEditingInstagram(false)}>Save</button>
+                    <button style={{ background: '#38BDF8', border: 'none', color: '#0E0E0E', borderRadius: '12px', padding: '8px 16px', fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer' }} onClick={handleSaveInstagram}>Save</button>
                   </>
                 ) : (
                   <>
@@ -865,7 +895,7 @@ const CreatorSettings = () => {
                       type="email" value={email} onChange={(e) => setEmail(e.target.value)}
                       style={{ background: '#16161e', border: '1px solid #29C5F6', color: '#ffffff', borderRadius: '8px', padding: '8px', fontSize: '0.95rem', width: '100%', maxWidth: '160px', outline: 'none', fontWeight: 500, fontFamily: 'monospace' }} autoFocus
                     />
-                    <button style={{ background: '#38BDF8', border: 'none', color: '#0E0E0E', borderRadius: '12px', padding: '8px 16px', fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer', flexShrink: 0 }} onClick={() => setIsEditingEmail(false)}>Save</button>
+                    <button style={{ background: '#38BDF8', border: 'none', color: '#0E0E0E', borderRadius: '12px', padding: '8px 16px', fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer', flexShrink: 0 }} onClick={handleSaveEmail}>Save</button>
                   </>
                 ) : (
                   <>

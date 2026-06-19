@@ -226,8 +226,8 @@ function App() {
 
             <Route path="/dev/components" element={<ComponentShowcase />} />
 
-            {/* Wildcard username dashboard route */}
-            <Route path="/@:username" element={<CreatorDashboard />} />
+            {/* Public profile route with @ prefix */}
+            <Route path="/@:handle" element={<CreatorProfile />} />
 
             {/* Buyer History & Single Question */}
             <Route path="/history" element={<BuyerHistoryPage />} />

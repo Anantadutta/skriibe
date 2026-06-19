@@ -29,6 +29,7 @@ const CreatorProfile = () => {
   const [buyerPhone, setBuyerPhone] = useState('');
   const [isBanned, setIsBanned] = useState(false);
   const [paymentTab, setPaymentTab] = useState('UPI');
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
     const fetchCreator = async () => {
@@ -66,6 +67,7 @@ const CreatorProfile = () => {
             }
           }
           setIsBanned(activeBan);
+          setIsLoggedIn(true);
         }
       } catch (err) {
         try {
@@ -73,9 +75,10 @@ const CreatorProfile = () => {
           if (cRes.data?.creator) {
             setBuyerName(cRes.data.creator.name || '');
             setBuyerEmail(cRes.data.creator.email || '');
+            setIsLoggedIn(true);
           }
         } catch (e) {
-          // not logged in, leave empty
+          setIsLoggedIn(false);
         }
       }
     };
@@ -167,7 +170,11 @@ const CreatorProfile = () => {
       }}>
         {/* Back button */}
         <button 
-          onClick={() => isPreview ? navigate(-1) : navigate('/explore')}
+          onClick={() => {
+            if (isPreview) navigate(-1);
+            else if (isLoggedIn) navigate('/explore');
+            else navigate('/');
+          }}
           style={{
             alignSelf: 'flex-start',
             marginBottom: '32px',
@@ -411,7 +418,13 @@ const CreatorProfile = () => {
               </div>
 
               <button
-                onClick={() => setStep('ask')}
+                onClick={() => {
+                  if (!isLoggedIn && !isPreview) {
+                    navigate(`/fan/login?redirect=/${handle}`);
+                  } else {
+                    setStep('ask');
+                  }
+                }}
                 disabled={isBanned || isPreview}
                 style={{
                   background: (isBanned || isPreview) ? '#333' : 'linear-gradient(90deg, #34d399, #10b981)',
