@@ -588,6 +588,69 @@ const sendStrikeSuspension48hEmail = async (email, name) => {
   }
 };
 
+const sendFanSuspensionEmail = async (email, name, endDate) => {
+  const resend = getResendClient();
+  if (!resend) return;
+  try {
+    const { data, error } = await resend.emails.send({
+      from: 'skriibe <founder@skriibe.com>',
+      to: [email],
+      subject: `A Quick Reminder About Keeping Skriibe Respectful`,
+      html: `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff; color: #1A1A1A;">
+          <h2>Hi ${name},</h2>
+          <p>We reviewed a recent question sent from your account and noticed language that doesn't align with our Community Guidelines.</p>
+          <p>We understand that conversations can sometimes get emotional, but Skriibe works best when creators and fans interact respectfully. As a result, your account has been placed under a 7-day messaging restriction.</p>
+          <p><strong>What does this mean?</strong></p>
+          <ol>
+            <li>You will not be able to send paid questions or messages to any creator on Skriibe for the next 7 days.</li>
+            <li>You can still access your account and view your existing activity.</li>
+            <li>Your access will automatically be restored on ${endDate}.</li>
+          </ol>
+          <p>Think of this as an opportunity to reset.</p>
+          <p><strong>Important Note:</strong> Repeated violations may result in a permanent suspension from the platform.</p>
+          <p>If you believe this action was taken in error, you can contact us at support@skriibe.com for a review.</p>
+          <p>Thank you for helping us maintain a respectful community.</p>
+          <p>Team Skriibe.</p>
+        </div>
+      `
+    });
+    if (error) console.error('Fan suspension email error:', error);
+    return data;
+  } catch (err) {
+    console.error('sendFanSuspensionEmail error:', err);
+  }
+};
+
+const sendFanPermanentBanEmail = async (email, name) => {
+  const resend = getResendClient();
+  if (!resend) return;
+  try {
+    const { data, error } = await resend.emails.send({
+      from: 'skriibe <founder@skriibe.com>',
+      to: [email],
+      subject: `Your Skriibe Account Has Been Permanently Suspended`,
+      html: `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff; color: #1A1A1A;">
+          <h2>Hi ${name},</h2>
+          <p>Following a previous warning, we identified further violations of our Community Guidelines involving abusive, hateful, offensive, or inappropriate language.</p>
+          <p>As a result, your account has been permanently suspended from Skriibe.</p>
+          <p><strong>What this means</strong></p>
+          <p>You can no longer send questions or messages to creators. Access to creator interactions and future purchases has been disabled. Any future accounts created to bypass this suspension may also be restricted.</p>
+          <p>We strive to maintain a respectful and safe environment for both creators and fans. Unfortunately, repeated violations of our guidelines leave us unable to continue providing access to the platform.</p>
+          <p>If you believe this decision was made in error, you may contact us at support@skriibe.com within 7 days of receiving this notice.</p>
+          <p>Thank you for your understanding.</p>
+          <p>Team Skriibe</p>
+        </div>
+      `
+    });
+    if (error) console.error('Fan permanent ban email error:', error);
+    return data;
+  } catch (err) {
+    console.error('sendFanPermanentBanEmail error:', err);
+  }
+};
+
 module.exports = { 
   sendWaitlistWelcomeEmail, 
   sendCreatorWelcomeEmail, 
@@ -601,5 +664,7 @@ module.exports = {
   sendFollowUpAnsweredEmail,
   sendNewQuestionEmail,
   sendStrikeWarningEmail,
-  sendStrikeSuspension48hEmail
+  sendStrikeSuspension48hEmail,
+  sendFanSuspensionEmail,
+  sendFanPermanentBanEmail
 };

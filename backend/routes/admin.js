@@ -413,7 +413,7 @@ router.get('/creator-disputes', async (req, res) => {
 router.post('/creator-disputes/:id/resolve', async (req, res) => {
   try {
     const { id } = req.params;
-    const { decision, notes } = req.body;
+    const { decision, notes, banType } = req.body;
     
     const updateData = { adminNotes: notes || '' };
     if (decision) updateData.adminDecision = decision;
@@ -426,6 +426,28 @@ router.post('/creator-disputes/:id/resolve', async (req, res) => {
     );
     
     if (!dispute) return res.status(404).json({ error: 'Dispute not found' });
+
+    // Handle fan banning for abusive questions
+    if (decision === 'abusive' && banType) {
+      const Fan = require('../models/Fan');
+      const fan = await Fan.findById(dispute.fanId);
+      if (fan) {
+        const { sendFanSuspensionEmail, sendFanPermanentBanEmail } = require('../utils/emailService');
+        if (banType === 'permanent') {
+          fan.isBanned = true;
+          await fan.save();
+          await sendFanPermanentBanEmail(fan.email, fan.name || 'Fan');
+        } else if (banType === '7_days' && !fan.isBanned) {
+          // If already permanently banned, do not downgrade
+          const endDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+          fan.banExpiresAt = endDate;
+          await fan.save();
+          const formattedEndDate = endDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+          await sendFanSuspensionEmail(fan.email, fan.name || 'Fan', formattedEndDate);
+        }
+      }
+    }
+
     res.json({ success: true, dispute });
   } catch (err) {
     console.error(err);

@@ -69,16 +69,26 @@ router.post('/submit-question', async (req, res) => {
     }
 
     // Check if buyer is banned
-    let bannedFan = null;
+    let buyerFan = null;
     if (buyerEmail) {
-      bannedFan = await Fan.findOne({ email: buyerEmail.toLowerCase(), isBanned: true });
+      buyerFan = await Fan.findOne({ email: buyerEmail.toLowerCase() });
     }
-    if (!bannedFan && buyerPhone) {
-      bannedFan = await Fan.findOne({ email: `${buyerPhone}@banned.skriibe.com`, isBanned: true });
+    if (!buyerFan && buyerPhone) {
+      buyerFan = await Fan.findOne({ email: `${buyerPhone}@banned.skriibe.com` });
     }
 
-    if (bannedFan) {
-      return res.status(403).json({ success: false, message: 'Your account is restricted from asking questions.' });
+    if (buyerFan) {
+      if (buyerFan.isBanned) {
+        return res.status(403).json({ success: false, message: 'Your account is permanently restricted from sending questions.' });
+      }
+      if (buyerFan.banExpiresAt) {
+        if (new Date(buyerFan.banExpiresAt) > new Date()) {
+          return res.status(403).json({ success: false, message: 'Your account is temporarily restricted from sending questions.' });
+        } else {
+          buyerFan.banExpiresAt = null;
+          await buyerFan.save();
+        }
+      }
     }
 
     // Validate question

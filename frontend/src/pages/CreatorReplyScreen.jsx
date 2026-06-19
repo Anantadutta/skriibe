@@ -755,7 +755,7 @@ complete.
                 Question Flagged
               </h2>
               <p style={{ margin: 0, fontSize: '0.95rem', color: '#94a3b8', lineHeight: '1.5' }}>
-                You have flagged this question. A full refund of ₹{question.amountPaid || question.pricePaid} has been automatically processed to the buyer.
+                You have flagged this question.
               </p>
             </div>
 

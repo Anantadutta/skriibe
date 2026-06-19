@@ -9,6 +9,8 @@ const CreatorDisputeScreen = () => {
   const [loading, setLoading] = useState(true);
   const [adminNotes, setAdminNotes] = useState('');
   const [saving, setSaving] = useState(false);
+  const [selectedDecision, setSelectedDecision] = useState(null);
+  const [banType, setBanType] = useState('');
 
   useEffect(() => {
     const fetchDispute = async () => {
@@ -33,10 +35,11 @@ const CreatorDisputeScreen = () => {
   const handleResolve = async (decision) => {
     try {
       setSaving(true);
-      const res = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/admin/creator-disputes/${id}/resolve`, {
-        decision,
-        notes: adminNotes
-      }, { withCredentials: true });
+      const payload = { decision, notes: adminNotes };
+      if (decision === 'abusive') {
+        payload.banType = banType;
+      }
+      const res = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/admin/creator-disputes/${id}/resolve`, payload, { withCredentials: true });
       navigate(-1);
     } catch (err) {
       console.error('Failed to resolve dispute:', err);
@@ -165,7 +168,7 @@ const CreatorDisputeScreen = () => {
         </div>
 
         <button 
-          onClick={() => handleResolve('fan_wins')}
+          onClick={() => { setSelectedDecision(null); handleResolve('fan_wins'); }}
           disabled={saving}
           style={{ 
             background: 'rgba(239, 68, 68, 0.1)', 
@@ -187,7 +190,7 @@ const CreatorDisputeScreen = () => {
         </button>
 
         <button 
-          onClick={() => handleResolve('creator_wins')}
+          onClick={() => { setSelectedDecision(null); handleResolve('creator_wins'); }}
           disabled={saving}
           style={{ 
             background: 'rgba(56, 189, 248, 0.1)', 
@@ -207,6 +210,87 @@ const CreatorDisputeScreen = () => {
           <span style={{ fontWeight: 'bold', fontSize: '1rem' }}>Invalid question - payout to the creator</span>
           <span style={{ fontSize: '0.8rem', color: 'rgba(56, 189, 248, 0.7)' }}>Creator keeps the payment, question stays closed.</span>
         </button>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <button 
+            onClick={() => setSelectedDecision(selectedDecision === 'abusive' ? null : 'abusive')}
+            disabled={saving}
+            style={{ 
+              background: 'rgba(245, 158, 11, 0.1)', 
+              color: '#F59E0B', 
+              border: `1px solid ${selectedDecision === 'abusive' ? '#F59E0B' : 'rgba(245, 158, 11, 0.3)'}`, 
+              padding: '16px', 
+              borderRadius: '12px', 
+              cursor: saving ? 'not-allowed' : 'pointer',
+              opacity: saving ? 0.7 : 1,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '6px',
+              transition: 'all 0.2s'
+            }}
+          >
+            <span style={{ fontWeight: 'bold', fontSize: '1rem' }}>Abusive question - payout to the creator</span>
+            <span style={{ fontSize: '0.8rem', color: 'rgba(245, 158, 11, 0.7)' }}>Creator keeps the payment, question stays closed. Fan will be banned.</span>
+          </button>
+
+          {selectedDecision === 'abusive' && (
+            <div style={{
+              background: 'rgba(245, 158, 11, 0.05)',
+              border: '1px solid rgba(245, 158, 11, 0.2)',
+              borderRadius: '12px',
+              padding: '16px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '16px',
+              marginTop: '4px'
+            }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: '#fff', fontSize: '0.9rem' }}>
+                  <input 
+                    type="radio" 
+                    name="banType" 
+                    value="7_days" 
+                    checked={banType === '7_days'} 
+                    onChange={(e) => setBanType(e.target.value)} 
+                    style={{ accentColor: '#F59E0B' }}
+                  />
+                  Ban fan for 7 days
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: '#fff', fontSize: '0.9rem' }}>
+                  <input 
+                    type="radio" 
+                    name="banType" 
+                    value="permanent" 
+                    checked={banType === 'permanent'} 
+                    onChange={(e) => setBanType(e.target.value)} 
+                    style={{ accentColor: '#EF4444' }}
+                  />
+                  Ban fan permanently
+                </label>
+              </div>
+
+              <button 
+                onClick={() => handleResolve('abusive')}
+                disabled={saving || !banType}
+                style={{
+                  background: !banType ? '#333' : '#F59E0B',
+                  color: !banType ? '#888' : '#fff',
+                  border: 'none',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  fontWeight: 'bold',
+                  fontSize: '0.95rem',
+                  cursor: (!banType || saving) ? 'not-allowed' : 'pointer',
+                  transition: 'all 0.2s',
+                  marginTop: '4px'
+                }}
+              >
+                {saving ? 'Submitting...' : 'Submit'}
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
     </div>

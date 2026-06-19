@@ -34,16 +34,17 @@ router.post('/', verifyFanToken, async (req, res) => {
 
     const Fan = require('../models/Fan');
     const fanUser = await Fan.findById(req.fan.fanId);
-    if (fanUser && fanUser.isBanned) {
-      let activeBan = true;
-      if (fanUser.banExpiresAt && new Date(fanUser.banExpiresAt) < new Date()) {
-        activeBan = false;
-        fanUser.isBanned = false;
-        fanUser.banExpiresAt = null;
-        await fanUser.save();
+    if (fanUser) {
+      if (fanUser.isBanned) {
+        return res.status(403).json({ message: 'Your account is permanently restricted from sending questions.' });
       }
-      if (activeBan) {
-        return res.status(403).json({ message: 'Your account is currently restricted from sending questions.' });
+      if (fanUser.banExpiresAt) {
+        if (new Date(fanUser.banExpiresAt) > new Date()) {
+          return res.status(403).json({ message: 'Your account is temporarily restricted from sending questions.' });
+        } else {
+          fanUser.banExpiresAt = null;
+          await fanUser.save();
+        }
       }
     }
 
