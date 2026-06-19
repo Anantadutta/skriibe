@@ -651,6 +651,32 @@ const sendFanPermanentBanEmail = async (email, name) => {
   }
 };
 
+const sendCreatorAbusiveDisputeResolutionEmail = async (creatorEmail, creatorName, fanName) => {
+  const resend = getResendClient();
+  if (!resend) return;
+  try {
+    const { data, error } = await resend.emails.send({
+      from: 'skriibe <founder@skriibe.com>',
+      to: [creatorEmail],
+      subject: `Dispute Resolved: Payout released`,
+      html: `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff; color: #1A1A1A;">
+          <h2>Hi ${creatorName},</h2>
+          <p>We've reviewed the dispute regarding the abusive question.</p>
+          <p><strong>You get to keep the payment, and the question will stay closed.</strong></p>
+          <p>Additionally, the fan (${fanName}) has been banned from the platform.</p>
+          <p>Thank you for keeping Skriibe safe.</p>
+          <p>Team Skriibe</p>
+        </div>
+      `
+    });
+    if (error) console.error('Creator abusive dispute email error:', error);
+    return data;
+  } catch (err) {
+    console.error('sendCreatorAbusiveDisputeResolutionEmail error:', err);
+  }
+};
+
 module.exports = { 
   sendWaitlistWelcomeEmail, 
   sendCreatorWelcomeEmail, 
@@ -666,5 +692,6 @@ module.exports = {
   sendStrikeWarningEmail,
   sendStrikeSuspension48hEmail,
   sendFanSuspensionEmail,
-  sendFanPermanentBanEmail
+  sendFanPermanentBanEmail,
+  sendCreatorAbusiveDisputeResolutionEmail
 };

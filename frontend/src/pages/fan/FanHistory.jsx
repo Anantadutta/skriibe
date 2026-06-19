@@ -474,6 +474,20 @@ const FanHistory = () => {
                   Status: <strong style={{ color: '#fbbf24', textTransform: 'uppercase' }}>UNDER REVIEW</strong>
                   <p style={{ marginTop: '8px', fontSize: '14px', lineHeight: '1.5' }}>Thanks for reporting. We've removed this question from your open queue and will review it within 48 hours.</p>
               </div>
+            ) : q.status === 'resolved' ? (
+              <div style={{ textAlign: 'center', padding: '32px', color: '#94a3b8', background: 'rgba(255,255,255,0.02)', borderRadius: '16px' }}>
+                  Status: <strong style={{ color: '#10b981', textTransform: 'uppercase' }}>DISPUTE RESOLVED</strong>
+                  <p style={{ marginTop: '8px', fontSize: '14px', lineHeight: '1.5', color: '#fff' }}>
+                     {q.adminDecision === 'fan_wins' ? 'A full refund has been issued to you.' : 
+                      q.adminDecision === 'partial_refund' ? 'A partial refund has been issued to you.' : 
+                      'This dispute has been dismissed and payout released to the creator.'}
+                  </p>
+                  {q.adminNotes && (
+                    <div style={{ marginTop: '16px', padding: '12px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', fontSize: '13px', fontStyle: 'italic', color: '#cbd5e1' }}>
+                      " {q.adminNotes} "
+                    </div>
+                  )}
+              </div>
             ) : (
               <div style={{ textAlign: 'center', padding: '32px', color: '#94a3b8', background: 'rgba(255,255,255,0.02)', borderRadius: '16px' }}>
                   Status: <strong style={{ color: getStatusColor(q.status), textTransform: 'uppercase' }}>{q.status}</strong>

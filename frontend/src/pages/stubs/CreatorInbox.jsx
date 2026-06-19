@@ -85,6 +85,8 @@ const CreatorInbox = () => {
   const { roots, childrenMap } = buildThreads(questions);
 
   const getThreadStatus = (root, children) => {
+     const isResolvedAbusive = (q) => q.status?.toLowerCase() === 'resolved' && q.adminDecision === 'abusive';
+     if (isResolvedAbusive(root) || children.some(isResolvedAbusive)) return 'resolved_abusive';
      const isFlaggedOrRejected = (q) => q.status?.toLowerCase() === 'flagged' || q.status?.toLowerCase() === 'rejected';
      if (isFlaggedOrRejected(root) || children.some(isFlaggedOrRejected)) return 'flagged';
      if (children.length > 0) {
@@ -97,7 +99,10 @@ const CreatorInbox = () => {
 
   const pendingRoots = roots.filter(r => getThreadStatus(r, childrenMap[r._id || r.id] || []) === 'submitted');
   const repliedRoots = roots.filter(r => getThreadStatus(r, childrenMap[r._id || r.id] || []) === 'answered');
-  const flaggedRoots = roots.filter(r => getThreadStatus(r, childrenMap[r._id || r.id] || []) === 'flagged');
+  const flaggedRoots = roots.filter(r => {
+    const s = getThreadStatus(r, childrenMap[r._id || r.id] || []);
+    return s === 'flagged' || s === 'resolved_abusive';
+  });
 
   const tabCounts = {
     'All': roots.length,
@@ -216,7 +221,7 @@ const CreatorInbox = () => {
               const status = getThreadStatus(q, childrenMap[q._id || q.id] || []);
               if (activeTab === 'Pending') return status === 'submitted';
               if (activeTab === 'Replied') return status === 'answered';
-              if (activeTab === 'Flagged') return status === 'flagged';
+              if (activeTab === 'Flagged') return status === 'flagged' || status === 'resolved_abusive';
               return true;
             });
 
@@ -359,15 +364,31 @@ const CreatorInbox = () => {
                     )}
 
                     {/* Flagged Section */}
-                    {qIsFlagged && (
+                    {(qIsFlagged || threadStatus === 'resolved_abusive') && (
                       <div style={{ marginTop: '4px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#EF4444', fontSize: '0.85rem', fontWeight: 600 }}>
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg>
-                          Flagged — hidden from your queue, under review
-                        </div>
-                        <button style={{ background: '#2a2a35', border: 'none', borderRadius: '12px', color: '#94a3b8', fontWeight: 600, fontSize: '0.95rem', padding: '14px', cursor: 'pointer' }}>
-                          Restore to pending
-                        </button>
+                        {threadStatus === 'resolved_abusive' ? (
+                          <div style={{ marginTop: '8px', background: 'rgba(56, 189, 248, 0.1)', border: '1px solid rgba(56, 189, 248, 0.3)', borderRadius: '12px', padding: '16px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#38BDF8', fontSize: '0.85rem', fontWeight: 800, textTransform: 'uppercase', marginBottom: '8px' }}>
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                              New Message from Admin
+                            </div>
+                            <div style={{ color: '#e2e8f0', fontSize: '0.95rem', lineHeight: '1.5' }}>
+                              <strong>You get the payment, and the question stays closed.</strong><br/>
+                              The fan ({q.buyerName || q.followerName}) is banned.<br/><br/>
+                              Thank you for keeping Skriibe safe.
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#EF4444', fontSize: '0.85rem', fontWeight: 600 }}>
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg>
+                              Flagged — hidden from your queue, under review
+                            </div>
+                            <button style={{ background: '#2a2a35', border: 'none', borderRadius: '12px', color: '#94a3b8', fontWeight: 600, fontSize: '0.95rem', padding: '14px', cursor: 'pointer' }}>
+                              Restore to pending
+                            </button>
+                          </>
+                        )}
                       </div>
                     )}
                   </div>

@@ -125,6 +125,28 @@ const CreatorDashboard = () => {
     .filter(q => q.paid === true && new Date(q.createdAt) >= oneWeekAgo)
     .reduce((sum, q) => sum + (q.amountPaid || 0), 0);
 
+  const [abusivePopupQuestion, setAbusivePopupQuestion] = useState(null);
+
+  useEffect(() => {
+    if (questions.length > 0) {
+      const resolvedAbusiveQ = questions.find(q => 
+        q.status === 'resolved' && 
+        q.adminDecision === 'abusive' && 
+        !localStorage.getItem(`ack_abusive_${q._id || q.id}`)
+      );
+      if (resolvedAbusiveQ) {
+        setAbusivePopupQuestion(resolvedAbusiveQ);
+      }
+    }
+  }, [questions]);
+
+  const handleAcknowledgeAbusive = () => {
+    if (abusivePopupQuestion) {
+      localStorage.setItem(`ack_abusive_${abusivePopupQuestion._id || abusivePopupQuestion.id}`, 'true');
+      setAbusivePopupQuestion(null);
+    }
+  };
+
   return (
     <div style={{
       minHeight: '100vh',
@@ -149,6 +171,29 @@ const CreatorDashboard = () => {
           100% { box-shadow: 0 0 0 14px rgba(34, 197, 94, 0); }
         }
       `}} />
+
+      {/* Abusive Dispute Resolved Modal */}
+      {abusivePopupQuestion && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.85)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+          <div style={{ background: '#1A1A24', border: '1px solid #38BDF8', borderRadius: '20px', padding: '32px', maxWidth: '360px', width: '100%', textAlign: 'center', boxShadow: '0 0 40px rgba(56, 189, 248, 0.15)' }}>
+            <div style={{ fontSize: '48px', marginBottom: '16px' }}>🛡️</div>
+            <h2 style={{ margin: '0 0 16px 0', fontSize: '1.4rem', fontWeight: 800, color: '#fff' }}>Message from Admin</h2>
+            <p style={{ color: '#cbd5e1', fontSize: '0.95rem', lineHeight: '1.6', marginBottom: '16px' }}>
+              We've reviewed the abusive question you flagged from <strong>{abusivePopupQuestion.buyerName || abusivePopupQuestion.followerName || 'a fan'}</strong>.
+            </p>
+            <div style={{ background: 'rgba(56, 189, 248, 0.1)', padding: '16px', borderRadius: '12px', marginBottom: '24px' }}>
+              <p style={{ color: '#38BDF8', margin: '0 0 8px 0', fontWeight: 700 }}>You get the payment, and the question stays closed.</p>
+              <p style={{ color: '#94a3b8', margin: 0, fontSize: '0.85rem' }}>The fan has been banned from the platform.</p>
+            </div>
+            <button 
+              onClick={handleAcknowledgeAbusive}
+              style={{ width: '100%', background: '#38BDF8', color: '#0F172A', border: 'none', borderRadius: '12px', padding: '14px', fontSize: '1rem', fontWeight: 800, cursor: 'pointer' }}
+            >
+              Got it
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Container to restrict width */}
       <div style={{

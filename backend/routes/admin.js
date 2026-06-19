@@ -423,7 +423,7 @@ router.post('/creator-disputes/:id/resolve', async (req, res) => {
       id,
       { $set: updateData },
       { new: true }
-    );
+    ).populate('creatorId', 'name email');
     
     if (!dispute) return res.status(404).json({ error: 'Dispute not found' });
 
@@ -445,6 +445,7 @@ router.post('/creator-disputes/:id/resolve', async (req, res) => {
           const formattedEndDate = endDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
           await sendFanSuspensionEmail(fan.email, fan.name || 'Fan', formattedEndDate);
         }
+        
       }
     }
 
