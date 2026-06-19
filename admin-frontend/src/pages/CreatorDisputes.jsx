@@ -8,6 +8,8 @@ const CreatorDisputes = () => {
   const [disputes, setDisputes] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const [filter, setFilter] = useState('open'); // 'open' or 'resolved'
+
   useEffect(() => {
     const fetchDisputes = async () => {
       try {
@@ -21,6 +23,10 @@ const CreatorDisputes = () => {
     };
     fetchDisputes();
   }, []);
+
+  const openCount = disputes.filter(d => !d.adminDecision).length;
+  const resolvedCount = disputes.filter(d => !!d.adminDecision).length;
+  const filteredDisputes = disputes.filter(d => filter === 'open' ? !d.adminDecision : !!d.adminDecision);
 
   return (
     <div style={{ padding: '32px 24px', maxWidth: '1200px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '24px' }}>
@@ -41,15 +47,51 @@ const CreatorDisputes = () => {
         <div style={{ fontSize: '0.85rem', color: '#94a3b8', marginTop: '4px' }}>Manage questions rejected or flagged by creators</div>
       </div>
 
+      {/* Toggle */}
+      <div style={{ display: 'flex', background: '#13131A', padding: '4px', borderRadius: '12px', border: '1px solid #1E1E2D', width: 'fit-content' }}>
+        <button 
+          onClick={() => setFilter('open')}
+          style={{
+            background: filter === 'open' ? '#2A2A35' : 'transparent',
+            color: filter === 'open' ? '#fff' : '#64748b',
+            border: 'none',
+            padding: '8px 24px',
+            borderRadius: '8px',
+            fontWeight: 'bold',
+            fontSize: '0.9rem',
+            cursor: 'pointer',
+            transition: 'all 0.2s'
+          }}
+        >
+          Open ({openCount})
+        </button>
+        <button 
+          onClick={() => setFilter('resolved')}
+          style={{
+            background: filter === 'resolved' ? '#2A2A35' : 'transparent',
+            color: filter === 'resolved' ? '#fff' : '#64748b',
+            border: 'none',
+            padding: '8px 24px',
+            borderRadius: '8px',
+            fontWeight: 'bold',
+            fontSize: '0.9rem',
+            cursor: 'pointer',
+            transition: 'all 0.2s'
+          }}
+        >
+          Resolved ({resolvedCount})
+        </button>
+      </div>
+
       {loading ? (
         <div style={{ color: '#fff', textAlign: 'center', padding: '40px' }}>Loading disputes...</div>
-      ) : disputes.length === 0 ? (
+      ) : filteredDisputes.length === 0 ? (
         <div style={{ background: '#13131A', borderRadius: '16px', padding: '40px', border: '1px solid #1E1E2D', textAlign: 'center', color: '#64748b' }}>
-          No active creator disputes at the moment.
+          No {filter} creator disputes at the moment.
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {disputes.map(d => {
+          {filteredDisputes.map(d => {
             const isAbuse = d.rejectReason === 'abuse';
             let borderColor = '#1E1E2D';
             if (d.adminDecision === 'fan_wins') borderColor = '#EF4444'; // Red for fan wins
