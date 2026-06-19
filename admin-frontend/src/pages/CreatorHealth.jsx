@@ -58,7 +58,7 @@ const CreatorHealth = () => {
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
         <div style={{ fontSize: '0.9rem', color: '#64748b' }}>
-          Admin <span style={{ color: '#ffffff', fontWeight: 'bold' }}>/ Creator Health</span>
+          Admin <span style={{ color: '#ffffff', fontWeight: 'bold' }}>/ Creator Life</span>
         </div>
         <NotificationBell />
       </div>
