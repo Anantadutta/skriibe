@@ -61,28 +61,40 @@ const verifyFanToken = async (req, res, next) => {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret');
     
-    if (!decoded.fanId && decoded.email) {
+    if (!decoded.fanId && (decoded.email || decoded.creatorId)) {
       const Fan = require('../models/Fan');
-      let fan = await Fan.findOne({ email: decoded.email.toLowerCase() });
-      if (!fan) {
-        // Auto-create Fan account for this Creator so they can use Fan mode
-        const Creator = require('../models/Creator');
-        const creator = await Creator.findOne({ email: decoded.email.toLowerCase() });
-        if (creator) {
-          fan = new Fan({
-            email: decoded.email.toLowerCase(),
-            password: 'auto-generated',
-            name: creator.name || 'User',
-            roles: ['fan', 'creator'],
-            activeRole: 'fan',
-            authProvider: creator.authProvider || 'local'
-          });
-          await fan.save();
-          
-          creator.fanId = fan._id;
-          await creator.save();
-        }
+      const Creator = require('../models/Creator');
+      
+      let creator = null;
+      if (decoded.creatorId) {
+        creator = await Creator.findById(decoded.creatorId);
+      } else if (decoded.email) {
+        creator = await Creator.findOne({ email: decoded.email.toLowerCase() });
       }
+
+      let fan = null;
+      if (creator && creator.fanId) {
+        fan = await Fan.findById(creator.fanId);
+      } else if (creator && creator.email) {
+        fan = await Fan.findOne({ email: creator.email.toLowerCase() });
+      } else if (decoded.email) {
+        fan = await Fan.findOne({ email: decoded.email.toLowerCase() });
+      }
+
+      if (!fan && creator && creator.email) {
+        fan = new Fan({
+          email: creator.email.toLowerCase(),
+          password: 'auto-generated',
+          name: creator.name || 'User',
+          roles: ['fan', 'creator'],
+          activeRole: 'fan',
+          authProvider: creator.authProvider || 'local'
+        });
+        await fan.save();
+        creator.fanId = fan._id;
+        await creator.save();
+      }
+
       if (fan) {
         decoded.fanId = fan._id;
         if (!decoded.roles) decoded.roles = fan.roles;
