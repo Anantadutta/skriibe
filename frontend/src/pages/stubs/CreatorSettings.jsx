@@ -953,14 +953,13 @@ const CreatorSettings = () => {
 
         {/* ACCOUNT SWITCH & SIGN OUT */}
         <div style={{ paddingBottom: '100px', paddingTop: '24px', display: 'flex', flexDirection: 'column', gap: '16px', alignItems: 'center' }}>
-          {roles && roles.includes('fan') && (
             <button 
               onClick={async () => {
                 try {
                   const res = await switchRole('fan');
                   if (res.success) {
                     setAuthData(roles, 'fan', res.token);
-                    navigate('/explore');
+                    window.location.href = '/explore';
                   }
                 } catch (err) {
                   alert('Failed to switch to Fan mode');
@@ -982,7 +981,6 @@ const CreatorSettings = () => {
             >
               <span style={{ fontSize: '18px' }}>👤</span> Switch to Fan Mode →
             </button>
-          )}
 
           <button style={{
             background: 'transparent', border: 'none', color: '#f87171',

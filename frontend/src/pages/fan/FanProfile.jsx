@@ -224,7 +224,7 @@ const FanProfile = () => {
                         const res = await switchRole('creator');
                         if (res.success) {
                           setAuthData(roles, 'creator', res.token);
-                          navigate('/creator/dashboard');
+                          window.location.href = '/creator/dashboard';
                         }
                       } catch (err) {
                         alert('Failed to switch role');

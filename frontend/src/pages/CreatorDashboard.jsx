@@ -673,14 +673,15 @@ const CreatorDashboard = () => {
         </div>
 
         {/* 8. SWITCH TO FAN MODE CTA */}
-        {roles && roles.includes('fan') && (
+        {(
+
           <div 
             onClick={async () => {
               try {
                 const res = await switchRole('fan');
                 if (res.success) {
                   setAuthData(roles, 'fan', res.token);
-                  navigate('/explore');
+                  window.location.href = '/explore';
                 }
               } catch (err) {
                 alert('Failed to switch to Fan mode');
