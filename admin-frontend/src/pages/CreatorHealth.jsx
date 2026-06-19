@@ -12,7 +12,7 @@ const CreatorHealth = () => {
   useEffect(() => {
     const fetchCreators = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/api/admin/creators', { withCredentials: true });
+        const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/admin/creators`, { withCredentials: true });
         setCreators(res.data);
       } catch (err) {
         console.error('Failed to fetch creators', err);

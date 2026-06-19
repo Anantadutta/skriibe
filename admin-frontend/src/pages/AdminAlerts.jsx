@@ -11,7 +11,7 @@ const AdminAlerts = () => {
   useEffect(() => {
     const fetchAlerts = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/api/admin/alerts', { withCredentials: true });
+        const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/admin/alerts`, { withCredentials: true });
         setAlerts(res.data);
       } catch (err) {
         console.error('Failed to fetch alerts:', err);
@@ -25,7 +25,7 @@ const AdminAlerts = () => {
   const handleMarkAsRead = async (id, e) => {
     if (e) e.stopPropagation();
     try {
-      await axios.post('http://localhost:5000/api/admin/alerts/mark-read', { ids: [id] }, { withCredentials: true });
+      await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/admin/alerts/mark-read`, { ids: [id] }, { withCredentials: true });
       setAlerts(alerts.map(a => a._id === id ? { ...a, isRead: true } : a));
     } catch (err) {
       console.error(err);
@@ -34,7 +34,7 @@ const AdminAlerts = () => {
 
   const handleMarkAllRead = async () => {
     try {
-      await axios.post('http://localhost:5000/api/admin/alerts/mark-read', { ids: [] }, { withCredentials: true });
+      await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/admin/alerts/mark-read`, { ids: [] }, { withCredentials: true });
       setAlerts(alerts.map(a => ({ ...a, isRead: true })));
     } catch (err) {
       console.error(err);
