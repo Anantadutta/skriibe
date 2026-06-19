@@ -13,7 +13,7 @@ const CreatorDisputeScreen = () => {
   useEffect(() => {
     const fetchDispute = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/admin/creator-disputes`, { withCredentials: true });
+        const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/admin/creator-disputes`, { withCredentials: true });
         const found = res.data.find(d => d._id === id);
         if (found) {
           setDispute(found);
@@ -33,7 +33,7 @@ const CreatorDisputeScreen = () => {
   const handleResolve = async (decision) => {
     try {
       setSaving(true);
-      await axios.post(`http://localhost:5000/api/admin/creator-disputes/${id}/resolve`, {
+      const res = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/admin/creator-disputes/${id}/resolve`, {
         decision,
         notes: adminNotes
       }, { withCredentials: true });

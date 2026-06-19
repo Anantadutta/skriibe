@@ -567,7 +567,7 @@ router.get('/payouts', verifyCreatorToken, async (req, res) => {
       amountPaid:   { $gt: 0 },
       answeredAt:   { $exists: true, $ne: null },
       adminDecision: { $nin: ['fan_wins', 'banned'] },
-    }).select('amountPaid answeredAt');
+    }).select('amountPaid answeredAt buyerName isAnonymous').sort({ answeredAt: -1 });
 
     let lifetimePaid = 0;
     let thisMonth    = 0;
@@ -597,6 +597,36 @@ router.get('/payouts', verifyCreatorToken, async (req, res) => {
         }
       }
     }
+
+    // Group history by month
+    const groupedHistory = {};
+    for (const q of answeredPaid) {
+      const gross = q.amountPaid || 0;
+      const earning = gross * CREATOR_SHARE;
+      
+      const monthKey = q.answeredAt.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase();
+      if (!groupedHistory[monthKey]) {
+        groupedHistory[monthKey] = [];
+      }
+      
+      let statusLabel = 'Paid';
+      if (q.answeredAt >= lastWednesday) {
+        statusLabel = 'Available';
+      }
+      
+      groupedHistory[monthKey].push({
+        id: q._id.toString(),
+        date: q.answeredAt.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+        bank: q.isAnonymous ? 'Anonymous' : (q.buyerName || 'Fan'),
+        amount: Math.round(earning * 100) / 100,
+        status: statusLabel
+      });
+    }
+
+    const payoutHistoryGrouped = Object.keys(groupedHistory).map(month => ({
+      month,
+      items: groupedHistory[month]
+    }));
 
     // New In Escrow logic: unanswered questions
     const pendingQuestions = await Question.find({
@@ -660,7 +690,8 @@ router.get('/payouts', verifyCreatorToken, async (req, res) => {
       pendingList,
       underReviewAmount: Math.round(underReviewAmount * 100) / 100,
       underReviewQuestionsCount,
-      underReviewList
+      underReviewList,
+      payoutHistoryGrouped
     });
   } catch (err) {
     console.error(err);

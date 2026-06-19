@@ -131,18 +131,18 @@ const CreatorHealth = () => {
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
                   <div style={{ background: '#15100C', padding: '16px', borderRadius: '12px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
-                    <div className="font-wide" style={{ color: replyColor, fontSize: '1.4rem', fontWeight: '900' }}>{stats.replyRate}%</div>
+                    <div className="font-wide" style={{ color: '#38BDF8', fontSize: '1.4rem', fontWeight: '900' }}>{stats.replyRate}%</div>
                     <div style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Reply</div>
                   </div>
                   <div style={{ background: '#15100C', padding: '16px', borderRadius: '12px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
-                    <div className="font-wide" style={{ color: refundColor, fontSize: '1.4rem', fontWeight: '900' }}>{stats.refundRate}%</div>
-                    <div style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Refunds</div>
+                    <div className="font-wide" style={{ color: '#38BDF8', fontSize: '1.4rem', fontWeight: '900' }}>{stats.avgResponseTimeMins || 0}m</div>
+                    <div style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Avg</div>
                   </div>
                   <div style={{ background: '#15100C', padding: '16px', borderRadius: '12px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
-                    <div className="font-wide" style={{ color: breachColor, fontSize: '1.4rem', fontWeight: '900', textAlign: 'center', lineHeight: '1.1' }}>
-                      {stats.slaBreaches} this<br/>week
+                    <div className="font-wide" style={{ color: '#38BDF8', fontSize: '1.4rem', fontWeight: '900', textAlign: 'center', lineHeight: '1.1' }}>
+                      {stats.answered || 0}
                     </div>
-                    <div style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: 'bold', textTransform: 'uppercase', marginTop: '4px' }}>Breaches</div>
+                    <div style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: 'bold', textTransform: 'uppercase', marginTop: '4px' }}>Answered</div>
                   </div>
                 </div>
               </div>

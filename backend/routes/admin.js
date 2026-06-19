@@ -146,15 +146,22 @@ router.get('/creators', async (req, res) => {
       let answered = 0;
       let refunds = 0;
       let slaBreaches = 0;
+      let totalResponseTimeMs = 0;
 
       questions.forEach(q => {
-        if (q.status === 'answered') answered++;
+        if (q.status === 'answered') {
+          answered++;
+          if (q.createdAt && q.answeredAt) {
+            totalResponseTimeMs += (new Date(q.answeredAt) - new Date(q.createdAt));
+          }
+        }
         if (q.status === 'rejected' || q.status === 'refunded' || q.adminDecision === 'fan_wins') refunds++;
         if (q.status === 'expired' || (q.answeredAt && q.expiresAt && q.answeredAt > q.expiresAt)) slaBreaches++;
       });
 
       const replyRate = totalQuestions > 0 ? Math.round((answered / totalQuestions) * 100) : 0;
       const refundRate = totalQuestions > 0 ? Math.round((refunds / totalQuestions) * 100) : 0;
+      const avgResponseTimeMins = answered > 0 ? Math.round((totalResponseTimeMs / answered) / 60000) : 0;
 
       let healthStatus = 'Healthy';
       if (replyRate < 70) {
@@ -167,6 +174,8 @@ router.get('/creators', async (req, res) => {
           replyRate,
           refundRate,
           slaBreaches,
+          avgResponseTimeMins,
+          answered,
           healthStatus
         }
       };

@@ -11,7 +11,7 @@ const CreatorDisputes = () => {
   useEffect(() => {
     const fetchDisputes = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/api/admin/creator-disputes', { withCredentials: true });
+        const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/admin/creator-disputes`, { withCredentials: true });
         setDisputes(res.data);
       } catch (err) {
         console.error('Error fetching creator disputes:', err);

@@ -10,7 +10,7 @@ const BuyerManagement = () => {
   useEffect(() => {
     const fetchFans = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/api/admin/fans', { withCredentials: true });
+        const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/admin/fans`, { withCredentials: true });
         setFans(res.data);
       } catch (err) {
         console.error('Failed to fetch fans', err);

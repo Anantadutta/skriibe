@@ -17,7 +17,7 @@ const DisputeScreen = () => {
   useEffect(() => {
     const fetchDispute = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/admin/buyer-disputes`, { withCredentials: true });
+        const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/admin/buyer-disputes`, { withCredentials: true });
         const found = res.data.find(d => d._id === id);
         setDispute(found || null);
       } catch (err) {

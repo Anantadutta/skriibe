@@ -29,23 +29,7 @@ const refundedItems = [
   { date: '05 Jun 2025', id: 'SKR093', type: 'Approved Refund', reason: 'Duplicate payment', amount: '-₹79.20' },
 ];
 
-const payoutHistoryGrouped = [
-  {
-    month: 'JUNE 2025',
-    items: [
-      { date: '9 Jun 2025', bank: 'HDFC Bank •••• 4821', amount: '₹3,280', status: 'Paid' },
-      { date: '2 Jun 2025', bank: 'HDFC Bank •••• 4821', amount: '₹2,960', status: 'Paid' },
-    ],
-  },
-  {
-    month: 'MAY 2025',
-    items: [
-      { date: '28 May 2025', bank: 'HDFC Bank •••• 4821', amount: '₹4,100', status: 'Pending' },
-      { date: '15 May 2025', bank: 'HDFC Bank •••• 4821', amount: '₹3,100', status: 'Protected' },
-      { date: '3 May 2025', bank: 'HDFC Bank •••• 4821', amount: '₹3,400', status: 'Paid' },
-    ],
-  },
-];
+
 
 const StatusIcon = ({ status }) => {
   if (status === 'Paid') return (
@@ -498,27 +482,33 @@ const CreatorPayouts = () => {
                   </button>
                 </div>
 
-                {payoutHistoryGrouped.map(group => (
-                  <div key={group.month} style={{ marginBottom: '20px' }}>
-                    <div style={{ fontSize: '10px', fontWeight: '700', color: '#686860', letterSpacing: '1.2px', marginBottom: '10px' }}>{group.month}</div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                      {group.items.map(item => (
-                        <div key={item.date} style={{ backgroundColor: '#0f0f1c', borderRadius: '14px', padding: '14px 16px', display: 'flex', alignItems: 'center', gap: '12px', border: '1px solid rgba(255,255,255,0.07)', cursor: 'pointer' }}>
-                          <StatusIcon status={item.status} />
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontSize: '14px', fontWeight: '700', marginBottom: '3px' }}>{item.date}</div>
-                            <div style={{ fontSize: '11px', color: '#686860' }}>{item.bank}</div>
+                {payoutStats.payoutHistoryGrouped && payoutStats.payoutHistoryGrouped.length > 0 ? (
+                  payoutStats.payoutHistoryGrouped.map(group => (
+                    <div key={group.month} style={{ marginBottom: '20px' }}>
+                      <div style={{ fontSize: '10px', fontWeight: '700', color: '#686860', letterSpacing: '1.2px', marginBottom: '10px' }}>{group.month}</div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        {group.items.map(item => (
+                          <div key={item.id} style={{ backgroundColor: '#0f0f1c', borderRadius: '14px', padding: '14px 16px', display: 'flex', alignItems: 'center', gap: '12px', border: '1px solid rgba(255,255,255,0.07)', cursor: 'pointer' }}>
+                            <StatusIcon status={item.status} />
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ fontSize: '14px', fontWeight: '700', marginBottom: '3px' }}>{item.date}</div>
+                              <div style={{ fontSize: '11px', color: '#686860' }}>{item.bank}</div>
+                            </div>
+                            <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                              <div style={{ fontSize: '15px', fontWeight: '700', marginBottom: '5px' }}>{fmt(item.amount)}</div>
+                              <StatusBadge status={item.status} />
+                            </div>
+                            <ChevronRight />
                           </div>
-                          <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                            <div style={{ fontSize: '15px', fontWeight: '700', marginBottom: '5px' }}>{item.amount}</div>
-                            <StatusBadge status={item.status} />
-                          </div>
-                          <ChevronRight />
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
+                  ))
+                ) : (
+                  <div style={{ padding: '20px', textAlign: 'center', color: '#686860', fontSize: '14px' }}>
+                    No payout history yet.
                   </div>
-                ))}
+                )}
               </>
             )}
 

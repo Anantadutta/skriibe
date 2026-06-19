@@ -8,7 +8,7 @@ const DismissDispute = () => {
   const handleConfirm = async () => {
     try {
       const axios = require('axios');
-      await axios.post(`http://localhost:5000/api/admin/buyer-disputes/${id}/dismiss`, {}, { withCredentials: true });
+      await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/admin/buyer-disputes/${id}/dismiss`, {}, { withCredentials: true });
       navigate('/admin/buyer-disputes');
     } catch (err) {
       console.error(err);
