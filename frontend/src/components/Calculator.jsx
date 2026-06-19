@@ -12,7 +12,7 @@ const Calculator = () => {
     };
 
     return (
-        <section className="py-24 px-6 max-w-[900px] mx-auto text-center" id="calculator">
+        <section className="pt-8 pb-24 px-6 max-w-[900px] mx-auto text-center" id="calculator">
             {/* Title Line */}
             <div className="text-[13px] text-gray-500 font-bold tracking-[0.25em] uppercase mb-12">
                 UNANSWERED DMS THIS WEEK — MOVE THE SLIDER

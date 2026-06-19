@@ -271,12 +271,48 @@ const FanProfile = () => {
                     fontWeight: '700',
                     cursor: 'pointer',
                     fontSize: '16px',
-                    transition: 'background 0.2s'
+                    transition: 'background 0.2s',
+                    marginBottom: '8px'
                   }}
                   onMouseOver={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'}
                   onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
                 >
                   Log Out
+                </button>
+
+                <button 
+                  onClick={async () => {
+                    const confirmDelete = window.confirm("Are you sure you want to permanently delete your account? This action cannot be undone.");
+                    if (confirmDelete) {
+                      try {
+                        const res = await api.delete('/fan-auth/profile');
+                        if (res.data.success) {
+                          localStorage.clear();
+                          window.location.href = '/fan/login';
+                        } else {
+                          alert(res.data.message || 'Failed to delete account');
+                        }
+                      } catch (err) {
+                        alert(err.response?.data?.message || 'Error deleting account');
+                      }
+                    }
+                  }}
+                  style={{
+                    width: '100%',
+                    background: 'rgba(239, 68, 68, 0.1)',
+                    border: 'none',
+                    color: '#ef4444',
+                    padding: '16px',
+                    borderRadius: '12px',
+                    fontWeight: '700',
+                    cursor: 'pointer',
+                    fontSize: '16px',
+                    transition: 'background 0.2s'
+                  }}
+                  onMouseOver={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)'}
+                  onMouseOut={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'}
+                >
+                  Delete Account
                 </button>
               </div>
             </div>
@@ -285,11 +321,11 @@ const FanProfile = () => {
           <div style={{ color: '#ef4444' }}>Could not load profile.</div>
         )}
 
-        {/* Your Questions Section */}
+        {/* Payout History Section */}
         {fanProfile && (
           <div style={{ marginTop: '48px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-              <h2 style={{ fontSize: '24px', fontWeight: '700', margin: 0 }}>Your Questions</h2>
+              <h2 style={{ fontSize: '24px', fontWeight: '700', margin: 0 }}>Payout History</h2>
               {!showAllQuestions && questions.length > 3 && (
                 <button 
                   onClick={() => setShowAllQuestions(true)}
@@ -315,7 +351,7 @@ const FanProfile = () => {
                   justifyContent: 'space-between',
                   cursor: 'pointer'
                 }} onClick={() => navigate('/fan/history')}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flex: 1, marginRight: '16px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flex: 1, minWidth: 0, marginRight: '16px' }}>
                       <div style={{ minWidth: '40px', height: '40px', borderRadius: '50%', background: 'rgba(56, 189, 248, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#38bdf8' }}>
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
                       </div>

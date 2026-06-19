@@ -484,7 +484,7 @@ const CreatorSettings = () => {
             <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
             <circle cx="12" cy="12" r="3"></circle>
           </svg>
-          <span style={{ fontSize: '1.1rem', fontWeight: '700' }}>View my page</span>
+          <span style={{ fontSize: '1.1rem', fontWeight: '700' }}>Preview page</span>
         </button>
 
         {/* AMA SETTINGS SECTION */}

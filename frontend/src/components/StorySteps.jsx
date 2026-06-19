@@ -17,7 +17,7 @@ const StorySteps = ({ theme = 'dark' }) => {
 };
 
 const StepOne = () => (
-    <div className="grid md:grid-cols-2 gap-20 items-center pt-12 pb-24 border-b border-skriibe-d4">
+    <div className="grid md:grid-cols-2 gap-20 items-center pt-12 pb-24 border-t border-b border-skriibe-d4">
         <div className="animate-fade-up">
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-skriibe-blue/10 border border-skriibe-blue/20 text-[11px] font-bold text-skriibe-blue tracking-wider uppercase mb-5">
                 Step 01 · The problem
@@ -291,10 +291,10 @@ const StepThree = ({ theme = 'dark' }) => {
                     Step 03 · Follower pays
                 </div>
                 <h3 className="font-libre text-[clamp(26px,3.5vw,42px)] leading-[1.1] mb-4">
-                    They pay Rs.99.<br /><span className="italic text-skriibe-blue">You get a WhatsApp ping.</span>
+                    They pay Rs.99.<br /><span className="italic text-skriibe-blue">You get an Email ping.</span>
                 </h3>
                 <p className="font-roboto text-gray-400 text-base leading-relaxed mb-6">
-                    Your follower lands on your skriibe page, types their question, and pays via UPI in 3 taps. No account needed. No friction. You get a WhatsApp notification the moment payment clears.
+                    Your follower lands on your skriibe page, types their question, and pays via UPI in 3 taps. No account needed. No friction. You get an WhatsApp notification the moment payment clears.
                 </p>
                 <div className="font-roboto p-4 bg-skriibe-d3 rounded-xl border-l-[3px] border-skriibe-blue text-sm text-gray-400 leading-relaxed">
                     Only serious people pay. No more 100 DMs where 90 are "hey bro please help." Every paid question is from someone who genuinely wants your advice.

@@ -107,23 +107,25 @@ const Footer = ({ theme }) => {
         {/* Logo and Description */}
         <div className="col-span-1 md:col-span-2 flex flex-col gap-6">
           <div className="flex items-start">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 2000 520.97"
-              className="h-10 w-auto transition-colors text-white overflow-visible -ml-2"
-            >
-              <text
-                x="0"
-                y="457.72"
-                textAnchor="start"
-                fontSize="566.36px"
-                fontFamily="Garet, sans-serif"
-                fontWeight="400"
-                fill="currentColor"
+            <a href="/">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 2000 520.97"
+                className="h-10 w-auto transition-colors text-white overflow-visible -ml-2"
               >
-                skr<tspan fill="#3BA8D8">ii</tspan>be
-              </text>
-            </svg>
+                <text
+                  x="0"
+                  y="457.72"
+                  textAnchor="start"
+                  fontSize="566.36px"
+                  fontFamily="Garet, sans-serif"
+                  fontWeight="400"
+                  fill="currentColor"
+                >
+                  skr<tspan fill="#3BA8D8">ii</tspan>be
+                </text>
+              </svg>
+            </a>
           </div>
           <p className="text-[#a3a3a3] text-[15px] leading-relaxed max-w-sm mt-2">
             A creator monetization platform that lets creators get paid to answer their followers' questions — turning free DMs into guaranteed, paid conversations delivered within 24 hours.
@@ -159,12 +161,13 @@ const Footer = ({ theme }) => {
           <a href="/about" className="text-[#a3a3a3] hover:text-white transition-colors text-sm">About Us</a>
           <a href="/mission" className="text-[#a3a3a3] hover:text-white transition-colors text-sm">Mission</a>
           <a href="/vision" className="text-[#a3a3a3] hover:text-white transition-colors text-sm">Vision</a>
+          <a href="/contact" className="text-[#a3a3a3] hover:text-white transition-colors text-sm">Contact Us</a>
         </div>
 
         <div className="col-span-1 flex flex-col gap-5">
           <h4 className="text-white font-bold tracking-widest text-xs uppercase mb-2">Product</h4>
           <a href="#" onClick={(e) => { e.preventDefault(); setShowHowItWorks(true); }} className="text-[#a3a3a3] hover:text-white transition-colors text-sm">How it Works</a>
-          <a href="#" onClick={(e) => { e.preventDefault(); setShowCreatorFaqs(true); }} className="text-[#a3a3a3] hover:text-white transition-colors text-sm">FAQs</a>
+          <a href="/faqs" className="text-[#a3a3a3] hover:text-white transition-colors text-sm">FAQs</a>
         </div>
 
         <div className="col-span-1 flex flex-col gap-5">
@@ -179,7 +182,11 @@ const Footer = ({ theme }) => {
 
       {/* Bottom Bar */}
       <div className="max-w-7xl mx-auto pt-8 border-t border-[#1a1a1a] flex flex-col md:flex-row justify-between items-center gap-4 text-sm">
-        <div className="text-[#556987]">© 2026 skriibe · Made in India · For India</div>
+        <div className="text-[#556987]">
+          © 2026 Skriibe. All rights reserved.<br />
+          A product of EdLern Innovations Private Limited.<br />
+          Made in India
+        </div>
         <div className="text-[#737373]">
           Instagram brings the audience. <span className="text-[#3BA8D8]">skriibe brings the money.</span>
         </div>

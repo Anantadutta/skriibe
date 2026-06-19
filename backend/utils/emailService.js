@@ -222,7 +222,7 @@ const sendWelcomeEmail = async (email, name, handle) => {
                   <tr>
                     <td style="padding: 40px 40px 20px 40px;">
                       <h1 style="font-family: 'Dancing Script', cursive; font-size: 48px; color: #004F71; margin: 0 0 30px 0; font-weight: 700;">You're welcome</h1>
-                      <h2 style="font-family: 'Inter', sans-serif; font-size: 20px; color: #1a1a1a; margin: 0 0 20px 0; font-weight: 700;">Dear Skriiber</h2>
+                      <h2 style="font-family: 'Inter', sans-serif; font-size: 20px; color: #1a1a1a; margin: 0 0 20px 0; font-weight: 700;">Dear ${name}</h2>
                       <p style="font-family: 'Inter', sans-serif; font-size: 16px; color: #333333; line-height: 1.6; margin: 0 0 20px 0; font-style: italic;">
                         Your Skriibe profile is now live and ready to receive questions from your community.
                       </p>
@@ -546,13 +546,28 @@ const sendStrikeWarningEmail = async (email, name) => {
     const { data, error } = await resend.emails.send({
       from: 'skriibe <founder@skriibe.com>',
       to: [email],
-      subject: `Action Required: SLA Breach Warning`,
+      subject: `Heads Up: A Question Went Unanswered on Your Skriibe Account`,
       html: `
-        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff; color: #1A1A1A;">
-          <h2>Hi ${name},</h2>
-          <p>Your reply window expired on one question. The buyer has been refunded automatically. This is a reminder — your next missed reply within 90 days will result in a formal Strike 2.</p>
-          <p>Please log in to your dashboard to view your active questions and reply promptly.</p>
-          <p style="font-size: 12px; color: #888;">— Team skriibe</p>
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff; color: #1A1A1A; line-height: 1.6;">
+          <p>Hi ${name || 'there'},</p>
+          <p>This is a heads-up, not a penalty - but we want to make sure you're aware.</p>
+          <p>One of your recent questions wasn't answered within the 24-hour response window. The buyer has been automatically refunded, and we've recorded a Strike 1 on your account.</p>
+          <div style="background-color: #f8fafc; padding: 15px; border-radius: 8px; margin: 20px 0;">
+            <strong>ACCOUNT STATUS</strong><br/>
+            Account active<br/>
+            Strike 1 of 4 recorded<br/>
+            Strike window: 90 days
+          </div>
+          <p><strong>What this means right now:</strong><br/>
+          Nothing changes on your profile. There's no visibility impact and no payout hold. Strike 1 carries no health score penalty - consider this an early alert.</p>
+          <p><strong>What to watch out for:</strong><br/>
+          Strikes are cumulative within a 90-day window. If no further SLA breaches occur in the next 90 days, this strike decays automatically and your slate resets to zero.</p>
+          <p>If you do receive additional strikes within that window:<br/>
+          &rarr; Strike 2 &ndash; 48-hour account pause, removed from discovery<br/>
+          &rarr; Strike 3 &ndash; 7-day account pause, payouts frozen<br/>
+          &rarr; Strike 4 &ndash; Permanent removal from Skriibe</p>
+          <p>We know things get busy. If something's making it hard to respond within the window &ndash; whether it's volume, schedule, or something else - reply to this email and let's figure it out together.</p>
+          <p>Warm regards,<br/>Team Skriibe</p>
         </div>
       `
     });
@@ -563,21 +578,41 @@ const sendStrikeWarningEmail = async (email, name) => {
   }
 };
 
-const sendStrikeSuspension48hEmail = async (email, name) => {
+const sendStrikeSuspension48hEmail = async (email, name, restoreDate) => {
   const resend = getResendClient();
   if (!resend) return;
   try {
     const { data, error } = await resend.emails.send({
       from: 'skriibe <founder@skriibe.com>',
       to: [email],
-      subject: `Account Suspended: Strike 2 Issued`,
+      subject: `Action Taken: Your Skriibe Account Has Been Paused (Strike 2)`,
       html: `
-        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff; color: #1A1A1A;">
-          <h2>Hi ${name},</h2>
-          <p>Your reply window expired on another question. The buyer has been refunded automatically.</p>
-          <p>Because this is your second missed reply within 90 days, your account has been issued a formal Strike 2 and is temporarily suspended from the public Discovery page for 48 hours.</p>
-          <p>You must still log in to answer any existing pending questions that have already been paid for. Your next missed reply within 90 days will result in Strike 3 (a 7-day suspension and payout freeze).</p>
-          <p style="font-size: 12px; color: #888;">— Team skriibe</p>
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff; color: #1A1A1A; line-height: 1.6;">
+          <p>Hi ${name || 'there'},</p>
+          <p>We've issued a Strike 2 on your Skriibe account following a second unanswered question within your 90-day strike window.</p>
+          <p>Your account has been paused effective immediately.</p>
+          <div style="background-color: #f8fafc; padding: 15px; border-radius: 8px; margin: 20px 0;">
+            <strong>ACCOUNT STATUS</strong><br/>
+            Account paused - 48 hours<br/>
+            Removed from discovery &amp; search<br/>
+            Strike 2 of 4 recorded
+          </div>
+          <p><strong>What happens during the pause:</strong></p>
+          <ul>
+            <li>Your creator page is not visible to new buyers</li>
+            <li>No new questions can be submitted to your profile</li>
+            <li>Your account and earnings remain intact</li>
+            <li>The pause lifts automatically after 48 hours - no action needed from you</li>
+          </ul>
+          <p>Your strike window resets to zero if you remain SLA-compliant for 90 days from your first strike. If another breach occurs within this window:</p>
+          <p>
+          &rarr; Strike 3 &ndash; 7-day account pause, payouts frozen<br/>
+          &rarr; Strike 4 &ndash; Permanent removal from Skriibe
+          </p>
+          <p>We'd genuinely like to help you avoid this. If you're dealing with a high volume of questions, a scheduling issue, or anything making the 24-hour window difficult - please reach out.<br/>
+          We can look at options like temporarily limiting your question intake.</p>
+          <p>Your account will be automatically restored on ${restoreDate || '48 hours from now'}.</p>
+          <p>Regards,<br/>Team Skriibe</p>
         </div>
       `
     });
@@ -585,6 +620,92 @@ const sendStrikeSuspension48hEmail = async (email, name) => {
     return data;
   } catch (err) {
     console.error('sendStrikeSuspension48hEmail error:', err);
+  }
+};
+
+const sendStrikeSuspension7dEmail = async (email, name, restoreDate) => {
+  const resend = getResendClient();
+  if (!resend) return;
+  try {
+    const { data, error } = await resend.emails.send({
+      from: 'skriibe <founder@skriibe.com>',
+      to: [email],
+      subject: `Important: Your Skriibe Account Has Been Suspended for 7 Days (Strike 3)`,
+      html: `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff; color: #1A1A1A; line-height: 1.6;">
+          <p>Hi ${name || 'there'},</p>
+          <p>Following a third SLA breach within your current 90-day strike window, we've issued a Strike 3 on your account. This is a serious escalation and requires your immediate attention.</p>
+          <p>Your account has been suspended for 7 days, effective immediately.</p>
+          <div style="background-color: #f8fafc; padding: 15px; border-radius: 8px; margin: 20px 0;">
+            <strong>ACCOUNT STATUS</strong><br/>
+            Account suspended &mdash; 7 days<br/>
+            No new questions accepted<br/>
+            Payouts frozen for suspension period<br/>
+            Strike 3 of 4 recorded
+          </div>
+          <p><strong>During the suspension:</strong></p>
+          <ul>
+            <li>Your profile is not visible to buyers on the platform</li>
+            <li>No new paid questions can be submitted</li>
+            <li>Any questions already paid for before this suspension must still be answered - buyers have paid and are owed a response</li>
+            <li>Payouts are frozen and will resume after the suspension ends with no loss of legitimate earnings</li>
+          </ul>
+          <p>Your account will be reinstated on ${restoreDate || '7 days from now'} if no further violations occur.</p>
+          <p>&#9888; One more SLA breach within this window will result in permanent removal from Skriibe, including earnings review and blacklisting of your contact details.</p>
+          <p>We want to be direct with you: we believe your content has value, and we'd rather see you succeed on the platform than lose your account.<br/>
+          If there's anything preventing you from meeting the 24-hour window, please email us before your next breach - not after.</p>
+          <p>For questions or to appeal this decision, email founder@skriibe.com within 48 hours.</p>
+          <p>Regards,<br/>Team Skriibe</p>
+        </div>
+      `
+    });
+    if (error) console.error('Strike suspension 7d email error:', error);
+    return data;
+  } catch (err) {
+    console.error('sendStrikeSuspension7dEmail error:', err);
+  }
+};
+
+const sendStrikePermanentBanEmail = async (email, name) => {
+  const resend = getResendClient();
+  if (!resend) return;
+  try {
+    const { data, error } = await resend.emails.send({
+      from: 'skriibe <founder@skriibe.com>',
+      to: [email],
+      subject: `Your Skriibe Creator Account Has Been Permanently Removed`,
+      html: `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff; color: #1A1A1A; line-height: 1.6;">
+          <p>Hi ${name || 'there'},</p>
+          <p>We're writing to inform you that your Skriibe account has been permanently removed following a fourth SLA breach within your 90-day strike window.</p>
+          <p>This decision has been made in accordance with Skriibe's Creator Strike Policy, which was communicated to you at each prior strike stage.</p>
+          <div style="background-color: #f8fafc; padding: 15px; border-radius: 8px; margin: 20px 0;">
+            <strong>ACCOUNT STATUS</strong><br/>
+            Account permanently removed<br/>
+            Pending earnings under 30-day review<br/>
+            Profile deactivated<br/>
+            Strike 4 recorded
+          </div>
+          <p><strong>What happens next:</strong></p>
+          <ol>
+            <li><strong>Pending Earnings Review</strong><br/>
+            Your pending earnings will be held for 30 days to allow for resolution of any outstanding buyer disputes or refund claims. Following the review, 50% of your eligible earnings (minus any disputed amounts) will be released to your registered payout account. You will receive a separate notification once this is completed.</li>
+            <li><strong>Your Content</strong><br/>
+            Answers you delivered to buyers remain accessible to those buyers for their own records. Your public profile and creator page are deactivated and no longer visible on the platform.</li>
+            <li><strong>Account Re-registration</strong><br/>
+            The phone number and email address associated with this account have been flagged and cannot be used to create a new Skriibe account.</li>
+          </ol>
+          <p>If you believe this decision was made in error, you may submit an appeal to founder@skriibe.com within 48 hours of receiving this email. Please include your registered email address and a clear explanation of your grounds for appeal.<br/>
+          Appeals are reviewed by our team and decisions are communicated within 7 business days.</p>
+          <p>We're sorry it came to this. We wish you the best going forward.</p>
+          <p>Team Skriibe</p>
+        </div>
+      `
+    });
+    if (error) console.error('Strike permanent ban email error:', error);
+    return data;
+  } catch (err) {
+    console.error('sendStrikePermanentBanEmail error:', err);
   }
 };
 
@@ -691,6 +812,8 @@ module.exports = {
   sendNewQuestionEmail,
   sendStrikeWarningEmail,
   sendStrikeSuspension48hEmail,
+  sendStrikeSuspension7dEmail,
+  sendStrikePermanentBanEmail,
   sendFanSuspensionEmail,
   sendFanPermanentBanEmail,
   sendCreatorAbusiveDisputeResolutionEmail

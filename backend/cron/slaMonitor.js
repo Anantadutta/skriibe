@@ -5,8 +5,8 @@ const AdminAlert = require('../models/AdminAlert');
 const { 
   sendStrikeWarningEmail, 
   sendStrikeSuspension48hEmail, 
-  sendBan7DaysEmail, 
-  sendBanPermanentEmail 
+  sendStrikeSuspension7dEmail, 
+  sendStrikePermanentBanEmail 
 } = require('../utils/emailService');
 
 const runSlaMonitor = async () => {
@@ -65,16 +65,16 @@ const runSlaMonitor = async () => {
         await sendStrikeWarningEmail(creator.email, creator.name);
       } else if (newLevel === 2) {
         creator.suspensionUntil = new Date(now.getTime() + 48 * 60 * 60 * 1000);
-        await sendStrikeSuspension48hEmail(creator.email, creator.name);
+        await sendStrikeSuspension48hEmail(creator.email, creator.name, creator.suspensionUntil);
       } else if (newLevel === 3) {
         creator.suspensionUntil = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
         creator.payoutsFrozenUntil = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-        await sendBan7DaysEmail(creator.email, creator.name, creator.suspensionUntil);
+        await sendStrikeSuspension7dEmail(creator.email, creator.name, creator.suspensionUntil);
       } else if (newLevel >= 4) {
         creator.isBanned = true;
         creator.blacklisted = true;
         creator.pendingEarningsHoldUntil = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
-        await sendBanPermanentEmail(creator.email, creator.name);
+        await sendStrikePermanentBanEmail(creator.email, creator.name);
       }
 
       await creator.save();

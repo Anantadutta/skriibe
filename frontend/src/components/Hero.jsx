@@ -82,7 +82,7 @@ const Hero = () => {
         className="absolute inset-0 w-full h-full pointer-events-none opacity-50"
       />
 
-      <div className="animate-fade-up z-10 relative inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-skriibe-d3 border border-skriibe-d5 text-[13px] font-semibold text-gray-400 tracking-wider uppercase mb-6">
+      <div className="animate-fade-up z-10 relative inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-skriibe-d3 border border-skriibe-d5 text-[13px] font-semibold text-gray-400 tracking-wider uppercase mb-8 -mt-20">
         <div className="w-1.5 h-1.5 rounded-full bg-skriibe-blue animate-pulse" />
         WE'RE LIVE, JOIN NOW
       </div>
@@ -128,7 +128,7 @@ const Hero = () => {
         </Link>
       </div>
 
-      <div className="animate-fade-up [animation-delay:400ms] z-10 relative flex flex-col items-center mb-16">
+      <div className="animate-fade-up [animation-delay:400ms] z-10 relative flex flex-col items-center mb-0">
         <button
           onClick={() => document.getElementById('story').scrollIntoView({ behavior: 'smooth' })}
           className="text-gray-400 font-medium text-sm border border-white/10 px-6 py-2.5 rounded-full hover:border-white/30 hover:text-white transition-all flex items-center gap-2"

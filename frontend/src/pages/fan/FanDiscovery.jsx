@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import CreatorCard from '../../components/discovery/CreatorCard';
 import FanNavbar from '../../components/fan/layout/FanNavbar';
 import FanBottomNav from '../../components/fan/layout/FanBottomNav';
@@ -7,46 +7,16 @@ import { getLiveCreators } from '../../services/discoveryApi';
 import { getFanMe } from '../../services/fanApi';
 import { io } from 'socket.io-client';
 
-
-
-const categories = [
-  { id: 'All', label: 'All Categories', query: 'All creators' },
-  { id: 'Career', label: 'Career & Finance', query: 'Career & Finance' },
-  { id: 'Health', label: 'Health & Fitness', query: 'Health & Fitness' },
-  { id: 'Tech', label: 'Tech & Skills', query: 'Tech & Skills' },
-  { id: 'Fashion', label: 'Fashion & Lifestyle', query: 'Fashion & Lifestyle' },
-  { id: 'Vlogs', label: 'Daily Vlogs & Entertainment', query: 'Daily Vlogs & Entertainment' },
-  { id: 'Education', label: 'Education', query: 'Education' },
-  { id: 'Business', label: 'Business & Entrepreneurship', query: 'Business & Entrepreneurship' },
-  { id: 'Relationships', label: 'Relationships & Life', query: 'Relationships & Life' },
-  { id: 'Spirituality', label: 'Spirituality', query: 'Spirituality' },
-  { id: 'Others', label: 'Others', query: 'Others' }
-];
-
 const FanDiscovery = () => {
   const [creators, setCreators] = useState([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [activeCategory, setActiveCategory] = useState('All');
   const [loading, setLoading] = useState(true);
   const [fanName, setFanName] = useState('Fan');
+  const navigate = useNavigate();
 
-  const [isLiveFilter, setIsLiveFilter] = useState(false);
-
-  // Debounce ref
-  const debounceTimeout = useRef(null);
-
-  const fetchCreators = async (query = '', cat = 'All creators', liveOnly = false) => {
+  const fetchCreators = async () => {
     setLoading(true);
     try {
-      const params = {};
-      if (query) params.search = query;
-      if (cat !== 'All') {
-        const catObj = categories.find(c => c.id === cat);
-        if (catObj) params.category = catObj.query;
-      }
-      if (liveOnly) params.live = 'true';
-
-      const data = await getLiveCreators(params);
+      const data = await getLiveCreators({});
       if (data.success && data.creators) {
         setCreators(data.creators);
       } else {
@@ -60,10 +30,8 @@ const FanDiscovery = () => {
   };
 
   useEffect(() => {
-    // Initial fetch
-    fetchCreators(searchQuery, activeCategory, isLiveFilter);
+    fetchCreators();
 
-    // Fetch fan profile
     const fetchFanProfile = async () => {
       try {
         const res = await getFanMe();
@@ -76,7 +44,6 @@ const FanDiscovery = () => {
     };
     fetchFanProfile();
 
-    // Socket.IO setup
     const socketUrl = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : 'http://localhost:5000';
     const socket = io(socketUrl);
     socket.on('creator-status-changed', ({ creatorId, isLive }) => {
@@ -90,32 +57,7 @@ const FanDiscovery = () => {
     };
   }, []);
 
-  // Handle Search Input with Debounce (300ms)
-  const handleSearchChange = (e) => {
-    const val = e.target.value;
-    setSearchQuery(val);
-    
-    if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
-    debounceTimeout.current = setTimeout(() => {
-      fetchCreators(val, activeCategory, isLiveFilter);
-    }, 300);
-  };
-
-  // Handle Category Click
-  const handleCategoryClick = (cat) => {
-    setActiveCategory(cat);
-    fetchCreators(searchQuery, cat, isLiveFilter);
-  };
-
-  // Handle Live Filter Toggle
-  const toggleLiveFilter = () => {
-    const newLive = !isLiveFilter;
-    setIsLiveFilter(newLive);
-    fetchCreators(searchQuery, activeCategory, newLive);
-  };
-
-  // Filter locally so socket updates instantly remove offline creators if filter is active
-  const filteredCreators = creators.filter(c => !c.isPaused && (isLiveFilter ? c.isLive : true));
+  const topCreators = creators.filter(c => !c.isPaused).slice(0, 4);
 
   return (
     <div style={{
@@ -126,16 +68,12 @@ const FanDiscovery = () => {
       display: 'flex',
       flexDirection: 'column'
     }}>
-      {/* Top Navbar */}
       <FanNavbar />
 
-      {/* Main Content */}
       <main style={{ flex: 1, padding: 'min(40px, 5vw)', maxWidth: '1200px', margin: '0 auto', width: '100%', boxSizing: 'border-box', overflowX: 'hidden' }}>
         
-        {/* Header Section */}
         <div style={{ marginBottom: '16px' }}>
           
-          {/* Personalized Fan Greeting Card */}
           <div style={{
             background: '#13161C',
             border: '1px solid #1F2937',
@@ -151,7 +89,6 @@ const FanDiscovery = () => {
             overflow: 'hidden',
             boxShadow: '0 4px 20px rgba(0,0,0,0.2)'
           }}>
-            {/* Purple glow on the left */}
             <div style={{
               position: 'absolute',
               top: 0,
@@ -171,7 +108,6 @@ const FanDiscovery = () => {
               pointerEvents: 'none'
             }} />
 
-            {/* Avatar */}
             <div style={{
               width: '48px',
               height: '48px',
@@ -188,7 +124,6 @@ const FanDiscovery = () => {
               {fanName.charAt(0).toUpperCase()}
             </div>
 
-            {/* Greeting Text */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', zIndex: 1 }}>
               <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#fff', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 Hey <span style={{ color: '#2DD4BF' }}>{fanName}</span> <span style={{ fontSize: '1.1rem' }}>👋</span>
@@ -200,7 +135,6 @@ const FanDiscovery = () => {
             </div>
           </div>
 
-          
           <h1 style={{ fontSize: '36px', fontWeight: '800', lineHeight: '1.1', margin: '0 0 16px 0', letterSpacing: '-2px', textAlign: 'left', width: 'fit-content', WebkitFontSmoothing: 'antialiased', MozOsxFontSmoothing: 'grayscale' }}>
             Ask anyone.<br />
             <span style={{ 
@@ -212,99 +146,25 @@ const FanDiscovery = () => {
               Get a real answer.
             </span>
           </h1>
-          
-
         </div>
 
-        {/* Search & Filters */}
-        <div style={{ marginBottom: '40px' }}>
-          {/* Search Bar */}
-          <div style={{
-            background: 'rgba(255,255,255,0.03)',
-            border: '1px solid rgba(255,255,255,0.05)',
-            borderRadius: '16px',
-            padding: '16px 24px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px',
-            marginBottom: '24px'
-          }}>
-            <span style={{ fontSize: '20px' }}>🔍</span>
-            <input 
-              type="text"
-              placeholder="Search creators, @handles or topics..."
-              value={searchQuery}
-              onChange={handleSearchChange}
-              style={{
-                background: 'transparent',
-                border: 'none',
-                color: '#fff',
-                fontSize: '16px',
-                width: '100%',
-                outline: 'none'
-              }}
-            />
-          </div>
-
-          {/* Filter Chips / Dropdown */}
-          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-
-            <div style={{ position: 'relative', width: '280px' }}>
-              <select 
-                value={activeCategory}
-                onChange={(e) => handleCategoryClick(e.target.value)}
-                style={{
-                  background: 'rgba(255,255,255,0.03)',
-                  color: '#fff',
-                  border: '1px solid rgba(255,255,255,0.05)',
-                  padding: '10px 40px 10px 20px',
-                  borderRadius: '20px',
-                  fontSize: '14px',
-                  fontWeight: '600',
-                  outline: 'none',
-                  cursor: 'pointer',
-                  appearance: 'none',
-                  WebkitAppearance: 'none',
-                  width: '100%',
-                  fontFamily: 'inherit'
-                }}
-              >
-                {categories.map(cat => (
-                  <option key={cat.id} value={cat.id} style={{ background: '#13131A' }}>{cat.label}</option>
-                ))}
-              </select>
-              {/* Custom arrow */}
-              <div style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#94a3b8', fontSize: '10px' }}>
-                ▼
-              </div>
-            </div>
-          </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', marginTop: '32px' }}>
+          <h2 style={{ margin: 0, fontSize: '24px', fontWeight: '700' }}>
+            Trending creators
+          </h2>
         </div>
 
-        {/* Dynamic Section Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            {isLiveFilter && <div style={{ width: '16px', height: '16px', background: '#f43f5e', borderRadius: '50%', boxShadow: '0 0 12px rgba(244,63,94,0.6)' }} />}
-            <h2 style={{ margin: 0, fontSize: '24px', fontWeight: '700' }}>
-              {isLiveFilter ? 'Live right now' : (searchQuery ? 'Search results' : 'All creators')}
-            </h2>
-          </div>
-          <div style={{ color: '#94a3b8', fontSize: '14px' }}>
-            {filteredCreators.length} creators
-          </div>
-        </div>
-
-        {/* Creators Grid */}
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
-          gap: '20px'
+          gap: '20px',
+          marginBottom: '32px'
         }}>
-          {filteredCreators.map(creator => (
+          {topCreators.map(creator => (
             <CreatorCard key={creator.id || creator.handle} creator={creator} />
           ))}
           
-          {filteredCreators.length === 0 && (
+          {topCreators.length === 0 && !loading && (
             <div style={{ 
               gridColumn: '1 / -1', 
               textAlign: 'center', 
@@ -315,9 +175,33 @@ const FanDiscovery = () => {
             }}>
               <div style={{ fontSize: '48px', marginBottom: '16px' }}>🔍</div>
               <h3 style={{ fontSize: '20px', margin: '0 0 8px' }}>No creators found</h3>
-              <p style={{ color: '#94a3b8', margin: 0 }}>Try adjusting your search or category filter.</p>
             </div>
           )}
+        </div>
+
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '40px' }}>
+          <button 
+            onClick={() => navigate('/explore')}
+            style={{
+              background: 'linear-gradient(90deg, #7c3aed, #06b6d4)',
+              border: 'none',
+              color: '#ffffff',
+              padding: '16px 32px',
+              fontSize: '16px',
+              fontWeight: 800,
+              borderRadius: '16px',
+              cursor: 'pointer',
+              boxShadow: '0 4px 20px rgba(124, 58, 237, 0.3)',
+              transition: 'transform 0.2s',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
+            onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+          >
+            Explore more creators <span>→</span>
+          </button>
         </div>
 
       </main>

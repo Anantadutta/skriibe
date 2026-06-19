@@ -91,7 +91,7 @@ const CreatorSettings = () => {
             onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
             onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
           >
-            <span style={{ fontSize: '18px', fontWeight: '800' }}>View My Page</span>
+            <span style={{ fontSize: '18px', fontWeight: '800' }}>Preview Page</span>
             <span style={{ fontSize: '16px', fontWeight: '800' }}>→</span>
           </button>
 

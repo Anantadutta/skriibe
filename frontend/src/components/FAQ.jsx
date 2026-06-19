@@ -125,7 +125,7 @@ const FAQ = () => {
           <h2 className="text-white text-xl md:text-2xl font-bold tracking-[0.25em] uppercase mb-2">
             FAQS
           </h2>
-          <h3 className="text-[#3BA8D8] text-5xl md:text-6xl" style={{ fontFamily: "'Fraunces', serif", fontStyle: 'italic', fontWeight: 600 }}>
+          <h3 className="font-libre text-skriibe-blue text-5xl md:text-6xl font-normal">
             Good to know
           </h3>
         </div>

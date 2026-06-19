@@ -474,4 +474,28 @@ router.post('/switch-role', verifyFanToken, async (req, res) => {
   }
 });
 
+router.delete('/profile', verifyFanToken, async (req, res) => {
+  try {
+    await connectDB();
+    const fan = await Fan.findById(req.fan.fanId);
+    if (!fan) {
+      return res.status(404).json({ success: false, message: 'Fan not found' });
+    }
+    
+    await Fan.findByIdAndDelete(req.fan.fanId);
+    
+    if (fan.roles && fan.roles.includes('creator')) {
+      const Creator = require('../models/Creator');
+      const CreatorProfile = require('../models/CreatorProfile');
+      await Creator.findOneAndDelete({ fanId: fan._id });
+      await CreatorProfile.findOneAndDelete({ user: fan._id });
+    }
+
+    res.json({ success: true, message: 'Account deleted successfully' });
+  } catch (err) {
+    console.error('Delete account error:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
 module.exports = router;
