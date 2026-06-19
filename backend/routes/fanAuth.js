@@ -454,7 +454,12 @@ router.post('/switch-role', verifyFanToken, async (req, res) => {
     if (!fan) return res.status(404).json({ success: false, message: 'Fan not found' });
 
     if (!fan.roles.includes(role)) {
-      return res.status(403).json({ success: false, message: 'Role not assigned to user' });
+      if (role === 'fan') {
+        fan.roles.push('fan');
+        await fan.save();
+      } else {
+        return res.status(403).json({ success: false, message: 'Role not assigned to user' });
+      }
     }
 
     fan.activeRole = role;
