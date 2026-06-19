@@ -394,7 +394,7 @@ router.post('/check-handle', async (req, res) => {
  * @desc Save profile data
  */
 router.post('/onboarding/profile', verifyCreatorToken, async (req, res) => {
-  const { name, handle, email, phone, bio, expertise, instagramHandle } = req.body;
+  const { name, handle, email, phone, bio, expertise, instagramHandle, instagramFollowers } = req.body;
 
   // Validation
   if (!name || name.length < 2 || name.length > 60) return res.status(400).json({ message: 'Invalid name' });
@@ -420,7 +420,7 @@ router.post('/onboarding/profile', verifyCreatorToken, async (req, res) => {
 
   const updatedCreator = await Creator.findByIdAndUpdate(
     req.creator.creatorId,
-    { name, handle, email, phone, bio, expertise, instagramHandle },
+    { name, handle, profileUrl: `skriibe.com/${handle}`, email, phone, bio, expertise, instagramHandle, instagramFollowers },
     { new: true }
   );
 

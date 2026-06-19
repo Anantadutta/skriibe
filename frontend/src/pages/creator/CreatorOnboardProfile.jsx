@@ -685,6 +685,15 @@ const CreatorOnboardProfile = () => {
                   required
                 />
 
+                <Field
+                  label="INSTAGRAM FOLLOWERS *"
+                  type="number"
+                  value={form.instagramFollowers || ''}
+                  onChange={(e) => handleInputChange('instagramFollowers', parseInt(e.target.value) || 0)}
+                  placeholder="e.g. 10000"
+                  required
+                />
+
                 {/* BIO TEXTAREA — styled exactly like Field */}
                 <div style={{
                   background: '#0f0f1a',

@@ -11,6 +11,7 @@ const CreatorSchema = new mongoose.Schema({
   password: { type: String },
   name: { type: String, default: '' },
   handle: { type: String, unique: true, sparse: true, lowercase: true },
+  profileUrl: { type: String, default: '' },
   bio: { type: String, default: '' },
   avatarUrl: { type: String, default: '' },
   expertise: [{ type: String }],

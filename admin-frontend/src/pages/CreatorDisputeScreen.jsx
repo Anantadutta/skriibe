@@ -127,6 +127,9 @@ const CreatorDisputeScreen = () => {
           <span style={{ color: '#64748b', fontSize: '0.9rem' }}>Buyer</span>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
             <span style={{ fontWeight: 'bold', fontSize: '0.9rem', color: '#fff' }}>{dispute.buyerName || dispute.followerName || 'Anonymous'}</span>
+            {(dispute.buyerEmail || dispute.buyerPhone) && (
+              <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>{dispute.buyerEmail || dispute.buyerPhone}</span>
+            )}
             <span style={{ fontSize: '0.7rem', color: '#f59e0b', background: 'rgba(245, 158, 11, 0.1)', padding: '2px 6px', borderRadius: '4px', fontWeight: 'bold' }}>First dispute by buyer</span>
           </div>
         </div>
@@ -189,27 +192,7 @@ const CreatorDisputeScreen = () => {
           <span style={{ fontSize: '0.8rem', color: 'rgba(239, 68, 68, 0.7)' }}>Fan receives full refund back to original payment method.</span>
         </button>
 
-        <button 
-          onClick={() => { setSelectedDecision(null); handleResolve('creator_wins'); }}
-          disabled={saving}
-          style={{ 
-            background: 'rgba(56, 189, 248, 0.1)', 
-            color: '#38BDF8', 
-            border: '1px solid rgba(56, 189, 248, 0.3)', 
-            padding: '16px', 
-            borderRadius: '12px', 
-            cursor: saving ? 'not-allowed' : 'pointer',
-            opacity: saving ? 0.7 : 1,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: '6px',
-            transition: 'all 0.2s'
-          }}
-        >
-          <span style={{ fontWeight: 'bold', fontSize: '1rem' }}>Invalid question - payout to the creator</span>
-          <span style={{ fontSize: '0.8rem', color: 'rgba(56, 189, 248, 0.7)' }}>Creator keeps the payment, question stays closed.</span>
-        </button>
+
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           <button 

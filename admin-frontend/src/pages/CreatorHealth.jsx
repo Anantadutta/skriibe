@@ -67,7 +67,7 @@ const CreatorHealth = () => {
 
       <div style={{ display: 'flex', flexDirection: 'column' }}>
         <h1 className="font-wide" style={{ margin: 0, fontSize: '1.75rem', letterSpacing: '-0.03em', color: '#ffffff' }}>
-          Creator Health
+          Creator Life
         </h1>
         <div style={{ fontSize: '0.85rem', color: '#94a3b8', marginTop: '4px' }}>Monitor creator performance and SLA breaches</div>
       </div>
@@ -137,6 +137,10 @@ const CreatorHealth = () => {
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
                       <div style={{ color: '#fff', fontSize: '1.1rem', fontWeight: 'bold' }}>{creator.name || 'No Name Provided'}</div>
                       <div style={{ color: '#94a3b8', fontSize: '0.85rem' }}>@{creator.handle || 'unknown'}</div>
+                      <div style={{ color: '#64748b', fontSize: '0.75rem', marginTop: '4px' }}>
+                        Joined: {new Date(creator.createdAt || Date.now()).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+                        {' · '}Active since {Math.max(1, Math.floor((Date.now() - new Date(creator.createdAt || Date.now()).getTime()) / (1000 * 60 * 60 * 24)))} days
+                      </div>
                     </div>
                   </div>
                   <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
