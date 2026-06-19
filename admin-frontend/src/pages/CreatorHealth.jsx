@@ -151,16 +151,6 @@ const CreatorHealth = () => {
                       <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'currentColor' }} />
                       {stats.healthStatus}
                     </div>
-                    {stats.healthStatus !== 'Permanently Removed' && (
-                      <>
-                        <button onClick={() => handleWarn(creator._id)} style={{ background: 'transparent', border: '1px solid #78350F', color: '#F59E0B', padding: '6px 16px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 'bold', cursor: 'pointer' }}>
-                          Warn
-                        </button>
-                        <button onClick={() => handleSuspend(creator._id)} style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)', color: '#EF4444', padding: '6px 16px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 'bold', cursor: 'pointer' }}>
-                          Suspend
-                        </button>
-                      </>
-                    )}
                   </div>
                 </div>
 
@@ -179,7 +169,7 @@ const CreatorHealth = () => {
                   </div>
                 )}
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '12px' }}>
                   <div style={{ background: '#15100C', padding: '16px', borderRadius: '12px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
                     <div className="font-wide" style={{ color: '#38BDF8', fontSize: '1.4rem', fontWeight: '900' }}>{stats.replyRate}%</div>
                     <div style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Reply</div>
@@ -193,6 +183,12 @@ const CreatorHealth = () => {
                       {stats.answered || 0}
                     </div>
                     <div style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: 'bold', textTransform: 'uppercase', marginTop: '4px' }}>Answered</div>
+                  </div>
+                  <div style={{ background: '#15100C', padding: '16px', borderRadius: '12px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+                    <div className="font-wide" style={{ color: '#EF4444', fontSize: '1.4rem', fontWeight: '900', textAlign: 'center', lineHeight: '1.1' }}>
+                      {creator.activeStrikesCount >= 4 ? '4 (Suspended)' : (creator.activeStrikesCount || 0)}
+                    </div>
+                    <div style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: 'bold', textTransform: 'uppercase', marginTop: '4px' }}>Strikes</div>
                   </div>
                 </div>
               </div>
