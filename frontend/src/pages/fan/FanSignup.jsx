@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import TransparentLogo from '../../components/TransparentLogo';
 import { useNavigate, Link } from 'react-router-dom';
 import { fanSignup } from '../../services/fanApi';
+import { useAuth } from '../../context/AuthContext';
 
 const FanSignup = () => {
   const [name, setName] = useState('');
@@ -31,6 +32,7 @@ const FanSignup = () => {
   const [focusedEmail, setFocusedEmail] = useState(false);
   const [focusedPassword, setFocusedPassword] = useState(false);
   const navigate = useNavigate();
+  const { setAuthData } = useAuth();
   
   console.log("FanSignup rendered");
 
@@ -54,6 +56,7 @@ const FanSignup = () => {
     try {
       const res = await fanSignup(name, email, password, '', whatsappConsent);
       if (res.data.success) {
+        setAuthData(['fan'], 'fan', res.data.token);
         // Just redirect to explore page for now after successful signup
         const queryParams = new URLSearchParams(window.location.search);
         const redirect = queryParams.get('redirect');
@@ -243,7 +246,7 @@ const FanSignup = () => {
                 </div>
                 <input
                   type="text"
-                  placeholder="Jane Smith"
+                  placeholder="Name"
                   value={name}
                   onChange={(e) => {
                     setName(e.target.value);
@@ -297,7 +300,7 @@ const FanSignup = () => {
                 </div>
                 <input
                   type="email"
-                  placeholder="jane.smith@example.com"
+                  placeholder="your@gmail.com"
                   value={email}
                   onChange={(e) => {
                     setEmail(e.target.value);

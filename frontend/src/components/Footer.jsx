@@ -45,7 +45,7 @@ const Footer = ({ theme }) => {
                 <h4 className="text-white font-semibold mb-2 text-lg">For Creators</h4>
                 <ul className="text-[#94a3b8] leading-relaxed text-sm list-disc pl-4 space-y-2">
                   <li>Sign up, set your price, set your terms.</li>
-                  <li>Connect your payout — get paid directly.</li>
+                  <li>Connect your payout — get paid.</li>
                   <li>Drop your skriibe link in your Instagram bio.</li>
                   <li>Followers pay, you answer in 24 hours.</li>
                 </ul>

@@ -252,7 +252,7 @@ const CreatorSignup = () => {
               }}>
                 <input
                   type="email"
-                  placeholder=""
+                  placeholder="your@gmail.com"
                   value={email}
                   onChange={(e) => {
                     setEmail(e.target.value);
@@ -300,7 +300,7 @@ const CreatorSignup = () => {
               }}>
                 <input
                   type={showPassword ? "text" : "password"}
-                  placeholder=""
+                  placeholder="••••••••"
                   value={password}
                   onChange={(e) => {
                     setPassword(e.target.value);
@@ -384,7 +384,7 @@ const CreatorSignup = () => {
               }}>
                 <input
                   type={showConfirmPassword ? "text" : "password"}
-                  placeholder=""
+                  placeholder="••••••••"
                   value={confirmPassword}
                   onChange={(e) => {
                     setConfirmPassword(e.target.value);

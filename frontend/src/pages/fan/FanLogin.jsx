@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import TransparentLogo from '../../components/TransparentLogo';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { fanLogin } from '../../services/fanApi';
+import { useAuth } from '../../context/AuthContext';
 
 const FanLogin = () => {
   const [email, setEmail] = useState('');
@@ -32,6 +33,7 @@ const FanLogin = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const message = location.state?.message;
+  const { setAuthData } = useAuth();
   
   console.log("FanLogin rendered");
 
@@ -46,6 +48,7 @@ const FanLogin = () => {
     try {
       const res = await fanLogin(email, password);
       if (res.data.success) {
+        setAuthData(['fan'], 'fan', res.data.token);
         const queryParams = new URLSearchParams(location.search);
         const redirect = queryParams.get('redirect');
         navigate(redirect || '/discovery');
@@ -246,7 +249,7 @@ const FanLogin = () => {
                 </div>
                 <input
                   type="email"
-                  placeholder="duttananata@gmail.com"
+                  placeholder="your@gmail.com"
                   value={email}
                   onChange={(e) => {
                     setEmail(e.target.value);

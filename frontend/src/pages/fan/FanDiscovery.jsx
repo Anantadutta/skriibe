@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import CreatorCard from '../../components/discovery/CreatorCard';
 import FanNavbar from '../../components/fan/layout/FanNavbar';
@@ -7,16 +7,39 @@ import { getLiveCreators } from '../../services/discoveryApi';
 import { getFanMe } from '../../services/fanApi';
 import { io } from 'socket.io-client';
 
+const categories = [
+  { id: 'All', label: 'All Categories', query: 'All creators' },
+  { id: 'Career', label: 'Career & Finance', query: 'Career & Finance' },
+  { id: 'Health', label: 'Health & Fitness', query: 'Health & Fitness' },
+  { id: 'Tech', label: 'Tech & Skills', query: 'Tech & Skills' },
+  { id: 'Fashion', label: 'Fashion & Lifestyle', query: 'Fashion & Lifestyle' },
+  { id: 'Vlogs', label: 'Daily Vlogs & Entertainment', query: 'Daily Vlogs & Entertainment' },
+  { id: 'Education', label: 'Education', query: 'Education' },
+  { id: 'Business', label: 'Business & Entrepreneurship', query: 'Business & Entrepreneurship' },
+  { id: 'Relationships', label: 'Relationships & Life', query: 'Relationships & Life' },
+  { id: 'Spirituality', label: 'Spirituality', query: 'Spirituality' },
+  { id: 'Others', label: 'Others', query: 'Others' }
+];
+
 const FanDiscovery = () => {
   const [creators, setCreators] = useState([]);
   const [loading, setLoading] = useState(true);
   const [fanName, setFanName] = useState('Fan');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeCategory, setActiveCategory] = useState('All');
+  const debounceTimeout = useRef(null);
   const navigate = useNavigate();
 
-  const fetchCreators = async () => {
+  const fetchCreators = async (query = '', cat = 'All') => {
     setLoading(true);
     try {
-      const data = await getLiveCreators({});
+      const params = {};
+      if (query) params.search = query;
+      if (cat !== 'All') {
+        const catObj = categories.find(c => c.id === cat);
+        if (catObj) params.category = catObj.query;
+      }
+      const data = await getLiveCreators(params);
       if (data.success && data.creators) {
         setCreators(data.creators);
       } else {
@@ -29,8 +52,23 @@ const FanDiscovery = () => {
     }
   };
 
+  const handleSearchChange = (e) => {
+    const val = e.target.value;
+    setSearchQuery(val);
+    
+    if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
+    debounceTimeout.current = setTimeout(() => {
+      fetchCreators(val, activeCategory);
+    }, 300);
+  };
+
+  const handleCategoryClick = (cat) => {
+    setActiveCategory(cat);
+    fetchCreators(searchQuery, cat);
+  };
+
   useEffect(() => {
-    fetchCreators();
+    fetchCreators(searchQuery, activeCategory);
 
     const fetchFanProfile = async () => {
       try {
@@ -57,7 +95,9 @@ const FanDiscovery = () => {
     };
   }, []);
 
-  const topCreators = creators.filter(c => !c.isPaused).slice(0, 4);
+  const filteredCreators = creators.filter(c => !c.isPaused);
+  const isSearching = searchQuery !== '' || activeCategory !== 'All';
+  const displayCreators = isSearching ? filteredCreators : filteredCreators.slice(0, 4);
 
   return (
     <div style={{
@@ -148,9 +188,112 @@ const FanDiscovery = () => {
           </h1>
         </div>
 
+        {/* Tips for a great question section */}
+        <div style={{ marginBottom: '40px' }}>
+          <h2 style={{ fontSize: '20px', fontWeight: '700', marginBottom: '20px', color: '#fff' }}>
+            Tips for a great question
+          </h2>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            {/* Item 1 */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+              <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: '#251b2e', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', flexShrink: 0 }}>
+                <span style={{ color: '#ef4444', fontWeight: '900' }}>?</span>
+              </div>
+              <div>
+                <div style={{ fontSize: '16px', fontWeight: '700', marginBottom: '4px', color: '#fff' }}>Be clear and specific</div>
+                <div style={{ fontSize: '14px', color: '#94a3b8' }}>Specific questions get better answers.</div>
+              </div>
+            </div>
+
+            {/* Item 2 */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+              <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: '#2e1921', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', flexShrink: 0 }}>
+                ❤️
+              </div>
+              <div>
+                <div style={{ fontSize: '16px', fontWeight: '700', marginBottom: '4px', color: '#fff' }}>Be respectful</div>
+                <div style={{ fontSize: '14px', color: '#94a3b8' }}>Let's keep it kind and positive.</div>
+              </div>
+            </div>
+
+            {/* Item 3 */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+              <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: '#191f2e', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', flexShrink: 0 }}>
+                ✉️
+              </div>
+              <div>
+                <div style={{ fontSize: '16px', fontWeight: '700', marginBottom: '4px', color: '#fff' }}>Message box</div>
+                <div style={{ fontSize: '14px', color: '#94a3b8' }}>You can always ask another one!</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Search and Categories Section */}
+        <div style={{ marginBottom: '32px' }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            background: 'rgba(255, 255, 255, 0.04)',
+            border: '1px solid rgba(255, 255, 255, 0.04)',
+            borderRadius: '16px',
+            padding: '12px 16px',
+            width: '100%',
+            boxSizing: 'border-box'
+          }}>
+            <span style={{ fontSize: '20px', marginRight: '12px' }}>🔍</span>
+            <input
+              type="text"
+              placeholder="Search creators, @handles or topics..."
+              value={searchQuery}
+              onChange={handleSearchChange}
+              style={{
+                flex: 1,
+                background: 'transparent',
+                border: 'none',
+                outline: 'none',
+                color: '#ffffff',
+                fontSize: '15px',
+                fontFamily: 'var(--font-body)',
+              }}
+            />
+          </div>
+          
+          <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginTop: '12px' }}>
+            <div style={{ position: 'relative', width: '280px' }}>
+              <select 
+                value={activeCategory}
+                onChange={(e) => handleCategoryClick(e.target.value)}
+                style={{
+                  background: 'rgba(255,255,255,0.03)',
+                  color: '#fff',
+                  border: '1px solid rgba(255,255,255,0.05)',
+                  padding: '10px 40px 10px 16px',
+                  borderRadius: '12px',
+                  fontSize: '13px',
+                  fontWeight: '700',
+                  outline: 'none',
+                  cursor: 'pointer',
+                  appearance: 'none',
+                  WebkitAppearance: 'none',
+                  width: '100%',
+                  fontFamily: 'inherit'
+                }}
+              >
+                {categories.map(cat => (
+                  <option key={cat.id} value={cat.id} style={{ background: '#13131A' }}>{cat.label}</option>
+                ))}
+              </select>
+              <div style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#94a3b8', fontSize: '10px' }}>
+                ▼
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', marginTop: '32px' }}>
           <h2 style={{ margin: 0, fontSize: '24px', fontWeight: '700' }}>
-            Trending creators
+            {isSearching ? 'Search results' : 'Trending creators'}
           </h2>
         </div>
 
@@ -160,11 +303,11 @@ const FanDiscovery = () => {
           gap: '20px',
           marginBottom: '32px'
         }}>
-          {topCreators.map(creator => (
+          {displayCreators.map(creator => (
             <CreatorCard key={creator.id || creator.handle} creator={creator} />
           ))}
           
-          {topCreators.length === 0 && !loading && (
+          {displayCreators.length === 0 && !loading && (
             <div style={{ 
               gridColumn: '1 / -1', 
               textAlign: 'center', 

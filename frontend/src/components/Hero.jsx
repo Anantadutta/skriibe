@@ -103,10 +103,10 @@ const Hero = () => {
           to="/creator/signup"
           className="flex-1 flex items-center justify-center sm:justify-center gap-3 px-6 py-3.5 rounded-full bg-[#5bc5e3] text-black hover:bg-[#4ab8d6] transform hover:-translate-y-0.5 transition-all"
         >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
-            <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" />
-            <path d="M8 12C8 14 10 16 12 16C14 16 16 14 16 12C16 10 14 8 12 8" />
-            <circle cx="10" cy="11" r="1" fill="currentColor" stroke="none" />
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+            <path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4" />
+            <path d="M4 6v12c0 1.1.9 2 2 2h14v-4" />
+            <path d="M18 12a2 2 0 0 0-2 2c0 1.1.9 2 2 2h4v-4h-4z" />
           </svg>
           <div className="flex flex-col items-start text-left">
             <span className="font-bold text-[16px] leading-tight">I'm a Creator</span>
@@ -119,7 +119,10 @@ const Hero = () => {
           className="flex-1 flex items-center justify-center sm:justify-center gap-3 px-6 py-3.5 rounded-full bg-[#131313] border border-white/10 text-white hover:bg-[#1a1a1a] hover:border-white/20 transform hover:-translate-y-0.5 transition-all"
         >
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white shrink-0">
-            <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+            <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" />
+            <path d="M8 12h.01" />
+            <path d="M12 12h.01" />
+            <path d="M16 12h.01" />
           </svg>
           <div className="flex flex-col items-start text-left">
             <span className="font-bold text-[16px] leading-tight">I'm a Fan</span>

@@ -236,6 +236,16 @@ const CreatorSharePage = () => {
     window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(fullShareUrl)}`, '_blank');
   };
 
+  const openFacebook = () => {
+    const fbUrl = creator?.facebook || creator?.socials?.facebook || creator?.socialLinks?.facebook;
+    if (fbUrl) {
+      const urlToOpen = fbUrl.startsWith('http') ? fbUrl : `https://facebook.com/${fbUrl}`;
+      window.open(urlToOpen, '_blank');
+    } else {
+      window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(fullShareUrl)}`, '_blank');
+    }
+  };
+
   const downloadSkriibeQRCode = () => {
     const canvas = generateQRCanvas();
     if (!canvas) return;
@@ -711,6 +721,14 @@ const CreatorSharePage = () => {
                 <path d="M16 4h2.5l-5.5 6.5L19 20h-4.5l-3.5-4.5-4 4.5H4.5l6-7L5 4h4.5l3 4.5L16 4Zm-1.5 14h1.5L8.5 5.5h-1.5L14.5 18Z" fill="#ffffff"/>
               </svg>
               <span style={{ fontSize: '10px', color: '#94a3b8' }}>X</span>
+            </div>
+
+            <div onClick={openFacebook} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="24" height="24" rx="4" fill="#1877F2"/>
+                <path d="M15 12h3l1-4h-4V6a1 1 0 0 1 1-1h3V1h-3a5 5 0 0 0-5 5v2H8v4h3v8h4v-8z" fill="#ffffff"/>
+              </svg>
+              <span style={{ fontSize: '10px', color: '#94a3b8' }}>Facebook</span>
             </div>
 
           </div>

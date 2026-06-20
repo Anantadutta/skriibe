@@ -71,7 +71,12 @@ const CreatorSettings = () => {
       if (creator.email) setEmail(creator.email);
       if (creator.instagramHandle) setInstagram(creator.instagramHandle);
       else if (creator.handle) setInstagram(`@${creator.handle}`);
-      if (creator.avatarUrl) setAvatar(creator.avatarUrl);
+      if (creator.avatarUrl) {
+        setAvatar(creator.avatarUrl);
+      } else {
+        const dName = creator.name || creator.displayName || creator.handle || 'C';
+        setAvatar(dName[0].toUpperCase());
+      }
       if (creator.isPaused !== undefined) setIsPaused(creator.isPaused);
       if (creator.expertise) setExpertiseList(creator.expertise);
     }
