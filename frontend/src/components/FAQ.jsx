@@ -108,7 +108,7 @@ export const faqData = [
   }
 ];
 
-const FAQ = () => {
+const FAQ = ({ theme }) => {
   const [openIndex, setOpenIndex] = useState(null);
   const navigate = useNavigate();
 
@@ -116,13 +116,13 @@ const FAQ = () => {
     setOpenIndex(openIndex === index ? null : index);
   };
 
-  const visibleFaqs = faqData.slice(0, 10);
+  const visibleFaqs = faqData.slice(0, 5);
 
   return (
-    <div className="w-full bg-black py-20 px-4 flex flex-col items-center font-syne">
+    <div className={`w-full ${theme === 'light' ? 'bg-[#f8fafc]' : 'bg-black'} py-20 px-4 flex flex-col items-center font-syne`}>
       <div className="max-w-2xl w-full">
         <div className="text-center mb-12">
-          <h2 className="text-white text-xl md:text-2xl font-bold tracking-[0.25em] uppercase mb-2">
+          <h2 className={`${theme === 'light' ? 'text-black' : 'text-white'} text-xl md:text-2xl font-bold tracking-[0.25em] uppercase mb-2`}>
             FAQS
           </h2>
           <h3 className="font-libre text-skriibe-blue text-5xl md:text-6xl font-normal">
@@ -134,20 +134,20 @@ const FAQ = () => {
           {visibleFaqs.map((faq, index) => (
             <div 
               key={index}
-              className="border border-[#38265c] bg-black rounded-2xl overflow-hidden transition-all duration-300"
+              className={`border ${theme === 'light' ? 'border-gray-200 bg-white' : 'border-[#38265c] bg-black'} rounded-2xl overflow-hidden transition-all duration-300`}
             >
               <button
                 onClick={() => toggleFAQ(index)}
                 className="w-full flex justify-between items-center px-6 py-5 text-left focus:outline-none"
               >
-                <span className="text-white text-lg font-medium">{faq.question}</span>
-                <span className="text-[#a094ba] text-3xl font-light ml-4 transition-transform duration-300" style={{ transform: openIndex === index ? 'rotate(45deg)' : 'rotate(0deg)' }}>
+                <span className={`${theme === 'light' ? 'text-black' : 'text-white'} text-lg font-medium`}>{faq.question}</span>
+                <span className={`${theme === 'light' ? 'text-gray-500' : 'text-[#a094ba]'} text-3xl font-light ml-4 transition-transform duration-300`} style={{ transform: openIndex === index ? 'rotate(45deg)' : 'rotate(0deg)' }}>
                   +
                 </span>
               </button>
               
               <div 
-                className={`px-6 text-[#94a3b8] transition-all duration-300 ease-in-out ${openIndex === index ? 'pb-5 opacity-100 max-h-40' : 'max-h-0 opacity-0 overflow-hidden'}`}
+                className={`px-6 ${theme === 'light' ? 'text-gray-600' : 'text-[#94a3b8]'} transition-all duration-300 ease-in-out ${openIndex === index ? 'pb-5 opacity-100 max-h-40' : 'max-h-0 opacity-0 overflow-hidden'}`}
               >
                 {faq.answer}
               </div>
@@ -155,11 +155,11 @@ const FAQ = () => {
           ))}
         </div>
 
-        {faqData.length > 10 && (
+        {faqData.length > 5 && (
           <div className="mt-8 flex justify-center">
             <button
               onClick={() => navigate('/faqs')}
-              className="px-8 py-3 bg-[#111] border border-[#38265c] text-white rounded-full font-medium hover:bg-[#1a1a1a] transition-colors duration-300 shadow-md"
+              className={`px-8 py-3 ${theme === 'light' ? 'bg-white border-gray-200 text-black hover:bg-gray-50' : 'bg-[#111] border-[#38265c] text-white hover:bg-[#1a1a1a]'} border rounded-full font-medium transition-colors duration-300 shadow-md`}
             >
               View more
             </button>

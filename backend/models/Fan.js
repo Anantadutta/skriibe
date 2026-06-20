@@ -11,6 +11,7 @@ const FanSchema = new mongoose.Schema({
   name: { type: String, default: '' },
   roles: { type: [String], enum: ['fan', 'creator'], default: ['fan'] },
   activeRole: { type: String, enum: ['fan', 'creator'], default: 'fan' },
+  avatarUrl: { type: String, default: null },
   isBanned: { type: Boolean, default: false },
   banExpiresAt: { type: Date, default: null },
   authProvider: { type: String, default: 'local' },

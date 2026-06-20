@@ -81,13 +81,25 @@ router.get('/creators', async (req, res) => {
         { suspensionUntil: { $lte: new Date() } }
       ]
     };
+    const PREDEFINED_CATEGORIES = [
+      'Career & Finance', 'Health & Fitness', 'Tech & Skills', 
+      'Fashion & Lifestyle', 'Daily Vlogs & Entertainment', 
+      'Education', 'Business & Entrepreneurship', 'Relationships & Life', 
+      'Spirituality'
+    ];
     
     if (live === 'true') query.isLive = true;
-    if (category) query.expertise = category;
+    if (category === 'Others') {
+      query.expertise = { $elemMatch: { $nin: PREDEFINED_CATEGORIES } };
+    } else if (category) {
+      query.expertise = category;
+    }
+    
     if (search) {
+      const cleanSearch = search.replace(/^@/, '');
       query.$or = [
-        { name: { $regex: search, $options: 'i' } },
-        { handle: { $regex: search, $options: 'i' } }
+        { name: { $regex: cleanSearch, $options: 'i' } },
+        { handle: { $regex: cleanSearch, $options: 'i' } }
       ];
     }
 

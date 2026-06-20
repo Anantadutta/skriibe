@@ -49,7 +49,7 @@ const DMCounter = ({ theme }) => {
   const sliderBackground = `linear-gradient(to right, #00A3FF ${sliderPercentage}%, #1e1e1e ${sliderPercentage}%)`;
 
   return (
-    <div ref={sectionRef} className="pt-32 pb-24 px-6 bg-skriibe-d2 border-y border-skriibe-d4 overflow-hidden">
+    <div ref={sectionRef} className="pt-12 pb-24 px-6 bg-skriibe-d2 border-y border-skriibe-d4 overflow-hidden">
       <div className="max-w-[1000px] mx-auto text-center">
         {/* 1. Combined Title Line */}
         <p className="font-dm uppercase text-[15px] tracking-[0.14em] font-medium mb-12" style={{ color: theme === 'light' ? 'rgba(0,0,0,0.4)' : 'rgba(255,255,255,0.35)' }}>

@@ -189,15 +189,21 @@ const FanDiscovery = () => {
         </div>
 
         {/* Tips for a great question section */}
-        <div style={{ marginBottom: '40px' }}>
-          <h2 style={{ fontSize: '20px', fontWeight: '700', marginBottom: '20px', color: '#fff' }}>
+        <div style={{ 
+          marginBottom: '40px',
+          background: '#0f0f1a',
+          border: '1px solid rgba(255, 255, 255, 0.08)',
+          borderRadius: '16px',
+          padding: '24px'
+        }}>
+          <h2 style={{ fontSize: '20px', fontWeight: '700', marginBottom: '24px', color: '#fff', marginTop: 0 }}>
             Tips for a great question
           </h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             {/* Item 1 */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-              <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: '#251b2e', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', flexShrink: 0 }}>
-                <span style={{ color: '#ef4444', fontWeight: '900' }}>?</span>
+              <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'rgba(124, 58, 237, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', flexShrink: 0 }}>
+                <span style={{ color: '#7c3aed', fontWeight: '900' }}>?</span>
               </div>
               <div>
                 <div style={{ fontSize: '16px', fontWeight: '700', marginBottom: '4px', color: '#fff' }}>Be clear and specific</div>
@@ -207,8 +213,8 @@ const FanDiscovery = () => {
 
             {/* Item 2 */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-              <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: '#2e1921', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', flexShrink: 0 }}>
-                ❤️
+              <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'rgba(239, 68, 68, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', flexShrink: 0 }}>
+                <span style={{ color: '#ef4444' }}>❤️</span>
               </div>
               <div>
                 <div style={{ fontSize: '16px', fontWeight: '700', marginBottom: '4px', color: '#fff' }}>Be respectful</div>
@@ -218,75 +224,37 @@ const FanDiscovery = () => {
 
             {/* Item 3 */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-              <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: '#191f2e', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', flexShrink: 0 }}>
-                ✉️
+              <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'rgba(59, 130, 246, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                  <polyline points="22,6 12,13 2,6"></polyline>
+                </svg>
               </div>
               <div>
-                <div style={{ fontSize: '16px', fontWeight: '700', marginBottom: '4px', color: '#fff' }}>Message box</div>
+                <div style={{ fontSize: '16px', fontWeight: '700', marginBottom: '4px', color: '#fff' }}>One question at a time</div>
                 <div style={{ fontSize: '14px', color: '#94a3b8' }}>You can always ask another one!</div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Search and Categories Section */}
-        <div style={{ marginBottom: '32px' }}>
           <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            background: 'rgba(255, 255, 255, 0.04)',
-            border: '1px solid rgba(255, 255, 255, 0.04)',
+            background: 'linear-gradient(135deg, rgba(124, 58, 237, 0.12) 0%, rgba(124, 58, 237, 0.04) 100%)',
             borderRadius: '16px',
-            padding: '12px 16px',
-            width: '100%',
-            boxSizing: 'border-box'
+            padding: '24px',
+            textAlign: 'center',
+            marginTop: '32px',
+            border: '1px solid rgba(124, 58, 237, 0.1)'
           }}>
-            <span style={{ fontSize: '20px', marginRight: '12px' }}>🔍</span>
-            <input
-              type="text"
-              placeholder="Search creators, @handles or topics..."
-              value={searchQuery}
-              onChange={handleSearchChange}
-              style={{
-                flex: 1,
-                background: 'transparent',
-                border: 'none',
-                outline: 'none',
-                color: '#ffffff',
-                fontSize: '15px',
-                fontFamily: 'var(--font-body)',
-              }}
-            />
-          </div>
-          
-          <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginTop: '12px' }}>
-            <div style={{ position: 'relative', width: '280px' }}>
-              <select 
-                value={activeCategory}
-                onChange={(e) => handleCategoryClick(e.target.value)}
-                style={{
-                  background: 'rgba(255,255,255,0.03)',
-                  color: '#fff',
-                  border: '1px solid rgba(255,255,255,0.05)',
-                  padding: '10px 40px 10px 16px',
-                  borderRadius: '12px',
-                  fontSize: '13px',
-                  fontWeight: '700',
-                  outline: 'none',
-                  cursor: 'pointer',
-                  appearance: 'none',
-                  WebkitAppearance: 'none',
-                  width: '100%',
-                  fontFamily: 'inherit'
-                }}
-              >
-                {categories.map(cat => (
-                  <option key={cat.id} value={cat.id} style={{ background: '#13131A' }}>{cat.label}</option>
-                ))}
-              </select>
-              <div style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#94a3b8', fontSize: '10px' }}>
-                ▼
-              </div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', marginBottom: '8px' }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+              <span style={{ color: '#7c3aed', fontWeight: '700', fontSize: '15px' }}>Private & Safe</span>
+            </div>
+            <div style={{ color: '#94a3b8', fontSize: '14px', lineHeight: '1.5' }}>
+              Your question is sent privately to the creator.<br/>
+              It won't be shared with others.
             </div>
           </div>
         </div>

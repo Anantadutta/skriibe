@@ -40,6 +40,7 @@ import CreatorAnalytics from './pages/stubs/CreatorAnalytics';
 import CreatorPayouts from './pages/creator/CreatorPayouts';
 import CreatorSetupPayouts from './pages/stubs/CreatorPayouts';
 import CreatorSettings from './pages/stubs/CreatorSettings';
+import CreatorNotifications from './pages/CreatorNotifications';
 import CreatorAccountHealth from './pages/stubs/CreatorAccountHealth';
 import CreatorDeleteQuestion from './pages/stubs/CreatorDeleteQuestion';
 import CreatorSharePage from './pages/creator/CreatorSharePage';
@@ -82,12 +83,12 @@ function LandingPage({ theme, toggleTheme }) {
     <div className={`min-h-screen transition-colors duration-300 ${theme === 'light' ? 'bg-white text-black' : 'bg-black text-white'}`}>
       <Navbar theme={theme} toggleTheme={toggleTheme} />
       <div className="relative flex flex-col">
-        <Hero />
+        <Hero theme={theme} />
       </div>
       <DMCounter theme={theme} />
       <StorySteps theme={theme} />
       <FlowGraphic />
-      <FAQ />
+      <FAQ theme={theme} />
       <Footer theme={theme} />
 
       {/* Account Deleted Toast */}
@@ -204,6 +205,7 @@ function App() {
               <Route path="/creator/setup-payouts" element={<CreatorSetupPayouts />} />
               <Route path="/creator/settings" element={<CreatorSettings />} />
               <Route path="/creator/health" element={<CreatorAccountHealth />} />
+              <Route path="/creator/notifications" element={<CreatorNotifications />} />
               
               {/* Redirects for legacy routes to keep UX seamless */}
               <Route path="/dashboard" element={<Navigate to="/creator/dashboard" replace />} />

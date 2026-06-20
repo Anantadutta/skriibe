@@ -6,21 +6,6 @@ import { useAuth } from '../../context/AuthContext';
 
 const FanSignup = () => {
   const [name, setName] = useState('');
-  const [scale, setScale] = React.useState(1);
-
-  React.useEffect(() => {
-    const handleResize = () => {
-      const formHeight = 950;
-      if (window.innerHeight < formHeight) {
-        setScale(window.innerHeight / formHeight);
-      } else {
-        setScale(1);
-      }
-    };
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -76,6 +61,10 @@ const FanSignup = () => {
     <div style={{
       height: '100vh',
       background: '#0a0a0f',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
       position: 'relative',
       overflow: 'hidden'
     }}>
@@ -136,26 +125,19 @@ const FanSignup = () => {
       `}} />
 
       <div style={{
-        width: `${100 / scale}%`,
-        maxWidth: `${480 / scale}px`,
-        padding: '12px 16px',
+        width: '100%',
+        maxWidth: '480px',
+        padding: '0 16px',
         boxSizing: 'border-box',
         zIndex: 1,
-        position: 'absolute',
-        top: '48%',
-        left: '50%',
-        transform: `translate(-50%, -50%) scale(${scale})`,
-        transformOrigin: 'center center',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center'
+        position: 'relative'
       }}>
         <div style={{
           background: 'rgba(255, 255, 255, 0.05)',
           backdropFilter: 'blur(12px)',
           border: '1px solid rgba(255, 255, 255, 0.08)',
           borderRadius: '16px',
-          padding: '24px',
+          padding: '20px',
           display: 'flex',
           flexDirection: 'column',
           boxSizing: 'border-box'

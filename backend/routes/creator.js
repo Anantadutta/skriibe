@@ -257,6 +257,19 @@ router.post('/questions/:id/reply', verifyCreatorToken, async (req, res) => {
     if (!question) {
       return res.status(404).json({ message: 'Question not found or unauthorized' });
     }
+
+    const creatorSharePercentage = parseFloat(process.env.CREATOR_SHARE_PERCENTAGE || '0.80');
+    const grossAmount = question.amountPaid || 0; 
+    
+    if (grossAmount > 0) {
+        const grossPaise = Math.round(grossAmount * 100);
+        const creatorSharePaise = Math.round(grossPaise * creatorSharePercentage);
+        const creatorShareRs = creatorSharePaise / 100;
+
+        await Creator.findByIdAndUpdate(req.creator.creatorId, {
+            $inc: { availableBalance: creatorShareRs }
+        });
+    }
     
     // Asynchronously update the stats for the creator
     updateCreatorStats(req.creator.creatorId);

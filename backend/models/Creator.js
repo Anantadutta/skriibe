@@ -41,6 +41,8 @@ const CreatorSchema = new mongoose.Schema({
     replyRate: { type: Number, default: 0 },
     avgReplyTime: { type: Number, default: 0 }
   },
+  availableBalance: { type: Number, default: 0 },
+  lifetimePaid: { type: Number, default: 0 },
   authProvider: { type: String, default: 'local' },
   resetPasswordToken: { type: String },
   resetPasswordExpires: { type: Date },

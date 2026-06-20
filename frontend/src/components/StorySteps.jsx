@@ -7,7 +7,10 @@ const StorySteps = ({ theme = 'dark' }) => {
     return (
         <section className="px-6 pb-8 overflow-hidden" id="story">
             <div className="max-w-[1160px] mx-auto">
-                <StepOne />
+                <h2 className={`font-libre text-[clamp(40px,7vw,84px)] font-bold italic text-center mb-12 mt-12 ${theme === 'light' ? 'text-black' : 'text-white'}`}>
+                    How it <span className="text-skriibe-blue">works.</span>
+                </h2>
+                <StepOne theme={theme} />
                 <StepTwo theme={theme} />
                 <StepThree theme={theme} />
                 <StepFour theme={theme} />
@@ -17,7 +20,7 @@ const StorySteps = ({ theme = 'dark' }) => {
 };
 
 const StepOne = () => (
-    <div className="grid md:grid-cols-2 gap-20 items-center pt-12 pb-24 border-t border-b border-skriibe-d4">
+    <div className="grid md:grid-cols-2 gap-20 items-center pb-24 border-b border-skriibe-d4">
         <div className="animate-fade-up">
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-skriibe-blue/10 border border-skriibe-blue/20 text-[11px] font-bold text-skriibe-blue tracking-wider uppercase mb-5">
                 Step 01 · The problem
@@ -294,7 +297,7 @@ const StepThree = ({ theme = 'dark' }) => {
                     They pay Rs.99.<br /><span className="italic text-skriibe-blue">You get an Email ping.</span>
                 </h3>
                 <p className="font-roboto text-gray-400 text-base leading-relaxed mb-6">
-                    Your follower lands on your skriibe page, types their question, and pays via UPI in 3 taps. No account needed. No friction. You get an WhatsApp notification the moment payment clears.
+                    Your follower lands on your skriibe page, types their question, and pays via UPI in 3 taps. No account needed. No friction. You get an email notification the moment payment clears.
                 </p>
                 <div className="font-roboto p-4 bg-skriibe-d3 rounded-xl border-l-[3px] border-skriibe-blue text-sm text-gray-400 leading-relaxed">
                     Only serious people pay. No more 100 DMs where 90 are "hey bro please help." Every paid question is from someone who genuinely wants your advice.
@@ -444,7 +447,7 @@ const StepFour = ({ theme }) => {
                     Answer in your dashboard.<br /><span className="italic text-skriibe-blue">Earn <span className="text-white">Rs.99</span> per reply.</span>
                 </h3>
                 <p className="font-roboto text-gray-400 text-lg leading-relaxed mb-8">
-                    Open your skriibe dashboard. See the question. Type your reply — minimum 100 characters, so every answer is real. Hit send. The follower gets your answer instantly via WhatsApp and email.
+                    Open your skriibe dashboard. See the question. Type your reply — minimum 100 characters, so every answer is real. Hit send. The follower gets your answer instantly via email and skriibe inbox.
                 </p>
                 <div className="font-roboto p-6 bg-skriibe-d3 rounded-2xl border-l-[4px] border-skriibe-blue text-sm md:text-base text-gray-400 leading-relaxed">
                     Rs.99 per question, batched and transferred to your bank account every Tuesday. No chasing. No invoicing. Automatic.

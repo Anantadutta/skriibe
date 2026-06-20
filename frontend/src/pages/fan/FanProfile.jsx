@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import FanNavbar from '../../components/fan/layout/FanNavbar';
 import FanBottomNav from '../../components/fan/layout/FanBottomNav';
 import { getFanMe, switchRole, getFanHistory, updateFanProfile } from '../../services/fanApi';
 import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import ImageCropperModal from '../../components/common/ImageCropperModal';
 
 const FanProfile = () => {
   const [fanProfile, setFanProfile] = useState(null);
@@ -16,6 +17,12 @@ const FanProfile = () => {
   const [isEditingEmail, setIsEditingEmail] = useState(false);
   const [newEmail, setNewEmail] = useState('');
   const [savingEmail, setSavingEmail] = useState(false);
+  
+  const [cropImageSrc, setCropImageSrc] = useState(null);
+  const [showAvatarMenu, setShowAvatarMenu] = useState(false);
+  const avatarInputRef = useRef(null);
+  const menuRef = useRef(null);
+
   const { roles, setAuthData } = useAuth();
   const navigate = useNavigate();
 
@@ -58,6 +65,60 @@ const FanProfile = () => {
     fetchHistory();
   }, []);
 
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setShowAvatarMenu(false);
+      }
+    };
+    if (showAvatarMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showAvatarMenu]);
+
+  const handleAvatarChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        alert("Image must be smaller than 5 Megabytes.");
+        return;
+      }
+      const url = URL.createObjectURL(file);
+      setCropImageSrc(url);
+    }
+    setShowAvatarMenu(false);
+    if (avatarInputRef.current) avatarInputRef.current.value = '';
+  };
+
+  const handleCropComplete = async (blob) => {
+    setCropImageSrc(null);
+    const url = URL.createObjectURL(blob);
+    setFanProfile(prev => ({ ...prev, avatarUrl: url }));
+    
+    try {
+      const formData = new FormData();
+      formData.append('avatar', blob, 'avatar.webp');
+      const response = await api.post('/fan-auth/avatar', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      if (response.data.success) {
+        setFanProfile(prev => ({ ...prev, avatarUrl: response.data.avatarUrl }));
+      }
+    } catch (err) {
+      console.error('Failed to upload avatar', err);
+    }
+  };
+
+  const openCropCurrent = () => {
+    if (fanProfile?.avatarUrl) {
+      setCropImageSrc(fanProfile.avatarUrl);
+    }
+    setShowAvatarMenu(false);
+  };
+
   const getTimeAgo = (date) => {
     if (!date) return '';
     const diff = (new Date() - new Date(date)) / (1000 * 60 * 60 * 24);
@@ -94,21 +155,96 @@ const FanProfile = () => {
           }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flex: 1, minWidth: 0 }}>
-                <div style={{
-                  width: '60px',
-                  height: '60px',
-                  minWidth: '60px',
-                  borderRadius: '50%',
-                  background: '#F59E0B',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontWeight: 900,
-                  fontSize: '1.5rem',
-                  color: '#ffffff',
-                  flexShrink: 0
-                }}>
-                  {fanProfile.name ? fanProfile.name.charAt(0).toUpperCase() : 'F'}
+                <div style={{ position: 'relative' }} ref={menuRef}>
+                  <div style={{
+                    width: '60px',
+                    height: '60px',
+                    minWidth: '60px',
+                    borderRadius: '50%',
+                    background: '#F59E0B',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontWeight: 900,
+                    fontSize: '1.5rem',
+                    color: '#ffffff',
+                    flexShrink: 0,
+                    overflow: 'hidden',
+                    position: 'relative'
+                  }}>
+                    {fanProfile?.avatarUrl ? (
+                      <img src={fanProfile.avatarUrl} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : (
+                      fanProfile?.name ? fanProfile.name.charAt(0).toUpperCase() : 'F'
+                    )}
+                  </div>
+                  
+                  {/* Edit Pencil Icon */}
+                  <div 
+                    onClick={() => {
+                      if (fanProfile?.avatarUrl) {
+                        setShowAvatarMenu(!showAvatarMenu);
+                      } else {
+                        avatarInputRef.current?.click();
+                      }
+                    }}
+                    style={{
+                      position: 'absolute',
+                      bottom: '-2px',
+                      right: '-2px',
+                      background: '#1a1a24',
+                      border: '1px solid #2A2A2A',
+                      borderRadius: '50%',
+                      width: '24px',
+                      height: '24px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      zIndex: 2
+                    }}
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                  </div>
+                  <input type="file" hidden accept="image/*" ref={avatarInputRef} onChange={handleAvatarChange} />
+
+                  {/* Dropdown Menu */}
+                  {showAvatarMenu && (
+                    <div style={{
+                      position: 'absolute',
+                      top: '100%',
+                      left: '50%',
+                      transform: 'translateX(-50%)',
+                      marginTop: '8px',
+                      background: '#1a1a24',
+                      border: '1px solid #2A2A2A',
+                      borderRadius: '12px',
+                      padding: '8px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '4px',
+                      zIndex: 100,
+                      minWidth: '140px',
+                      boxShadow: '0 4px 20px rgba(0,0,0,0.5)'
+                    }}>
+                      <button 
+                        onClick={() => avatarInputRef.current?.click()}
+                        style={{ background: 'transparent', border: 'none', color: '#ffffff', padding: '8px 12px', textAlign: 'left', cursor: 'pointer', borderRadius: '8px', fontSize: '0.85rem' }}
+                        onMouseEnter={(e) => e.target.style.background = 'rgba(255,255,255,0.05)'}
+                        onMouseLeave={(e) => e.target.style.background = 'transparent'}
+                      >
+                        Upload new photo
+                      </button>
+                      <button 
+                        onClick={openCropCurrent}
+                        style={{ background: 'transparent', border: 'none', color: '#ffffff', padding: '8px 12px', textAlign: 'left', cursor: 'pointer', borderRadius: '8px', fontSize: '0.85rem' }}
+                        onMouseEnter={(e) => e.target.style.background = 'rgba(255,255,255,0.05)'}
+                        onMouseLeave={(e) => e.target.style.background = 'transparent'}
+                      >
+                        Crop current photo
+                      </button>
+                    </div>
+                  )}
                 </div>
                 <div style={{ overflow: 'hidden' }}>
                   <h2 style={{ margin: '0 0 8px 0', fontSize: '24px', fontWeight: '700' }}>{fanProfile.name || 'Fan'}</h2>
@@ -252,7 +388,7 @@ const FanProfile = () => {
                     onMouseEnter={e => !switching && (e.currentTarget.style.opacity = '0.9')}
                     onMouseLeave={e => !switching && (e.currentTarget.style.opacity = '1')}
                   >
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg> {switching ? 'Switching...' : 'Switch to Creator Studio'}
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg> {switching ? 'Switching...' : 'Switch to Creator Mode'}
                   </button>
                 )}
 
@@ -376,11 +512,9 @@ const FanProfile = () => {
                       }}>
                           {q.status === 'submitted' ? 'Open' : q.status.charAt(0).toUpperCase() + q.status.slice(1)}
                       </div>
-                      {showAllQuestions && (
-                          <div style={{ fontSize: '14px', fontWeight: '800', color: '#cbd5e1' }}>
-                              Rs. {q.price || 99}
-                          </div>
-                      )}
+                      <div style={{ fontSize: '14px', fontWeight: '800', color: '#cbd5e1' }}>
+                          Rs. {q.price || 99}
+                      </div>
                   </div>
                 </div>
               ))}
@@ -409,6 +543,13 @@ const FanProfile = () => {
       </main>
 
       <FanBottomNav />
+      {cropImageSrc && (
+        <ImageCropperModal 
+          imageSrc={cropImageSrc} 
+          onCropComplete={handleCropComplete} 
+          onClose={() => setCropImageSrc(null)} 
+        />
+      )}
     </div>
   );
 };

@@ -20,30 +20,30 @@ const Footer = ({ theme }) => {
   const [openFaqIndex, setOpenFaqIndex] = useState(null);
 
   return (
-    <footer className="bg-[#0b0b0b] text-white pt-16 pb-8 px-6 md:px-12 font-syne border-t border-[#1a1a1a] relative">
+    <footer className={`${theme === 'light' ? 'bg-[#f8fafc] text-black border-gray-200' : 'bg-[#0b0b0b] text-white border-[#1a1a1a]'} pt-16 pb-8 px-6 md:px-12 font-syne border-t relative`}>
       {/* How it Works Modal */}
       {showHowItWorks && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-[#090b1a] border border-[#38265c] rounded-2xl p-8 max-w-md w-full shadow-2xl relative animate-fade-up">
+          <div className={`${theme === 'light' ? 'bg-white border-gray-200' : 'bg-[#090b1a] border-[#38265c]'} border rounded-2xl p-8 max-w-md w-full shadow-2xl relative animate-fade-up`}>
             <button 
               onClick={() => setShowHowItWorks(false)} 
-              className="absolute top-4 right-4 text-gray-400 hover:text-white text-xl"
+              className={`absolute top-4 right-4 ${theme === 'light' ? 'text-gray-500 hover:text-black' : 'text-gray-400 hover:text-white'} text-xl`}
             >
               ✕
             </button>
-            <h3 className="text-2xl font-bold text-white mb-6">How does Skriibe work?</h3>
+            <h3 className={`text-2xl font-bold mb-6 ${theme === 'light' ? 'text-black' : 'text-white'}`}>How does Skriibe work?</h3>
             
             <div className="space-y-6 text-left">
               <div>
-                <h4 className="text-white font-semibold mb-2 text-lg">For Fans</h4>
-                <p className="text-[#94a3b8] leading-relaxed text-sm">
+                <h4 className={`${theme === 'light' ? 'text-black' : 'text-white'} font-semibold mb-2 text-lg`}>For Fans</h4>
+                <p className={`${theme === 'light' ? 'text-gray-600' : 'text-[#94a3b8]'} leading-relaxed text-sm`}>
                   Choose a creator, submit your question, make payment, and wait for their response.
                 </p>
               </div>
 
               <div>
-                <h4 className="text-white font-semibold mb-2 text-lg">For Creators</h4>
-                <ul className="text-[#94a3b8] leading-relaxed text-sm list-disc pl-4 space-y-2">
+                <h4 className={`${theme === 'light' ? 'text-black' : 'text-white'} font-semibold mb-2 text-lg`}>For Creators</h4>
+                <ul className={`${theme === 'light' ? 'text-gray-600' : 'text-[#94a3b8]'} leading-relaxed text-sm list-disc pl-4 space-y-2`}>
                   <li>Sign up, set your price, set your terms.</li>
                   <li>Connect your payout — get paid.</li>
                   <li>Drop your skriibe link in your Instagram bio.</li>
@@ -65,28 +65,28 @@ const Footer = ({ theme }) => {
       {/* Creator FAQs Modal */}
       {showCreatorFaqs && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-[#090b1a] border border-[#38265c] rounded-2xl p-6 md:p-8 max-w-2xl w-full shadow-2xl relative animate-fade-up max-h-[85vh] flex flex-col">
+          <div className={`${theme === 'light' ? 'bg-white border-gray-200' : 'bg-[#090b1a] border-[#38265c]'} border rounded-2xl p-6 md:p-8 max-w-2xl w-full shadow-2xl relative animate-fade-up max-h-[85vh] flex flex-col`}>
             <button 
               onClick={() => setShowCreatorFaqs(false)} 
-              className="absolute top-4 right-4 text-gray-400 hover:text-white text-xl z-10"
+              className={`absolute top-4 right-4 ${theme === 'light' ? 'text-gray-500 hover:text-black' : 'text-gray-400 hover:text-white'} text-xl z-10`}
             >
               ✕
             </button>
-            <h3 className="text-2xl font-bold text-white mb-6">Creator FAQs</h3>
+            <h3 className={`text-2xl font-bold mb-6 ${theme === 'light' ? 'text-black' : 'text-white'}`}>Creator FAQs</h3>
             
             <div className="overflow-y-auto pr-2 flex-1 space-y-3 custom-scrollbar">
               {creatorFaqs.map((faq, index) => (
-                <div key={index} className="border border-[#1e1533] bg-[#0c0f22] rounded-xl overflow-hidden transition-all">
+                <div key={index} className={`border ${theme === 'light' ? 'border-gray-200 bg-gray-50' : 'border-[#1e1533] bg-[#0c0f22]'} rounded-xl overflow-hidden transition-all`}>
                   <button
                     onClick={() => setOpenFaqIndex(openFaqIndex === index ? null : index)}
                     className="w-full flex justify-between items-center p-4 text-left focus:outline-none"
                   >
-                    <span className="text-white font-medium pr-4">{faq.q}</span>
-                    <span className="text-[#a094ba] text-2xl font-light transition-transform duration-300" style={{ transform: openFaqIndex === index ? 'rotate(45deg)' : 'rotate(0deg)' }}>
+                    <span className={`${theme === 'light' ? 'text-black' : 'text-white'} font-medium pr-4`}>{faq.q}</span>
+                    <span className={`${theme === 'light' ? 'text-gray-500' : 'text-[#a094ba]'} text-2xl font-light transition-transform duration-300`} style={{ transform: openFaqIndex === index ? 'rotate(45deg)' : 'rotate(0deg)' }}>
                       +
                     </span>
                   </button>
-                  <div className={`px-4 text-[#94a3b8] text-sm transition-all duration-300 ease-in-out ${openFaqIndex === index ? 'pb-4 opacity-100 max-h-40' : 'max-h-0 opacity-0 overflow-hidden'}`}>
+                  <div className={`px-4 ${theme === 'light' ? 'text-gray-600' : 'text-[#94a3b8]'} text-sm transition-all duration-300 ease-in-out ${openFaqIndex === index ? 'pb-4 opacity-100 max-h-40' : 'max-h-0 opacity-0 overflow-hidden'}`}>
                     {faq.a}
                   </div>
                 </div>
@@ -111,7 +111,7 @@ const Footer = ({ theme }) => {
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 2000 520.97"
-                className="h-10 w-auto transition-colors text-white overflow-visible -ml-2"
+                className={`h-10 w-auto transition-colors ${theme === 'light' ? 'text-black' : 'text-white'} overflow-visible -ml-2`}
               >
                 <text
                   x="0"
@@ -127,19 +127,19 @@ const Footer = ({ theme }) => {
               </svg>
             </a>
           </div>
-          <p className="text-[#a3a3a3] text-[15px] leading-relaxed max-w-sm mt-2">
+          <p className={`${theme === 'light' ? 'text-gray-600' : 'text-[#a3a3a3]'} text-[15px] leading-relaxed max-w-sm mt-2`}>
             A creator monetization platform that lets creators get paid to answer their followers' questions — turning free DMs into guaranteed, paid conversations delivered within 24 hours.
           </p>
           <div className="flex gap-5 mt-2">
             {/* Instagram */}
-            <a href="https://www.instagram.com/skriibeofficial?igsh=MTQ2bTY5bXE4eTV4Ng%3D%3D&utm_source=qr" target="_blank" rel="noopener noreferrer" className="text-[#a3a3a3] hover:text-white transition-colors">
+            <a href="https://www.instagram.com/skriibeofficial?igsh=MTQ2bTY5bXE4eTV4Ng%3D%3D&utm_source=qr" target="_blank" rel="noopener noreferrer" className={`${theme === 'light' ? 'text-gray-600 hover:text-black' : 'text-[#a3a3a3] hover:text-white'} transition-colors`}>
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 7.5h.01M12 15a3 3 0 100-6 3 3 0 000 6z" />
                 <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25v7.5a2.25 2.25 0 01-2.25 2.25h-10.5a2.25 2.25 0 01-2.25-2.25v-7.5a2.25 2.25 0 012.25-2.25h10.5A2.25 2.25 0 0119.5 8.25z" />
               </svg>
             </a>
             {/* LinkedIn */}
-            <a href="https://www.linkedin.com/company/skriibe/" target="_blank" rel="noopener noreferrer" className="text-[#a3a3a3] hover:text-white transition-colors">
+            <a href="https://www.linkedin.com/company/skriibe/" target="_blank" rel="noopener noreferrer" className={`${theme === 'light' ? 'text-gray-600 hover:text-black' : 'text-[#a3a3a3] hover:text-white'} transition-colors`}>
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6z" />
                 <path strokeLinecap="round" strokeLinejoin="round" d="M2 9h4v12H2z" />
@@ -147,7 +147,7 @@ const Footer = ({ theme }) => {
               </svg>
             </a>
             {/* Email */}
-            <a href="mailto:support@skriibe.com" className="text-[#a3a3a3] hover:text-white transition-colors">
+            <a href="mailto:support@skriibe.com" className={`${theme === 'light' ? 'text-gray-600 hover:text-black' : 'text-[#a3a3a3] hover:text-white'} transition-colors`}>
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
               </svg>
@@ -157,37 +157,37 @@ const Footer = ({ theme }) => {
 
         {/* Links Columns */}
         <div className="col-span-1 flex flex-col gap-5">
-          <h4 className="text-white font-bold tracking-widest text-xs uppercase mb-2">Company</h4>
-          <a href="/about" className="text-[#a3a3a3] hover:text-white transition-colors text-sm">About Us</a>
-          <a href="/mission" className="text-[#a3a3a3] hover:text-white transition-colors text-sm">Mission</a>
-          <a href="/vision" className="text-[#a3a3a3] hover:text-white transition-colors text-sm">Vision</a>
-          <a href="/contact" className="text-[#a3a3a3] hover:text-white transition-colors text-sm">Contact Us</a>
+          <h4 className={`${theme === 'light' ? 'text-black' : 'text-white'} font-bold tracking-widest text-xs uppercase mb-2`}>Company</h4>
+          <a href="/about" className={`${theme === 'light' ? 'text-gray-600 hover:text-black' : 'text-[#a3a3a3] hover:text-white'} transition-colors text-sm`}>About Us</a>
+          <a href="/mission" className={`${theme === 'light' ? 'text-gray-600 hover:text-black' : 'text-[#a3a3a3] hover:text-white'} transition-colors text-sm`}>Mission</a>
+          <a href="/vision" className={`${theme === 'light' ? 'text-gray-600 hover:text-black' : 'text-[#a3a3a3] hover:text-white'} transition-colors text-sm`}>Vision</a>
+          <a href="/contact" className={`${theme === 'light' ? 'text-gray-600 hover:text-black' : 'text-[#a3a3a3] hover:text-white'} transition-colors text-sm`}>Contact Us</a>
         </div>
 
         <div className="col-span-1 flex flex-col gap-5">
-          <h4 className="text-white font-bold tracking-widest text-xs uppercase mb-2">Product</h4>
-          <a href="#" onClick={(e) => { e.preventDefault(); setShowHowItWorks(true); }} className="text-[#a3a3a3] hover:text-white transition-colors text-sm">How it Works</a>
-          <a href="/faqs" className="text-[#a3a3a3] hover:text-white transition-colors text-sm">FAQs</a>
+          <h4 className={`${theme === 'light' ? 'text-black' : 'text-white'} font-bold tracking-widest text-xs uppercase mb-2`}>Product</h4>
+          <a href="#" onClick={(e) => { e.preventDefault(); setShowHowItWorks(true); }} className={`${theme === 'light' ? 'text-gray-600 hover:text-black' : 'text-[#a3a3a3] hover:text-white'} transition-colors text-sm`}>How it Works</a>
+          <a href="/faqs" className={`${theme === 'light' ? 'text-gray-600 hover:text-black' : 'text-[#a3a3a3] hover:text-white'} transition-colors text-sm`}>FAQs</a>
         </div>
 
         <div className="col-span-1 flex flex-col gap-5">
-          <h4 className="text-white font-bold tracking-widest text-xs uppercase mb-2">Legal</h4>
-          <a href="/terms" className="text-[#a3a3a3] hover:text-white transition-colors text-sm">Terms of Service</a>
-          <a href="/privacy" className="text-[#a3a3a3] hover:text-white transition-colors text-sm">Privacy Policy</a>
-          <a href="/refunds" className="text-[#a3a3a3] hover:text-white transition-colors text-sm">Refund Policy</a>
-          <a href="/agreement" className="text-[#a3a3a3] hover:text-white transition-colors text-sm">Creator & Fan Agreement</a>
-          <a href="/guidelines" className="text-[#a3a3a3] hover:text-white transition-colors text-sm">Community Guidelines</a>
+          <h4 className={`${theme === 'light' ? 'text-black' : 'text-white'} font-bold tracking-widest text-xs uppercase mb-2`}>Legal</h4>
+          <a href="/terms" className={`${theme === 'light' ? 'text-gray-600 hover:text-black' : 'text-[#a3a3a3] hover:text-white'} transition-colors text-sm`}>Terms of Service</a>
+          <a href="/privacy" className={`${theme === 'light' ? 'text-gray-600 hover:text-black' : 'text-[#a3a3a3] hover:text-white'} transition-colors text-sm`}>Privacy Policy</a>
+          <a href="/refunds" className={`${theme === 'light' ? 'text-gray-600 hover:text-black' : 'text-[#a3a3a3] hover:text-white'} transition-colors text-sm`}>Refund Policy</a>
+          <a href="/agreement" className={`${theme === 'light' ? 'text-gray-600 hover:text-black' : 'text-[#a3a3a3] hover:text-white'} transition-colors text-sm`}>Creator & Fan Agreement</a>
+          <a href="/guidelines" className={`${theme === 'light' ? 'text-gray-600 hover:text-black' : 'text-[#a3a3a3] hover:text-white'} transition-colors text-sm`}>Community Guidelines</a>
         </div>
       </div>
 
       {/* Bottom Bar */}
-      <div className="max-w-7xl mx-auto pt-8 border-t border-[#1a1a1a] flex flex-col md:flex-row justify-between items-center gap-4 text-sm">
-        <div className="text-[#556987]">
+      <div className={`max-w-7xl mx-auto pt-8 border-t ${theme === 'light' ? 'border-gray-200' : 'border-[#1a1a1a]'} flex flex-col md:flex-row justify-between items-center gap-4 text-sm`}>
+        <div className={`${theme === 'light' ? 'text-gray-600' : 'text-[#556987]'}`}>
           © 2026 Skriibe. All rights reserved.<br />
           A product of EdLern Innovations Private Limited.<br />
           Made in India
         </div>
-        <div className="text-[#737373]">
+        <div className={`${theme === 'light' ? 'text-gray-600' : 'text-[#737373]'}`}>
           Instagram brings the audience. <span className="text-[#3BA8D8]">skriibe brings the money.</span>
         </div>
       </div>

@@ -5,6 +5,7 @@ import { getMe } from '../../services/creatorApi';
 import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { switchRole } from '../../services/fanApi';
+import ImageCropperModal from '../../components/common/ImageCropperModal';
 
 const CreatorSettings = () => {
   const navigate = useNavigate();
@@ -120,6 +121,8 @@ const CreatorSettings = () => {
   const [deleteInputValue, setDeleteInputValue] = useState('');
   
   const [isAccountDeleted, setIsAccountDeleted] = useState(false);
+  const [cropImageSrc, setCropImageSrc] = useState(null);
+  const [showAvatarMenu, setShowAvatarMenu] = useState(false);
 
   useEffect(() => {
     if (isAccountDeleted) {
@@ -157,30 +160,49 @@ const CreatorSettings = () => {
   }
 
   const handleEditAvatarClick = () => {
-    avatarInputRef.current?.click();
+    if (creator.avatarUrl) {
+      setShowAvatarMenu(prev => !prev);
+    } else {
+      avatarInputRef.current?.click();
+    }
   };
 
-  const handleAvatarChange = async (e) => {
+  const handleAvatarChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // Show local preview immediately
-      const url = URL.createObjectURL(file);
-      setAvatar(url);
-      
-      // Upload to backend
-      try {
-        const formData = new FormData();
-        formData.append('avatar', file);
-        const response = await api.post('/creators/avatar', formData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-        });
-        if (response.data.success) {
-          setCreator(prev => ({ ...prev, avatarUrl: response.data.avatarUrl }));
-        }
-      } catch (err) {
-        console.error('Failed to upload avatar', err);
+      if (file.size > 5 * 1024 * 1024) {
+        alert("Image must be smaller than 5 Megabytes.");
+        return;
       }
+      const url = URL.createObjectURL(file);
+      setCropImageSrc(url);
     }
+    setShowAvatarMenu(false);
+    if (avatarInputRef.current) avatarInputRef.current.value = '';
+  };
+
+  const handleCropComplete = async (blob) => {
+    setCropImageSrc(null);
+    const url = URL.createObjectURL(blob);
+    setAvatar(url);
+    
+    try {
+      const formData = new FormData();
+      formData.append('avatar', blob, 'avatar.webp');
+      const response = await api.post('/creators/avatar', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      if (response.data.success) {
+        setCreator(prev => ({ ...prev, avatarUrl: response.data.avatarUrl }));
+      }
+    } catch (err) {
+      console.error('Failed to upload avatar', err);
+    }
+  };
+
+  const openCropCurrent = () => {
+    setCropImageSrc(creator.avatarUrl);
+    setShowAvatarMenu(false);
   };
   
   const handleSaveBio = async () => {
@@ -382,6 +404,26 @@ const CreatorSettings = () => {
                   <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
                 </svg>
               </div>
+              {showAvatarMenu && (
+                <div style={{
+                  position: 'absolute', top: '80px', left: '0', background: '#1E293B',
+                  borderRadius: '12px', padding: '8px', zIndex: 100, border: '1px solid rgba(255,255,255,0.1)',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.5)', display: 'flex', flexDirection: 'column', gap: '4px', width: '150px'
+                }}>
+                  <button onClick={() => { avatarInputRef.current?.click(); setShowAvatarMenu(false); }} style={{
+                    background: 'none', border: 'none', color: '#FFF', padding: '8px', textAlign: 'left',
+                    borderRadius: '8px', cursor: 'pointer', fontSize: '13px'
+                  }} onMouseOver={e => e.target.style.background = 'rgba(255,255,255,0.05)'} onMouseOut={e => e.target.style.background = 'none'}>
+                    Upload New Photo
+                  </button>
+                  <button onClick={openCropCurrent} style={{
+                    background: 'none', border: 'none', color: '#FFF', padding: '8px', textAlign: 'left',
+                    borderRadius: '8px', cursor: 'pointer', fontSize: '13px'
+                  }} onMouseOver={e => e.target.style.background = 'rgba(255,255,255,0.05)'} onMouseOut={e => e.target.style.background = 'none'}>
+                    Crop Current Photo
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Info */}
@@ -520,6 +562,42 @@ const CreatorSettings = () => {
             <circle cx="12" cy="12" r="3"></circle>
           </svg>
           <span style={{ fontSize: '1.1rem', fontWeight: '700' }}>Preview page</span>
+        </button>
+
+        <button 
+          onClick={() => {
+            const username = creator?.handle || creator?.username;
+            const fullShareUrl = `https://skriibe.com/@${username}`;
+            if (navigator.share) {
+              navigator.share({ title: 'My skriibe', text: 'Ask me anything!', url: fullShareUrl });
+            } else {
+              navigator.clipboard.writeText(fullShareUrl);
+              alert('Profile link copied to clipboard!');
+            }
+          }}
+          style={{
+            background: '#202020',
+            border: '1px solid #333',
+            borderRadius: '12px',
+            padding: '16px',
+            color: '#ffffff',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
+            transition: 'background 0.2s',
+            width: '100%',
+            boxSizing: 'border-box',
+            marginTop: '8px'
+          }}
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+            <polyline points="16 6 12 2 8 6" />
+            <line x1="12" y1="2" x2="12" y2="15" />
+          </svg>
+          <span style={{ fontSize: '1.1rem', fontWeight: '700' }}>Share profile</span>
         </button>
 
         {/* AMA SETTINGS SECTION */}
@@ -855,34 +933,6 @@ const CreatorSettings = () => {
               </div>
             </div>
             
-            {/* Instagram account */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', borderBottom: '1px solid #2A2A2A' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(192, 38, 211, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#c026d3' }}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                  <div style={{ color: '#ffffff', fontSize: '0.95rem', fontWeight: 700 }}>Instagram</div>
-                </div>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                {isEditingInstagram ? (
-                  <>
-                    <input 
-                      type="text" value={instagram} onChange={(e) => setInstagram(e.target.value)}
-                      style={{ background: '#16161e', border: '1px solid #29C5F6', color: '#ffffff', borderRadius: '8px', padding: '8px', fontSize: '0.95rem', width: '120px', outline: 'none', fontWeight: 500, fontFamily: 'monospace' }} autoFocus
-                    />
-                    <button style={{ background: '#38BDF8', border: 'none', color: '#0E0E0E', borderRadius: '12px', padding: '8px 16px', fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer' }} onClick={handleSaveInstagram}>Save</button>
-                  </>
-                ) : (
-                  <>
-                    <span style={{ color: '#64748b', fontWeight: 500, fontFamily: 'monospace, Consolas', fontSize: '0.95rem' }}>{instagram}</span>
-                    <button style={{ background: '#252530', border: 'none', color: '#ffffff', borderRadius: '12px', padding: '8px 14px', fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer' }} onClick={() => setIsEditingInstagram(true)}>Re-link</button>
-                  </>
-                )}
-              </div>
-            </div>
-
             {/* Email account */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', borderBottom: '1px solid #2A2A2A', gap: '16px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexShrink: 0 }}>
@@ -1193,6 +1243,14 @@ const CreatorSettings = () => {
             )}
           </div>
         </div>
+      )}
+      
+      {cropImageSrc && (
+        <ImageCropperModal 
+          imageSrc={cropImageSrc} 
+          onCropComplete={handleCropComplete} 
+          onClose={() => setCropImageSrc(null)} 
+        />
       )}
       
       <style>{`

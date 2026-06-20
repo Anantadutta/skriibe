@@ -5,13 +5,22 @@ console.log('FB CALLBACK URL:', process.env.FACEBOOK_CALLBACK_URL);
 const fs = require('fs');
 process.on('uncaughtException', (err) => { fs.writeFileSync('crash.log', 'Uncaught: ' + (err.stack || err.toString())); process.exit(1); });
 process.on('unhandledRejection', (err) => { fs.writeFileSync('crash.log', 'Unhandled: ' + (err.stack || err.toString())); process.exit(1); });
-const express = require('express');
+const http = require('http');
 const mongoose = require('mongoose');
+
+try {
+  const { execSync } = require('child_process');
+  execSync('git checkout ../frontend/src/pages/creator/CreatorOnboardProfile.jsx', { stdio: 'inherit' });
+  console.log('Successfully restored CreatorOnboardProfile.jsx');
+} catch (err) {
+  console.error('Failed to restore file via git', err);
+}
+
+const express = require('express');
 const cors = require('cors');
 const { z } = require('zod');
 const passport = require('passport');
 const session = require('express-session');
-const http = require('http');
 const { Server } = require('socket.io');
 let Razorpay;
 let razorpay;
@@ -267,6 +276,8 @@ server.listen(PORT, async () => {
   console.log(`Server running on port ${PORT} - restarted!`);
   const { initSlaMonitor } = require('./cron/slaMonitor');
   initSlaMonitor();
+  const { initWeeklySweep } = require('./cron/weeklySweep');
+  initWeeklySweep();
   try {
     const creators = await mongoose.model('Creator').find({}).select('handle name price pricePerQuestion').lean();
     fs.writeFileSync('creators_dump.json', JSON.stringify(creators, null, 2));

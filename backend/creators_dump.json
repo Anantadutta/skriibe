@@ -54,10 +54,23 @@
     "pricePerQuestion": 99
   },
   {
-    "_id": "6a359583db8e90d9993050da",
+    "_id": "6a365a1d1af95734251f467d",
+    "name": "Tarundeep Singh",
+    "price": 50,
+    "pricePerQuestion": 50,
+    "handle": "tarun0501"
+  },
+  {
+    "_id": "6a36c81adece8c422cb170bc",
     "name": "Ananta .",
-    "price": 49,
-    "pricePerQuestion": 49,
-    "handle": "2222"
+    "price": 99,
+    "pricePerQuestion": 99,
+    "handle": "idk"
+  },
+  {
+    "_id": "6a36f47e4d6fea2844e75090",
+    "name": "",
+    "price": 99,
+    "pricePerQuestion": 99
   }
 ]

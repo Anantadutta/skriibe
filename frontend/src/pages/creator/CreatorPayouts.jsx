@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { PhoneFrame } from '../../components/ama/layout/PhoneFrame';
 import { BottomNav } from '../../components/ama/layout/BottomNav';
 import api from '../../services/api';
+import { getMe } from '../../services/creatorApi';
 import { io } from 'socket.io-client';
 
 const TABS = ['Available', 'Protected', 'Under Review', 'Refunded', 'History'];
@@ -102,6 +103,7 @@ const CreatorPayouts = () => {
   const [refundSubTab, setRefundSubTab] = useState('All');
   const tabsRef = useRef(null);
   const [payoutStats, setPayoutStats] = useState({ lifetimePaid: 0, thisMonth: 0, inEscrow: 0, available: 0, nextPayoutDate: null, availableQuestions: 0, availableGross: 0, availableFee: 0, inEscrowQuestions: 0, pendingList: [], underReviewAmount: 0, underReviewQuestionsCount: 0, underReviewList: [] });
+  const [creatorCreatedAt, setCreatorCreatedAt] = useState(null);
 
   const fetchPayouts = () => {
     api.get('/creator/payouts')
@@ -111,6 +113,14 @@ const CreatorPayouts = () => {
 
   useEffect(() => {
     fetchPayouts();
+
+    getMe()
+      .then(res => {
+        if (res.data && res.data.creator && res.data.creator.createdAt) {
+          setCreatorCreatedAt(res.data.creator.createdAt);
+        }
+      })
+      .catch(() => {});
 
     const socketUrl = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : 'http://localhost:5000';
     const socket = io(socketUrl);
@@ -130,12 +140,38 @@ const CreatorPayouts = () => {
 
   const fmt = (n) => '₹' + (Number(n) || 0).toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
 
-  const getNextTuesday = () => {
-    const now = new Date();
-    const daysForward = ((2 - now.getDay() + 7) % 7) || 7;
-    const next = new Date(now);
-    next.setDate(now.getDate() + daysForward);
-    return next.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' });
+  const getNextPayoutDate = () => {
+    if (!creatorCreatedAt) return "...";
+
+    const normalize = (d) => {
+      const x = new Date(d);
+      x.setHours(0, 0, 0, 0);
+      return x;
+    };
+
+    const now = normalize(new Date());
+    const createdDate = normalize(new Date(creatorCreatedAt));
+
+    const firstEligibleDate = new Date(createdDate);
+    firstEligibleDate.setDate(createdDate.getDate() + 7);
+
+    const daysUntilTuesday = (2 - firstEligibleDate.getDay() + 7) % 7;
+    const firstPayoutDate = new Date(firstEligibleDate);
+    firstPayoutDate.setDate(firstEligibleDate.getDate() + daysUntilTuesday);
+
+    let targetDate = firstPayoutDate;
+    if (now >= firstPayoutDate) {
+      const daysForward = ((2 - now.getDay() + 7) % 7) || 7;
+      targetDate = new Date(now);
+      targetDate.setDate(now.getDate() + daysForward);
+    }
+
+    return targetDate.toLocaleDateString('en-IN', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    });
   };
 
   const scrollTabs = () => {
@@ -200,31 +236,7 @@ const CreatorPayouts = () => {
               <p style={{ fontSize: '13px', color: '#686860', margin: 0 }}>Your earnings overview</p>
             </div>
 
-            {/* ── Overview card ── */}
-            <div style={{
-              background: 'linear-gradient(145deg, #0d1f2d 0%, #0a0a1e 60%, #07070E 100%)',
-              borderRadius: '20px',
-              padding: '22px',
-              marginBottom: '18px',
-              border: '1px solid rgba(61,217,255,0.14)',
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '7px', marginBottom: '10px' }}>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#3DD9FF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
-                  <polyline points="17 6 23 6 23 12"></polyline>
-                </svg>
-                <span style={{ color: '#3DD9FF', fontSize: '11px', fontWeight: '700', letterSpacing: '1.2px' }}>LIFETIME PAID</span>
-              </div>
-              <div style={{ fontSize: '42px', fontWeight: '800', letterSpacing: '-2px', lineHeight: 1.1, marginBottom: '5px' }}>{fmt(payoutStats.lifetimePaid)}</div>
-              <div style={{ fontSize: '12px', color: '#686860', marginBottom: '20px' }}>Total amount credited to your account</div>
-
-              <div style={{ display: 'flex', gap: '10px' }}>
-                <div style={{ flex: 1, backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: '12px', padding: '14px', border: '1px solid rgba(255,255,255,0.06)' }}>
-                  <div style={{ fontSize: '10px', color: '#686860', fontWeight: '700', letterSpacing: '0.8px', marginBottom: '7px' }}>THIS MONTH</div>
-                  <div style={{ fontSize: '20px', fontWeight: '700', color: '#3DD9FF' }}>{fmt(payoutStats.thisMonth)}</div>
-                </div>
-              </div>
-            </div>            {/* ── Tab row (horizontally scrollable) ── */}
+            {/* ── Tab row (horizontally scrollable) ── */}
             <div style={{ marginBottom: '6px', position: 'relative' }}>
               <div style={{
                 display: 'flex',
@@ -275,7 +287,7 @@ const CreatorPayouts = () => {
                   <div style={{ fontSize: '34px', fontWeight: '800', letterSpacing: '-1px', marginBottom: '14px' }}>{fmt(payoutStats.available)}</div>
                   <div style={{ color: '#686860', fontSize: '12px', marginBottom: '3px' }}>Next Payout</div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '7px', color: '#3DD9FF', fontSize: '13px', fontWeight: '600', marginBottom: '18px' }}>
-                    <CalendarIcon color="#3DD9FF" /> {getNextTuesday()}
+                    <CalendarIcon color="#3DD9FF" /> {getNextPayoutDate()}
                   </div>
                   <div style={{ backgroundColor: 'rgba(34,197,94,0.07)', border: '1px solid rgba(34,197,94,0.2)', borderRadius: '12px', padding: '14px', display: 'flex', gap: '10px', width: '100%', boxSizing: 'border-box' }}>
                     <div style={{ color: '#22C55E', flexShrink: 0 }}>
@@ -296,7 +308,7 @@ const CreatorPayouts = () => {
                   {[
                     ['Eligible Questions', payoutStats.availableQuestions ? payoutStats.availableQuestions.toString() : '0'],
                     ['Total Revenue', fmt(payoutStats.availableGross || 0)],
-                    ['Your Earnings (80%)', fmt(payoutStats.available || 0)],
+                    ['Your Earnings', fmt(payoutStats.available || 0)],
             
                   ].map(([label, value], i, arr) => (
                     <div key={label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', paddingBottom: i < arr.length - 1 ? '12px' : 0, borderBottom: i < arr.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none', marginBottom: i < arr.length - 1 ? '12px' : 0 }}>
@@ -423,7 +435,7 @@ const CreatorPayouts = () => {
                       Refunded 
                     </div>
                   </div>
-                  <div style={{ fontSize: '34px', fontWeight: '800', letterSpacing: '-1px', color: '#EF4444', marginBottom: '4px' }}>-₹{(payoutStats.refundedAmount || 0).toFixed(2)}</div>
+                  <div style={{ fontSize: '34px', fontWeight: '800', letterSpacing: '-1px', color: '#EF4444', marginBottom: '4px' }}>₹{(payoutStats.refundedAmount || 0).toFixed(2)}</div>
                   <div style={{ color: '#686860', fontSize: '12px', marginBottom: '16px' }}>{payoutStats.refundedQuestionsCount || 0} Questions</div>
                   <div style={{ backgroundColor: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: '12px', padding: '14px', display: 'flex', gap: '10px' }}>
                     <div style={{ color: '#EF4444', flexShrink: 0, marginTop: '1px' }}><InfoIcon color="#EF4444" /></div>

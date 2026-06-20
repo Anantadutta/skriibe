@@ -5,6 +5,13 @@ import FanBottomNav from '../../components/fan/layout/FanBottomNav';
 import { getLiveCreators } from '../../services/discoveryApi';
 import { io } from 'socket.io-client';
 
+const PREDEFINED_CATEGORIES = [
+  'Career & Finance', 'Health & Fitness', 'Tech & Skills', 
+  'Fashion & Lifestyle', 'Daily Vlogs & Entertainment', 
+  'Education', 'Business & Entrepreneurship', 'Relationships & Life', 
+  'Spirituality'
+];
+
 const categories = [
   { id: 'All', label: 'All Categories', query: 'All creators' },
   { id: 'Career', label: 'Career & Finance', query: 'Career & Finance' },
@@ -23,6 +30,7 @@ const FanExplore = () => {
   const [creators, setCreators] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
+  const [selectedCustomCategory, setSelectedCustomCategory] = useState(null);
   const [loading, setLoading] = useState(true);
 
   // Debounce ref
@@ -79,10 +87,24 @@ const FanExplore = () => {
 
   const handleCategoryClick = (cat) => {
     setActiveCategory(cat);
+    setSelectedCustomCategory(null);
     fetchCreators(searchQuery, cat);
   };
 
-  const filteredCreators = creators.filter(c => !c.isPaused);
+  const customCategories = React.useMemo(() => {
+    if (activeCategory !== 'Others') return [];
+    const allExpertise = creators.flatMap(c => c.expertise || []);
+    const custom = allExpertise.filter(cat => !PREDEFINED_CATEGORIES.includes(cat) && cat !== 'Others');
+    return [...new Set(custom)];
+  }, [creators, activeCategory]);
+
+  const filteredCreators = creators.filter(c => {
+    if (c.isPaused) return false;
+    if (activeCategory === 'Others' && selectedCustomCategory) {
+      return (c.expertise || []).includes(selectedCustomCategory);
+    }
+    return true;
+  });
 
   return (
     <div style={{
@@ -155,6 +177,31 @@ const FanExplore = () => {
               </div>
             </div>
           </div>
+          
+          {activeCategory === 'Others' && customCategories.length > 0 && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '16px' }}>
+              {customCategories.map(cat => (
+                <button
+                  key={cat}
+                  onClick={() => setSelectedCustomCategory(selectedCustomCategory === cat ? null : cat)}
+                  style={{
+                    padding: '8px 16px',
+                    borderRadius: '20px',
+                    fontSize: '13px',
+                    fontWeight: '600',
+                    border: '1px solid',
+                    borderColor: selectedCustomCategory === cat ? '#00ffa3' : 'rgba(255,255,255,0.1)',
+                    background: selectedCustomCategory === cat ? 'rgba(0, 255, 163, 0.1)' : 'rgba(255,255,255,0.03)',
+                    color: selectedCustomCategory === cat ? '#00ffa3' : '#fff',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>

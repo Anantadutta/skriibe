@@ -10,6 +10,7 @@ const AdminAlert = require('../models/AdminAlert');
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const FacebookStrategy = require('passport-facebook').Strategy;
+const multer = require('multer');
 
 const connectDB = async () => {
   if (mongoose.connection.readyState === 1) return;
@@ -118,6 +119,51 @@ passport.use('facebook-fan', new FacebookStrategy({
 // -- ROUTES --
 
 const { verifyFanToken } = require('../middleware/auth');
+
+// Multer setup for avatar uploads
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'uploads/');
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, file.fieldname + '-' + uniqueSuffix + '.' + file.originalname.split('.').pop());
+  }
+});
+const upload = multer({ 
+  storage: storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype === 'image/jpeg' || file.mimetype === 'image/png' || file.mimetype === 'image/webp') {
+      cb(null, true);
+    } else {
+      cb(new Error('Only .png, .jpg, .jpeg, and .webp formats allowed!'), false);
+    }
+  }
+});
+
+// Route to upload fan avatar
+router.post('/avatar', verifyFanToken, upload.single('avatar'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'No file uploaded' });
+    }
+
+    const avatarUrl = `${process.env.BACKEND_URL || 'http://localhost:5000'}/uploads/${req.file.filename}`;
+    
+    await connectDB();
+    const updatedFan = await Fan.findByIdAndUpdate(
+      req.fan.fanId,
+      { avatarUrl },
+      { new: true }
+    );
+
+    res.json({ success: true, avatarUrl: updatedFan.avatarUrl });
+  } catch (err) {
+    console.error('Avatar upload error:', err);
+    res.status(500).json({ message: 'Failed to upload avatar' });
+  }
+});
 
 router.get('/me', verifyFanToken, async (req, res) => {
   try {

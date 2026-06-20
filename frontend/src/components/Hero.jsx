@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 
-const Hero = () => {
+const Hero = ({ theme }) => {
   const canvasRef = useRef(null);
 
   useEffect(() => {
@@ -66,7 +66,7 @@ const Hero = () => {
   }, []);
 
   return (
-    <section className="relative min-h-screen flex flex-col items-center justify-center text-center px-6 pt-16 pb-20 overflow-hidden">
+    <section className="relative min-h-screen flex flex-col items-center justify-center text-center px-6 pt-16 pb-8 overflow-hidden">
       {/* Background Effects */}
       <div className="absolute top-[-10%] left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-radial-gradient from-skriibe-blue/10 to-transparent pointer-events-none opacity-50 dark:opacity-100" />
       <div
@@ -100,7 +100,7 @@ const Hero = () => {
       {/* Persona Selector (New Buttons) */}
       <div className="animate-fade-up [animation-delay:300ms] flex flex-col sm:flex-row gap-4 justify-center mb-10 w-full max-w-2xl mx-auto px-4 z-10 relative">
         <Link
-          to="/creator/signup"
+          to="/creator/login"
           className="flex-1 flex items-center justify-center sm:justify-center gap-3 px-6 py-3.5 rounded-full bg-[#5bc5e3] text-black hover:bg-[#4ab8d6] transform hover:-translate-y-0.5 transition-all"
         >
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
@@ -108,25 +108,25 @@ const Hero = () => {
             <path d="M4 6v12c0 1.1.9 2 2 2h14v-4" />
             <path d="M18 12a2 2 0 0 0-2 2c0 1.1.9 2 2 2h4v-4h-4z" />
           </svg>
-          <div className="flex flex-col items-start text-left">
+          <div className="flex flex-col items-start text-left w-[170px]">
             <span className="font-bold text-[16px] leading-tight">I'm a Creator</span>
             <span className="text-[12px] text-black/70 font-medium">Get paid to reply</span>
           </div>
         </Link>
 
         <Link
-          to="/fan/signup"
-          className="flex-1 flex items-center justify-center sm:justify-center gap-3 px-6 py-3.5 rounded-full bg-[#131313] border border-white/10 text-white hover:bg-[#1a1a1a] hover:border-white/20 transform hover:-translate-y-0.5 transition-all"
+          to="/fan/login"
+          className={`flex-1 flex items-center justify-center sm:justify-center gap-3 px-6 py-3.5 rounded-full ${theme === 'light' ? 'bg-black/5 backdrop-blur-md border-gray-200/50 text-black hover:bg-black/10' : 'bg-[#131313] border-white/10 text-white hover:bg-[#1a1a1a] hover:border-white/20'} border transform hover:-translate-y-0.5 transition-all`}
         >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white shrink-0">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`${theme === 'light' ? 'text-black' : 'text-white'} shrink-0`}>
             <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" />
             <path d="M8 12h.01" />
             <path d="M12 12h.01" />
             <path d="M16 12h.01" />
           </svg>
-          <div className="flex flex-col items-start text-left">
+          <div className="flex flex-col items-start text-left w-[170px]">
             <span className="font-bold text-[16px] leading-tight">I'm a Fan</span>
-            <span className="text-[12px] text-gray-400 font-medium">Ask your favourite creators</span>
+            <span className={`text-[12px] ${theme === 'light' ? 'text-gray-500' : 'text-gray-400'} font-medium`}>Ask your favourite creators</span>
           </div>
         </Link>
       </div>
@@ -134,7 +134,7 @@ const Hero = () => {
       <div className="animate-fade-up [animation-delay:400ms] z-10 relative flex flex-col items-center mb-0">
         <button
           onClick={() => document.getElementById('story').scrollIntoView({ behavior: 'smooth' })}
-          className="text-gray-400 font-medium text-sm border border-white/10 px-6 py-2.5 rounded-full hover:border-white/30 hover:text-white transition-all flex items-center gap-2"
+          className={`${theme === 'light' ? 'text-gray-500 border-gray-200 hover:border-gray-300 hover:text-black' : 'text-gray-400 border-white/10 hover:border-white/30 hover:text-white'} font-medium text-sm border px-6 py-2.5 rounded-full transition-all flex items-center gap-2`}
         >
           See how it works ↓
         </button>

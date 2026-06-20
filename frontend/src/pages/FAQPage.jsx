@@ -95,7 +95,7 @@ const FAQPage = () => {
         </div>
       </main>
       
-      <Footer />
+      <Footer theme={theme} />
     </div>
   );
 };

@@ -32,6 +32,7 @@ const CreatorDashboard = () => {
   }, []);
   
   useEffect(() => {
+    window.scrollTo(0, 0);
     const fetchCreator = async () => {
       try {
         const res = await getMe();
@@ -126,6 +127,24 @@ const CreatorDashboard = () => {
 
   const displayUserName = creator.name || creator.displayName || creator.handle || 'Tanvi';
   const avatarLetter = (displayUserName[0] || 'T').toUpperCase();
+
+  const getGreeting = () => {
+    // Get current time in IST
+    const options = { timeZone: 'Asia/Kolkata', hour: 'numeric', hour12: false };
+    const formatter = new Intl.DateTimeFormat([], options);
+    const hour = parseInt(formatter.format(new Date()), 10);
+    
+    if (hour >= 5 && hour < 12) {
+      return "Good morning";
+    } else if (hour >= 12 && hour < 17) {
+      return "Good afternoon";
+    } else if (hour >= 17 && hour < 21) {
+      return "Good evening";
+    } else {
+      // Suggestion for late night greeting instead of just "Good night"
+      return "Hope you're having a great night"; 
+    }
+  };
 
   const totalReceived = questions.length;
   const repliedQuestions = questions.filter(q => ['answered', 'rejected'].includes(q.status?.toLowerCase()));
@@ -266,7 +285,7 @@ const CreatorDashboard = () => {
               </div>
             </div>
             <div style={{ position: 'relative', zIndex: 1, color: '#94a3b8', fontSize: '0.85rem', display: 'flex', flexDirection: 'column', gap: '2px' }}>
-              Good afternoon
+              {getGreeting()}
               <div style={{ color: '#ffffff', fontWeight: 'bold', fontSize: '1rem' }}>
                 {displayUserName}
               </div>
@@ -277,7 +296,7 @@ const CreatorDashboard = () => {
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             {/* Bell */}
             <div 
-              onClick={() => navigate('/creator/inbox')}
+              onClick={() => navigate('/creator/notifications')}
               style={{
                 position: 'relative',
                 width: '40px',

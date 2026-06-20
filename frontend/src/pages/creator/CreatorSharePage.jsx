@@ -9,6 +9,7 @@ import { BottomNav } from '../../components/ama/layout/BottomNav';
 import { getMe } from '../../services/creatorApi';
 import { QRCodeCanvas } from 'qrcode.react';
 import confetti from 'canvas-confetti';
+import TransparentLogo from '../../components/TransparentLogo';
 
 const CreatorSharePage = () => {
   const navigate = useNavigate();
@@ -43,6 +44,7 @@ const CreatorSharePage = () => {
   const qrRef = useRef(null);
   const qrRef2 = useRef(null);
   const [qrSlide, setQrSlide] = useState(0);
+  const [showQRModal, setShowQRModal] = useState(false);
 
   useEffect(() => {
     if (location.state?.isNewlyLive) {
@@ -107,7 +109,7 @@ const CreatorSharePage = () => {
     window.open('https://studio.youtube.com', '_blank');
   };
 
-  const generateQRCanvas = () => {
+  const generateQRCanvas = async () => {
     const qrCanvasSrc = qrRef2.current?.querySelector('canvas');
     if (!qrCanvasSrc) return null;
 
@@ -123,32 +125,44 @@ const CreatorSharePage = () => {
     ctx.fillStyle = '#0a0a0f';
     ctx.fillRect(0, 0, width, height);
 
-    // skriibe wordmark — white "skr"/"be" with cyan "ii", chained with measured widths so there are no gaps
-    const fontSize = 150;
-    ctx.font = `300 ${fontSize}px "DM Sans", "Segoe UI", Arial, sans-serif`;
-    ctx.textBaseline = 'alphabetic';
-    ctx.textAlign = 'left';
+    // Draw the Skriibe logo from image
+    await new Promise((resolve) => {
+      const img = new Image();
+      img.crossOrigin = 'Anonymous';
+      img.onload = () => {
+        // Create temporary canvas to process alpha transparency
+        const tmpCanvas = document.createElement('canvas');
+        tmpCanvas.width = img.width;
+        tmpCanvas.height = img.height;
+        const tCtx = tmpCanvas.getContext('2d', { willReadFrequently: true });
+        tCtx.drawImage(img, 0, 0);
+        const imgData = tCtx.getImageData(0, 0, tmpCanvas.width, tmpCanvas.height);
+        const data = imgData.data;
+        for (let i = 0; i < data.length; i += 4) {
+          const r = data[i]; const g = data[i+1]; const b = data[i+2];
+          const alpha = Math.max(r, g, b);
+          if (alpha > 0) {
+            data[i] = (r / alpha) * 255;
+            data[i+1] = (g / alpha) * 255;
+            data[i+2] = (b / alpha) * 255;
+          }
+          data[i+3] = alpha;
+        }
+        tCtx.putImageData(imgData, 0, 0);
 
-    const part1 = 'skr';
-    const part2 = 'ii';
-    const part3 = 'be';
-    const w1 = ctx.measureText(part1).width;
-    const w2 = ctx.measureText(part2).width;
-    const w3 = ctx.measureText(part3).width;
-    const totalWidth = w1 + w2 + w3;
-    let logoX = (width - totalWidth) / 2;
-    const baselineY = 240;
-
-    ctx.fillStyle = '#ffffff';
-    ctx.fillText(part1, logoX, baselineY);
-    logoX += w1;
-
-    ctx.fillStyle = '#3db4f2';
-    ctx.fillText(part2, logoX, baselineY);
-    logoX += w2;
-
-    ctx.fillStyle = '#ffffff';
-    ctx.fillText(part3, logoX, baselineY);
+        const targetWidth = 500;
+        const scale = targetWidth / img.width;
+        const targetHeight = img.height * scale;
+        
+        const logoX = (width - targetWidth) / 2;
+        const logoY = 140;
+        
+        ctx.drawImage(tmpCanvas, logoX, logoY, targetWidth, targetHeight);
+        resolve();
+      };
+      img.onerror = () => resolve(); // continue even if error
+      img.src = '/logo.png';
+    });
 
     // White rounded card for QR
     const cardWidth = 700;
@@ -189,7 +203,7 @@ const CreatorSharePage = () => {
   useEffect(() => {
     // Pre-generate the QR file for synchronous native sharing
     const timer = setTimeout(async () => {
-      const canvas = generateQRCanvas();
+      const canvas = await generateQRCanvas();
       if (canvas) {
         const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
         if (blob) {
@@ -204,7 +218,7 @@ const CreatorSharePage = () => {
   const openWhatsApp = async () => {
     try {
       if (navigator.canShare && navigator.share) {
-        const canvas = generateQRCanvas();
+        const canvas = await generateQRCanvas();
         if (canvas) {
           const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
           if (blob) {
@@ -246,8 +260,8 @@ const CreatorSharePage = () => {
     }
   };
 
-  const downloadSkriibeQRCode = () => {
-    const canvas = generateQRCanvas();
+  const downloadSkriibeQRCode = async () => {
+    const canvas = await generateQRCanvas();
     if (!canvas) return;
 
     // Download the generated image
@@ -307,7 +321,7 @@ const CreatorSharePage = () => {
   return (
     <div style={{
       minHeight: '100vh',
-      background: '#0a0a0f',
+      background: '#050508',
       color: '#ffffff',
       display: 'flex',
       justifyContent: 'center',
@@ -320,7 +334,7 @@ const CreatorSharePage = () => {
         position: 'fixed',
         inset: 0,
         zIndex: 0,
-        background: '#0a0a0f',
+        background: '#050508',
         overflow: 'hidden',
         pointerEvents: 'none'
       }}>
@@ -532,7 +546,7 @@ const CreatorSharePage = () => {
         maxWidth: '480px',
         height: '100dvh',
         overflow: 'hidden',
-        padding: '10px 16px',
+        padding: '2px 16px',
         display: 'flex',
         flexDirection: 'column',
         gap: '6px',
@@ -578,8 +592,8 @@ const CreatorSharePage = () => {
             ←
           </button>
           
-          <div className="gradient-title">
-            My skriibe page
+          <div style={{ color: '#ffffff', fontSize: '16px', fontWeight: 700, letterSpacing: '0.2px' }}>
+            My <span style={{ color: '#818cf8' }}>skriibe</span> page
           </div>
 
           {/* LIVE pulse badge */}
@@ -606,172 +620,153 @@ const CreatorSharePage = () => {
 
         {/* CONSOLIDATED TOP CARD */}
         <div style={{
-          background: 'rgba(255, 255, 255, 0.05)',
-          backdropFilter: 'blur(12px)',
-          border: '1px solid rgba(255, 255, 255, 0.08)',
-          borderRadius: '16px',
-          padding: '10px 14px',
           display: 'flex',
           flexDirection: 'column',
           gap: '6px',
           position: 'relative',
-          overflow: 'hidden',
           flexShrink: 0,
-          boxShadow: showBanner ? '0 0 25px rgba(124, 58, 237, 0.2)' : 'none'
+          marginTop: '8px'
         }}>
           {showBanner && (
-            <div style={{ position: 'relative', marginBottom: '8px' }}>
-              <button
-                onClick={() => setShowBanner(false)}
-                style={{
-                  position: 'absolute', top: '-10px', right: '-10px', background: 'transparent',
-                  border: 'none', color: '#94a3b8', fontSize: '20px', cursor: 'pointer'
-                }}
-              >&times;</button>
-              <h2 style={{
-                background: 'linear-gradient(90deg, #7c3aed, #a855f7)', WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent', fontSize: '1.4rem', fontWeight: '800', margin: 0
-              }}>You're live! <span style={{ WebkitTextFillColor: 'initial' }}>🎉</span></h2>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px', marginTop: '4px' }}>
+              <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: '#5468ff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <h2 style={{
+                  background: 'linear-gradient(90deg, #7c3aed, #a855f7)', WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent', fontSize: '1.5rem', fontWeight: '800', margin: 0
+                }}>
+                  You're live!
+                </h2>
+                <span style={{ color: '#94a3b8', fontSize: '13px', marginTop: '4px' }}>
+                  Your page is ready to share.
+                </span>
+              </div>
             </div>
           )}
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxWidth: '85%' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', width: '100%' }}>
             <span style={{ fontFamily: 'monospace', fontSize: '10px', color: '#94a3b8', letterSpacing: '0.1em', fontWeight: 700 }}>
               YOUR LINK
             </span>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', background: 'rgba(0,0,0,0.3)', padding: '8px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)' }}>
-              <span style={{ fontFamily: 'monospace', fontSize: '15px', fontWeight: 600, color: '#ffffff', wordBreak: 'break-all' }}>
-                {shareUrl}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', background: '#0f0f13', padding: '12px 16px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
+              <span style={{ fontSize: '14px', fontWeight: 600, color: '#e2e8f0', wordBreak: 'break-all' }}>
+                <span style={{ color: '#94a3b8' }}>skriibe.com/</span>@{username || handle}
               </span>
-              <button onClick={copyLinkToClipboard} style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', display: 'flex', padding: '2px' }}>
-                📋
+              <button onClick={copyLinkToClipboard} style={{ background: '#232328', border: 'none', color: '#e2e8f0', cursor: 'pointer', display: 'flex', padding: '8px', borderRadius: '8px' }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
               </button>
             </div>
           </div>
 
-          <div style={{ fontSize: '13px', color: '#94a3b8', lineHeight: '1.5', marginTop: '4px' }}>
-            Anyone with this link can ask you a <span style={{ color: '#a855f7', fontWeight: 700 }}>paid question</span>
+          <div style={{ fontSize: '13px', color: '#94a3b8', lineHeight: '1.5', marginTop: '4px', marginBottom: '4px' }}>
+            Anyone with this link can ask you a <span style={{ color: '#a855f7', fontWeight: 600 }}>paid question.</span>
           </div>
 
-          <button onClick={copyLinkToClipboard} className="copy-link-btn" style={{ marginTop: '8px' }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <button onClick={copyLinkToClipboard} className="copy-link-btn" style={{ background: 'linear-gradient(90deg, #7c3aed, #3b82f6)', color: 'white', padding: '12px', borderRadius: '16px', border: 'none', fontWeight: 600, width: '100%', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
               <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
             </svg>
-            <span>{copiedLink ? 'Copied Link! ✓' : 'Copy link'}</span>
+            <span>{copiedLink ? 'Copied!' : 'Copy link'}</span>
           </button>
-
-          <div style={{ display: 'flex', gap: '10px', marginTop: '4px' }}>
-            <button onClick={scrollToQR} className="copy-link-btn" style={{ flex: 1, background: '#1A1A1A', border: '1px solid #2A2A2A', color: '#ffffff', boxShadow: 'none' }}>
-              <span>Share Profile</span>
-            </button>
-            <button onClick={() => navigate(`/creator/${username}?preview=true`)} className="copy-link-btn" style={{ flex: 1, background: 'linear-gradient(90deg, #7c3aed, #06b6d4)' }}>
-              <span>Preview Page →</span>
-            </button>
-          </div>
           
         </div>
 
         {/* SHARE YOUR LINK SECTION */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flexShrink: 0 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flexShrink: 0, marginTop: '16px' }}>
           <div style={{ color: '#94a3b8', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', paddingLeft: '4px' }}>
             SHARE ON
           </div>
 
-          <div style={{ display: 'flex', gap: '20px', padding: '8px', background: 'rgba(255, 255, 255, 0.03)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)', justifyContent: 'center' }}>
-            
-            <div onClick={openInstagram} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <defs>
-                  <linearGradient id="ig-grad2" x1="20%" y1="100%" x2="80%" y2="0%">
-                    <stop offset="0%" stopColor="#f09433" />
-                    <stop offset="25%" stopColor="#e6683c" />
-                    <stop offset="50%" stopColor="#dc2743" />
-                    <stop offset="75%" stopColor="#cc2366" />
-                    <stop offset="100%" stopColor="#bc1888" />
-                  </linearGradient>
-                </defs>
-                <rect width="24" height="24" rx="5" fill="url(#ig-grad2)"/>
-                <rect x="5" y="5" width="14" height="14" rx="4" stroke="#fff" strokeWidth="1.5" />
-                <circle cx="12" cy="12" r="3.5" stroke="#fff" strokeWidth="1.5" />
-                <circle cx="16.5" cy="7.5" r="1.1" fill="#fff" />
-              </svg>
-              <span style={{ fontSize: '10px', color: '#94a3b8' }}>Instagram</span>
-            </div>
-
-            <div onClick={openLinkedIn} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect width="24" height="24" rx="4" fill="#0A66C2"/>
-                <path d="M7 20H4V9h3v11zM5.5 7.73a1.74 1.74 0 1 1 0-3.48 1.74 1.74 0 0 1 0 3.48zM20 20h-3v-5.6c0-1.34-.03-3.06-1.87-3.06-1.87 0-2.16 1.46-2.16 2.96V20h-3V9h2.88v1.5h.04c.4-.76 1.38-1.56 2.84-1.56 3.04 0 3.6 2 3.6 4.6V20z" fill="#fff"/>
-              </svg>
-              <span style={{ fontSize: '10px', color: '#94a3b8' }}>LinkedIn</span>
-            </div>
-
-            <div onClick={openWhatsApp} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', cursor: 'pointer', transition: 'transform 0.2s', ':hover': { transform: 'scale(1.05)' } }}>
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12.01 2.002c-5.518 0-10 4.48-10 9.998 0 1.754.453 3.42 1.314 4.908L2 22l5.247-1.376a9.966 9.966 0 0 0 4.763 1.206h.004c5.517 0 10-4.48 10-9.998 0-5.518-4.483-9.998-10-9.998z" fill="#25D366"/>
-                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347" fill="#fff"/>
-              </svg>
-              <span style={{ fontSize: '10px', color: '#94a3b8' }}>WhatsApp</span>
-            </div>
-
-            <div onClick={openX} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect width="24" height="24" rx="4" fill="#000000"/>
-                <path d="M16 4h2.5l-5.5 6.5L19 20h-4.5l-3.5-4.5-4 4.5H4.5l6-7L5 4h4.5l3 4.5L16 4Zm-1.5 14h1.5L8.5 5.5h-1.5L14.5 18Z" fill="#ffffff"/>
-              </svg>
-              <span style={{ fontSize: '10px', color: '#94a3b8' }}>X</span>
-            </div>
-
-            <div onClick={openFacebook} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect width="24" height="24" rx="4" fill="#1877F2"/>
-                <path d="M15 12h3l1-4h-4V6a1 1 0 0 1 1-1h3V1h-3a5 5 0 0 0-5 5v2H8v4h3v8h4v-8z" fill="#ffffff"/>
-              </svg>
-              <span style={{ fontSize: '10px', color: '#94a3b8' }}>Facebook</span>
-            </div>
-
-          </div>
-        </div>
-
-        {/* Go to Dashboard Button */}
-        <div style={{ display: 'flex', marginTop: '0px', marginBottom: '0px' }}>
-          <button onClick={() => navigate('/creator/dashboard', { state: { creator } })} className="copy-link-btn" style={{ width: '100%', background: '#ffffff', border: 'none', color: '#0a0a0f', fontWeight: 800, fontSize: '14px', padding: '12px', borderRadius: '12px', display: 'flex', justifyContent: 'center', alignItems: 'center', boxShadow: '0 4px 20px rgba(255, 255, 255, 0.15)', transition: 'all 0.2s' }}>
-            <span>Go to Dashboard →</span>
-          </button>
-        </div>
-
-
-
-        {/* QR CODE SECTION */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', position: 'relative', flexShrink: 0 }}>
-          <div style={{ color: '#94a3b8', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', paddingLeft: '4px' }}>
-            QR code
-          </div>
-
-          <div style={{ background: '#0a0a0f', border: '1px solid #3db4f2', borderRadius: '16px', padding: '8px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', boxShadow: '0 8px 32px rgba(61, 180, 242, 0.15)' }}>
-            <div ref={qrRef2} style={{ background: '#ffffff', padding: '8px', borderRadius: '12px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', width: '100%', boxSizing: 'border-box' }}>
-              <QRCodeCanvas value={fullShareUrl} size={90} bgColor="#ffffff" fgColor="#000000" level="H" />
-              <div style={{ color: '#3db4f2', fontSize: '14px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                @{handle}
+          <div style={{ display: 'flex', gap: '12px', justifyContent: 'space-between', marginTop: '8px' }}>
+            <div onClick={openInstagram} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <defs>
+                    <linearGradient id="ig-grad" x1="20%" y1="100%" x2="80%" y2="0%">
+                      <stop offset="0%" stopColor="#f09433" />
+                      <stop offset="25%" stopColor="#e6683c" />
+                      <stop offset="50%" stopColor="#dc2743" />
+                      <stop offset="75%" stopColor="#cc2366" />
+                      <stop offset="100%" stopColor="#bc1888" />
+                    </linearGradient>
+                  </defs>
+                  <rect x="0" y="0" width="24" height="24" rx="6" fill="url(#ig-grad)" />
+                  <rect x="5.5" y="5.5" width="13" height="13" rx="3.5" stroke="#fff" strokeWidth="1.5" fill="none" />
+                  <circle cx="12" cy="12" r="3" stroke="#fff" strokeWidth="1.5" fill="none" />
+                  <circle cx="16" cy="8" r="1" fill="#fff" />
+                </svg>
               </div>
+              <span style={{ fontSize: '11px', color: '#94a3b8' }}>Instagram</span>
             </div>
-            <div style={{ display: 'flex', gap: '6px', width: '100%', justifyContent: 'space-between' }}>
-              <button onClick={handleNativeShare} style={{ flex: 1, background: 'rgba(61, 180, 242, 0.1)', color: '#3db4f2', border: '1px solid rgba(61, 180, 242, 0.2)', padding: '6px 4px', borderRadius: '8px', fontSize: '10px', fontWeight: 700, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', transition: 'all 0.2s' }}>
-                <span style={{ fontSize: '14px' }}>↑</span> Share profile
-              </button>
-              <button onClick={copyLinkToClipboard} style={{ flex: 1, background: 'rgba(61, 180, 242, 0.1)', color: '#3db4f2', border: '1px solid rgba(61, 180, 242, 0.2)', padding: '6px 4px', borderRadius: '8px', fontSize: '10px', fontWeight: 700, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', transition: 'all 0.2s' }}>
-                <span style={{ fontSize: '14px' }}>🔗</span> {copiedLink ? 'Copied! ✓' : 'Copy link'}
-              </button>
-              <button onClick={downloadSkriibeQRCode} style={{ flex: 1, background: '#3db4f2', color: '#0a0a0f', border: 'none', padding: '6px 4px', borderRadius: '8px', fontSize: '10px', fontWeight: 800, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', transition: 'all 0.2s' }}>
-                <span style={{ fontSize: '14px' }}>↓</span> Download
-              </button>
+
+            <div onClick={openLinkedIn} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="0" y="0" width="24" height="24" rx="5" fill="#0A66C2" />
+                  <path d="M7.5 18v-8h-2v8h2zM6.5 8.5c.8 0 1.5-.7 1.5-1.5s-.7-1.5-1.5-1.5-1.5.7-1.5 1.5.7 1.5 1.5 1.5z" fill="#fff" />
+                  <path d="M19 18h-2v-4.5c0-1.1-.8-2-1.8-2s-1.8.9-1.8 2V18h-2v-8h2v1.2c.5-.8 1.5-1.2 2.5-1.2 2.2 0 3.5 1.5 3.5 3.5V18z" fill="#fff" />
+                </svg>
+              </div>
+              <span style={{ fontSize: '11px', color: '#94a3b8' }}>LinkedIn</span>
             </div>
-            <div style={{ color: '#FAFAF8', fontSize: '12px', fontWeight: 600, marginTop: '2px', letterSpacing: '0.02em' }}>
-              Ask me anything
+
+            <div onClick={openWhatsApp} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="0" y="0" width="24" height="24" rx="5" fill="#25D366" />
+                  <path d="M12 4a8 8 0 0 0-6.8 12.2l-1.2 3.8 3.8-1.2A8 8 0 1 0 12 4zm0 14.5a6.5 6.5 0 0 1-3.3-.9l-.2-.1-2.4.8.8-2.4-.1-.2A6.5 6.5 0 1 1 12 18.5z" fill="#ffffff" />
+                  <path d="M9.7 7.7c-.2-.4-.4-.4-.6-.4h-.4c-.2 0-.6.1-.9.4-.3.3-.9.9-.9 2.2s1 2.5 1.1 2.6c.1.2 1.8 2.8 4.3 3.8.6.3 1.1.4 1.5.6.6.2 1.1.2 1.6.1.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.1-1.2-.1-.1-.3-.2-.5-.3-.2-.1-1.1-.6-1.3-.6-.2-.1-.3-.1-.5.1-.2.3-.5.6-.6.8-.1.2-.3.2-.5.1-.9-.5-1.9-1.1-2.5-1.9-.1-.2 0-.2.1-.3l.3-.3c.1-.1.1-.2.2-.3.1-.2 0-.3 0-.4-.1-.2-.5-1.2-.7-1.7z" fill="#ffffff" />
+                </svg>
+              </div>
+              <span style={{ fontSize: '11px', color: '#94a3b8' }}>WhatsApp</span>
+            </div>
+
+            <div onClick={openX} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="0" y="0" width="24" height="24" rx="5" fill="#000000" />
+                  <path d="M16 6h-2.5l-3.5 5.5-4-5.5H3.5l5.5 7.5-6 8h2.5l4-6.5 4.5 6.5h2.5l-6-8.5 5.5-7.5zm-3 12l-7-10h1.5l7 10h-1.5z" fill="#fff" />
+                </svg>
+              </div>
+              <span style={{ fontSize: '11px', color: '#94a3b8' }}>X</span>
+            </div>
+
+            <div onClick={openFacebook} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="0" y="0" width="24" height="24" rx="5" fill="#1877F2" />
+                  <path d="M15.5 8h-2c-1.4 0-1.5.8-1.5 1.5v2h3l-.5 3h-2.5v7h-3v-7h-2v-3h2v-2.5C9 5 10.5 4 13.5 4h2.5v4z" fill="#fff" />
+                </svg>
+              </div>
+              <span style={{ fontSize: '11px', color: '#94a3b8' }}>Facebook</span>
             </div>
           </div>
         </div>
+
+        <button onClick={() => setShowQRModal(true)} style={{ background: '#131316', color: '#ffffff', padding: '12px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)', fontSize: '14px', fontWeight: 600, marginTop: '12px', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%' }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '8px' }}>
+            <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+            <polyline points="16 6 12 2 8 6" />
+            <line x1="12" y1="2" x2="12" y2="15" />
+          </svg>
+          Share profile
+        </button>
+
+        <button onClick={() => navigate(`/creator/${username}?preview=true`)} style={{ background: 'linear-gradient(90deg, #7c3aed, #06b6d4)', color: '#ffffff', padding: '12px', borderRadius: '16px', border: 'none', fontSize: '14px', fontWeight: 600, marginTop: '8px', cursor: 'pointer' }}>
+          Preview page →
+        </button>
+
+        <button onClick={() => navigate('/creator/dashboard', { state: { creator } })} style={{ background: '#ffffff', border: 'none', color: '#0a0a0f', fontSize: '14px', fontWeight: 800, marginTop: '8px', padding: '12px', borderRadius: '16px', cursor: 'pointer', display: 'flex', justifyContent: 'center', width: '100%' }}>
+          Go to Dashboard →
+        </button>
 
         {/* Made with 🤍 for bold conversations Footer */}
         <div style={{
@@ -790,6 +785,99 @@ const CreatorSharePage = () => {
         <BottomNav activeTab="home" />
 
       </div>
+
+      {showQRModal && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', flexDirection: 'column', background: '#0a0a0f' }}>
+          {/* Close button top right */}
+          <button onClick={() => setShowQRModal(false)} style={{ position: 'absolute', top: '16px', right: '16px', background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: '50%', width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', cursor: 'pointer', zIndex: 10 }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px', position: 'relative' }}>
+            {/* Skriibe Logo Heading */}
+            <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'center', width: '100%' }}>
+              <TransparentLogo src="/logo.png" alt="skriibe logo" style={{ height: '90px', width: 'auto', transform: 'scale(2.2)', transformOrigin: 'center center' }} />
+            </div>
+
+            {/* White Box containing QR Code */}
+            <div ref={qrRef2} style={{ background: '#ffffff', borderRadius: '16px', padding: '32px 24px', display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', maxWidth: '320px', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}>
+              <QRCodeCanvas 
+                value={fullShareUrl}
+                size={180}
+                bgColor="#ffffff"
+                fgColor="#000000"
+                level="H"
+                includeMargin={false}
+              />
+              <div style={{ marginTop: '24px', color: '#38bdf8', fontSize: '18px', fontWeight: 800, letterSpacing: '0.5px' }}>
+                @{username || handle}
+              </div>
+            </div>
+
+            {/* 3 Buttons Row */}
+            <div style={{ display: 'flex', gap: '8px', marginTop: '16px', width: '100%', maxWidth: '320px', position: 'relative' }}>
+              <button onClick={() => {
+                if (navigator.share) {
+                  navigator.share({ title: 'My skriibe', text: 'Ask me anything!', url: fullShareUrl });
+                } else {
+                  copyLinkToClipboard();
+                }
+              }} style={{ flex: 1, background: '#131316', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '12px', padding: '12px', color: '#38bdf8', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+                  <polyline points="16 6 12 2 8 6" />
+                  <line x1="12" y1="2" x2="12" y2="15" />
+                </svg>
+                <span style={{ fontSize: '12px', fontWeight: 600 }}>Share profile</span>
+              </button>
+
+              <button onClick={copyLinkToClipboard} style={{ flex: 1, background: '#131316', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '12px', padding: '12px', color: '#38bdf8', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                  <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                </svg>
+                <span style={{ fontSize: '12px', fontWeight: 600 }}>Copy link</span>
+              </button>
+
+              <button onClick={downloadSkriibeQRCode} style={{ flex: 1, background: '#38bdf8', border: 'none', borderRadius: '12px', padding: '12px', color: '#000000', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="7 10 12 15 17 10" />
+                  <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+                <span style={{ fontSize: '12px', fontWeight: 600 }}>Download</span>
+              </button>
+
+              {copiedLink && (
+                <div style={{
+                  position: 'absolute',
+                  top: '110%',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  background: 'rgba(82, 82, 91, 0.95)',
+                  color: '#ffffff',
+                  padding: '8px 16px',
+                  borderRadius: '24px',
+                  fontSize: '13px',
+                  whiteSpace: 'nowrap',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+                  zIndex: 100
+                }}>
+                  Copied to clipboard.
+                </div>
+              )}
+            </div>
+
+            {/* Bottom Text */}
+            <div style={{ marginTop: '32px', color: '#ffffff', fontSize: '18px', fontWeight: 800, letterSpacing: '0.5px' }}>
+              Ask me anything
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
