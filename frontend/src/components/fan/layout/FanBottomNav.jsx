@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import api from '../../../services/api';
+import { switchRole } from '../../../services/fanApi';
 import UpgradePromptModal from '../../UpgradePromptModal';
 import { useAuth } from '../../../context/AuthContext';
 
 const FanBottomNav = () => {
   const location = useLocation();
   const currentPath = location.pathname;
+  const navigate = useNavigate();
   const [unreadCount, setUnreadCount] = useState(0);
-  const [showModal, setShowModal] = useState(false);
-  const { roles } = useAuth();
+  const { roles, setAuthData } = useAuth();
 
   useEffect(() => {
     const fetchNotifications = async () => {
@@ -100,14 +101,27 @@ const FanBottomNav = () => {
       <nav className="fan-bottom-nav">
         {navItems.map(item => {
           if (item.isAction) {
-            // Only show Upload button if they are JUST a fan
-            if (!roles || roles.includes('creator')) return null;
-            
             return (
               <div 
                 key={item.label} 
                 className="fan-bottom-nav-item" 
-                onClick={() => setShowModal(true)}
+                onClick={async () => {
+                  if (roles && roles.includes('creator')) {
+                    try {
+                      const res = await switchRole('creator');
+                      if (res.success) {
+                        setAuthData(roles, 'creator', res.token);
+                        window.location.href = '/creator/dashboard';
+                      } else {
+                        navigate('/creator/dashboard');
+                      }
+                    } catch (err) {
+                      navigate('/creator/dashboard');
+                    }
+                  } else {
+                    navigate('/fan/upgrade');
+                  }
+                }}
                 style={{ cursor: 'pointer', transform: 'translateY(-10px)' }}
               >
                 <div className="nav-icon" style={{ marginBottom: '0px' }}>
@@ -133,7 +147,6 @@ const FanBottomNav = () => {
       </nav>
       {/* Spacer to prevent content from hiding behind fixed nav */}
       <div style={{ height: '70px', flexShrink: 0 }} />
-      <UpgradePromptModal isOpen={showModal} onClose={() => setShowModal(false)} />
     </>
   );
 };

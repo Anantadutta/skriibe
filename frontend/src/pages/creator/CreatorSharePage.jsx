@@ -44,7 +44,7 @@ const CreatorSharePage = () => {
   const qrRef = useRef(null);
   const qrRef2 = useRef(null);
   const [qrSlide, setQrSlide] = useState(0);
-  const [showQRModal, setShowQRModal] = useState(false);
+  const [showQRModal, setShowQRModal] = useState(location.state?.openQR || false);
 
   useEffect(() => {
     if (location.state?.isNewlyLive) {
@@ -789,7 +789,13 @@ const CreatorSharePage = () => {
       {showQRModal && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', flexDirection: 'column', background: '#0a0a0f' }}>
           {/* Close button top right */}
-          <button onClick={() => setShowQRModal(false)} style={{ position: 'absolute', top: '16px', right: '16px', background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: '50%', width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', cursor: 'pointer', zIndex: 10 }}>
+          <button onClick={() => {
+            if (location.state?.returnToSettings) {
+              navigate('/creator/settings');
+            } else {
+              setShowQRModal(false);
+            }
+          }} style={{ position: 'absolute', top: '16px', right: '16px', background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: '50%', width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', cursor: 'pointer', zIndex: 10 }}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="18" y1="6" x2="6" y2="18"></line>
               <line x1="6" y1="6" x2="18" y2="18"></line>

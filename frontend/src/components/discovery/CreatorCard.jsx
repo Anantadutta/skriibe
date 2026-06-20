@@ -102,17 +102,17 @@ const CreatorCard = ({ creator }) => {
         </div>
 
         {/* Info */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1, minWidth: 0 }}>
           <h3 style={{ margin: 0, fontSize: '20px', fontWeight: '800', lineHeight: 1.1, display: 'flex', alignItems: 'center', gap: '6px' }}>
-            {name}
+            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={name}>{name}</span>
             {verified !== false && (
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0 }}>
                 <path d="M12 2L15 4.5L18.5 4L20 7L23 9L21.5 12L23 15L20 17L18.5 20L15 19.5L12 22L9 19.5L5.5 20L4 17L1 15L2.5 12L1 9L4 7L5.5 4L9 4.5L12 2Z" fill="#0066FF"/>
                 <path d="M10 15L7 12L8.41 10.59L10 12.17L15.59 6.58L17 8L10 15Z" fill="white"/>
               </svg>
             )}
           </h3>
-          <div style={{ color: '#64748b', fontSize: '13px' }}>@{handle}</div>
+          <div style={{ color: '#64748b', fontSize: '13px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={`@${handle}`}>@{handle}</div>
           <div style={{ marginTop: '2px', display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
             {expertiseList.map((exp, idx) => (
               <span key={idx} style={{

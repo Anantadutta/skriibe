@@ -26,11 +26,17 @@ const hashPassword = (password) => {
 
 // Helper function to verify password
 const verifyPassword = (password, storedHash) => {
-  const [salt, key] = storedHash.split(':');
-  const hashedBuffer = crypto.scryptSync(password, salt, 64);
-  const keyBuffer = Buffer.from(key, 'hex');
-  const match = crypto.timingSafeEqual(hashedBuffer, keyBuffer);
-  return match;
+  if (!storedHash || !storedHash.includes(':')) return false;
+  try {
+    const [salt, key] = storedHash.split(':');
+    if (!salt || !key) return false;
+    const hashedBuffer = crypto.scryptSync(password, salt, 64);
+    const keyBuffer = Buffer.from(key, 'hex');
+    return crypto.timingSafeEqual(hashedBuffer, keyBuffer);
+  } catch (err) {
+    console.error('Password verification error:', err);
+    return false;
+  }
 };
 
 const issueToken = (fan) => {
@@ -469,13 +475,29 @@ router.post('/me/upgrade-to-creator', verifyFanToken, async (req, res) => {
         name: creator_name,
         handle: uniqueHandle,
         bio: bio,
+        avatarUrl: fan.avatarUrl || '',
         expertise: [category],
         fanId: fan._id
       });
       await creator.save();
     } else {
       creator.fanId = fan._id;
-      if (!creator.name) creator.name = creator_name;
+      creator.name = creator_name;
+      creator.bio = bio;
+      creator.expertise = [category];
+      if (!creator.avatarUrl && fan.avatarUrl) {
+        creator.avatarUrl = fan.avatarUrl;
+      }
+      if (!creator.handle) {
+        let baseHandle = creator_name.toLowerCase().replace(/\s+/g, '');
+        let uniqueHandle = baseHandle;
+        let counter = 1;
+        while (await Creator.findOne({ handle: uniqueHandle })) {
+          uniqueHandle = baseHandle + counter;
+          counter++;
+        }
+        creator.handle = uniqueHandle;
+      }
       await creator.save();
     }
 

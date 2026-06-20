@@ -565,16 +565,7 @@ const CreatorSettings = () => {
         </button>
 
         <button 
-          onClick={() => {
-            const username = creator?.handle || creator?.username;
-            const fullShareUrl = `https://skriibe.com/@${username}`;
-            if (navigator.share) {
-              navigator.share({ title: 'My skriibe', text: 'Ask me anything!', url: fullShareUrl });
-            } else {
-              navigator.clipboard.writeText(fullShareUrl);
-              alert('Profile link copied to clipboard!');
-            }
-          }}
+          onClick={() => navigate('/dashboard/share', { state: { creator, openQR: true, returnToSettings: true } })}
           style={{
             background: '#202020',
             border: '1px solid #333',
@@ -1074,7 +1065,7 @@ const CreatorSettings = () => {
             localStorage.clear();
             window.location.href = '/';
           }}>
-            Sign out
+            Log out 
           </button>
         </div>
       </div>

@@ -16,7 +16,6 @@ const FanToCreatorUpgrade = () => {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -55,7 +54,7 @@ const FanToCreatorUpgrade = () => {
       const res = await upgradeToCreator(formData.creator_name, formData.bio, formData.category);
       if (res.success) {
         setAuthData(['fan', 'creator'], 'creator', res.token);
-        setSuccess(true);
+        navigate('/creator/dashboard');
       }
     } catch (err) {
       setError(err.response?.data?.message || 'Upgrade failed. Please try again.');
@@ -64,25 +63,7 @@ const FanToCreatorUpgrade = () => {
     }
   };
 
-  if (success) {
-    return (
-      <div style={containerStyle}>
-        <div style={cardStyle}>
-          <div style={{ fontSize: '64px', marginBottom: '20px' }}>🎉</div>
-          <h1 style={headingStyle}>You're a creator now!</h1>
-          <p style={subtextStyle}>Switch between Fan and Creator mode anytime from your profile.</p>
-          <div style={{ display: 'flex', gap: '16px', marginTop: '30px', justifyContent: 'center' }}>
-            <button onClick={() => navigate('/creator/dashboard')} style={primaryBtnStyle}>
-              Go to Creator Studio
-            </button>
-            <button onClick={() => navigate('/explore')} style={secondaryBtnStyle}>
-              Stay in Fan mode
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+
 
   return (
     <div style={containerStyle}>

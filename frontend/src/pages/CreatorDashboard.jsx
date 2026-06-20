@@ -263,23 +263,6 @@ const CreatorDashboard = () => {
             }} />
             
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <div 
-                onClick={() => navigate('/dashboard/share')}
-                style={{
-                  width: '32px',
-                  height: '32px',
-                  borderRadius: '50%',
-                  background: 'rgba(255,255,255,0.05)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer',
-                  zIndex: 1,
-                  border: '1px solid rgba(255,255,255,0.1)'
-                }}
-              >
-                <span style={{ fontSize: '1.2rem', color: '#94a3b8', marginTop: '-2px' }}>‹</span>
-              </div>
               <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center' }}>
                 <TransparentLogo src="/logo.png" alt="skriibe logo" style={{ height: '24px', width: 'auto', transform: 'scale(4)', transformOrigin: 'left center' }} />
               </div>
