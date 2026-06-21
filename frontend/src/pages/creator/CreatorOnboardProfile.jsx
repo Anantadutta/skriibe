@@ -182,7 +182,7 @@ const CreatorOnboardProfile = () => {
       if (!isEmailValid) missing.push('Valid Email');
       if (!isPhoneValid) missing.push('10-digit Phone');
       if (form.expertise.length === 0) missing.push('Expertise (min 1)');
-      if (!form.instagramFollowers || form.instagramFollowers <= 0) missing.push('Instagram Followers (>0)');
+      if (!form.instagramFollowers || form.instagramFollowers.toString().trim() === '') missing.push('Instagram Followers');
       showError('Please fix: ' + missing.join(' · '));
       return;
     }
@@ -221,7 +221,7 @@ const CreatorOnboardProfile = () => {
     isPhoneValid &&
     form.expertise.length >= 1 &&
     form.expertise.length <= 2 &&
-    form.instagramFollowers > 0;
+    form.instagramFollowers.toString().trim().length > 0;
 
   if (loadingCreator) {
     return (
@@ -714,9 +714,9 @@ const CreatorOnboardProfile = () => {
 
                 <Field
                   label="INSTAGRAM FOLLOWERS *"
-                  type="number"
+                  type="text"
                   value={form.instagramFollowers || ''}
-                  onChange={(e) => handleInputChange('instagramFollowers', parseInt(e.target.value) || 0)}
+                  onChange={(e) => handleInputChange('instagramFollowers', e.target.value)}
                   placeholder="e.g. 10k"
                   required
                 />
