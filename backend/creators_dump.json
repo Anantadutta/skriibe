@@ -1,125 +1,14 @@
 [
   {
-    "_id": "6a29764ac8790778cb6b49c0",
-    "name": "Vasundhara Keshan",
-    "price": 99,
-    "pricePerQuestion": 99,
-    "handle": "heyy"
-  },
-  {
-    "_id": "6a2a5618ee505119888fb726",
-    "name": "Shreeman Keshan",
-    "price": 99,
-    "pricePerQuestion": 99
-  },
-  {
-    "_id": "6a2b9c9bc07c847097d9ec77",
-    "name": "Tarundeep Singh",
-    "price": 100,
-    "pricePerQuestion": 100,
-    "handle": "tarungujral05"
-  },
-  {
-    "_id": "6a318b97a4947fb883261067",
-    "name": "Tarun Singh",
-    "price": 1000,
-    "pricePerQuestion": 1000,
-    "handle": "tarun_0592"
-  },
-  {
-    "_id": "6a338715f7107480034a024d",
-    "name": "Jawand Singh",
-    "price": 10,
-    "pricePerQuestion": 10,
-    "handle": "jd_creations24"
-  },
-  {
-    "_id": "6a34e7896e913c8e1b42d1e8",
-    "name": "Annie",
-    "price": 55,
-    "pricePerQuestion": 55,
-    "handle": "iidk_3654"
-  },
-  {
-    "_id": "6a352ec6faea1cefd717ea8f",
+    "_id": "6a37a3f73ac733675a603aa7",
     "name": "Ananta Dutta",
     "price": 99,
     "pricePerQuestion": 99,
     "handle": "anantadutta"
   },
   {
-    "_id": "6a353085b57bc2da7bd27a84",
-    "name": "",
-    "price": 99,
-    "pricePerQuestion": 99
-  },
-  {
-    "_id": "6a365a1d1af95734251f467d",
+    "_id": "6a37a6917cf48ddc3f2d4ef3",
     "name": "Tarundeep Singh",
-    "price": 50,
-    "pricePerQuestion": 50,
-    "handle": "tarun0501"
-  },
-  {
-    "_id": "6a36c81adece8c422cb170bc",
-    "name": "Ananta .",
-    "price": 9,
-    "pricePerQuestion": 9,
-    "handle": "idk"
-  },
-  {
-    "_id": "6a36f47e4d6fea2844e75090",
-    "name": "",
-    "price": 99,
-    "pricePerQuestion": 99
-  },
-  {
-    "_id": "6a36f57c11a9a81c8262dfe1",
-    "name": "",
-    "price": 99,
-    "pricePerQuestion": 99
-  },
-  {
-    "_id": "6a36f7f311a9a81c8262dfe3",
-    "name": "",
-    "price": 99,
-    "pricePerQuestion": 99
-  },
-  {
-    "_id": "6a3705183009a9c0149816ed",
-    "name": "JD Singh",
-    "price": 99,
-    "pricePerQuestion": 99,
-    "handle": "jdbhogal17"
-  },
-  {
-    "_id": "6a37072d78410cee72781336",
-    "name": "converted_creator",
-    "handle": "converted_creator",
-    "price": 99,
-    "pricePerQuestion": 99
-  },
-  {
-    "_id": "6a370a523009a9c0149816ef",
-    "name": "",
-    "price": 99,
-    "pricePerQuestion": 99
-  },
-  {
-    "_id": "6a370b8878410cee7278133b",
-    "name": "",
-    "price": 99,
-    "pricePerQuestion": 99
-  },
-  {
-    "_id": "6a3794e7061e9a998e5c9633",
-    "name": "",
-    "price": 99,
-    "pricePerQuestion": 99
-  },
-  {
-    "_id": "6a3795ef26d9bf92ed3a9c0c",
-    "name": "",
     "price": 99,
     "pricePerQuestion": 99
   }
