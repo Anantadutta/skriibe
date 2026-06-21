@@ -122,47 +122,27 @@ const CreatorSharePage = () => {
     canvas.height = height;
 
     // Background (Black)
-    ctx.fillStyle = '#0a0a0f';
+    ctx.fillStyle = '#000000';
     ctx.fillRect(0, 0, width, height);
 
-    // Draw the Skriibe logo from image
+    // Draw the Skriibe logo image
+    const logoImg = new Image();
+    logoImg.src = '/logo.png';
+    logoImg.crossOrigin = 'Anonymous';
     await new Promise((resolve) => {
-      const img = new Image();
-      img.crossOrigin = 'Anonymous';
-      img.onload = () => {
-        // Create temporary canvas to process alpha transparency
-        const tmpCanvas = document.createElement('canvas');
-        tmpCanvas.width = img.width;
-        tmpCanvas.height = img.height;
-        const tCtx = tmpCanvas.getContext('2d', { willReadFrequently: true });
-        tCtx.drawImage(img, 0, 0);
-        const imgData = tCtx.getImageData(0, 0, tmpCanvas.width, tmpCanvas.height);
-        const data = imgData.data;
-        for (let i = 0; i < data.length; i += 4) {
-          const r = data[i]; const g = data[i+1]; const b = data[i+2];
-          const alpha = Math.max(r, g, b);
-          if (alpha > 0) {
-            data[i] = (r / alpha) * 255;
-            data[i+1] = (g / alpha) * 255;
-            data[i+2] = (b / alpha) * 255;
-          }
-          data[i+3] = alpha;
-        }
-        tCtx.putImageData(imgData, 0, 0);
-
-        const targetWidth = 500;
-        const scale = targetWidth / img.width;
-        const targetHeight = img.height * scale;
-        
-        const logoX = (width - targetWidth) / 2;
-        const logoY = 140;
-        
-        ctx.drawImage(tmpCanvas, logoX, logoY, targetWidth, targetHeight);
-        resolve();
-      };
-      img.onerror = () => resolve(); // continue even if error
-      img.src = '/logo.png';
+      logoImg.onload = resolve;
+      logoImg.onerror = resolve;
     });
+    
+    if (logoImg.width) {
+      const scale = Math.min(700 / logoImg.width, 560 / logoImg.height);
+      const targetWidth = logoImg.width * scale;
+      const targetHeight = logoImg.height * scale;
+      const startX = (width - targetWidth) / 2;
+      // Center the logo's internal text around Y=150, exactly in the middle of the empty space
+      const logoY = 150 - (targetHeight / 2);
+      ctx.drawImage(logoImg, startX, logoY, targetWidth, targetHeight);
+    }
 
     // White rounded card for QR
     const cardWidth = 700;

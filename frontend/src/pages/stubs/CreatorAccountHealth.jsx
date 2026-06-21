@@ -181,9 +181,9 @@ const CreatorAccountHealth = () => {
           </div>
           
           <div style={{ display: 'flex', justifyContent: 'space-between', color: '#475569', fontSize: '0.7rem', fontWeight: 600 }}>
-            <div style={{ flex: 1, textAlign: 'center' }}>1-Warning</div>
-            <div style={{ flex: 1, textAlign: 'center' }}>2-Review</div>
-            <div style={{ flex: 1, textAlign: 'center' }}>3-Suspend</div>
+            <div style={{ flex: 1, textAlign: 'center' }}>1-Email Warning</div>
+            <div style={{ flex: 1, textAlign: 'center' }}>2-Suspend 48 hours</div>
+            <div style={{ flex: 1, textAlign: 'center' }}>3-Suspend 7 days</div>
             <div style={{ flex: 1, textAlign: 'center' }}>4-Ban</div>
           </div>
         </div>
@@ -256,20 +256,20 @@ const CreatorAccountHealth = () => {
           marginBottom: '24px'
         }}>
           <div style={{ display: 'flex', padding: '16px', borderBottom: '1px solid #22222c' }}>
-            <div style={{ width: '80px', color: '#fb923c', fontWeight: 700, fontSize: '0.85rem' }}>Strike 1</div>
-            <div style={{ color: '#64748b', fontSize: '0.85rem' }}>Admin review and email warning</div>
+            <div style={{ minWidth: '80px', color: '#fb923c', fontWeight: 700, fontSize: '0.85rem' }}>Strike 1</div>
+            <div style={{ color: '#64748b', fontSize: '0.85rem' }}>Email warning</div>
           </div>
           <div style={{ display: 'flex', padding: '16px', borderBottom: '1px solid #22222c' }}>
-            <div style={{ width: '80px', color: '#f59e0b', fontWeight: 700, fontSize: '0.85rem' }}>Strike 2</div>
+            <div style={{ minWidth: '80px', color: '#f59e0b', fontWeight: 700, fontSize: '0.85rem' }}>Strike 2</div>
             <div style={{ color: '#64748b', fontSize: '0.85rem' }}>Page auto-paused for 48 hours</div>
           </div>
           <div style={{ display: 'flex', padding: '16px', borderBottom: '1px solid #22222c' }}>
-            <div style={{ width: '80px', color: '#ef4444', fontWeight: 700, fontSize: '0.85rem' }}>Strike 3</div>
-            <div style={{ color: '#64748b', fontSize: '0.85rem' }}>Page auto-paused for 7 days · payouts frozen</div>
+            <div style={{ minWidth: '80px', color: '#ef4444', fontWeight: 700, fontSize: '0.85rem' }}>Strike 3</div>
+            <div style={{ color: '#64748b', fontSize: '0.85rem' }}>Page auto-paused for 7 days · admin review</div>
           </div>
           <div style={{ display: 'flex', padding: '16px' }}>
-            <div style={{ width: '80px', color: '#dc2626', fontWeight: 700, fontSize: '0.85rem' }}>Strike 4</div>
-            <div style={{ color: '#64748b', fontSize: '0.85rem' }}>Permanent ban · payouts frozen</div>
+            <div style={{ minWidth: '80px', color: '#dc2626', fontWeight: 700, fontSize: '0.85rem' }}>Strike 4</div>
+            <div style={{ color: '#64748b', fontSize: '0.85rem' }}>Permanent ban · admin review</div>
           </div>
         </div>
 
@@ -302,15 +302,7 @@ const CreatorAccountHealth = () => {
             </li>
             <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <span style={{ color: '#4ade80', fontWeight: 'bold' }}>·</span>
-              <span style={{ color: '#4d7c5b', fontSize: '0.9rem' }}>No complaints for 30 days removes 1 strike</span>
-            </li>
-            <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ color: '#4ade80', fontWeight: 'bold' }}>·</span>
-              <span style={{ color: '#4d7c5b', fontSize: '0.9rem' }}>70-89% - Good - Doing Well</span>
-            </li>
-            <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ color: '#4ade80', fontWeight: 'bold' }}>·</span>
-              <span style={{ color: '#4d7c5b', fontSize: '0.9rem' }}>Below 70% - Needs Attention - Action Required</span>
+              <span style={{ color: '#4d7c5b', fontSize: '0.9rem' }}>No complaints for 90 days removes strike</span>
             </li>
           </ul>
         </div>

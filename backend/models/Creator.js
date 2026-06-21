@@ -33,7 +33,7 @@ const CreatorSchema = new mongoose.Schema({
   pan: { type: String },
   instagramLinked: { type: Boolean, default: false },
   instagramHandle: { type: String },
-  instagramFollowers: { type: Number },
+  instagramFollowers: { type: mongoose.Schema.Types.Mixed },
   instagramAccessToken: { type: String }, // encrypted
 
   stats: {

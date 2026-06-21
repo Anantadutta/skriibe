@@ -25,6 +25,7 @@ const CreatorDashboard = () => {
   const [questions, setQuestions] = useState([]);
   const [copied, setCopied] = useState(false);
   const [now, setNow] = useState(Date.now());
+  const [isSavingStatus, setIsSavingStatus] = useState(false);
 
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 60000);
@@ -37,7 +38,7 @@ const CreatorDashboard = () => {
       try {
         const res = await getMe();
         if (res.success) {
-          setCreator(prev => ({ ...prev, ...res.creator }));
+          setCreator(res.creator);
           setIsLive(res.creator.isLive !== false);
         }
       } catch (error) {
@@ -465,10 +466,11 @@ const CreatorDashboard = () => {
                 {creator?.isPaused ? 'Account paused by yourself temporarily' : `You're ${isLive ? 'LIVE' : 'OFFLINE'}`}
               </span>
             </div>
-            <div style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: '2px' }}>
+            <div style={{ color: '#94a3b8', fontSize: '0.85rem', marginTop: '6px' }}>
               {creator?.isPaused 
                 ? 'Not accepting questions temporarily' 
-                : (isLive ? `Accepting questions · ₹${creator.price || creator.pricePerQuestion || 99}/question` : 'Currently offline')}
+                : (isSavingStatus ? 'Updating...' 
+                : (isLive ? 'Go offline on break, live again when back.' : 'Currently offline'))}
             </div>
           </div>
 
@@ -582,7 +584,7 @@ const CreatorDashboard = () => {
                 <span style={{ background: 'rgba(16, 185, 129, 0.15)', color: '#10B981', padding: '4px 8px', borderRadius: '8px', fontSize: '0.7rem', fontWeight: 800 }}>Good</span>
               </div>
               <div style={{ color: '#94a3b8', fontSize: '0.8rem', marginTop: '6px', lineHeight: '1.4' }}>
-                94% reply rate · 0 SLA breaches · 1 strike-free month
+                {creator?.stats?.replyRate || 0}% reply rate · {creator?.sla?.breaches || 0} SLA breaches · {creator?.sla?.strikes || 0} strikes
               </div>
             </div>
           </div>
@@ -692,13 +694,7 @@ const CreatorDashboard = () => {
         {/* 7. SHARE LINK */}
         <div style={{ background: '#13161C', border: '1px dashed #1F2937', borderRadius: '16px', padding: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px' }}>
           <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-            {/* Fake QR code */}
-            <div style={{ width: '48px', height: '48px', background: '#ffffff', borderRadius: '12px', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '2px', padding: '6px', boxSizing: 'border-box' }}>
-              <div style={{ background: '#0E0E0E', borderRadius: '2px' }}/><div style={{ background: 'transparent' }}/><div style={{ background: '#0E0E0E', borderRadius: '2px' }}/><div style={{ background: '#0E0E0E', borderRadius: '2px' }}/>
-              <div style={{ background: '#0E0E0E', borderRadius: '2px' }}/><div style={{ background: '#0E0E0E', borderRadius: '2px' }}/><div style={{ background: 'transparent' }}/><div style={{ background: '#0E0E0E', borderRadius: '2px' }}/>
-              <div style={{ background: 'transparent' }}/><div style={{ background: '#0E0E0E', borderRadius: '2px' }}/><div style={{ background: '#0E0E0E', borderRadius: '2px' }}/><div style={{ background: 'transparent' }}/>
-              <div style={{ background: '#0E0E0E', borderRadius: '2px' }}/><div style={{ background: 'transparent' }}/><div style={{ background: '#0E0E0E', borderRadius: '2px' }}/><div style={{ background: '#0E0E0E', borderRadius: '2px' }}/>
-            </div>
+
             <div>
               <div style={{ fontWeight: 800, fontSize: '0.95rem', color: '#fff' }}>Share your link & get more questions</div>
               <div style={{ color: '#38BDF8', fontSize: '0.85rem', marginTop: '4px' }}>skriibe.com/@{creator.handle || 'tanvi'}</div>
