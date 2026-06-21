@@ -200,7 +200,7 @@ const CreatorOnboardProfile = () => {
         ...form,
         expertise: finalExpertise,
         handle: finalHandle,
-        avatarUrl: typeof avatarPreview === 'string' && avatarPreview.startsWith('http') ? avatarPreview : null
+        avatarUrl: avatarPreview || null
       });
 
       const creatorPayload = res.data?.creator || res.creator || res.data;
