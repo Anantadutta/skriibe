@@ -384,6 +384,10 @@ const CreatorDashboard = () => {
               <span style={{ fontSize: '2.2rem', color: '#29C5F6', marginRight: '4px' }}>₹</span>
               <span style={{ fontSize: '3rem', fontWeight: 900, color: '#fff', letterSpacing: '-1.5px' }}>{Math.round(payoutStats.available || 0)}</span>
             </div>
+            
+            <div style={{ color: '#94a3b8', fontSize: '0.85rem', fontWeight: 600, marginTop: '8px' }}>
+              Accepting questions. <span style={{ color: '#38bdf8' }}>₹{creator.pricePerQuestion || 0}</span>/question.
+            </div>
 
           </div>
 
