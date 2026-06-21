@@ -356,18 +356,7 @@ router.get('/me', verifyCreatorToken, async (req, res) => {
     }
     if (creator.isBanned) return res.status(403).json({ message: 'Account permanently removed' });
     
-    // Auto-seed mock data for local testing if handle is missing
-    if (!creator.handle) {
-      creator.handle = 'anantadutta';
-      creator.name = 'Ananta Dutta';
-      creator.bio = 'Helping India save smarter. 5 yrs at HDFC. SIP, mutual funds, tax planning.';
-      creator.expertise = ['Finance', 'SIP'];
-      creator.instagramHandle = 'anantadutta';
-      creator.instagramFollowers = 12000;
-      creator.instagramConnected = true;
-      await creator.save();
-    }
-    
+    // Removed mock data auto-seeding here so new users can enter their own details
     res.json({ success: true, creator });
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
