@@ -9,7 +9,15 @@
   {
     "_id": "6a37a6917cf48ddc3f2d4ef3",
     "name": "Tarundeep Singh",
+    "price": 49,
+    "pricePerQuestion": 49,
+    "handle": "tarun_0501"
+  },
+  {
+    "_id": "6a37ad2a952588b382928868",
+    "name": "dd",
     "price": 99,
-    "pricePerQuestion": 99
+    "pricePerQuestion": 99,
+    "handle": "rev"
   }
 ]

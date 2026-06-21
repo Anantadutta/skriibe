@@ -281,7 +281,7 @@ const CreatorLogin = () => {
                 letterSpacing: '1.5px',
                 fontWeight: '600'
               }}>
-                YOUR PASSWORD
+                 PASSWORD
               </label>
 
               <div style={{
