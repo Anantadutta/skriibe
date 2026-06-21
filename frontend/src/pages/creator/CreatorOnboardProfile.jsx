@@ -4,24 +4,27 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { saveProfile, getMe } from '../../services/creatorApi';
 import { PhoneFrame } from '../../components/ama/layout/PhoneFrame';
 import { Field } from '../../components/ama/ui/Field';
+import ImageCropperModal from '../../components/common/ImageCropperModal';
 
 const CreatorOnboardProfile = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const passedCreator = location.state?.creator || {};
 
   const [form, setForm] = useState({
-    name: '',
+    name: passedCreator.name || '',
     handle: '',
-    email: '',
-    phone: '',
-    bio: '',
-    expertise: [],
-    instagramHandle: '',
-    instagramConnected: false,
-    instagramFollowers: 0
+    email: (passedCreator.email && !passedCreator.email.includes('@temp.skriibe.com')) ? passedCreator.email : '',
+    phone: passedCreator.phone || '',
+    bio: passedCreator.bio || '',
+    expertise: passedCreator.expertise || [],
+    instagramHandle: passedCreator.instagramHandle || '',
+    instagramConnected: passedCreator.instagramConnected || false,
+    instagramFollowers: passedCreator.instagramFollowers || 0
   });
 
   const [avatarPreview, setAvatarPreview] = useState(null);
@@ -32,6 +35,9 @@ const CreatorOnboardProfile = () => {
 
   const [bioFocused, setBioFocused] = useState(false);
   const [customExpertise, setCustomExpertise] = useState('');
+
+  const [cropModalOpen, setCropModalOpen] = useState(false);
+  const [cropImageSrc, setCropImageSrc] = useState(null);
 
   // List of standard expertise tag options
   const expertiseOptions = [
@@ -55,15 +61,15 @@ const CreatorOnboardProfile = () => {
           const creator = res.creator;
           setForm(prev => ({
             ...prev,
-            name: creator.name || '',
-            handle: '', // Let user pick
-            email: (creator.email && !creator.email.includes('@temp.skriibe.com')) ? creator.email : '',
-            phone: creator.phone || '',
-            bio: '', // Let user fill
-            expertise: [], // Let user fill
-            instagramHandle: creator.instagramHandle || '',
+            name: creator.name || prev.name,
+            handle: creator.handle || prev.handle || '',
+            email: (creator.email && !creator.email.includes('@temp.skriibe.com')) ? creator.email : prev.email,
+            phone: creator.phone || prev.phone,
+            bio: creator.bio || prev.bio || '',
+            expertise: creator.expertise?.length > 0 ? creator.expertise : prev.expertise,
+            instagramHandle: creator.instagramHandle || prev.instagramHandle || '',
             instagramConnected: creator.instagramConnected || false,
-            instagramFollowers: creator.instagramFollowers || 0
+            instagramFollowers: creator.instagramFollowers || prev.instagramFollowers || 0
           }));
           if (creator.avatarUrl) {
             setAvatarPreview(creator.avatarUrl);
@@ -135,9 +141,22 @@ const CreatorOnboardProfile = () => {
         alert('File size too large (max 5MB)');
         return;
       }
-      setAvatarFile(file);
-      setAvatarPreview(URL.createObjectURL(file));
+      const reader = new FileReader();
+      reader.onload = () => {
+        setCropImageSrc(reader.result);
+        setCropModalOpen(true);
+      };
+      reader.readAsDataURL(file);
+      e.target.value = ''; // Reset input
     }
+  };
+
+  const handleCropComplete = (blob) => {
+    const file = new File([blob], "profile_crop.webp", { type: "image/webp" });
+    setAvatarFile(file);
+    setAvatarPreview(URL.createObjectURL(blob));
+    setCropModalOpen(false);
+    setCropImageSrc(null);
   };
 
   const handleAddCustomExpertise = () => {
@@ -151,18 +170,24 @@ const CreatorOnboardProfile = () => {
 
   const handleContinue = async () => {
     setError('');
-    if (!form.name || !form.handle || !form.email || !form.phone || form.expertise.length === 0) {
+    const showError = (msg) => {
+      setError(msg);
+      setTimeout(() => setError(''), 5000);
+    };
+
+    if (!form.name || !form.handle || !form.email || !form.phone || form.expertise.length === 0 || !form.instagramFollowers) {
       const missing = [];
       if (!form.name || form.name.trim().length < 2) missing.push('Full Name');
-      if (!isHandleValid) missing.push('Username (3–30 chars, letters/numbers/underscore/period only)');
+      if (!isHandleValid) missing.push('Username (3–30 chars)');
       if (!isEmailValid) missing.push('Valid Email');
-      if (!isPhoneValid) missing.push('10-digit Phone Number');
-      if (form.expertise.length === 0) missing.push('Field of Expertise (pick at least 1)');
-      setError('Please fix: ' + missing.join(' · '));
+      if (!isPhoneValid) missing.push('10-digit Phone');
+      if (form.expertise.length === 0) missing.push('Expertise (min 1)');
+      if (!form.instagramFollowers || form.instagramFollowers <= 0) missing.push('Instagram Followers (>0)');
+      showError('Please fix: ' + missing.join(' · '));
       return;
     }
     if (form.expertise.includes('Others') && !customExpertise.trim()) {
-      setError('Please specify your expertise in the text field.');
+      showError('Please specify your expertise in the text field.');
       return;
     }
 
@@ -181,7 +206,7 @@ const CreatorOnboardProfile = () => {
       const creatorPayload = res.data?.creator || res.creator || res.data;
       navigate('/onboard/pricing', { state: { creator: creatorPayload } });
     } catch (err) {
-      setError(err.response?.data?.message || 'Could not connect to server — make sure the backend is running.');
+      showError(err.response?.data?.message || 'Could not connect to server — make sure the backend is running.');
     } finally {
       setLoading(false);
     }
@@ -195,7 +220,8 @@ const CreatorOnboardProfile = () => {
     isEmailValid &&
     isPhoneValid &&
     form.expertise.length >= 1 &&
-    form.expertise.length <= 2;
+    form.expertise.length <= 2 &&
+    form.instagramFollowers > 0;
 
   if (loadingCreator) {
     return (
@@ -513,6 +539,7 @@ const CreatorOnboardProfile = () => {
 
                 <Field
                   label="USERNAME *"
+                  subtitle={<>This will be your profile link that will be generated as: <br /> <span style={{ color: '#29C5F6' }}>https://skriibe.com/@{form.handle || 'username'}</span></>}
                   value={form.handle}
                   onChange={(e) => handleInputChange('handle', e.target.value.replace(/[^a-zA-Z0-9_.]/g, ''))}
                   placeholder=""
@@ -690,7 +717,7 @@ const CreatorOnboardProfile = () => {
                   type="number"
                   value={form.instagramFollowers || ''}
                   onChange={(e) => handleInputChange('instagramFollowers', parseInt(e.target.value) || 0)}
-                  placeholder="e.g. 10000"
+                  placeholder="e.g. 10k"
                   required
                 />
 
@@ -760,6 +787,13 @@ const CreatorOnboardProfile = () => {
               flexDirection: 'column',
               gap: '10px'
             }}>
+              <button
+                onClick={handleContinue}
+                disabled={loading}
+                className="continue-btn"
+              >
+                {loading ? 'Saving...' : 'Continue →'}
+              </button>
               {error && (
                 <div style={{
                   background: 'rgba(239, 68, 68, 0.1)',
@@ -775,13 +809,6 @@ const CreatorOnboardProfile = () => {
                   {error}
                 </div>
               )}
-              <button
-                onClick={handleContinue}
-                disabled={loading}
-                className="continue-btn"
-              >
-                {loading ? 'Saving...' : 'Continue →'}
-              </button>
             </div>
           </div>
         </PhoneFrame>
@@ -799,6 +826,17 @@ const CreatorOnboardProfile = () => {
         </div>
 
       </div>
+
+      {cropModalOpen && cropImageSrc && (
+        <ImageCropperModal
+          imageSrc={cropImageSrc}
+          onCropComplete={handleCropComplete}
+          onClose={() => {
+            setCropModalOpen(false);
+            setCropImageSrc(null);
+          }}
+        />
+      )}
     </div>
   );
 };
