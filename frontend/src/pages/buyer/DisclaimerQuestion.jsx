@@ -184,7 +184,7 @@ const DisclaimerQuestion = () => {
                   I understand and agree
                 </span>
                 <span style={{ fontFamily: 'var(--font-body)', fontSize: '12px', color: 'var(--g2)', lineHeight: 1.4 }}>
-                  By logging in and using Skriibe, you agree to our <span style={{ color: 'var(--blue)', cursor: 'pointer' }}>Terms of Service</span> and <span style={{ color: 'var(--blue)', cursor: 'pointer' }}>Privacy Policy</span>.
+                  By logging in and using Skriibe, you agree to our <Link to="/terms" style={{ color: 'var(--blue)', cursor: 'pointer', textDecoration: 'none' }}>Terms of Service</Link> and <Link to="/privacy" style={{ color: 'var(--blue)', cursor: 'pointer', textDecoration: 'none' }}>Privacy Policy</Link>.
                 </span>
               </div>
             </label>

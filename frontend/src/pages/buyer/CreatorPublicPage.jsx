@@ -436,7 +436,7 @@ const CreatorPublicPage = () => {
             />
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
               <span style={{ fontSize: '0.95rem', fontWeight: '600', color: '#ffffff' }}>I understand and agree</span>
-              <span style={{ fontSize: '0.75rem', color: '#94a3b8', lineHeight: '1.4' }}>By logging in and using Skriibe, you agree to our <span style={{ color: '#29C5F6', cursor: 'pointer' }}>Terms of Service</span> and <span style={{ color: '#29C5F6', cursor: 'pointer' }}>Privacy Policy</span>.</span>
+              <span style={{ fontSize: '0.75rem', color: '#94a3b8', lineHeight: '1.4' }}>By logging in and using Skriibe, you agree to our <Link to="/terms" style={{ color: '#29C5F6', cursor: 'pointer', textDecoration: 'none' }}>Terms of Service</Link> and <Link to="/privacy" style={{ color: '#29C5F6', cursor: 'pointer', textDecoration: 'none' }}>Privacy Policy</Link>.</span>
             </div>
           </label>
         </div>

@@ -451,61 +451,12 @@ const CreatorSettings = () => {
                   </div>
                 ))}
               </div>
-
-              {/* Bio Section */}
-              <div style={{ marginTop: '12px' }}>
-                {isEditingBio ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    <textarea 
-                      value={bio}
-                      onChange={(e) => setBio(e.target.value)}
-                      style={{
-                        background: 'rgba(255, 255, 255, 0.05)',
-                        border: '1px solid rgba(99, 102, 241, 0.5)',
-                        borderRadius: '8px',
-                        color: '#fff',
-                        padding: '8px',
-                        fontSize: '0.9rem',
-                        lineHeight: '1.4',
-                        width: '100%',
-                        boxSizing: 'border-box',
-                        resize: 'vertical',
-                        minHeight: '60px',
-                        outline: 'none',
-                        fontFamily: 'inherit'
-                      }}
-                      autoFocus
-                    />
-                    <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-                      <button 
-                        onClick={() => setIsEditingBio(false)}
-                        style={{ background: 'transparent', border: '1px solid #475569', color: '#94a3b8', borderRadius: '6px', padding: '4px 10px', fontSize: '0.8rem', cursor: 'pointer' }}
-                      >Cancel</button>
-                      <button 
-                        onClick={handleSaveBio}
-                        style={{ background: '#6366F1', border: 'none', color: '#fff', borderRadius: '6px', padding: '4px 10px', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer' }}
-                      >Save</button>
-                    </div>
-                  </div>
-                ) : (
-                  <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
-                    <div style={{ color: '#E2E8F0', fontSize: '0.9rem', lineHeight: '1.5' }}>
-                      {bio}
-                    </div>
-                    <button 
-                      onClick={() => setIsEditingBio(true)}
-                      style={{
-                        background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '2px', display: 'flex', alignItems: 'center', justifyContent: 'center'
-                      }}
-                    >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M12 20h9"></path>
-                        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
-                      </svg>
-                    </button>
-                  </div>
-                )}
+              
+              <div style={{ color: '#E2E8F0', fontSize: '0.9rem', lineHeight: '1.5', marginTop: '8px' }}>
+                {creator.instagramFollowers >= 1000 ? (creator.instagramFollowers/1000).toFixed(1).replace('.0', '') + 'K' : (creator.instagramFollowers || 0)} followers
               </div>
+
+
             </div>
           </div>
 
