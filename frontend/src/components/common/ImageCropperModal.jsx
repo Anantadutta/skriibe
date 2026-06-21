@@ -10,6 +10,10 @@ const ImageCropperModal = ({ imageSrc, onCropComplete, onClose }) => {
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [imgSize, setImgSize] = useState({ width: 0, height: 0, naturalWidth: 0, naturalHeight: 0 });
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
+  
+  // Pinch to zoom state
+  const [initialPinchDist, setInitialPinchDist] = useState(null);
+  const [initialZoom, setInitialZoom] = useState(1);
 
   const CROP_SIZE = 250; // Visual size of the crop box
   const OUTPUT_SIZE = 800; // Output image size (px), 800x800 is 0.64 Megapixels, well within 5 Megapixel limit
@@ -66,16 +70,45 @@ const ImageCropperModal = ({ imageSrc, onCropComplete, onClose }) => {
     setIsDragging(false);
   };
   
+  const getDistance = (touch1, touch2) => {
+    return Math.hypot(touch1.clientX - touch2.clientX, touch1.clientY - touch2.clientY);
+  };
+
   const handleTouchStart = (e) => {
-    setIsDragging(true);
-    setDragStart({ x: e.touches[0].clientX - position.x, y: e.touches[0].clientY - position.y });
+    if (e.touches.length === 2) {
+      setInitialPinchDist(getDistance(e.touches[0], e.touches[1]));
+      setInitialZoom(zoom);
+      setIsDragging(false);
+    } else if (e.touches.length === 1) {
+      setIsDragging(true);
+      setDragStart({ x: e.touches[0].clientX - position.x, y: e.touches[0].clientY - position.y });
+    }
   };
   
   const handleTouchMove = (e) => {
-    if (!isDragging) return;
-    let newX = e.touches[0].clientX - dragStart.x;
-    let newY = e.touches[0].clientY - dragStart.y;
-    setPosition({ x: newX, y: newY });
+    if (e.touches.length === 2 && initialPinchDist) {
+      e.preventDefault(); // Prevent default browser zoom/scroll
+      const currentDist = getDistance(e.touches[0], e.touches[1]);
+      const scale = currentDist / initialPinchDist;
+      const newZoom = Math.max(1, Math.min(3, initialZoom * scale));
+      setZoom(newZoom);
+    } else if (e.touches.length === 1 && isDragging) {
+      let newX = e.touches[0].clientX - dragStart.x;
+      let newY = e.touches[0].clientY - dragStart.y;
+      setPosition({ x: newX, y: newY });
+    }
+  };
+
+  const handleTouchEnd = (e) => {
+    if (e.touches.length < 2) {
+      setInitialPinchDist(null);
+    }
+    if (e.touches.length === 0) {
+      setIsDragging(false);
+    } else if (e.touches.length === 1) {
+      setDragStart({ x: e.touches[0].clientX - position.x, y: e.touches[0].clientY - position.y });
+      setIsDragging(true);
+    }
   };
 
   const handleCrop = async () => {
@@ -151,14 +184,14 @@ const ImageCropperModal = ({ imageSrc, onCropComplete, onClose }) => {
         
         <div 
           ref={containerRef}
-          style={{ position: 'relative', width: '100%', height: '350px', overflow: 'hidden', backgroundColor: '#000', cursor: isDragging ? 'grabbing' : 'grab' }}
+          style={{ position: 'relative', width: '100%', height: '350px', overflow: 'hidden', backgroundColor: '#000', cursor: isDragging ? 'grabbing' : 'grab', touchAction: 'none' }}
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseUp}
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
-          onTouchEnd={handleMouseUp}
+          onTouchEnd={handleTouchEnd}
         >
           {containerSize.width > 0 && (
             <img
@@ -174,6 +207,8 @@ const ImageCropperModal = ({ imageSrc, onCropComplete, onClose }) => {
                 left: '50%',
                 width: `${imgSize.width * zoom}px`,
                 height: `${imgSize.height * zoom}px`,
+                maxWidth: 'none',
+                maxHeight: 'none',
                 transform: `translate(calc(-50% + ${position.x}px), calc(-50% + ${position.y}px))`,
                 pointerEvents: 'none',
                 willChange: 'transform'

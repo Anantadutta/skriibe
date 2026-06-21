@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 /**
  * @component Field — Styled input field container for AMA forms.
  */
-export const Field = ({ label, value, placeholder, onChange, type = 'text', required }) => {
+export const Field = ({ label, value, placeholder, onChange, type = 'text', required, subtitle }) => {
   const [isFocused, setIsFocused] = useState(false);
 
   return (
@@ -25,7 +25,7 @@ export const Field = ({ label, value, placeholder, onChange, type = 'text', requ
         color: '#06b6d4',
         textTransform: 'uppercase',
         letterSpacing: '0.08em',
-        marginBottom: '6px',
+        marginBottom: subtitle ? '4px' : '6px',
         display: 'block',
         fontWeight: 700,
         textAlign: 'left'
@@ -38,6 +38,18 @@ export const Field = ({ label, value, placeholder, onChange, type = 'text', requ
           label
         )}
       </label>
+      {subtitle && (
+        <div style={{
+          fontFamily: 'var(--font-body)',
+          fontSize: '12px',
+          color: '#94a3b8',
+          marginBottom: '8px',
+          textAlign: 'left',
+          textTransform: 'none'
+        }}>
+          {subtitle}
+        </div>
+      )}
       {onChange || type !== 'text' ? (
         <input
           type={type}

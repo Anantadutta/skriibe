@@ -258,7 +258,7 @@ router.post('/questions/:id/reply', verifyCreatorToken, async (req, res) => {
       return res.status(404).json({ message: 'Question not found or unauthorized' });
     }
 
-    const creatorSharePercentage = parseFloat(process.env.CREATOR_SHARE_PERCENTAGE || '0.80');
+    const creatorSharePercentage = parseFloat(process.env.CREATOR_SHARE_PERCENTAGE || '1.00');
     const grossAmount = question.amountPaid || 0; 
     
     if (grossAmount > 0) {
@@ -574,7 +574,7 @@ router.post('/delete-account', async (req, res) => {
 router.get('/payouts', verifyCreatorToken, async (req, res) => {
   try {
     await connectDB();
-    const CREATOR_SHARE = 0.80;
+    const CREATOR_SHARE = 1.00;
     const ESCROW_DAYS   = 7;
 
     const now = new Date();

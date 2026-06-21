@@ -5,6 +5,7 @@ import { BottomNav } from '../../components/ama/layout/BottomNav';
 import api from '../../services/api';
 import { getMe } from '../../services/creatorApi';
 import { io } from 'socket.io-client';
+import TransparentLogo from '../../components/TransparentLogo';
 
 const TABS = ['Available', 'Protected', 'Under Review', 'Refunded', 'History'];
 
@@ -221,8 +222,8 @@ const CreatorPayouts = () => {
                 <polyline points="15 18 9 12 15 6"></polyline>
               </svg>
             </button>
-            <div style={{ fontFamily: 'Syne, sans-serif', fontWeight: 'bold', fontSize: '20px', letterSpacing: '-0.5px', color: '#3DD9FF' }}>
-              skriibe
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <TransparentLogo src="/logo.png" alt="skriibe logo" style={{ height: '22px', width: 'auto', transform: 'scale(4)', transformOrigin: 'center' }} />
             </div>
             <div style={{ width: '38px' }} />
           </div>
