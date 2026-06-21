@@ -481,6 +481,31 @@ const CreatorPayouts = () => {
             {/* ── HISTORY ── */}
             {activeTab === 'History' && (
               <>
+                <Card style={{ padding: '24px', marginBottom: '24px', background: 'linear-gradient(145deg, #0F172A 0%, #0B0F19 100%)', border: '1px solid #1E293B' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#38BDF8', fontSize: '11px', fontWeight: '800', letterSpacing: '1.2px', marginBottom: '12px' }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline>
+                      <polyline points="16 7 22 7 22 13"></polyline>
+                    </svg>
+                    LIFETIME PAID
+                  </div>
+                  <div style={{ fontSize: '42px', fontWeight: '900', letterSpacing: '-1.5px', color: '#fff', display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '4px', lineHeight: 1 }}>
+                    <span style={{ color: '#E2E8F0', fontSize: '32px' }}>₹</span>{(payoutStats.lifetimePaid || 0)}
+                  </div>
+                  <div style={{ color: '#64748B', fontSize: '13px', fontWeight: '500', marginBottom: '24px' }}>
+                    Total amount credited to your account
+                  </div>
+                  
+                  <div style={{ background: '#1E293B', borderRadius: '14px', padding: '16px', border: '1px solid #334155' }}>
+                    <div style={{ color: '#64748B', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '8px', textTransform: 'uppercase' }}>
+                      This month
+                    </div>
+                    <div style={{ color: '#38BDF8', fontSize: '20px', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '2px' }}>
+                      <span style={{ fontSize: '16px' }}>₹</span>{(payoutStats.thisMonthPaid || 0)}
+                    </div>
+                  </div>
+                </Card>
+
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                   <h3 style={{ fontSize: '16px', fontWeight: '700', margin: 0 }}>Payout History</h3>
                   <button style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', color: '#A8A8A0', fontSize: '12px', padding: '7px 12px', cursor: 'pointer' }}>
