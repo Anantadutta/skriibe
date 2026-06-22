@@ -134,5 +134,31 @@
     "handle": "kuhu",
     "price": 499,
     "pricePerQuestion": 499
+  },
+  {
+    "_id": "6a39427a7d594fa3f2e69772",
+    "name": "",
+    "price": 99,
+    "pricePerQuestion": 99
+  },
+  {
+    "_id": "6a394c8e4efc0bdcfe2bebae",
+    "name": "Tarundeep Singh",
+    "price": 8,
+    "pricePerQuestion": 8,
+    "handle": "tarun0501"
+  },
+  {
+    "_id": "6a394de04efc0bdcfe2bebb1",
+    "name": "Tarundeep Singh",
+    "handle": "tarundeepsingh1",
+    "price": 8,
+    "pricePerQuestion": 8
+  },
+  {
+    "_id": "6a3950364efc0bdcfe2bebb2",
+    "name": "Vasundhara Keshan",
+    "price": 99,
+    "pricePerQuestion": 99
   }
 ]
