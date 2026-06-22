@@ -142,6 +142,15 @@ const CreatorDashboard = () => {
     );
   }
 
+  if (!creator) {
+    return (
+      <div style={{ background: '#0a0a0f', minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', color: '#fff' }}>
+        <h2>Error Loading Creator</h2>
+        <button onClick={() => navigate('/creator/login')} style={{ marginTop: '16px', padding: '10px 20px', background: '#38bdf8', color: '#0f172a', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>Return to Login</button>
+      </div>
+    );
+  }
+
   // Cyan filter: to make emojis turn cyan #29C5F6
   const cyanFilter = 'invert(69%) sepia(87%) saturate(2714%) hue-rotate(164deg) brightness(99%) contrast(98%)';
   // Gray filter

@@ -8,6 +8,7 @@ import TransparentLogo from '../../components/TransparentLogo';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { emailLogin } from '../../services/creatorApi';
 import { Button } from '../../components/ama/ui/Button';
+import { useAuth } from '../../context/AuthContext';
 
 const CreatorLogin = () => {
   const [email, setEmail] = useState('');
@@ -23,6 +24,7 @@ const CreatorLogin = () => {
   const [focusedEmail, setFocusedEmail] = useState(false);
   const [focusedPassword, setFocusedPassword] = useState(false);
   const navigate = useNavigate();
+  const { setAuthData } = useAuth();
   const successMessage = location.state?.message;
 
   const handleLogin = async () => {
@@ -38,10 +40,14 @@ const CreatorLogin = () => {
     setError('');
     try {
       const res = await emailLogin(email, password);
-      const { creator } = res.data;
+      const { creator, token } = res.data;
       
       // User has logged in, mark them as a returning creator
       localStorage.setItem('isReturningCreator', 'true');
+      
+      if (token) {
+        setAuthData(['creator'], 'creator', token);
+      }
       
       if (creator.onboardingComplete || creator.ama_enabled || creator.handle) {
         navigate('/creator/dashboard', { state: { creator } });

@@ -6,9 +6,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { verifyOTP, sendOTP } from '../../services/creatorApi';
+import { useAuth } from '../../context/AuthContext';
 
 const CreatorVerifyOTP = () => {
   const navigate = useNavigate();
+  const { setAuthData } = useAuth();
   const location = useLocation();
   const phone = location.state?.phone;
 
@@ -77,7 +79,10 @@ const CreatorVerifyOTP = () => {
     setError('');
     try {
       const res = await verifyOTP(phone, otpString);
-      const { creator } = res.data;
+      const { creator, token } = res.data;
+      if (token) {
+        setAuthData(['creator'], 'creator', token);
+      }
       if (creator.onboardingComplete || creator.ama_enabled || creator.handle) {
         navigate('/creator/dashboard', { state: { creator } });
       } else {
