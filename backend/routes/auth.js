@@ -203,7 +203,7 @@ router.post('/send-otp', async (req, res) => {
   try {
     await connectDB();
     const { phone } = req.body;
-    if (!phone || !/^[6-9]\d{9}$/.test(phone)) {
+    if (!phone || !/^\+[1-9]\d{6,14}$/.test(phone)) {
       return res.status(400).json({ message: 'Invalid phone number.' });
     }
 

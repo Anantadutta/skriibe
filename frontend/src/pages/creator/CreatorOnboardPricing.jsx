@@ -7,6 +7,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { savePricing } from '../../services/creatorApi';
 import { PhoneFrame } from '../../components/ama/layout/PhoneFrame';
+import { parsePhoneNumberFromString } from 'libphonenumber-js';
 
 const CreatorOnboardPricing = () => {
   const navigate = useNavigate();
@@ -21,6 +22,24 @@ const CreatorOnboardPricing = () => {
   const [customPrice, setCustomPrice] = useState('');
   const [showSaveSuccess, setShowSaveSuccess] = useState(false);
   const [isInputFocused, setIsInputFocused] = useState(false);
+
+  const getCurrencySymbol = (phoneStr) => {
+    if (!phoneStr) return '₹';
+    const parsed = parsePhoneNumberFromString(phoneStr.startsWith('+') ? phoneStr : '+' + phoneStr);
+    if (parsed && parsed.country) {
+      switch (parsed.country) {
+        case 'US': return '$';
+        case 'CA': return 'C$';
+        case 'GB': return '£';
+        case 'AE': return 'AED ';
+        case 'IN': return '₹';
+        default: return '₹';
+      }
+    }
+    return '₹';
+  };
+
+  const currencySymbol = getCurrencySymbol(creatorData?.phone);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -388,7 +407,7 @@ const CreatorOnboardPricing = () => {
                         fontWeight: 800,
                         fontFamily: 'monospace, var(--font-mono)'
                       }}>
-                        ₹{opt.value}
+                        {currencySymbol}{opt.value}
                       </span>
                     </div>
                   );
@@ -467,7 +486,7 @@ const CreatorOnboardPricing = () => {
                             fontWeight: 800,
                             fontFamily: 'monospace, var(--font-mono)'
                           }}>
-                            ₹—
+                            {currencySymbol}—
                           </span>
                         )}
                         {isSelected && customPrice && (
@@ -477,7 +496,7 @@ const CreatorOnboardPricing = () => {
                             fontWeight: 800,
                             fontFamily: 'monospace, var(--font-mono)'
                           }}>
-                            ₹{customPrice}
+                            {currencySymbol}{customPrice}
                           </span>
                         )}
                       </div>
@@ -501,7 +520,7 @@ const CreatorOnboardPricing = () => {
                             fontWeight: 800,
                             fontFamily: 'monospace, var(--font-mono)'
                           }}>
-                            ₹
+                            {currencySymbol}
                           </span>
                           <div style={{ display: 'flex', flexDirection: 'column', width: '100%', maxWidth: '140px' }}>
                             <input
@@ -538,7 +557,7 @@ const CreatorOnboardPricing = () => {
                             />
                             {customPrice !== '' && Number(customPrice) < 10 && (
                               <span style={{ color: '#ef4444', fontSize: '10px', marginTop: '4px', position: 'absolute', bottom: '-16px' }}>
-                                Minimum ₹10 required
+                                Minimum {currencySymbol}10 required
                               </span>
                             )}
                           </div>
@@ -651,7 +670,7 @@ const CreatorOnboardPricing = () => {
                     fontWeight: 700,
                     fontFamily: 'monospace, var(--font-mono)'
                   }}>
-                    ₹{weeklyGoal}
+                    {currencySymbol}{weeklyGoal}
                   </span>
                 </div>
                 <input

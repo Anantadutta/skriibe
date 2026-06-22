@@ -190,16 +190,18 @@ const CreatorReplyScreen = () => {
                   Reply to {(question.buyerName || question.followerName || 'Ayushi').split(' ')[0]}
                 </h2>
                 <div style={{ color: '#64748b', fontSize: '0.85rem', fontWeight: 500 }}>
-                  {question.isFollowUp ? 'Follow-up question · Free' : `Finance question · ₹${question.amountPaid || question.pricePaid || 99}`}
+                  {question.isFollowUp ? 'Follow-up question · Free' : `Question · ₹${question.amountPaid || question.pricePaid || 99}`}
                 </div>
               </div>
             </div>
 
             {/* SLA Warning Banner */}
-            <div style={{ background: '#291E00', border: '1px solid #B45309', borderRadius: '16px', padding: '16px', display: 'flex', alignItems: 'center', gap: '12px', color: '#FBBF24' }}>
-              <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#FBBF24' }} />
-              <span style={{ fontWeight: '800', fontSize: '0.95rem', letterSpacing: '0.01em' }}>SLA: {calculateSLARemaining()}</span>
-            </div>
+            {question.status !== 'satisfied' && (
+              <div style={{ background: '#291E00', border: '1px solid #B45309', borderRadius: '16px', padding: '16px', display: 'flex', alignItems: 'center', gap: '12px', color: '#FBBF24' }}>
+                <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#FBBF24' }} />
+                <span style={{ fontWeight: '800', fontSize: '0.95rem', letterSpacing: '0.01em' }}>SLA: {calculateSLARemaining()}</span>
+              </div>
+            )}
 
             {/* Context (Original Question and Answer) */}
             {rootQuestion ? (
@@ -259,145 +261,170 @@ const CreatorReplyScreen = () => {
               </div>
             )}
 
-            {/* Reply Editor */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <label style={{ fontSize: '0.95rem', color: '#ffffff', fontWeight: 800 }}>
-                Your reply <span style={{ color: '#94a3b8', fontWeight: 500 }}>(Min 100 characters, Max 1000 characters)</span> <span style={{ color: '#38BDF8' }}>*</span>
-              </label>
-              
-              {/* Quick Reply Chips */}
-              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                {['Great question!', "Here's my take —", 'Short answer:'].map((chip, idx) => (
-                  <div key={idx} onClick={() => setReplyText(prev => prev ? prev + ' ' + chip : chip)} style={{ background: '#1E293B', color: '#94a3b8', padding: '10px 16px', borderRadius: '12px', fontSize: '0.9rem', fontWeight: 600, whiteSpace: 'nowrap', cursor: 'pointer' }}>
-                    {chip}
-                  </div>
-                ))}
-              </div>
-
-              <textarea
-                value={replyText}
-                onChange={(e) => setReplyText(e.target.value)}
-                placeholder="Start typing your detailed response here..."
-                style={{
-                  background: '#16161E',
-                  border: 'none',
-                  borderRadius: '16px',
-                  padding: '20px',
-                  color: '#94a3b8',
-                  fontSize: '1rem',
-                  lineHeight: '1.5',
-                  minHeight: '200px',
-                  resize: 'none',
-                  fontFamily: 'system-ui, -apple-system, sans-serif',
-                  fontStyle: replyText ? 'normal' : 'italic',
-                  outline: 'none',
-                  boxSizing: 'border-box'
-                }}
-              />
-
-              {/* Character Count Validator */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', fontSize: '0.85rem', fontWeight: 700, color: '#94a3b8' }}>
-                <div style={{ color: isMinMet ? '#34D399' : (replyText.trim().length > 0 ? '#ef4444' : '#94a3b8') }}>
-                  {charCount}/1000 characters
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
-                  <div>
-                    {isMinMet ? <span style={{ color: '#34D399' }}>valid ✓</span> : (charCount < 100 ? `${100 - charCount} left to minimum` : `${charCount - 1000} over maximum`)}
-                  </div>
-                  <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 500 }}>
-                    100 characters minimum
+            {question.status === 'satisfied' ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div style={{ background: '#0a1922', borderRadius: '16px', padding: '20px', border: '1px solid rgba(56, 189, 248, 0.2)' }}>
+                  <div style={{ color: '#38bdf8', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '12px', textTransform: 'uppercase' }}>YOUR ANSWER</div>
+                  <div style={{ color: '#fff', fontSize: '16px', lineHeight: '1.6', wordBreak: 'break-all', overflowWrap: 'anywhere' }}>
+                    {question.answerText}
                   </div>
                 </div>
+                <div style={{ background: '#0a2e1c', color: '#10b981', borderRadius: '16px', padding: '16px', fontWeight: '800', fontSize: '15px', textAlign: 'center', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
+                  <span style={{ fontSize: '18px', marginRight: '8px' }}>🙂</span>
+                  {question.buyerName || question.followerName || 'The fan'} is satisfied with your answer!
+                </div>
               </div>
-            </div>
+            ) : (
+              <>
+                {/* SLA Warning Banner */}
+                {question.status !== 'satisfied' && (
+                  <div style={{ background: '#291E00', border: '1px solid #B45309', borderRadius: '16px', padding: '16px', display: 'flex', alignItems: 'center', gap: '12px', color: '#FBBF24' }}>
+                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#FBBF24' }} />
+                    <span style={{ fontWeight: '800', fontSize: '0.95rem', letterSpacing: '0.01em' }}>SLA: {calculateSLARemaining()}</span>
+                  </div>
+                )}
 
-            {/* Follow Up Allowed Toggle */}
-            {!question.isFollowUp && (
-              <div style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: '12px', 
-                padding: '16px', 
-                marginBottom: '16px',
-                background: followUpAllowed ? 'rgba(56, 189, 248, 0.1)' : 'rgba(255, 255, 255, 0.03)',
-                border: followUpAllowed ? '1px solid rgba(56, 189, 248, 0.4)' : '1px solid rgba(255, 255, 255, 0.1)',
-                borderRadius: '16px',
-                transition: 'all 0.2s ease'
-              }}>
-                <input 
-                  type="checkbox" 
-                  id="followUpAllowed"
-                  checked={followUpAllowed}
-                  onChange={(e) => setFollowUpAllowed(e.target.checked)}
-                  style={{ cursor: 'pointer', width: '20px', height: '20px', accentColor: '#38BDF8' }}
-                />
-                <label htmlFor="followUpAllowed" style={{ color: followUpAllowed ? '#38BDF8' : '#e2e8f0', fontSize: '1rem', fontWeight: '600', cursor: 'pointer', flex: 1 }}>
-                  Allow Fan to ask 1 Free Follow-up Question
-                </label>
-              </div>
+                {/* Reply Editor */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <label style={{ fontSize: '0.95rem', color: '#ffffff', fontWeight: 800 }}>
+                    Your reply <span style={{ color: '#94a3b8', fontWeight: 500 }}>(Min 100 characters, Max 1000 characters)</span> <span style={{ color: '#38BDF8' }}>*</span>
+                  </label>
+                  
+                  {/* Quick Reply Chips */}
+                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                    {['Great question!', "Here's my take —", 'Short answer:'].map((chip, idx) => (
+                      <div key={idx} onClick={() => setReplyText(prev => prev ? prev + ' ' + chip : chip)} style={{ background: '#1E293B', color: '#94a3b8', padding: '10px 16px', borderRadius: '12px', fontSize: '0.9rem', fontWeight: 600, whiteSpace: 'nowrap', cursor: 'pointer' }}>
+                        {chip}
+                      </div>
+                    ))}
+                  </div>
+
+                  <textarea
+                    value={replyText}
+                    onChange={(e) => setReplyText(e.target.value)}
+                    placeholder="Start typing your detailed response here..."
+                    style={{
+                      background: '#16161E',
+                      border: 'none',
+                      borderRadius: '16px',
+                      padding: '20px',
+                      color: '#94a3b8',
+                      fontSize: '1rem',
+                      lineHeight: '1.5',
+                      minHeight: '200px',
+                      resize: 'none',
+                      fontFamily: 'system-ui, -apple-system, sans-serif',
+                      fontStyle: replyText ? 'normal' : 'italic',
+                      outline: 'none',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+
+                  {/* Character Count Validator */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', fontSize: '0.85rem', fontWeight: 700, color: '#94a3b8' }}>
+                    <div style={{ color: isMinMet ? '#34D399' : (replyText.trim().length > 0 ? '#ef4444' : '#94a3b8') }}>
+                      {charCount}/1000 characters
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
+                      <div>
+                        {isMinMet ? <span style={{ color: '#34D399' }}>valid ✓</span> : (charCount < 100 ? `${100 - charCount} left to minimum` : `${charCount - 1000} over maximum`)}
+                      </div>
+                      <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 500 }}>
+                        100 characters minimum
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Follow Up Allowed Toggle */}
+                {!question.isFollowUp && (
+                  <div style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '12px', 
+                    padding: '16px', 
+                    marginBottom: '16px',
+                    background: followUpAllowed ? 'rgba(56, 189, 248, 0.1)' : 'rgba(255, 255, 255, 0.03)',
+                    border: followUpAllowed ? '1px solid rgba(56, 189, 248, 0.4)' : '1px solid rgba(255, 255, 255, 0.1)',
+                    borderRadius: '16px',
+                    transition: 'all 0.2s ease'
+                  }}>
+                    <input 
+                      type="checkbox" 
+                      id="followUpAllowed"
+                      checked={followUpAllowed}
+                      onChange={(e) => setFollowUpAllowed(e.target.checked)}
+                      style={{ cursor: 'pointer', width: '20px', height: '20px', accentColor: '#38BDF8' }}
+                    />
+                    <label htmlFor="followUpAllowed" style={{ color: followUpAllowed ? '#38BDF8' : '#e2e8f0', fontSize: '1rem', fontWeight: '600', cursor: 'pointer', flex: 1 }}>
+                      Allow Fan to ask 1 Free Follow-up Question
+                    </label>
+                  </div>
+                )}
+
+                {/* Send Reply Button */}
+                <button
+                  disabled={!isMinMet}
+                  onClick={handleSend}
+                  style={{
+                    background: isMinMet ? '#38BDF8' : '#1E293B',
+                    color: isMinMet ? '#0F172A' : '#64748b',
+                    border: 'none',
+                    borderRadius: '16px',
+                    padding: '18px',
+                    fontWeight: '800',
+                    fontSize: '1.05rem',
+                    cursor: isMinMet ? 'pointer' : 'not-allowed',
+                    transition: 'all 0.2s ease',
+                    textAlign: 'center',
+                    width: '100%'
+                  }}
+                >
+                  Send reply →
+                </button>
+
+                {/* Action Button Grid */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '4px' }}>
+                  <button
+                    onClick={handleRejectClick}
+                    style={{
+                      background: '#1A1B23',
+                      border: 'none',
+                      color: '#ffffff',
+                      borderRadius: '16px',
+                      padding: '16px',
+                      fontWeight: 800,
+                      fontSize: '0.95rem',
+                      cursor: 'pointer',
+                      textAlign: 'center'
+                    }}
+                  >
+                    Reject & refund
+                  </button>
+                  <button
+                    onClick={handleFlagClick}
+                    style={{
+                      background: 'rgba(239, 68, 68, 0.1)',
+                      border: '1px solid rgba(239, 68, 68, 0.2)',
+                      color: '#ef4444',
+                      borderRadius: '16px',
+                      padding: '16px',
+                      fontWeight: 800,
+                      fontSize: '0.95rem',
+                      cursor: 'pointer',
+                      textAlign: 'center',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px'
+                    }}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="#ef4444" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg>
+                    Flag abuse
+                  </button>
+                </div>
+              </>
             )}
-
-            {/* Send Reply Button */}
-            <button
-              disabled={!isMinMet}
-              onClick={handleSend}
-              style={{
-                background: isMinMet ? '#38BDF8' : '#1E293B',
-                color: isMinMet ? '#0F172A' : '#64748b',
-                border: 'none',
-                borderRadius: '16px',
-                padding: '18px',
-                fontWeight: '800',
-                fontSize: '1.05rem',
-                cursor: isMinMet ? 'pointer' : 'not-allowed',
-                transition: 'all 0.2s ease',
-                textAlign: 'center',
-                width: '100%'
-              }}
-            >
-              Send reply →
-            </button>
-
-            {/* Action Button Grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '4px' }}>
-              <button
-                onClick={handleRejectClick}
-                style={{
-                  background: '#1A1B23',
-                  border: 'none',
-                  color: '#ffffff',
-                  borderRadius: '16px',
-                  padding: '16px',
-                  fontWeight: 800,
-                  fontSize: '0.95rem',
-                  cursor: 'pointer',
-                  textAlign: 'center'
-                }}
-              >
-                Reject & refund
-              </button>
-              <button
-                onClick={handleFlagClick}
-                style={{
-                  background: 'rgba(239, 68, 68, 0.1)',
-                  border: '1px solid rgba(239, 68, 68, 0.2)',
-                  color: '#ef4444',
-                  borderRadius: '16px',
-                  padding: '16px',
-                  fontWeight: 800,
-                  fontSize: '0.95rem',
-                  cursor: 'pointer',
-                  textAlign: 'center',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '8px'
-                }}
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="#ef4444" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg>
-                Flag abuse
-              </button>
-            </div>
           </>
         )}
 
@@ -826,6 +853,64 @@ complete.
               onMouseLeave={(e) => e.target.style.background = '#1A1A1A'}
             >
               Return to Dashboard
+            </button>
+          </div>
+        )}
+
+        {/* ========================================= */}
+        {/* VIEW: READONLY FLAGGED/REJECTED           */}
+        {/* ========================================= */}
+        {view === 'readonly_flagged' && (
+          <div style={{ padding: '24px 20px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            {/* Context/Original Question */}
+            <div style={{ background: '#1A1A1A', borderRadius: '16px', padding: '16px', border: '1px solid #2A2A2A' }}>
+              <div style={{ color: '#FBBF24', fontSize: '0.8rem', fontWeight: 'bold', marginBottom: '8px', letterSpacing: '0.5px' }}>
+                {question.status?.toLowerCase() === 'rejected' ? 'REJECTED QUESTION' : 'FLAGGED QUESTION'}
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+                <div style={{ fontWeight: '700', color: '#fff', fontSize: '1rem' }}>
+                  {question.buyerName || question.followerName || 'Anonymous'}
+                </div>
+              </div>
+              <div style={{ color: '#E2E8F0', fontSize: '0.95rem', lineHeight: '1.5', whiteSpace: 'pre-wrap' }}>
+                {question.questionText}
+              </div>
+            </div>
+
+            {/* Answer (if any) */}
+            {question.answerText && (
+              <div style={{ background: 'rgba(34, 197, 94, 0.05)', borderRadius: '16px', padding: '16px', border: '1px solid rgba(34, 197, 94, 0.2)' }}>
+                <div style={{ color: '#22C55E', fontSize: '0.8rem', fontWeight: 'bold', marginBottom: '8px', letterSpacing: '0.5px' }}>YOUR ANSWER</div>
+                <div style={{ color: '#E2E8F0', fontSize: '0.95rem', lineHeight: '1.5', whiteSpace: 'pre-wrap' }}>
+                  {question.answerText}
+                </div>
+              </div>
+            )}
+
+            {/* Reason */}
+            <div style={{ background: 'rgba(239, 68, 68, 0.05)', borderRadius: '16px', padding: '16px', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
+              <div style={{ color: '#EF4444', fontSize: '0.8rem', fontWeight: 'bold', marginBottom: '8px', letterSpacing: '0.5px' }}>REASON</div>
+              <div style={{ color: '#E2E8F0', fontSize: '0.95rem', lineHeight: '1.5' }}>
+                {question.flagReason || question.rejectReason || 'No reason provided'}
+              </div>
+            </div>
+
+            <button
+              onClick={() => navigate(-1)}
+              style={{
+                background: '#2A2A35',
+                border: 'none',
+                color: '#ffffff',
+                borderRadius: '14px',
+                padding: '16px',
+                fontWeight: '600',
+                fontSize: '1rem',
+                cursor: 'pointer',
+                marginTop: '16px',
+                width: '100%'
+              }}
+            >
+              Go Back
             </button>
           </div>
         )}

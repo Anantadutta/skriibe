@@ -6,6 +6,7 @@ import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { switchRole } from '../../services/fanApi';
 import ImageCropperModal from '../../components/common/ImageCropperModal';
+import { getCurrencySymbol } from '../../utils/phoneValidation';
 
 const CreatorSettings = () => {
   const navigate = useNavigate();
@@ -23,6 +24,7 @@ const CreatorSettings = () => {
 
   const [creator, setCreator] = useState(location.state?.creator || mockCreator);
   const [highlightPause, setHighlightPause] = useState(location.state?.highlightPause || false);
+  const currencySymbol = getCurrencySymbol(creator?.phone);
 
   useEffect(() => {
     if (highlightPause) {
@@ -462,7 +464,7 @@ const CreatorSettings = () => {
           <div style={{ display: 'flex', justifyContent: 'space-between', position: 'relative', zIndex: 1, padding: '4px 0' }}>
 
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1, gap: '4px' }}>
-              <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#FFF' }}>₹{questionPrice}</span>
+              <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#FFF' }}>{currencySymbol}{questionPrice}</span>
               <span style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: 600 }}>Per question</span>
             </div>
             <div style={{ width: '1px', background: 'rgba(255,255,255,0.08)' }} />
@@ -472,7 +474,7 @@ const CreatorSettings = () => {
             </div>
             <div style={{ width: '1px', background: 'rgba(255,255,255,0.08)' }} />
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1, gap: '4px' }}>
-              <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#FFF' }}>₹{weeklyGoal}</span>
+              <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#FFF' }}>{currencySymbol}{weeklyGoal}</span>
               <span style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: 600 }}>Weekly goal</span>
             </div>
           </div>
@@ -557,7 +559,7 @@ const CreatorSettings = () => {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', borderBottom: '1px solid #2A2A2A' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                 <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(56, 189, 248, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#38BDF8', fontWeight: 700, fontSize: '1.1rem' }}>
-                  ₹
+                  {currencySymbol}
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                   <div style={{ color: '#ffffff', fontSize: '0.95rem', fontWeight: 700 }}>Question price</div>
@@ -568,7 +570,7 @@ const CreatorSettings = () => {
                 {isEditingPrice ? (
                   <>
                     <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                      <span style={{ position: 'absolute', left: '10px', color: '#94a3b8', fontSize: '0.95rem' }}>₹</span>
+                      <span style={{ position: 'absolute', left: '10px', color: '#94a3b8', fontSize: '0.95rem' }}>{currencySymbol}</span>
                       <input 
                         type="text" 
                         inputMode="numeric"
@@ -600,7 +602,7 @@ const CreatorSettings = () => {
                   </>
                 ) : (
                   <>
-                    <span style={{ color: '#ffffff', fontWeight: 700, fontSize: '1.05rem' }}>₹{questionPrice}</span>
+                    <span style={{ color: '#ffffff', fontWeight: 700, fontSize: '1.05rem' }}>{currencySymbol}{questionPrice}</span>
                     <button 
                       onClick={() => setIsEditingPrice(true)}
                       style={{
@@ -680,7 +682,7 @@ const CreatorSettings = () => {
                 {isEditingGoal ? (
                   <>
                     <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                      <span style={{ position: 'absolute', left: '12px', color: '#94a3b8', fontSize: '0.95rem', fontWeight: 500 }}>₹</span>
+                      <span style={{ position: 'absolute', left: '12px', color: '#94a3b8', fontSize: '0.95rem', fontWeight: 500 }}>{currencySymbol}</span>
                       <input 
                         type="number" 
                         value={weeklyGoal} 
@@ -703,7 +705,7 @@ const CreatorSettings = () => {
                   </>
                 ) : (
                   <>
-                    <span style={{ color: '#ffffff', fontWeight: 700, fontSize: '1.05rem' }}>₹{weeklyGoal}</span>
+                    <span style={{ color: '#ffffff', fontWeight: 700, fontSize: '1.05rem' }}>{currencySymbol}{weeklyGoal}</span>
                     <button 
                       onClick={() => setIsEditingGoal(true)}
                       style={{

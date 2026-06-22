@@ -1,8 +1,8 @@
-Uncaught: C:\Users\dutta\Downloads\skriibe-main\skriibe-main\backend\routes\auth.js:305
-    });
-     ^
+Uncaught: C:\Users\dutta\Downloads\skriibe-main\skriibe-main\backend\routes\fanAuth.js:441
+    const fan = await Fan.findById(req.fan.fanId);
+          ^
 
-SyntaxError: Unexpected token ')'
+SyntaxError: Identifier 'fan' has already been declared
     at wrapSafe (node:internal/modules/cjs/loader:1762:18)
     at Module._compile (node:internal/modules/cjs/loader:1803:20)
     at Object..js (node:internal/modules/cjs/loader:1969:10)
@@ -11,5 +11,5 @@ SyntaxError: Unexpected token ')'
     at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
     at Module.require (node:internal/modules/cjs/loader:1575:12)
     at require (node:internal/modules/helpers:191:16)
-    at Object.<anonymous> (C:\Users\dutta\Downloads\skriibe-main\skriibe-main\backend\server.js:245:22)
+    at Object.<anonymous> (C:\Users\dutta\Downloads\skriibe-main\skriibe-main\backend\server.js:255:26)
     at Module._compile (node:internal/modules/cjs/loader:1829:14)

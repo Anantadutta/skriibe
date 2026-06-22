@@ -83,8 +83,8 @@ const connectDB = async () => {
 router.post('/send-otp', otpLimiter, async (req, res) => {
   const { phone } = req.body;
   
-  if (!phone || !/^[6-9]\d{9}$/.test(phone)) {
-    return res.status(400).json({ message: 'Invalid phone number. Must be 10 digits starting with 6-9.' });
+  if (!phone || !/^\+[1-9]\d{6,14}$/.test(phone)) {
+    return res.status(400).json({ message: 'Invalid phone number format.' });
   }
 
   const existingOTP = otpStore.getOTP(phone);
@@ -389,7 +389,7 @@ router.post('/onboarding/profile', verifyCreatorToken, async (req, res) => {
   if (!name || name.length < 2 || name.length > 60) return res.status(400).json({ message: 'Invalid name' });
   if (!handle || !/^[a-zA-Z0-9_.]{3,30}$/.test(handle)) return res.status(400).json({ message: 'Invalid handle' });
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ message: 'Invalid email address' });
-  if (!phone || !/^[0-9]{10}$/.test(phone)) return res.status(400).json({ message: 'Invalid phone number' });
+  if (!phone || !/^\+[1-9]\d{6,14}$/.test(phone)) return res.status(400).json({ message: 'Invalid phone number' });
   if (bio && bio.length > 200) return res.status(400).json({ message: 'Bio too long' });
   if (!Array.isArray(expertise) || expertise.length === 0 || expertise.length > 2) return res.status(400).json({ message: '1 to 2 expertise fields required' });
 

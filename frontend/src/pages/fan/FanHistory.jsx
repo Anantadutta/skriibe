@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { CheckCircle2, ChevronRight, MessageSquare, PlayCircle, Star, PauseCircle } from 'lucide-react';
 import FanBottomNav from '../../components/fan/layout/FanBottomNav';
 import FanNavbar from '../../components/fan/layout/FanNavbar';
-import { getFanHistory, flagQuestion } from '../../services/fanApi';
+import { getFanHistory, flagQuestion, satisfyQuestion } from '../../services/fanApi';
+import api from '../../services/api';
 
 const FanHistory = () => {
   const flagOptions = [
@@ -333,14 +334,41 @@ const FanHistory = () => {
               </div>
             )}
 
-            <button 
-              onClick={() => setIsFlagModalOpen(true)}
-              style={{ background: 'transparent', border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: '16px', padding: '16px', color: '#ef4444', fontWeight: '600', fontSize: '14px', cursor: 'pointer', marginTop: '8px', transition: 'background 0.2s' }} 
-              onMouseOver={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.05)'} 
-              onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
-            >
-              Flag as incomplete (24hr window)
-            </button>
+            {q.status === 'satisfied' ? (
+              <div style={{ background: '#0a2e1c', color: '#10b981', borderRadius: '16px', padding: '16px', fontWeight: '800', fontSize: '15px', textAlign: 'center', marginTop: '8px', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
+                Satisfied with answer
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '8px' }}>
+                <button 
+                  onClick={async () => {
+                    try {
+                      await satisfyQuestion(q._id);
+                      setQuestions(prev => prev.map(question => question._id === q._id ? { ...question, status: 'satisfied' } : question));
+                      if (selectedQuestion?._id === q._id) {
+                        setSelectedQuestion({ ...selectedQuestion, status: 'satisfied' });
+                      }
+                    } catch (e) {
+                      console.error('Failed to satisfy', e);
+                    }
+                  }}
+                  style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.2)', borderRadius: '16px', padding: '16px', color: '#10b981', fontWeight: '600', fontSize: '14px', cursor: 'pointer', transition: 'background 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }} 
+                  onMouseOver={(e) => e.currentTarget.style.background = 'rgba(16, 185, 129, 0.15)'} 
+                  onMouseOut={(e) => e.currentTarget.style.background = 'rgba(16, 185, 129, 0.1)'}
+                >
+                  <span style={{ fontSize: '18px' }}>🙂</span> Satisfied with answer
+                </button>
+
+                <button 
+                  onClick={() => setIsFlagModalOpen(true)}
+                  style={{ background: 'transparent', border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: '16px', padding: '16px', color: '#ef4444', fontWeight: '600', fontSize: '14px', cursor: 'pointer', transition: 'background 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }} 
+                  onMouseOver={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.05)'} 
+                  onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
+                >
+                  <span style={{ fontSize: '16px' }}>⚑</span> Flag as incomplete (24hr window)
+                </button>
+              </div>
+            )}
 
           </div>
         </div>
@@ -558,7 +586,7 @@ const FanHistory = () => {
                     {group.options.map((opt, oIdx) => (
                       <div key={oIdx} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                         <button
-                          onClick={() => { setSelectedFlagOption(opt.label); if(opt.label !== 'Something else') setFlagReason(''); }}
+                          onClick={() => { setSelectedFlagOption(opt.label); setFlagReason(''); }}
                           style={{
                             width: '100%',
                             background: selectedFlagOption === opt.label ? 'rgba(239, 68, 68, 0.05)' : '#15151A',
@@ -585,7 +613,7 @@ const FanHistory = () => {
                           </div>
                         </button>
                         
-                        {opt.label === 'Something else' && selectedFlagOption === 'Something else' && (
+                        {selectedFlagOption === opt.label && (
                           <div style={{
                             background: '#15151A',
                             border: '1px solid rgba(255,255,255,0.06)',
@@ -633,16 +661,16 @@ const FanHistory = () => {
               </button>
               <button 
                 onClick={handleFlagConfirm}
-                disabled={!selectedFlagOption || (selectedFlagOption === 'Something else' && !flagReason.trim()) || isFlagging}
+                disabled={!selectedFlagOption || !flagReason.trim() || isFlagging}
                 style={{ 
                   flex: 1, 
-                  background: (!selectedFlagOption || (selectedFlagOption === 'Something else' && !flagReason.trim()) || isFlagging) ? '#3f3f46' : '#ef4444', 
+                  background: (!selectedFlagOption || !flagReason.trim() || isFlagging) ? '#3f3f46' : '#ef4444', 
                   border: 'none', 
-                  color: (!selectedFlagOption || (selectedFlagOption === 'Something else' && !flagReason.trim()) || isFlagging) ? '#a1a1aa' : '#fff', 
+                  color: (!selectedFlagOption || !flagReason.trim() || isFlagging) ? '#a1a1aa' : '#fff', 
                   padding: '12px', 
                   borderRadius: '12px', 
                   fontWeight: 'bold', 
-                  cursor: (!selectedFlagOption || (selectedFlagOption === 'Something else' && !flagReason.trim()) || isFlagging) ? 'not-allowed' : 'pointer',
+                  cursor: (!selectedFlagOption || !flagReason.trim() || isFlagging) ? 'not-allowed' : 'pointer',
                   transition: 'all 0.2s'
                 }}
               >

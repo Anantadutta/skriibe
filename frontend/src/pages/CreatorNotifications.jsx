@@ -37,6 +37,24 @@ const CreatorNotifications = () => {
   }, []);
 
   const pendingQuestions = questions.filter(q => q.status?.toLowerCase() === 'submitted');
+  const satisfiedQuestions = questions.filter(q => q.status?.toLowerCase() === 'satisfied' && !q.creatorReadSatisfied);
+  const allNotifications = [...pendingQuestions, ...satisfiedQuestions].sort((a, b) => new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt));
+
+  const handleNotificationClick = async (q) => {
+    let updatedQ = q;
+    if (q.status?.toLowerCase() === 'satisfied' && !q.creatorReadSatisfied) {
+      try {
+        const res = await api.patch(`/creator/questions/${q._id || q.id}/read-satisfied`);
+        if (res.data?.question) {
+          updatedQ = res.data.question;
+        }
+      } catch (err) {
+        console.error('Failed to mark satisfied as read', err);
+      }
+    }
+    const rootQuestion = q.isFollowUp ? questions.find(r => (r._id || r.id) === q.parentQuestionId) : null;
+    navigate(`/creator/dashboard/reply/${q._id || q.id}`, { state: { question: updatedQ, rootQuestion } });
+  };
 
   return (
     <div style={{
@@ -73,48 +91,51 @@ const CreatorNotifications = () => {
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             <h2 style={{ fontSize: '1.4rem', fontWeight: 700, margin: 0 }}>Notifications</h2>
             <div style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: '2px' }}>
-              You have {pendingQuestions.length} new question(s)
+              You have {allNotifications.length} new notification(s)
             </div>
           </div>
         </div>
 
         {/* Notifications List */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', paddingBottom: '100px' }}>
-          {pendingQuestions.length === 0 ? (
+          {allNotifications.length === 0 ? (
             <div style={{ color: '#64748b', textAlign: 'center', marginTop: '20px' }}>No new notifications.</div>
           ) : (
-            pendingQuestions.map((q) => (
-              <div 
-                key={q._id || q.id}
-                onClick={() => navigate('/creator/inbox')}
-                style={{
-                  background: '#16161e',
-                  border: '1px solid #2A2A2A',
-                  borderLeft: `4px solid #FBBF24`,
-                  borderRadius: '16px',
-                  padding: '16px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '8px',
-                  cursor: 'pointer'
-                }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <div style={{ color: '#FBBF24', fontSize: '0.8rem', fontWeight: 600 }}>
-                    {q.isFollowUp ? 'New Follow-up Question' : 'New Question'}
+            allNotifications.map((q) => {
+              const isSatisfied = q.status?.toLowerCase() === 'satisfied';
+              return (
+                <div 
+                  key={q._id || q.id}
+                  onClick={() => handleNotificationClick(q)}
+                  style={{
+                    background: '#16161e',
+                    border: '1px solid #2A2A2A',
+                    borderLeft: `4px solid ${isSatisfied ? '#10b981' : '#FBBF24'}`,
+                    borderRadius: '16px',
+                    padding: '16px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '8px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div style={{ color: isSatisfied ? '#10b981' : '#FBBF24', fontSize: '0.8rem', fontWeight: 600 }}>
+                      {isSatisfied ? 'Fan Satisfied' : (q.isFollowUp ? 'New Follow-up Question' : 'New Question')}
+                    </div>
+                    <div style={{ background: isSatisfied ? 'rgba(16, 185, 129, 0.15)' : 'rgba(251, 191, 36, 0.15)', color: isSatisfied ? '#10b981' : '#FBBF24', padding: '4px 8px', borderRadius: '8px', fontSize: '0.7rem', fontWeight: 700 }}>
+                      Unread
+                    </div>
                   </div>
-                  <div style={{ background: 'rgba(251, 191, 36, 0.15)', color: '#FBBF24', padding: '4px 8px', borderRadius: '8px', fontSize: '0.7rem', fontWeight: 700 }}>
-                    Unread
+                  <div style={{ fontSize: '1rem', fontWeight: 700, color: '#fff' }}>
+                    {isSatisfied ? `${q.buyerName || q.handle || 'A fan'} is satisfied with your answer` : `From ${q.buyerName || q.followerName || 'A fan'}`}
+                  </div>
+                  <div style={{ color: '#94a3b8', fontSize: '0.9rem', lineHeight: '1.4' }}>
+                    Click to view {isSatisfied ? 'the thread' : 'and reply'} in your inbox.
                   </div>
                 </div>
-                <div style={{ fontSize: '1rem', fontWeight: 700, color: '#fff' }}>
-                  From {q.buyerName || q.followerName || 'A fan'}
-                </div>
-                <div style={{ color: '#94a3b8', fontSize: '0.9rem', lineHeight: '1.4' }}>
-                  Click to view and reply in your inbox.
-                </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       </div>

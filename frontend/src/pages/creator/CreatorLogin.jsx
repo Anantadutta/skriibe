@@ -64,7 +64,7 @@ const CreatorLogin = () => {
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
-      justifyContent: 'center',
+      padding: '40px 0',
       position: 'relative',
       overflowX: 'hidden'
     }}>
@@ -143,6 +143,7 @@ const CreatorLogin = () => {
         width: '100%',
         maxWidth: '480px',
         padding: '0 16px',
+        margin: 'auto 0',
         boxSizing: 'border-box',
         zIndex: 1,
         position: 'relative'
@@ -247,6 +248,12 @@ const CreatorLogin = () => {
                 overflow: 'hidden',
                 marginBottom: '12px'
               }}>
+                <div style={{ padding: '0 0 0 16px', display: 'flex', alignItems: 'center', color: '#94a3b8' }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                    <polyline points="22,6 12,13 2,6"></polyline>
+                  </svg>
+                </div>
                 <input
                   type="email"
                   placeholder="your@gmail.com"
@@ -262,7 +269,7 @@ const CreatorLogin = () => {
                     background: 'transparent',
                     border: 'none',
                     outline: 'none',
-                    padding: '10px 14px',
+                    padding: '12px 16px 12px 12px',
                     fontSize: '16px',
                     color: '#ffffff',
                     fontFamily: 'var(--font-mono)',
@@ -294,6 +301,12 @@ const CreatorLogin = () => {
                 transition: 'all 0.25s ease',
                 overflow: 'hidden'
               }}>
+                <div style={{ padding: '0 0 0 16px', display: 'flex', alignItems: 'center', color: '#94a3b8' }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                  </svg>
+                </div>
                 <input
                   type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
@@ -309,7 +322,7 @@ const CreatorLogin = () => {
                     background: 'transparent',
                     border: 'none',
                     outline: 'none',
-                    padding: '12px 16px',
+                    padding: '12px 16px 12px 12px',
                     fontSize: '16px',
                     color: '#ffffff',
                     fontFamily: 'var(--font-mono)',

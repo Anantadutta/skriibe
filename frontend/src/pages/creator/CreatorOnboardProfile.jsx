@@ -9,6 +9,8 @@ import { saveProfile, getMe } from '../../services/creatorApi';
 import { PhoneFrame } from '../../components/ama/layout/PhoneFrame';
 import { Field } from '../../components/ama/ui/Field';
 import ImageCropperModal from '../../components/common/ImageCropperModal';
+import { parsePhoneNumberFromString } from 'libphonenumber-js';
+import { validatePhoneNumber, COUNTRIES } from '../../utils/phoneValidation';
 
 const CreatorOnboardProfile = () => {
   const navigate = useNavigate();
@@ -20,8 +22,8 @@ const CreatorOnboardProfile = () => {
     handle: '',
     email: (passedCreator.email && !passedCreator.email.includes('@temp.skriibe.com')) ? passedCreator.email : '',
     phone: passedCreator.phone || '',
-    bio: passedCreator.bio || '',
-    expertise: passedCreator.expertise || [],
+    bio: passedCreator.bio?.trim() === '' ? '' : passedCreator.bio || '',
+    expertise: (passedCreator.expertise && passedCreator.expertise.length === 1 && passedCreator.expertise[0] === 'Others') ? [] : (passedCreator.expertise || []),
     instagramHandle: passedCreator.instagramHandle || '',
     instagramConnected: passedCreator.instagramConnected || false,
     instagramFollowers: passedCreator.instagramFollowers || 0
@@ -65,8 +67,8 @@ const CreatorOnboardProfile = () => {
             handle: creator.handle || prev.handle || '',
             email: (creator.email && !creator.email.includes('@temp.skriibe.com')) ? creator.email : prev.email,
             phone: creator.phone || prev.phone,
-            bio: creator.bio || prev.bio || '',
-            expertise: creator.expertise?.length > 0 ? creator.expertise : prev.expertise,
+            bio: creator.bio?.trim() === '' ? '' : (creator.bio || prev.bio || ''),
+            expertise: (creator.expertise && creator.expertise.length === 1 && creator.expertise[0] === 'Others') ? [] : (creator.expertise?.length > 0 ? creator.expertise : prev.expertise),
             instagramHandle: creator.instagramHandle || prev.instagramHandle || '',
             instagramConnected: creator.instagramConnected || false,
             instagramFollowers: creator.instagramFollowers || prev.instagramFollowers || 0
@@ -180,7 +182,7 @@ const CreatorOnboardProfile = () => {
       if (!form.name || form.name.trim().length < 2) missing.push('Full Name');
       if (!isHandleValid) missing.push('Username (3–30 chars)');
       if (!isEmailValid) missing.push('Valid Email');
-      if (!isPhoneValid) missing.push('10-digit Phone');
+      if (!isPhoneValid) missing.push('Valid Phone Number');
       if (form.expertise.length === 0) missing.push('Expertise (min 1)');
       if (!form.instagramFollowers || form.instagramFollowers.toString().trim() === '') missing.push('Instagram Followers');
       showError('Please fix: ' + missing.join(' · '));
@@ -214,7 +216,25 @@ const CreatorOnboardProfile = () => {
 
   const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email);
   const isHandleValid = /^[a-zA-Z0-9_.]{3,30}$/.test(form.handle);
-  const isPhoneValid = /^[0-9]{10}$/.test(form.phone);
+  const isPhoneValid = (() => {
+    if (!form.phone) return false;
+    const parsed = parsePhoneNumberFromString(form.phone);
+    let countryCode, localValue;
+
+    if (parsed && parsed.country) {
+      countryCode = parsed.country;
+      localValue = parsed.nationalNumber;
+    } else {
+      const matched = COUNTRIES.find(c => form.phone.startsWith(c.dialCode));
+      if (matched) {
+        countryCode = matched.code;
+        localValue = form.phone.substring(matched.dialCode.length);
+      }
+    }
+
+    if (!countryCode || !localValue) return false;
+    return validatePhoneNumber(localValue, countryCode) === null;
+  })();
   const canContinue = form.name.trim().length >= 2 &&
     isHandleValid &&
     isEmailValid &&
@@ -436,7 +456,7 @@ const CreatorOnboardProfile = () => {
               marginBottom: '16px'
             }}>
               <button
-                onClick={() => navigate(-1)}
+                onClick={() => navigate('/discovery')}
                 style={{
                   position: 'absolute',
                   left: 0,
@@ -705,10 +725,10 @@ const CreatorOnboardProfile = () => {
 
                 <Field
                   label="MOBILE NUMBER *"
-                  type="tel"
+                  type="phone"
                   value={form.phone}
-                  onChange={(e) => handleInputChange('phone', e.target.value.replace(/[^0-9]/g, '').slice(0, 10))}
-                  placeholder="10 digit mobile number"
+                  onChange={(e) => handleInputChange('phone', e.target.value)}
+                  placeholder="Local mobile number"
                   required
                 />
 

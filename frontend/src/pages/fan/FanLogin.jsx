@@ -49,14 +49,14 @@ const FanLogin = () => {
 
   return (
     <div style={{
-      height: '100vh',
+      minHeight: '100vh',
       background: '#0a0a0f',
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
-      justifyContent: 'center',
+      padding: '40px 0',
       position: 'relative',
-      overflow: 'hidden'
+      overflowX: 'hidden'
     }}>
       {/* Background Shader & Noise */}
       <div style={{
@@ -118,6 +118,7 @@ const FanLogin = () => {
         width: '100%',
         maxWidth: '480px',
         padding: '0 16px',
+        margin: 'auto 0',
         boxSizing: 'border-box',
         zIndex: 1,
         position: 'relative'
@@ -178,7 +179,7 @@ const FanLogin = () => {
                 <TransparentLogo src="/logo.png" alt="skriibe logo" style={{ width: '100%', height: 'auto', transform: 'scale(1.8)' }} />
               </div>
               <div style={{ color: '#94a3b8', fontSize: '14px', fontFamily: 'var(--font-body)', fontWeight: '500' }}>
-                Welcome back, Fan
+                Welcome back. Log in to your account.
               </div>
             </div>
 
@@ -380,13 +381,13 @@ const FanLogin = () => {
               {/* LINK TO SIGNUP */}
               <div style={{ textAlign: 'center', marginTop: '16px', fontSize: '13px', paddingBottom: '0' }}>
                 <span style={{ color: '#94a3b8' }}>Don't have an account? </span>
-                <Link to="/fan/signup" style={{ color: '#06b6d4', textDecoration: 'none', fontWeight: '500' }}>Sign up</Link>
+                <Link to="/fan/signup" style={{ color: '#06b6d4', textDecoration: 'none', fontWeight: '500' }}>Register here</Link>
               </div>
             </div>
 
             <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <div style={{ textAlign: 'center', color: '#94a3b8', fontSize: '12px', marginBottom: '8px' }}>
-                or sign in with
+                or continue with
               </div>
               
               <a href={`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/auth/google?role=fan`}

@@ -36,10 +36,11 @@ const QuestionSchema = new mongoose.Schema(
     // Status
     status: {
       type: String,
-      enum: ['submitted', 'answered', 'expired', 'flagged', 'rejected'],
+      enum: ['submitted', 'answered', 'expired', 'flagged', 'rejected', 'satisfied'],
       default: 'submitted',
     },
     fanRead: { type: Boolean, default: false },
+    creatorReadSatisfied: { type: Boolean, default: false },
     flagReason: { type: String, default: '' },
     rejectReason: { type: String, default: '' },
     answerText: { type: String, default: '' },

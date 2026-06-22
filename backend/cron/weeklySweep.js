@@ -37,6 +37,17 @@ const runWeeklySweep = async () => {
                     amountSwept: amountToSweep
                 });
 
+                // Update ledger status
+                try {
+                    const Earning = require('../models/Earning');
+                    await Earning.updateMany(
+                        { creatorId: c._id, status: 'accumulating' },
+                        { $set: { status: 'swept' } }
+                    );
+                } catch (earningErr) {
+                    console.error('Failed to update earning status during sweep:', earningErr);
+                }
+
                 sweptCount++;
                 totalSweptAmount += amountToSweep;
             }

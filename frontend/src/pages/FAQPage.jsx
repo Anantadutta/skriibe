@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
-import { faqData } from '../components/FAQ';
+import { fanFaqs, creatorFaqs, generalFaqs } from '../components/FAQ';
 
 const FAQPage = () => {
   const navigate = useNavigate();
@@ -28,8 +28,8 @@ const FAQPage = () => {
     setTheme(prev => prev === 'dark' ? 'light' : 'dark');
   };
 
-  const toggleFAQ = (index) => {
-    setOpenIndex(openIndex === index ? null : index);
+  const toggleFAQ = (id) => {
+    setOpenIndex(openIndex === id ? null : id);
   };
 
   return (
@@ -68,27 +68,41 @@ const FAQPage = () => {
             All FAQs
           </h1>
           
-          <div className="flex flex-col gap-4 mt-8">
-            {faqData.map((faq, index) => (
-              <div 
-                key={index}
-                className={`border rounded-2xl overflow-hidden transition-all duration-300 ${theme === 'light' ? 'bg-white border-gray-200' : 'bg-black border-[#38265c]'}`}
-              >
-                <button
-                  onClick={() => toggleFAQ(index)}
-                  className="w-full flex justify-between items-center px-6 py-5 text-left focus:outline-none"
-                >
-                  <span className={`text-lg font-medium ${theme === 'light' ? 'text-gray-900' : 'text-white'}`}>{faq.question}</span>
-                  <span className={`text-3xl font-light ml-4 transition-transform duration-300 ${theme === 'light' ? 'text-gray-500' : 'text-[#a094ba]'}`} style={{ transform: openIndex === index ? 'rotate(45deg)' : 'rotate(0deg)' }}>
-                    +
-                  </span>
-                </button>
-                
-                <div 
-                  className={`px-6 font-sans transition-all duration-300 ease-in-out ${theme === 'light' ? 'text-gray-600' : 'text-[#94a3b8]'} ${openIndex === index ? 'pb-5 opacity-100 max-h-40' : 'max-h-0 opacity-0 overflow-hidden'}`}
-                >
-                  {faq.answer}
-                </div>
+          <div className="flex flex-col gap-12 mt-8">
+            {[
+              { title: "Fan FAQs", data: fanFaqs },
+              { title: "Creator FAQs", data: creatorFaqs },
+              { title: "General FAQs", data: generalFaqs }
+            ].map((category, catIndex) => (
+              <div key={catIndex} className="flex flex-col gap-4">
+                <h2 className={`text-2xl font-bold ${theme === 'light' ? 'text-gray-800' : 'text-gray-200'} mb-2 ml-2`}>
+                  {category.title}
+                </h2>
+                {category.data.map((faq, index) => {
+                  const id = `${catIndex}-${index}`;
+                  return (
+                    <div 
+                      key={id}
+                      className={`border rounded-2xl overflow-hidden transition-all duration-300 ${theme === 'light' ? 'bg-white border-gray-200' : 'bg-black border-[#38265c]'}`}
+                    >
+                      <button
+                        onClick={() => toggleFAQ(id)}
+                        className="w-full flex justify-between items-center px-6 py-5 text-left focus:outline-none"
+                      >
+                        <span className={`text-lg font-medium ${theme === 'light' ? 'text-gray-900' : 'text-white'}`}>{faq.question}</span>
+                        <span className={`text-3xl font-light ml-4 transition-transform duration-300 ${theme === 'light' ? 'text-gray-500' : 'text-[#a094ba]'}`} style={{ transform: openIndex === id ? 'rotate(45deg)' : 'rotate(0deg)' }}>
+                          +
+                        </span>
+                      </button>
+                      
+                      <div 
+                        className={`px-6 font-sans transition-all duration-300 ease-in-out ${theme === 'light' ? 'text-gray-600' : 'text-[#94a3b8]'} ${openIndex === id ? 'pb-5 opacity-100 max-h-40' : 'max-h-0 opacity-0 overflow-hidden'}`}
+                      >
+                        {faq.answer}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             ))}
           </div>

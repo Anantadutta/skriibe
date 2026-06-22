@@ -148,20 +148,28 @@ router.get('/creators', async (req, res) => {
       let slaBreaches = 0;
       let totalResponseTimeMs = 0;
 
+      let pendingCount = 0;
+      let disputeCount = 0;
+      let answeredForTime = 0;
+
       questions.forEach(q => {
-        if (q.status === 'answered') {
+        if (q.status === 'pending') pendingCount++;
+        if (q.status === 'flagged') disputeCount++;
+        if (['answered', 'satisfied', 'rejected'].includes(q.status)) {
           answered++;
           if (q.createdAt && q.answeredAt) {
             totalResponseTimeMs += (new Date(q.answeredAt) - new Date(q.createdAt));
+            answeredForTime++;
           }
         }
         if (q.status === 'rejected' || q.status === 'refunded' || q.adminDecision === 'fan_wins') refunds++;
         if (q.status === 'expired' || (q.answeredAt && q.expiresAt && q.answeredAt > q.expiresAt)) slaBreaches++;
       });
 
-      const replyRate = totalQuestions > 0 ? Math.round((answered / totalQuestions) * 100) : 0;
+      const denominator = totalQuestions - pendingCount - disputeCount;
+      const replyRate = denominator > 0 ? Math.round((answered / denominator) * 100) : 0;
       const refundRate = totalQuestions > 0 ? Math.round((refunds / totalQuestions) * 100) : 0;
-      const avgResponseTimeMins = answered > 0 ? Math.round((totalResponseTimeMs / answered) / 60000) : 0;
+      const avgResponseTimeMins = answeredForTime > 0 ? Math.round((totalResponseTimeMs / answeredForTime) / 60000) : 0;
 
       let activeStrikesCount = 0;
       if (creator.strikes && creator.strikes.length > 0) {
@@ -706,6 +714,28 @@ router.post('/buyer-disputes/:id/ban', async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Server error banning buyer' });
+  }
+});
+
+/**
+ * @route GET /api/admin/earnings
+ * @desc Get daily earnings ledger
+ */
+router.get('/earnings', async (req, res) => {
+  try {
+    await connectDB();
+    const Earning = require('../models/Earning');
+    const { creatorId, status } = req.query;
+    
+    let query = {};
+    if (creatorId) query.creatorId = creatorId;
+    if (status) query.status = status;
+    
+    const earnings = await Earning.find(query).sort({ date: -1 });
+    res.json({ success: true, earnings });
+  } catch (err) {
+    console.error('Error fetching earnings:', err);
+    res.status(500).json({ error: 'Server error fetching earnings' });
   }
 });
 

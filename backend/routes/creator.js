@@ -151,11 +151,11 @@ router.get('/questions', verifyCreatorToken, async (req, res) => {
     const { status } = req.query;
     await connectDB();
     
-    // Map frontend tab statuses to backend enum ('submitted', 'answered', 'expired', 'flagged')
+    // Map frontend tab statuses to backend enum ('submitted', 'answered', 'expired', 'flagged', 'satisfied')
     let queryStatus = null;
     if (status && status !== 'All') {
       if (status.toLowerCase() === 'pending') queryStatus = 'submitted';
-      else if (status.toLowerCase() === 'replied') queryStatus = 'answered';
+      else if (status.toLowerCase() === 'replied') queryStatus = { $in: ['answered', 'satisfied'] };
       else queryStatus = status.toLowerCase();
     }
 
@@ -188,15 +188,18 @@ const updateCreatorStats = async (creatorId) => {
     const Creator = require('../models/Creator');
 
     const stats = await Question.aggregate([
-      { $match: { creatorId: new mongoose.Types.ObjectId(creatorId), status: { $ne: 'pending' } } },
+      { $match: { creatorId: new mongoose.Types.ObjectId(creatorId) } },
       { $group: {
           _id: null,
           totalReceived: { $sum: 1 },
-          totalAnswered: { $sum: { $cond: [{ $eq: ['$status', 'answered'] }, 1, 0] } },
+          totalPending: { $sum: { $cond: [{ $eq: ['$status', 'pending'] }, 1, 0] } },
+          totalFlagged: { $sum: { $cond: [{ $eq: ['$status', 'flagged'] }, 1, 0] } },
+          totalAnswered: { $sum: { $cond: [{ $in: ['$status', ['answered', 'satisfied', 'rejected']] }, 1, 0] } },
+          totalAnsweredForTime: { $sum: { $cond: [{ $and: [{ $in: ['$status', ['answered', 'satisfied']] }, { $ne: ['$answeredAt', null] }] }, 1, 0] } },
           totalTimeDiff: { 
             $sum: { 
               $cond: [
-                { $and: [{ $eq: ['$status', 'answered'] }, { $ne: ['$answeredAt', null] }] }, 
+                { $and: [{ $in: ['$status', ['answered', 'satisfied']] }, { $ne: ['$answeredAt', null] }] }, 
                 { $subtract: ['$answeredAt', '$createdAt'] }, 
                 0 
               ] 
@@ -206,9 +209,11 @@ const updateCreatorStats = async (creatorId) => {
     ]);
 
     if (stats.length > 0) {
-      const { totalReceived, totalAnswered, totalTimeDiff } = stats[0];
-      const replyRate = totalReceived > 0 ? Math.round((totalAnswered / totalReceived) * 100) : 0;
-      const avgReplyTimeMs = totalAnswered > 0 ? (totalTimeDiff / totalAnswered) : 0;
+      const { totalReceived, totalPending, totalFlagged, totalAnswered, totalAnsweredForTime, totalTimeDiff } = stats[0];
+      const denominator = totalReceived - totalPending - totalFlagged;
+      const replyRate = denominator > 0 ? Math.round((totalAnswered / denominator) * 100) : 0;
+      
+      const avgReplyTimeMs = totalAnsweredForTime > 0 ? (totalTimeDiff / totalAnsweredForTime) : 0;
       const avgReplyTime = parseFloat((avgReplyTimeMs / (1000 * 60 * 60)).toFixed(1));
 
       await Creator.findByIdAndUpdate(creatorId, {
@@ -269,6 +274,22 @@ router.post('/questions/:id/reply', verifyCreatorToken, async (req, res) => {
         await Creator.findByIdAndUpdate(req.creator.creatorId, {
             $inc: { availableBalance: creatorShareRs }
         });
+
+        // Track daily earning in ledger
+        try {
+            const Earning = require('../models/Earning');
+            const creatorDoc = await Creator.findById(req.creator.creatorId).select('name');
+            await Earning.create({
+                creatorId: req.creator.creatorId,
+                creatorName: creatorDoc ? creatorDoc.name : 'Unknown Creator',
+                questionId: question._id,
+                orderNumber: question.orderNumber || 'N/A',
+                amount: creatorShareRs,
+                status: 'accumulating'
+            });
+        } catch (earningErr) {
+            console.error('Failed to create earning record:', earningErr);
+        }
     }
     
     // Asynchronously update the stats for the creator
@@ -575,20 +596,38 @@ router.get('/payouts', verifyCreatorToken, async (req, res) => {
   try {
     await connectDB();
     const CREATOR_SHARE = 1.00;
-    const ESCROW_DAYS   = 7;
-
     const now = new Date();
-    const lastWednesday = new Date(now);
-    const dayOfWeek = now.getDay(); // 0 is Sunday, 3 is Wednesday
-    const diffToWednesday = (dayOfWeek >= 3) ? (dayOfWeek - 3) : (dayOfWeek + 4);
-    lastWednesday.setDate(now.getDate() - diffToWednesday);
-    lastWednesday.setHours(0, 0, 0, 0);
+    const creatorData = await Creator.findById(req.creator.creatorId).select('createdAt');
+    const createdAtDate = creatorData?.createdAt || new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const normalizedCreatedAt = new Date(createdAtDate);
+    normalizedCreatedAt.setHours(0, 0, 0, 0);
 
-    const nextWednesday = new Date(lastWednesday);
-    nextWednesday.setDate(lastWednesday.getDate() + 7);
-    nextWednesday.setHours(0, 0, 0, 0);
+    const normalizedNow = new Date(now);
+    normalizedNow.setHours(0, 0, 0, 0);
+
+    const createdDayOfWeek = normalizedCreatedAt.getDay();
+    const daysUntilNextTuesday = (2 - createdDayOfWeek + 7) % 7;
+    const daysToAdd = daysUntilNextTuesday === 0 ? 7 : daysUntilNextTuesday + 7;
+
+    const firstPayoutDate = new Date(normalizedCreatedAt);
+    firstPayoutDate.setDate(normalizedCreatedAt.getDate() + daysToAdd);
+
+    let lastBoundary;
+    let nextPayoutDate;
+
+    if (now < firstPayoutDate) {
+      lastBoundary = new Date(0);
+      nextPayoutDate = firstPayoutDate;
+    } else {
+      const daysSinceTuesday = (now.getDay() - 2 + 7) % 7;
+      lastBoundary = new Date(now);
+      lastBoundary.setDate(now.getDate() - daysSinceTuesday);
+      lastBoundary.setHours(0, 0, 0, 0);
+
+      nextPayoutDate = new Date(lastBoundary);
+      nextPayoutDate.setDate(lastBoundary.getDate() + 7);
+    }
 
     // Include questions from both routes:
     // - fans route sets paymentStatus:'paid' immediately
@@ -614,16 +653,15 @@ router.get('/payouts', verifyCreatorToken, async (req, res) => {
     for (const q of answeredPaid) {
       const gross          = q.amountPaid || 0;
       const creatorEarning = gross * CREATOR_SHARE;
-      const releaseDate    = new Date(q.answeredAt.getTime() + ESCROW_DAYS * 86400000);
       const answeredMonth  = new Date(q.answeredAt.getFullYear(), q.answeredAt.getMonth(), 1);
 
-      // Weekly cycle logic: questions answered from last Wednesday to now
-      if (q.answeredAt >= lastWednesday) {
+      // Weekly cycle logic: questions answered from lastBoundary to now
+      if (q.answeredAt >= lastBoundary) {
         available += creatorEarning;
         availableQuestions++;
         availableGross += gross;
       } else {
-        // Questions answered before last Tuesday are considered paid out
+        // Questions answered before lastBoundary are considered paid out
         lifetimePaid += creatorEarning;
         if (answeredMonth >= monthStart) {
           thisMonth += creatorEarning;
@@ -643,7 +681,7 @@ router.get('/payouts', verifyCreatorToken, async (req, res) => {
       }
       
       let statusLabel = 'Paid';
-      if (q.answeredAt >= lastWednesday) {
+      if (q.answeredAt >= lastBoundary) {
         statusLabel = 'Available';
       }
       
@@ -771,7 +809,7 @@ router.get('/payouts', verifyCreatorToken, async (req, res) => {
       thisMonth:      Math.round(thisMonth    * 100) / 100,
       inEscrow:       Math.round(inEscrow     * 100) / 100,
       available:      Math.round(available    * 100) / 100,
-      nextPayoutDate: nextWednesday.toISOString(),
+      nextPayoutDate: nextPayoutDate.toISOString(),
       availableQuestions,
       availableGross: Math.round(availableGross * 100) / 100,
       availableFee:   Math.round((availableGross - availableGross * CREATOR_SHARE) * 100) / 100,

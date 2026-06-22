@@ -8,13 +8,6 @@ process.on('unhandledRejection', (err) => { fs.writeFileSync('crash.log', 'Unhan
 const http = require('http');
 const mongoose = require('mongoose');
 
-try {
-  const { execSync } = require('child_process');
-  execSync('git checkout ../frontend/src/pages/creator/CreatorOnboardProfile.jsx', { stdio: 'inherit' });
-  console.log('Successfully restored CreatorOnboardProfile.jsx');
-} catch (err) {
-  console.error('Failed to restore file via git', err);
-}
 
 const express = require('express');
 const cors = require('cors');

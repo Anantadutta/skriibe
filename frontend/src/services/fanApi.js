@@ -28,6 +28,11 @@ export const flagQuestion = async (id, reason) => {
   return response.data;
 };
 
+export const satisfyQuestion = async (id) => {
+  const response = await api.post(`/buyers/question/${id}/satisfied`);
+  return response.data;
+};
+
 export const switchRole = async (role) => {
   const response = await api.post('/fan-auth/switch-role', { role });
   return response.data;

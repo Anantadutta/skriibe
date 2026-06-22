@@ -6,6 +6,7 @@ const CreatorInbox = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [activeTab, setActiveTab] = useState('All');
+  const [flaggedSubFilter, setFlaggedSubFilter] = useState('All');
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expandedThreads, setExpandedThreads] = useState({});
@@ -101,7 +102,7 @@ const CreatorInbox = () => {
   const repliedRoots = roots.filter(r => getThreadStatus(r, childrenMap[r._id || r.id] || []) === 'answered');
   const flaggedRoots = roots.filter(r => {
     const s = getThreadStatus(r, childrenMap[r._id || r.id] || []);
-    return s === 'flagged' || s === 'resolved_abusive';
+    return s === 'flagged' || s === 'resolved_abusive' || s === 'rejected';
   });
 
   const tabCounts = {
@@ -214,6 +215,29 @@ const CreatorInbox = () => {
           {activeTab === 'All' ? 'ALL QUESTIONS' : activeTab.toUpperCase() + ' QUESTIONS'}
         </div>
 
+        {activeTab === 'Flagged' && (
+          <div style={{ display: 'flex', gap: '8px', marginTop: '4px', marginBottom: '8px' }}>
+            {['All', 'Flagged', 'Rejected'].map(filterOption => (
+              <div 
+                key={filterOption}
+                onClick={() => setFlaggedSubFilter(filterOption)}
+                style={{
+                  padding: '6px 12px',
+                  borderRadius: '16px',
+                  fontSize: '0.8rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  background: flaggedSubFilter === filterOption ? '#38bdf8' : '#1F2937',
+                  color: flaggedSubFilter === filterOption ? '#0F172A' : '#94a3b8',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                {filterOption}
+              </div>
+            ))}
+          </div>
+        )}
+
         {/* List */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', paddingBottom: '100px' }}>
           {(() => {
@@ -221,7 +245,11 @@ const CreatorInbox = () => {
               const status = getThreadStatus(q, childrenMap[q._id || q.id] || []);
               if (activeTab === 'Pending') return status === 'submitted';
               if (activeTab === 'Replied') return status === 'answered';
-              if (activeTab === 'Flagged') return status === 'flagged' || status === 'resolved_abusive';
+              if (activeTab === 'Flagged') {
+                if (flaggedSubFilter === 'Flagged') return status === 'flagged' || status === 'resolved_abusive';
+                if (flaggedSubFilter === 'Rejected') return status === 'rejected';
+                return status === 'flagged' || status === 'resolved_abusive' || status === 'rejected';
+              }
               return true;
             });
 
@@ -235,7 +263,8 @@ const CreatorInbox = () => {
               
               const isPending = threadStatus === 'submitted';
               const isReplied = threadStatus === 'answered';
-              const isFlagged = threadStatus === 'flagged';
+              const isFlagged = threadStatus === 'flagged' || threadStatus === 'resolved_abusive';
+              const isRejected = threadStatus === 'rejected';
               
               let borderColor = '#333';
               let badgeText = '';
@@ -257,17 +286,24 @@ const CreatorInbox = () => {
                 badgeText = 'Flagged';
                 badgeColor = '#EF4444';
                 badgeBg = 'rgba(239, 68, 68, 0.15)';
+              } else if (isRejected) {
+                borderColor = '#F97316'; // orange
+                badgeText = 'Rejected';
+                badgeColor = '#F97316';
+                badgeBg = 'rgba(249, 115, 22, 0.15)';
               }
 
               const renderMessage = (q, isChild, rootQ = null) => {
                 const qIsPending = q.status?.toLowerCase() === 'submitted';
                 const qIsReplied = q.status?.toLowerCase() === 'answered';
-                const qIsFlagged = q.status?.toLowerCase() === 'flagged';
+                const qIsFlagged = q.status?.toLowerCase() === 'flagged' || q.status?.toLowerCase() === 'resolved_abusive';
+                const qIsRejected = q.status?.toLowerCase() === 'rejected';
 
                 let subtitle = '';
                 if (qIsPending) subtitle = 'new question';
                 else if (qIsReplied) subtitle = 'replied earlier';
                 else if (qIsFlagged) subtitle = 'reported by you';
+                else if (qIsRejected) subtitle = 'rejected by you';
 
                 const diffMs = now - new Date(q.createdAt || now).getTime();
                 const hoursAgo = Math.floor(diffMs / (1000 * 60 * 60));
@@ -301,7 +337,7 @@ const CreatorInbox = () => {
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column' }}>
                           <div style={{ color: '#FBBF24', fontSize: '0.8rem', fontWeight: 600, marginBottom: '2px' }}>
-                            {isChild ? 'Follow-up Question' : (qIsPending ? 'New Question' : (qIsReplied ? 'Replied' : 'Reported by you'))}
+                            {isChild ? 'Follow-up Question' : (qIsPending ? 'New Question' : (qIsReplied ? 'Replied' : (qIsFlagged ? 'Reported by you' : 'Rejected by you')))}
                           </div>
                           <div style={{ fontSize: '1rem', fontWeight: 700, color: '#fff' }}>
                             {q.buyerName || q.followerName} <span style={{ color: '#38BDF8' }}>· {isChild ? 'Free' : `₹${q.amountPaid || q.pricePaid || 99}`}</span>
@@ -310,8 +346,8 @@ const CreatorInbox = () => {
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         {isChild && (
-                          <div style={{ background: qIsPending ? 'rgba(251, 191, 36, 0.15)' : (qIsReplied ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)'), color: qIsPending ? '#FBBF24' : (qIsReplied ? '#22C55E' : '#EF4444'), padding: '4px 10px', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 700 }}>
-                            {qIsPending ? 'Pending' : (qIsReplied ? 'Done' : 'Flagged')}
+                          <div style={{ background: qIsPending ? 'rgba(251, 191, 36, 0.15)' : (qIsReplied ? 'rgba(34, 197, 94, 0.15)' : (qIsFlagged ? 'rgba(239, 68, 68, 0.15)' : 'rgba(249, 115, 22, 0.15)')), color: qIsPending ? '#FBBF24' : (qIsReplied ? '#22C55E' : (qIsFlagged ? '#EF4444' : '#F97316')), padding: '4px 10px', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 700 }}>
+                            {qIsPending ? 'Pending' : (qIsReplied ? 'Done' : (qIsFlagged ? 'Flagged' : 'Rejected'))}
                           </div>
                         )}
 
@@ -385,7 +421,7 @@ const CreatorInbox = () => {
                               Flagged — hidden from your queue, under review
                             </div>
                             <button style={{ background: '#2a2a35', border: 'none', borderRadius: '12px', color: '#94a3b8', fontWeight: 600, fontSize: '0.95rem', padding: '14px', cursor: 'pointer' }}>
-                              Restore to pending
+                              under review by Skriibe admin team
                             </button>
                           </>
                         )}
@@ -401,6 +437,8 @@ const CreatorInbox = () => {
                 onClick={(e) => {
                   if (children.length > 0) {
                     toggleThread(rootQuestion._id || rootQuestion.id);
+                  } else if (isFlagged || isRejected) {
+                    navigate(`/creator/dashboard/reply/${rootQuestion._id || rootQuestion.id}`, { state: { question: rootQuestion, rootQuestion: rootQuestion, initialView: 'readonly_flagged' } });
                   }
                 }}
                 style={{
@@ -413,7 +451,7 @@ const CreatorInbox = () => {
                   flexDirection: 'column',
                   gap: '12px',
                   position: 'relative',
-                  cursor: children.length > 0 ? 'pointer' : 'default'
+                  cursor: (children.length > 0 || isFlagged || isRejected) ? 'pointer' : 'default'
                 }}>
                 <div style={{ position: 'absolute', top: '16px', right: '16px', display: 'flex', gap: '8px', alignItems: 'center' }}>
                   {children.length > 0 && (

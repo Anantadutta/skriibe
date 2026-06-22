@@ -33,6 +33,11 @@ const FanNotifications = () => {
       
       try {
         await api.patch(`/questions/notifications/${notif._id}/read`);
+        // If the notification relates to a question, mark the question as read too
+        // so the global unread count badge disappears immediately.
+        if (notif.referenceId) {
+          await api.post(`/questions/${notif.referenceId}/read`);
+        }
       } catch (err) {
         console.error('Failed to mark as read', err);
         // Revert on failure

@@ -22,8 +22,8 @@ const otpStore = {};
 router.post('/send-otp', async (req, res) => {
   try {
     const { phone } = req.body;
-    if (!phone || !/^\d{10}$/.test(phone)) {
-      return res.status(400).json({ success: false, message: 'Enter a valid 10-digit mobile number' });
+    if (!phone || !/^\+[1-9]\d{6,14}$/.test(phone)) {
+      return res.status(400).json({ success: false, message: 'Enter a valid international phone number' });
     }
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const expiresAt = Date.now() + 5 * 60 * 1000; // 5 minutes
@@ -237,6 +237,41 @@ router.post('/question/:id/flag', async (req, res) => {
   } catch (err) {
     console.error('flag-question error:', err.message);
     return res.status(500).json({ success: false, message: 'Failed to flag question' });
+  }
+});
+
+// POST /api/buyers/question/:id/satisfied
+// Marks an answered question as satisfied
+router.post('/question/:id/satisfied', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ success: false, message: 'Invalid question ID' });
+    }
+    const question = await Question.findById(id);
+    if (!question) {
+      return res.status(404).json({ success: false, message: 'Question not found' });
+    }
+    
+    question.status = 'satisfied';
+    await question.save();
+    
+    await AdminAlert.create({
+      type: 'buyer_satisfied',
+      title: 'Fan satisfied with answer',
+      message: `Fan marked answered question #${question._id.toString().slice(-6)} as satisfied.`,
+      referenceId: question._id
+    });
+
+    if (req.io) {
+      req.io.emit('question-status-changed', { creatorId: question.creatorId });
+    }
+
+    return res.json({ success: true, message: 'Question marked as satisfied successfully', question });
+  } catch (err) {
+    console.error('satisfied-question error:', err.message);
+    return res.status(500).json({ success: false, message: 'Failed to mark question as satisfied' });
   }
 });
 

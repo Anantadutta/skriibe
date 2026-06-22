@@ -11,6 +11,7 @@ import { getMe, toggleLive } from '../services/creatorApi';
 import api from '../services/api';
 import { switchRole } from '../services/fanApi';
 import { useAuth } from '../context/AuthContext';
+import { getCurrencySymbol } from '../utils/phoneValidation';
 
 const CreatorDashboard = () => {
   const { username } = useParams();
@@ -18,14 +19,17 @@ const CreatorDashboard = () => {
   const navigate = useNavigate();
   const { roles, setAuthData } = useAuth();
 
-  const [creator, setCreator] = useState(location.state?.creator || mockCreator);
-  const [isLive, setIsLive] = useState(creator.isLive !== false);
+  const [creator, setCreator] = useState(location.state?.creator || null);
+  const [loadingInitial, setLoadingInitial] = useState(!location.state?.creator);
+  const [isLive, setIsLive] = useState(creator?.isLive !== false);
   const [btnHover, setBtnHover] = useState(false);
   const [payoutStats, setPayoutStats] = useState({ available: 0 });
   const [questions, setQuestions] = useState([]);
   const [copied, setCopied] = useState(false);
   const [now, setNow] = useState(Date.now());
   const [isSavingStatus, setIsSavingStatus] = useState(false);
+
+  const currencySymbol = getCurrencySymbol(creator?.phone);
 
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 60000);
@@ -38,11 +42,17 @@ const CreatorDashboard = () => {
       try {
         const res = await getMe();
         if (res.success) {
+          if (!res.creator.phone) {
+            navigate('/onboard/profile', { replace: true });
+            return;
+          }
           setCreator(res.creator);
           setIsLive(res.creator.isLive !== false);
         }
       } catch (error) {
         console.error('Failed to fetch creator:', error);
+      } finally {
+        setLoadingInitial(false);
       }
     };
     // Always fetch latest data from backend on dashboard mount to ensure all stats (including weekly goal) are perfectly in sync
@@ -105,6 +115,17 @@ const CreatorDashboard = () => {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  if (loadingInitial) {
+    return (
+      <div style={{ background: '#0a0a0f', minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+        <div style={{ width: '40px', height: '40px', border: '3px solid rgba(124, 58, 237, 0.3)', borderTopColor: '#7c3aed', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+        <style>
+          {`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}
+        </style>
+      </div>
+    );
+  }
+
   if (show404) {
     return (
       <div style={{
@@ -148,16 +169,20 @@ const CreatorDashboard = () => {
   };
 
   const totalReceived = questions.length;
-  const repliedQuestions = questions.filter(q => ['answered', 'rejected'].includes(q.status?.toLowerCase()));
-  const dynamicReplyRate = totalReceived > 0 
-    ? Math.round((repliedQuestions.length / totalReceived) * 100)
+  const pendingCount = questions.filter(q => q.status?.toLowerCase() === 'pending').length;
+  const disputeCount = questions.filter(q => q.status?.toLowerCase() === 'flagged').length;
+  const repliedQuestions = questions.filter(q => ['answered', 'satisfied', 'rejected'].includes(q.status?.toLowerCase()));
+  
+  const denominator = totalReceived - pendingCount - disputeCount;
+  const dynamicReplyRate = denominator > 0 
+    ? Math.round((repliedQuestions.length / denominator) * 100)
     : 0;
 
   const oneWeekAgo = new Date();
   oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
   const dynamicWeeklyEarnings = questions
-    .filter(q => q.paid === true && q.status?.toLowerCase() === 'answered' && new Date(q.createdAt) >= oneWeekAgo)
-    .reduce((sum, q) => sum + (q.amountPaid || q.price || creator.pricePerQuestion || 0), 0);
+    .filter(q => ['answered', 'flagged'].includes(q.status?.toLowerCase()) && !q.isFollowUp && new Date(q.createdAt) >= oneWeekAgo)
+    .reduce((sum, q) => sum + (q.amountPaid || q.pricePaid || creator.pricePerQuestion || 0), 0);
 
   const [abusivePopupQuestion, setAbusivePopupQuestion] = useState(null);
 
@@ -381,12 +406,12 @@ const CreatorDashboard = () => {
               EARNINGS · THIS WEEK
             </div>
             <div style={{ display: 'flex', alignItems: 'baseline', marginTop: '4px' }}>
-              <span style={{ fontSize: '2.2rem', color: '#29C5F6', marginRight: '4px' }}>₹</span>
+              <span style={{ fontSize: '2.2rem', color: '#29C5F6', marginRight: '4px' }}>{currencySymbol}</span>
               <span style={{ fontSize: '3rem', fontWeight: 900, color: '#fff', letterSpacing: '-1.5px' }}>{Math.round(payoutStats.available || 0)}</span>
             </div>
             
             <div style={{ color: '#94a3b8', fontSize: '0.85rem', fontWeight: 600, marginTop: '8px' }}>
-              Accepting questions. <span style={{ color: '#38bdf8' }}>₹{creator.pricePerQuestion || 0}</span>/question.
+              Accepting questions. <span style={{ color: '#38bdf8' }}>{currencySymbol}{creator.pricePerQuestion || 0}</span>/question.
             </div>
 
           </div>
@@ -394,7 +419,7 @@ const CreatorDashboard = () => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '4px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: '#94a3b8' }}>
               <span>Weekly goal</span>
-              <span><strong style={{ color: '#fff' }}>₹{dynamicWeeklyEarnings}</strong> / ₹{creator.weeklyGoal || 1500}</span>
+              <span><strong style={{ color: '#fff' }}>{currencySymbol}{dynamicWeeklyEarnings}</strong> / {currencySymbol}{creator.weeklyGoal || 1500}</span>
             </div>
             <div style={{ width: '100%', height: '6px', background: '#1F2937', borderRadius: '4px', overflow: 'hidden' }}>
               <div style={{ width: `${Math.min(100, (dynamicWeeklyEarnings / (creator.weeklyGoal || 1500)) * 100)}%`, height: '100%', background: 'linear-gradient(90deg, #29C5F6 0%, #38BDF8 100%)', borderRadius: '4px' }} />
@@ -656,7 +681,7 @@ const CreatorDashboard = () => {
                         {q.isFollowUp ? 'Follow-up Question' : 'New Question'}
                       </div>
                       <span style={{ fontWeight: 700, fontSize: '1rem', color: '#fff' }}>
-                        {q.buyerName || q.followerName} <span style={{ color: '#38BDF8' }}>· {q.isFollowUp ? 'Free' : `₹${q.amountPaid || q.pricePaid}`}</span>
+                        {q.buyerName || q.followerName} <span style={{ color: '#38BDF8' }}>· {q.isFollowUp ? 'Free' : `${currencySymbol}${q.amountPaid || q.pricePaid}`}</span>
                       </span>
                     </div>
                   </div>

@@ -77,14 +77,14 @@ const CreatorSignup = () => {
 
   return (
     <div style={{
-      height: '100vh',
+      minHeight: '100vh',
       background: '#0a0a0f',
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
-      justifyContent: 'center',
+      padding: '40px 0',
       position: 'relative',
-      overflow: 'hidden'
+      overflowX: 'hidden'
     }}>
       {/* Background Shader & Noise */}
       <div style={{
@@ -161,6 +161,7 @@ const CreatorSignup = () => {
         width: '100%',
         maxWidth: '480px',
         padding: '0 16px',
+        margin: 'auto 0',
         boxSizing: 'border-box',
         zIndex: 1,
         position: 'relative'

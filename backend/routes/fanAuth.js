@@ -427,14 +427,15 @@ router.post('/logout', (req, res) => {
 
 router.post('/me/upgrade-to-creator', verifyFanToken, async (req, res) => {
   try {
-    const { creator_name, bio, category } = req.body;
-    if (!creator_name || !bio || !category) {
-      return res.status(400).json({ success: false, message: 'Creator name, bio, and category are required' });
-    }
-
+    let { creator_name, bio, category } = req.body;
+    
     await connectDB();
     const fan = await Fan.findById(req.fan.fanId);
     if (!fan) return res.status(404).json({ success: false, message: 'Fan not found' });
+
+    if (!creator_name) {
+      creator_name = fan.name || fan.email.split('@')[0];
+    }
 
     if (!fan.roles.includes('creator')) {
       fan.roles.push('creator');
@@ -448,20 +449,20 @@ router.post('/me/upgrade-to-creator', verifyFanToken, async (req, res) => {
       profile = new CreatorProfile({
         user: fan._id,
         creator_name,
-        bio,
-        category
+        bio: bio || '',
+        category: category || ''
       });
       await profile.save();
     } else {
       profile.creator_name = creator_name;
-      profile.bio = bio;
-      profile.category = category;
+      if (bio) profile.bio = bio;
+      if (category) profile.category = category;
       await profile.save();
     }
 
     let creator = await Creator.findOne({ email: fan.email.toLowerCase() });
     if (!creator) {
-      let baseHandle = creator_name.toLowerCase().replace(/\s+/g, '');
+      let baseHandle = creator_name.toLowerCase().replace(/[^a-z0-9]/g, '') || 'creator';
       let uniqueHandle = baseHandle;
       let counter = 1;
       while (await Creator.findOne({ handle: uniqueHandle })) {
@@ -474,22 +475,22 @@ router.post('/me/upgrade-to-creator', verifyFanToken, async (req, res) => {
         password: fan.password,
         name: creator_name,
         handle: uniqueHandle,
-        bio: bio,
+        bio: bio || '',
         avatarUrl: fan.avatarUrl || '',
-        expertise: [category],
+        expertise: category ? [category] : [],
         fanId: fan._id
       });
       await creator.save();
     } else {
       creator.fanId = fan._id;
       creator.name = creator_name;
-      creator.bio = bio;
-      creator.expertise = [category];
+      if (bio) creator.bio = bio;
+      if (category) creator.expertise = [category];
       if (!creator.avatarUrl && fan.avatarUrl) {
         creator.avatarUrl = fan.avatarUrl;
       }
       if (!creator.handle) {
-        let baseHandle = creator_name.toLowerCase().replace(/\s+/g, '');
+        let baseHandle = creator_name.toLowerCase().replace(/[^a-z0-9]/g, '') || 'creator';
         let uniqueHandle = baseHandle;
         let counter = 1;
         while (await Creator.findOne({ handle: uniqueHandle })) {

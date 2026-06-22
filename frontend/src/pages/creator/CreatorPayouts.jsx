@@ -6,6 +6,7 @@ import api from '../../services/api';
 import { getMe } from '../../services/creatorApi';
 import { io } from 'socket.io-client';
 import TransparentLogo from '../../components/TransparentLogo';
+import { getCurrencySymbol } from '../../utils/phoneValidation';
 
 const TABS = ['Available', 'Protected', 'Under Review', 'Refunded', 'History'];
 
@@ -105,6 +106,21 @@ const CreatorPayouts = () => {
   const tabsRef = useRef(null);
   const [payoutStats, setPayoutStats] = useState({ lifetimePaid: 0, thisMonth: 0, inEscrow: 0, available: 0, nextPayoutDate: null, availableQuestions: 0, availableGross: 0, availableFee: 0, inEscrowQuestions: 0, pendingList: [], underReviewAmount: 0, underReviewQuestionsCount: 0, underReviewList: [] });
   const [creatorCreatedAt, setCreatorCreatedAt] = useState(null);
+  const [currencySymbol, setCurrencySymbol] = useState('₹');
+
+  const [historyFilter, setHistoryFilter] = useState('Date: Newest First');
+  const [showFilterMenu, setShowFilterMenu] = useState(false);
+  const filterMenuRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (filterMenuRef.current && !filterMenuRef.current.contains(event.target)) {
+        setShowFilterMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const fetchPayouts = () => {
     api.get('/creator/payouts')
@@ -117,8 +133,9 @@ const CreatorPayouts = () => {
 
     getMe()
       .then(res => {
-        if (res.data && res.data.creator && res.data.creator.createdAt) {
-          setCreatorCreatedAt(res.data.creator.createdAt);
+        if (res.data && res.data.creator) {
+          if (res.data.creator.createdAt) setCreatorCreatedAt(res.data.creator.createdAt);
+          if (res.data.creator.phone) setCurrencySymbol(getCurrencySymbol(res.data.creator.phone));
         }
       })
       .catch(() => {});
@@ -139,35 +156,35 @@ const CreatorPayouts = () => {
     };
   }, []);
 
-  const fmt = (n) => '₹' + (Number(n) || 0).toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+  const fmt = (n) => currencySymbol + (Number(n) || 0).toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+
+  const getProcessedHistory = () => {
+    if (!payoutStats.payoutHistoryGrouped) return [];
+    
+    if (historyFilter === 'Date: Newest First') {
+      return payoutStats.payoutHistoryGrouped;
+    }
+    
+    if (historyFilter === 'Date: Oldest First') {
+      return [...payoutStats.payoutHistoryGrouped].reverse().map(group => ({
+        ...group,
+        items: [...group.items].reverse()
+      }));
+    }
+    
+    const allItems = payoutStats.payoutHistoryGrouped.flatMap(g => g.items);
+    if (historyFilter === 'Amount: High to Low') {
+      allItems.sort((a, b) => b.amount - a.amount);
+    } else if (historyFilter === 'Amount: Low to High') {
+      allItems.sort((a, b) => a.amount - b.amount);
+    }
+    
+    return [{ month: 'All Time', items: allItems }];
+  };
 
   const getNextPayoutDate = () => {
-    if (!creatorCreatedAt) return "...";
-
-    const normalize = (d) => {
-      const x = new Date(d);
-      x.setHours(0, 0, 0, 0);
-      return x;
-    };
-
-    const now = normalize(new Date());
-    const createdDate = normalize(new Date(creatorCreatedAt));
-
-    const firstEligibleDate = new Date(createdDate);
-    firstEligibleDate.setDate(createdDate.getDate() + 7);
-
-    const daysUntilTuesday = (2 - firstEligibleDate.getDay() + 7) % 7;
-    const firstPayoutDate = new Date(firstEligibleDate);
-    firstPayoutDate.setDate(firstEligibleDate.getDate() + daysUntilTuesday);
-
-    let targetDate = firstPayoutDate;
-    if (now >= firstPayoutDate) {
-      const daysForward = ((2 - now.getDay() + 7) % 7) || 7;
-      targetDate = new Date(now);
-      targetDate.setDate(now.getDate() + daysForward);
-    }
-
-    return targetDate.toLocaleDateString('en-IN', {
+    if (!payoutStats.nextPayoutDate) return "...";
+    return new Date(payoutStats.nextPayoutDate).toLocaleDateString('en-IN', {
       weekday: 'long',
       day: 'numeric',
       month: 'short',
@@ -299,7 +316,7 @@ const CreatorPayouts = () => {
                     </div>
                     <div style={{ fontSize: '12px', color: '#A8A8A0', lineHeight: '1.55' }}>
                       <span style={{ color: '#fff', fontWeight: '600' }}>These earnings are ready to be paid out.</span>{' '}
-                      Earnings from answered questions after 7-day holding period with no disputes.
+                      Accumulated earnings from answered questions since the start of your current weekly cycle. Payouts happen every Tuesday.
                     </div>
                   </div>
                 </Card>
@@ -436,7 +453,7 @@ const CreatorPayouts = () => {
                       Refunded 
                     </div>
                   </div>
-                  <div style={{ fontSize: '34px', fontWeight: '800', letterSpacing: '-1px', color: '#EF4444', marginBottom: '4px' }}>₹{(payoutStats.refundedAmount || 0).toFixed(2)}</div>
+                  <div style={{ fontSize: '34px', fontWeight: '800', letterSpacing: '-1px', color: '#EF4444', marginBottom: '4px' }}>{currencySymbol}{(payoutStats.refundedAmount || 0).toFixed(2)}</div>
                   <div style={{ color: '#686860', fontSize: '12px', marginBottom: '16px' }}>{payoutStats.refundedQuestionsCount || 0} Questions</div>
                   <div style={{ backgroundColor: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: '12px', padding: '14px', display: 'flex', gap: '10px' }}>
                     <div style={{ color: '#EF4444', flexShrink: 0, marginTop: '1px' }}><InfoIcon color="#EF4444" /></div>
@@ -490,7 +507,7 @@ const CreatorPayouts = () => {
                     LIFETIME PAID
                   </div>
                   <div style={{ fontSize: '42px', fontWeight: '900', letterSpacing: '-1.5px', color: '#fff', display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '4px', lineHeight: 1 }}>
-                    <span style={{ color: '#E2E8F0', fontSize: '32px' }}>₹</span>{(payoutStats.lifetimePaid || 0)}
+                    <span style={{ color: '#E2E8F0', fontSize: '32px' }}>{currencySymbol}</span>{(payoutStats.lifetimePaid || 0)}
                   </div>
                   <div style={{ color: '#64748B', fontSize: '13px', fontWeight: '500', marginBottom: '24px' }}>
                     Total amount credited to your account
@@ -501,30 +518,45 @@ const CreatorPayouts = () => {
                       This month
                     </div>
                     <div style={{ color: '#38BDF8', fontSize: '20px', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '2px' }}>
-                      <span style={{ fontSize: '16px' }}>₹</span>{(payoutStats.thisMonthPaid || 0)}
+                      <span style={{ fontSize: '16px' }}>{currencySymbol}</span>{(payoutStats.thisMonthPaid || 0)}
                     </div>
                   </div>
                 </Card>
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                   <h3 style={{ fontSize: '16px', fontWeight: '700', margin: 0 }}>Payout History</h3>
-                  <button style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', color: '#A8A8A0', fontSize: '12px', padding: '7px 12px', cursor: 'pointer' }}>
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <line x1="4" y1="6" x2="20" y2="6"></line>
-                      <line x1="8" y1="12" x2="16" y2="12"></line>
-                      <line x1="11" y1="18" x2="13" y2="18"></line>
-                    </svg>
-                    Filter
-                  </button>
+                  <div style={{ position: 'relative' }} ref={filterMenuRef}>
+                    <button onClick={() => setShowFilterMenu(!showFilterMenu)} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', color: '#A8A8A0', fontSize: '12px', padding: '7px 12px', cursor: 'pointer' }}>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="4" y1="6" x2="20" y2="6"></line>
+                        <line x1="8" y1="12" x2="16" y2="12"></line>
+                        <line x1="11" y1="18" x2="13" y2="18"></line>
+                      </svg>
+                      {historyFilter.split(':')[0]} {/* Show short name */}
+                    </button>
+                    {showFilterMenu && (
+                      <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: '8px', backgroundColor: '#1E293B', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '6px', minWidth: '160px', zIndex: 10, boxShadow: '0 10px 25px rgba(0,0,0,0.5)' }}>
+                        {['Date: Newest First', 'Date: Oldest First', 'Amount: High to Low', 'Amount: Low to High'].map(opt => (
+                          <div 
+                            key={opt}
+                            onClick={() => { setHistoryFilter(opt); setShowFilterMenu(false); }}
+                            style={{ padding: '10px 12px', fontSize: '13px', color: historyFilter === opt ? '#fff' : '#A8A8A0', backgroundColor: historyFilter === opt ? 'rgba(255,255,255,0.05)' : 'transparent', borderRadius: '8px', cursor: 'pointer', fontWeight: historyFilter === opt ? '600' : '400' }}
+                          >
+                            {opt}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
 
-                {payoutStats.payoutHistoryGrouped && payoutStats.payoutHistoryGrouped.length > 0 ? (
-                  payoutStats.payoutHistoryGrouped.map(group => (
+                {getProcessedHistory() && getProcessedHistory().length > 0 ? (
+                  getProcessedHistory().map(group => (
                     <div key={group.month} style={{ marginBottom: '20px' }}>
                       <div style={{ fontSize: '10px', fontWeight: '700', color: '#686860', letterSpacing: '1.2px', marginBottom: '10px' }}>{group.month}</div>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                         {group.items.map(item => (
-                          <div key={item.id} style={{ backgroundColor: '#0f0f1c', borderRadius: '14px', padding: '14px 16px', display: 'flex', alignItems: 'center', gap: '12px', border: '1px solid rgba(255,255,255,0.07)', cursor: 'pointer' }}>
+                          <div key={item.id} onClick={() => navigate('/creator/inbox')} style={{ backgroundColor: '#0f0f1c', borderRadius: '14px', padding: '14px 16px', display: 'flex', alignItems: 'center', gap: '12px', border: '1px solid rgba(255,255,255,0.07)', cursor: 'pointer' }}>
                             <StatusIcon status={item.status} />
                             <div style={{ flex: 1, minWidth: 0 }}>
                               <div style={{ fontSize: '14px', fontWeight: '700', marginBottom: '3px' }}>{item.date}</div>
@@ -532,7 +564,7 @@ const CreatorPayouts = () => {
                             </div>
                             <div style={{ textAlign: 'right', flexShrink: 0 }}>
                               <div style={{ fontSize: '15px', fontWeight: '700', marginBottom: '5px' }}>{fmt(item.amount)}</div>
-                              <StatusBadge status={item.status} />
+                              {item.status !== 'Available' && <StatusBadge status={item.status} />}
                             </div>
                             <ChevronRight />
                           </div>

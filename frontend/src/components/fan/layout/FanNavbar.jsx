@@ -41,7 +41,7 @@ const FanNavbar = () => {
     };
 
     const handleNotificationRead = () => {
-      setUnreadCount(prev => Math.max(0, prev - 1));
+      fetchNotifications();
     };
 
     fetchFanProfile();
