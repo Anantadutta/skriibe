@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { parsePhoneNumberFromString } from 'libphonenumber-js';
 import { normalizePhoneNumber, validatePhoneNumber } from '../../../utils/phoneValidation';
 
@@ -17,6 +17,15 @@ export const Field = ({ label, value, placeholder, onChange, type = 'text', requ
   const [isFocused, setIsFocused] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState('IN'); // Default IN as requested
   const [isTouched, setIsTouched] = useState(false);
+  const inputRef = useRef(null);
+
+  const handleContainerClick = (e) => {
+    // Prevent stealing focus if the user clicks on the select dropdown
+    if (e.target.tagName && e.target.tagName.toLowerCase() === 'select') return;
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  };
 
   let activeCountry = selectedCountry;
   let localValue = value || '';
@@ -59,6 +68,7 @@ export const Field = ({ label, value, placeholder, onChange, type = 'text', requ
 
   return (
     <div 
+      onClick={handleContainerClick}
       style={{
         background: '#0f0f1a',
         border: `1px solid ${isFocused ? '#7c3aed' : errorMsg ? '#ef4444' : 'rgba(255, 255, 255, 0.08)'}`,
@@ -67,7 +77,8 @@ export const Field = ({ label, value, placeholder, onChange, type = 'text', requ
         transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
         boxShadow: isFocused ? '0 0 10px rgba(124, 58, 237, 0.3)' : 'inset 0 2px 4px rgba(0,0,0,0.4)',
         boxSizing: 'border-box',
-        width: '100%'
+        width: '100%',
+        cursor: 'text'
       }}
     >
       <label style={{
@@ -135,6 +146,7 @@ export const Field = ({ label, value, placeholder, onChange, type = 'text', requ
               </select>
             </div>
             <input
+              ref={inputRef}
               type="tel"
               value={localValue}
               onChange={handlePhoneChange}
@@ -156,6 +168,7 @@ export const Field = ({ label, value, placeholder, onChange, type = 'text', requ
           </div>
         ) : (
           <input
+            ref={inputRef}
             type={type}
             value={value}
             onChange={onChange}
