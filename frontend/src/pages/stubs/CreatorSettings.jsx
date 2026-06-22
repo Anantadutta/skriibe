@@ -983,7 +983,7 @@ const CreatorSettings = () => {
                   const res = await switchRole('fan');
                   if (res.success) {
                     setAuthData(roles, 'fan', res.token);
-                    window.location.href = '/explore';
+                    window.location.href = '/discovery';
                   }
                 } catch (err) {
                   alert('Failed to switch to Fan mode');

@@ -20,6 +20,7 @@ const QuestionSchema = new mongoose.Schema(
     isFollowUp: { type: Boolean, default: false },
     followUpAllowed: { type: Boolean, default: true },
     parentQuestionId: { type: mongoose.Schema.Types.ObjectId, ref: 'Question' },
+    orderNumber: { type: String, unique: true, sparse: true },
 
     // Payment
     amountPaid: { type: Number, required: false }, // in INR

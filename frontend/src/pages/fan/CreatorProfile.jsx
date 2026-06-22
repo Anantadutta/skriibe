@@ -135,7 +135,9 @@ const CreatorProfile = () => {
         isFollowUp,
         parentQuestionId
       });
-      if (response.data?.question?._id) {
+      if (response.data?.question?.orderNumber) {
+        setOrderId(response.data.question.orderNumber);
+      } else if (response.data?.question?._id) {
         setOrderId(response.data.question._id);
       } else {
         setOrderId('SKR-' + Math.floor(100000 + Math.random() * 900000));
@@ -224,14 +226,14 @@ const CreatorProfile = () => {
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
                 <div style={{ width: '8px', height: '8px', background: '#10b981', borderRadius: '50%', boxShadow: '0 0 8px #10b981' }} />
                 <div style={{ color: '#fff', fontSize: '14px', fontWeight: '600' }}>
-                  {buyerEmail} <span style={{ color: '#475569', fontWeight: '400' }}>· Email</span>
+                  {buyerEmail}
                 </div>
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <div style={{ width: '8px', height: '8px', background: '#10b981', borderRadius: '50%', boxShadow: '0 0 8px #10b981' }} />
                 <div style={{ color: '#fff', fontSize: '14px', fontWeight: '600' }}>
-                  Skriibe Inbox <span style={{ color: '#475569', fontWeight: '400' }}>· App</span>
+                  Skriibe Inbox
                 </div>
               </div>
             </div>
@@ -244,7 +246,7 @@ const CreatorProfile = () => {
             }}>
               <div>
                 <div style={{ color: '#fff', fontSize: '14px', fontWeight: '700', marginBottom: '4px' }}>
-                  Order #SKR-{orderId.slice(-8).toUpperCase()}
+                  Order #{orderId.startsWith('SKR') ? orderId : 'SKR-' + orderId.slice(-8).toUpperCase()}
                 </div>
                 <div style={{ color: '#64748b', fontSize: '13px' }}>
                   Amount paid · {isFollowUp ? 'Free' : `₹${price}`}
@@ -509,9 +511,29 @@ const CreatorProfile = () => {
               />
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <span style={{ color: '#fff', fontSize: '14px', fontWeight: '600' }}>I understand and agree</span>
-                <span style={{ color: '#94a3b8', fontSize: '12px', lineHeight: 1.4 }}>By logging in and using Skriibe, you agree to our <span style={{ color: '#38bdf8', cursor: 'pointer' }}>Terms of Service</span> and <span style={{ color: '#38bdf8', cursor: 'pointer' }}>Privacy Policy</span>.</span>
+                <span style={{ color: '#94a3b8', fontSize: '12px', lineHeight: 1.4 }}>By logging in and using Skriibe, you agree to our <a href="https://www.skriibe.com/terms" style={{ color: '#38bdf8', textDecoration: 'none' }}>Terms of Service</a> and <a href="https://www.skriibe.com/privacy" style={{ color: '#38bdf8', textDecoration: 'none' }}>Privacy Policy</a>.</span>
               </div>
             </label>
+
+            {/* Question Section */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
+              <div style={{ background: '#131313', border: '1px solid #2a2a2a', borderRadius: '16px', padding: '12px 16px' }}>
+                <div style={{ color: '#64748b', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '8px' }}>ASK YOUR QUESTION <span style={{ color: '#ef4444' }}>*</span> <span style={{ color: '#475569', fontWeight: 'normal' }}>(MIN 20 CHARACTERS, MAX 500 CHARACTERS)</span></div>
+                <textarea 
+                  value={question}
+                  onChange={(e) => setQuestion(e.target.value)}
+                  placeholder={`What do you want to ask @${creator.handle}?`}
+                  style={{ width: '100%', height: '100px', background: 'transparent', border: 'none', color: '#fff', fontSize: '15px', outline: 'none', resize: 'none', fontFamily: 'inherit' }}
+                />
+              </div>
+              
+              <div style={{ display: 'flex', justifyContent: 'space-between', color: '#64748b', fontSize: '12px', padding: '0 4px' }}>
+                <span>Min 20 characters, Max 500 characters</span>
+                <span style={{ color: question.length > 500 ? '#ef4444' : '#64748b' }}>
+                  {question.length}/500 Characters
+                </span>
+              </div>
+            </div>
 
             <h3 style={{ color: '#fff', fontSize: '18px', margin: '0 0 16px' }}>Your details</h3>
 
@@ -558,27 +580,6 @@ const CreatorProfile = () => {
                 </div>
               </div>
 
-              {/* Question */}
-              <div style={{ background: '#131313', border: '1px solid #2a2a2a', borderRadius: '16px', padding: '12px 16px' }}>
-                <div style={{ color: '#64748b', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '8px' }}>YOUR QUESTION <span style={{ color: '#ef4444' }}>*</span> <span style={{ color: '#475569', fontWeight: 'normal' }}>(MIN 20 CHARACTERS, MAX 500 CHARACTERS)</span></div>
-                <textarea 
-                  value={question}
-                  onChange={(e) => setQuestion(e.target.value)}
-                  placeholder={`What do you want to ask @${creator.handle}?`}
-                  style={{ width: '100%', height: '100px', background: 'transparent', border: 'none', color: '#fff', fontSize: '15px', outline: 'none', resize: 'none', fontFamily: 'inherit' }}
-                />
-              </div>
-
-            </div>
-
-            {/* Word Count & Validation */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '24px', padding: '0 4px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', color: '#64748b', fontSize: '12px' }}>
-                <span>Min 20 characters, Max 500 characters</span>
-                <span style={{ color: question.length > 500 ? '#ef4444' : '#64748b' }}>
-                  {question.length}/500 Characters
-                </span>
-              </div>
             </div>
 
             {submitError && (

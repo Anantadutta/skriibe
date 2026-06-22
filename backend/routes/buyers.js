@@ -9,6 +9,8 @@ const AdminAlert = require('../models/AdminAlert');
 const { sendOTPviaMSG91 } = require('../utils/smsService');
 const Creator = require('../models/Creator');
 const Question = require('../models/Question');
+const Counter = require('../models/Counter');
+const Order = require('../models/Order');
 const Fan = require('../models/Fan');
 const jwt = require('jsonwebtoken');
 
@@ -109,6 +111,14 @@ router.post('/submit-question', async (req, res) => {
     const responseHours = parseInt(creator.responseTime) || 48; // e.g. "48 hours" → 48
     const expiresAt = new Date(Date.now() + responseHours * 60 * 60 * 1000);
 
+    // Get sequential order number
+    const counter = await Counter.findByIdAndUpdate(
+      { _id: 'questionOrderNumber' },
+      { $inc: { seq: 1 } },
+      { new: true, upsert: true }
+    );
+    const orderNumber = 'SKR-' + (10000 + counter.seq);
+
     // Create question (payment pending — Razorpay in Phase 4)
     const question = await Question.create({
       creatorId: creator._id,
@@ -125,11 +135,22 @@ router.post('/submit-question', async (req, res) => {
       expiresAt,
       isFollowUp: !!isFollowUp,
       parentQuestionId: isFollowUp ? parentQuestionId : undefined,
+      orderNumber,
+    });
+
+    const newOrder = await Order.create({
+      orderNumber: orderNumber,
+      questionId: question._id,
+      fanName: isAnonymous ? 'Anonymous' : (buyerName || ''),
+      creatorHandle: creator.handle,
+      amountPaid: question.amountPaid,
+      status: question.paymentStatus
     });
 
     return res.json({
       success: true,
       questionId: question._id,
+      orderNumber: question.orderNumber,
       message: 'Question submitted! Payment integration coming in Phase 4.',
     });
   } catch (err) {

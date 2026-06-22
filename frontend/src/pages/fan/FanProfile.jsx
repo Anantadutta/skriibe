@@ -144,6 +144,7 @@ const FanProfile = () => {
         {loading ? (
           <div style={{ color: '#94a3b8' }}>Loading profile...</div>
         ) : fanProfile ? (
+          <>
           <div style={{
             background: '#13161C',
             border: '1px solid rgba(255,255,255,0.05)',
@@ -318,9 +319,100 @@ const FanProfile = () => {
                 {isEditingEmail ? (savingEmail ? 'Saving...' : 'Save') : 'Edit'}
               </button>
             </div>
+          </div>
+
+          {/* Payout History Section */}
+          <div style={{ marginTop: '48px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h2 style={{ fontSize: '24px', fontWeight: '700', margin: 0 }}>Payout History</h2>
+              {!showAllQuestions && questions.length > 3 && (
+                <button 
+                  onClick={() => setShowAllQuestions(true)}
+                  style={{ background: 'transparent', border: 'none', color: '#38bdf8', fontSize: '15px', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+                >
+                  See all <span style={{ fontSize: '18px' }}>→</span>
+                </button>
+              )}
+            </div>
             
-            <div style={{ height: '1px', background: 'rgba(255,255,255,0.05)', margin: '8px 0' }} />
-            
+            <div style={{
+              background: '#13161C',
+              border: '1px solid rgba(255,255,255,0.05)',
+              borderRadius: '16px',
+              overflow: 'hidden'
+            }}>
+              {questions.slice(0, showAllQuestions ? undefined : 3).map((q, idx) => (
+                <div key={q._id} style={{
+                  padding: '20px',
+                  borderBottom: idx < (showAllQuestions ? questions.length : 3) - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  cursor: 'pointer'
+                }} onClick={() => navigate('/fan/history')}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flex: 1, minWidth: 0, marginRight: '16px' }}>
+                      <div style={{ minWidth: '40px', height: '40px', borderRadius: '50%', background: 'rgba(56, 189, 248, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#38bdf8' }}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                      </div>
+                      <div style={{ overflow: 'hidden' }}>
+                        <div style={{ fontWeight: '700', fontSize: '16px', color: '#fff', marginBottom: '4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {q.questionText}
+                        </div>
+                        <div style={{ fontSize: '14px', color: '#64748b' }}>
+                            {q.status === 'answered' ? '1 answer' : '0 answers'} · {getTimeAgo(q.createdAt)}
+                        </div>
+                      </div>
+                  </div>
+                  
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px', minWidth: '80px' }}>
+                      <div style={{ 
+                          padding: '6px 14px', 
+                          borderRadius: '20px', 
+                          fontSize: '12px', 
+                          fontWeight: '700',
+                          background: q.status === 'answered' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(56, 189, 248, 0.15)',
+                          color: q.status === 'answered' ? '#10b981' : '#38bdf8'
+                      }}>
+                          {q.status === 'submitted' ? 'Open' : q.status.charAt(0).toUpperCase() + q.status.slice(1)}
+                      </div>
+                      <div style={{ fontSize: '14px', fontWeight: '800', color: '#cbd5e1' }}>
+                          Rs. {q.price || 99}
+                      </div>
+                  </div>
+                </div>
+              ))}
+              
+              {questions.length === 0 && (
+                  <div style={{ padding: '40px', textAlign: 'center', color: '#64748b', fontSize: '15px' }}>
+                      You haven't asked any questions yet.
+                  </div>
+              )}
+              
+              {!showAllQuestions && questions.length > 3 && (
+                  <div 
+                    onClick={() => setShowAllQuestions(true)}
+                    style={{ padding: '16px', textAlign: 'center', background: 'rgba(255,255,255,0.02)', cursor: 'pointer', transition: 'background 0.2s', borderTop: '1px solid rgba(255,255,255,0.05)' }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.04)'}
+                    onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.02)'}
+                  >
+                      <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'rgba(255,255,255,0.05)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                      </div>
+                  </div>
+              )}
+            </div>
+          </div>
+
+          <div style={{
+            background: '#13161C',
+            border: '1px solid rgba(255,255,255,0.05)',
+            borderRadius: '16px',
+            padding: '32px',
+            marginTop: '48px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '24px'
+          }}>
             <div>
               <h3 style={{ margin: '0 0 20px 0', fontSize: '14px', fontWeight: '700', letterSpacing: '1px', color: '#64748b', textTransform: 'uppercase' }}>Account Settings</h3>
               
@@ -451,94 +543,11 @@ const FanProfile = () => {
                   Delete Account
                 </button>
               </div>
+              </div>
             </div>
-          </div>
+          </>
         ) : (
           <div style={{ color: '#ef4444' }}>Could not load profile.</div>
-        )}
-
-        {/* Payout History Section */}
-        {fanProfile && (
-          <div style={{ marginTop: '48px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-              <h2 style={{ fontSize: '24px', fontWeight: '700', margin: 0 }}>Payout History</h2>
-              {!showAllQuestions && questions.length > 3 && (
-                <button 
-                  onClick={() => setShowAllQuestions(true)}
-                  style={{ background: 'transparent', border: 'none', color: '#38bdf8', fontSize: '15px', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
-                >
-                  See all <span style={{ fontSize: '18px' }}>→</span>
-                </button>
-              )}
-            </div>
-            
-            <div style={{
-              background: '#13161C',
-              border: '1px solid rgba(255,255,255,0.05)',
-              borderRadius: '16px',
-              overflow: 'hidden'
-            }}>
-              {questions.slice(0, showAllQuestions ? undefined : 3).map((q, idx) => (
-                <div key={q._id} style={{
-                  padding: '20px',
-                  borderBottom: idx < (showAllQuestions ? questions.length : 3) - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  cursor: 'pointer'
-                }} onClick={() => navigate('/fan/history')}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flex: 1, minWidth: 0, marginRight: '16px' }}>
-                      <div style={{ minWidth: '40px', height: '40px', borderRadius: '50%', background: 'rgba(56, 189, 248, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#38bdf8' }}>
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-                      </div>
-                      <div style={{ overflow: 'hidden' }}>
-                        <div style={{ fontWeight: '700', fontSize: '16px', color: '#fff', marginBottom: '4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                          {q.questionText}
-                        </div>
-                        <div style={{ fontSize: '14px', color: '#64748b' }}>
-                            {q.status === 'answered' ? '1 answer' : '0 answers'} · {getTimeAgo(q.createdAt)}
-                        </div>
-                      </div>
-                  </div>
-                  
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px', minWidth: '80px' }}>
-                      <div style={{ 
-                          padding: '6px 14px', 
-                          borderRadius: '20px', 
-                          fontSize: '12px', 
-                          fontWeight: '700',
-                          background: q.status === 'answered' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(56, 189, 248, 0.15)',
-                          color: q.status === 'answered' ? '#10b981' : '#38bdf8'
-                      }}>
-                          {q.status === 'submitted' ? 'Open' : q.status.charAt(0).toUpperCase() + q.status.slice(1)}
-                      </div>
-                      <div style={{ fontSize: '14px', fontWeight: '800', color: '#cbd5e1' }}>
-                          Rs. {q.price || 99}
-                      </div>
-                  </div>
-                </div>
-              ))}
-              
-              {questions.length === 0 && (
-                  <div style={{ padding: '40px', textAlign: 'center', color: '#64748b', fontSize: '15px' }}>
-                      You haven't asked any questions yet.
-                  </div>
-              )}
-              
-              {!showAllQuestions && questions.length > 3 && (
-                  <div 
-                    onClick={() => setShowAllQuestions(true)}
-                    style={{ padding: '16px', textAlign: 'center', background: 'rgba(255,255,255,0.02)', cursor: 'pointer', transition: 'background 0.2s', borderTop: '1px solid rgba(255,255,255,0.05)' }}
-                    onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.04)'}
-                    onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.02)'}
-                  >
-                      <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'rgba(255,255,255,0.05)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
-                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                      </div>
-                  </div>
-              )}
-            </div>
-          </div>
         )}
       </main>
 

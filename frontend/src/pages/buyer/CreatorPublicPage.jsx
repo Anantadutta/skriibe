@@ -30,6 +30,7 @@ const CreatorPublicPage = () => {
   const [paymentTab, setPaymentTab] = useState('UPI');
   const [buyerUpiId, setBuyerUpiId] = useState('');
   const [submittedQuestionId, setSubmittedQuestionId] = useState(null);
+  const [orderNumber, setOrderNumber] = useState('');
   const [showCvv, setShowCvv] = useState(false);
   
   // Status
@@ -109,6 +110,7 @@ const CreatorPublicPage = () => {
       });
       if (res.success && res.questionId) {
         setSubmittedQuestionId(res.questionId);
+        setOrderNumber(res.orderNumber);
         localStorage.setItem('skriibe_buyer_phone', buyerPhone);
       }
       setStep(2);
@@ -489,7 +491,7 @@ const CreatorPublicPage = () => {
 
           <div style={{ background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '16px', padding: '16px', display: 'flex', flexDirection: 'column' }}>
             <div style={{ color: '#64748b', fontSize: '0.7rem', fontWeight: '800', letterSpacing: '2px', textTransform: 'uppercase' }}>
-              YOUR QUESTION <span style={{ color: '#ef4444' }}>*</span> <span style={{ color: '#64748b' }}>(MIN 20 CHARACTERS, MAX 500 CHARACTERS)</span>
+              ASK YOUR QUESTION <span style={{ color: '#ef4444' }}>*</span> <span style={{ color: '#64748b' }}>(MIN 20 CHARACTERS, MAX 500 CHARACTERS)</span>
             </div>
             <textarea 
               className="unified-input"
@@ -629,11 +631,11 @@ const CreatorPublicPage = () => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#22c55e', boxShadow: '0 0 8px #22c55e' }}></div>
-              <span style={{ fontSize: '1rem', color: '#cbd5e1' }}>{buyerEmail || 'amit@gmail.com'} <span style={{ color: '#475569', fontSize: '0.85rem' }}>· Email</span></span>
+              <span style={{ fontSize: '1rem', color: '#cbd5e1' }}>{buyerEmail || 'amit@gmail.com'}</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#22c55e', boxShadow: '0 0 8px #22c55e' }}></div>
-              <span style={{ fontSize: '1rem', color: '#cbd5e1' }}>Skriibe Inbox <span style={{ color: '#475569', fontSize: '0.85rem' }}>· App</span></span>
+              <span style={{ fontSize: '1rem', color: '#cbd5e1' }}>Skriibe Inbox</span>
             </div>
           </div>
         </div>
@@ -651,7 +653,7 @@ const CreatorPublicPage = () => {
         }}>
           <div>
             <div style={{ fontSize: '1rem', fontWeight: '700', color: '#ffffff', marginBottom: '4px' }}>
-              Order #SKR-20250501
+              Order #{orderNumber || 'SKR-20250501'}
             </div>
             <div style={{ fontSize: '0.85rem', color: '#475569', fontFamily: 'monospace' }}>
               Amount paid: ₹{creator.pricePerQuestion || '99'}

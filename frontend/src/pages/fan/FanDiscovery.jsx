@@ -4,7 +4,8 @@ import CreatorCard from '../../components/discovery/CreatorCard';
 import FanNavbar from '../../components/fan/layout/FanNavbar';
 import FanBottomNav from '../../components/fan/layout/FanBottomNav';
 import { getLiveCreators } from '../../services/discoveryApi';
-import { getFanMe } from '../../services/fanApi';
+import { getFanMe, switchRole } from '../../services/fanApi';
+import { useAuth } from '../../context/AuthContext';
 import { io } from 'socket.io-client';
 
 const categories = [
@@ -29,6 +30,23 @@ const FanDiscovery = () => {
   const [activeCategory, setActiveCategory] = useState('All');
   const debounceTimeout = useRef(null);
   const navigate = useNavigate();
+  const { roles, setAuthData } = useAuth();
+
+  const handleSwitchToCreatorMode = async () => {
+    if (roles.includes('creator')) {
+      try {
+        const res = await switchRole('creator');
+        if (res.success) {
+          setAuthData(roles, 'creator', res.token);
+          window.location.href = '/creator/dashboard';
+        }
+      } catch (err) {
+        console.error('Failed to switch to creator mode', err);
+      }
+    } else {
+      navigate('/fan/upgrade');
+    }
+  };
 
   const fetchCreators = async (query = '', cat = 'All') => {
     setLoading(true);
@@ -290,7 +308,7 @@ const FanDiscovery = () => {
           )}
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '40px' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', flexWrap: 'wrap', marginBottom: '40px' }}>
           <button 
             onClick={() => navigate('/explore')}
             style={{
@@ -306,12 +324,38 @@ const FanDiscovery = () => {
               transition: 'transform 0.2s',
               display: 'flex',
               alignItems: 'center',
+              justifyContent: 'center',
+              width: '300px',
               gap: '8px'
             }}
             onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
             onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
           >
             Explore more creators <span>→</span>
+          </button>
+
+          <button 
+            onClick={handleSwitchToCreatorMode}
+            style={{
+              background: 'rgba(56, 189, 248, 0.1)',
+              border: '1px solid rgba(56, 189, 248, 0.3)',
+              color: '#38bdf8',
+              padding: '16px 32px',
+              fontSize: '16px',
+              fontWeight: 800,
+              borderRadius: '16px',
+              cursor: 'pointer',
+              transition: 'transform 0.2s, background 0.2s',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '300px',
+              gap: '8px'
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.background = 'rgba(56, 189, 248, 0.2)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.background = 'rgba(56, 189, 248, 0.1)'; }}
+          >
+            <span style={{ fontSize: '20px' }}>👤</span> Switch to creator mode
           </button>
         </div>
 

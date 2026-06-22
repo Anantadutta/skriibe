@@ -5,6 +5,8 @@ const jwt = require('jsonwebtoken');
 
 const Question = require('../models/Question');
 const Creator = require('../models/Creator');
+const Counter = require('../models/Counter');
+const Order = require('../models/Order');
 const { sendFollowUpAskedEmail, sendNewQuestionEmail } = require('../utils/emailService');
 
 const { verifyFanToken } = require('../middleware/auth');
@@ -62,6 +64,13 @@ router.post('/', verifyFanToken, async (req, res) => {
       return res.status(403).json({ message: 'Creator is temporarily unable to accept new questions. Please try again later.' });
     }
 
+    const counter = await Counter.findByIdAndUpdate(
+      { _id: 'questionOrderNumber' },
+      { $inc: { seq: 1 } },
+      { new: true, upsert: true }
+    );
+    const orderNumber = 'SKR-' + (10000 + counter.seq);
+
     const newQuestion = new Question({
       creatorId: creator._id,
       handle: creator.handle,
@@ -76,9 +85,20 @@ router.post('/', verifyFanToken, async (req, res) => {
       expiresAt: new Date(Date.now() + (parseInt(creator.responseTime) || 48) * 60 * 60 * 1000),
       isFollowUp: !!isFollowUp,
       parentQuestionId: isFollowUp ? parentQuestionId : undefined,
+      orderNumber,
     });
 
     await newQuestion.save();
+
+    const newOrder = new Order({
+      orderNumber: orderNumber,
+      questionId: newQuestion._id,
+      fanName: buyerName || req.fan.name || req.fan.email,
+      creatorHandle: creator.handle,
+      amountPaid: newQuestion.amountPaid,
+      status: 'paid'
+    });
+    await newOrder.save();
 
     if (creator.email) {
       const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';

@@ -36,7 +36,7 @@ const FanBottomNav = () => {
   const navItems = [
     { label: 'Home', path: '/discovery', icon: (active) => <HomeIcon active={active} /> },
     { label: 'Explore', path: '/explore', icon: (active) => <ExploreIcon active={active} /> },
-    { label: 'Create', isAction: true, icon: () => <UploadIcon /> },
+    { label: 'Switch to creator mode', isAction: true, icon: () => <UploadIcon /> },
     { label: 'Inbox', path: '/fan/history', icon: (active) => <InboxIcon active={active} />, hasBadge: true },
     { label: 'Profile', path: '/fan/profile', icon: (active) => <ProfileIcon active={active} /> }
   ];
@@ -65,7 +65,7 @@ const FanBottomNav = () => {
           justify-content: center;
           text-decoration: none;
           color: #64748b;
-          width: 60px;
+          min-width: 60px;
           height: 100%;
           position: relative;
           transition: color 0.2s;
@@ -85,8 +85,9 @@ const FanBottomNav = () => {
           justify-content: center;
         }
         .nav-label {
-          font-size: 11px;
+          font-size: 10px;
           font-weight: 600;
+          white-space: nowrap;
         }
         .nav-badge {
           position: absolute;

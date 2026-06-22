@@ -23,6 +23,10 @@ const CreatorOnboardPricing = () => {
   const [isInputFocused, setIsInputFocused] = useState(false);
 
   useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
+  useEffect(() => {
     if (!creatorData) {
       import('../../services/creatorApi').then(({ getMe }) => {
         getMe().then(res => {
