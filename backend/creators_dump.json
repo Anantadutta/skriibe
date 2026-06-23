@@ -41,13 +41,6 @@
     "pricePerQuestion": 99
   },
   {
-    "_id": "6a37c1fbe8060b17513e5e1b",
-    "name": "Tarun Gujral",
-    "price": 1,
-    "pricePerQuestion": 1,
-    "handle": "tarungujral"
-  },
-  {
     "_id": "6a37c5a63d9618ac3b215afd",
     "name": "fe",
     "price": 49,
@@ -149,16 +142,51 @@
     "handle": "tarun0501"
   },
   {
-    "_id": "6a394de04efc0bdcfe2bebb1",
-    "name": "Tarundeep Singh",
-    "handle": "tarundeepsingh1",
-    "price": 8,
-    "pricePerQuestion": 8
-  },
-  {
     "_id": "6a3950364efc0bdcfe2bebb2",
     "name": "Vasundhara Keshan",
     "price": 99,
     "pricePerQuestion": 99
+  },
+  {
+    "_id": "6a396d67a53dd1ba90363723",
+    "name": "Tarundeep Singh",
+    "price": 99,
+    "pricePerQuestion": 99,
+    "handle": "tarun0502"
+  },
+  {
+    "_id": "6a3975ada53dd1ba90363725",
+    "name": "Tarunadjfbadsjb",
+    "price": 99,
+    "pricePerQuestion": 99,
+    "handle": "adjfgdsigf"
+  },
+  {
+    "_id": "6a3a1f2cffc8c3ddf884765b",
+    "name": "dceceecce",
+    "price": 49,
+    "pricePerQuestion": 49,
+    "handle": "ercvfvfvr"
+  },
+  {
+    "_id": "6a3a2232ffc8c3ddf884765d",
+    "name": "dcdcscds",
+    "price": 99,
+    "pricePerQuestion": 99,
+    "handle": "sdede"
+  },
+  {
+    "_id": "6a3a27fdc23f79ddece47567",
+    "name": "ffffrfer",
+    "price": 49,
+    "pricePerQuestion": 49,
+    "handle": "edde"
+  },
+  {
+    "_id": "6a3a2bf1ee6f9e79f9e43534",
+    "name": "checking penny",
+    "price": 49,
+    "pricePerQuestion": 49,
+    "handle": "vvcv"
   }
 ]

@@ -14,6 +14,7 @@ const Question = require('../models/Question');
 const AdminAlert = require('../models/AdminAlert');
 const { sendWelcomeEmail, sendProfileSubmittedEmail,
  sendQuestionAnsweredEmail, sendFollowUpAnsweredEmail } = require('../utils/emailService');
+const { verifyBankAccount } = require('../utils/cashfreeService');
 
 const { verifyCreatorToken } = require('../middleware/auth');
 
@@ -835,6 +836,101 @@ router.get('/payouts', verifyCreatorToken, async (req, res) => {
  */
 router.post('/logout', (req, res) => {
   res.json({ success: true });
+});
+
+/**
+ * @route POST /api/creator/verify-bank
+ * @desc Verify bank account using Cashfree API
+ */
+router.post('/verify-bank', verifyCreatorToken, async (req, res) => {
+  try {
+    const { bank_account, ifsc, name, phone, pan } = req.body;
+
+    if (!bank_account || !ifsc) {
+      return res.status(400).json({ message: 'Bank account number and IFSC are required.' });
+    }
+
+    // Basic IFSC format validation
+    const ifscRegex = /^[A-Z]{4}0[A-Z0-9]{6}$/;
+    if (!ifscRegex.test(ifsc)) {
+      return res.status(400).json({ message: 'Invalid IFSC code format.' });
+    }
+
+    await connectDB();
+    const creator = await Creator.findById(req.creator.creatorId);
+    if (!creator) {
+      return res.status(404).json({ message: 'Creator not found.' });
+    }
+
+    // Debouncing for production: if unchanged and already verified, skip API call
+    if (process.env.CASHFREE_ENV === 'production') {
+      if (
+        creator.bankVerificationStatus === 'verified' &&
+        creator.bankAccountNumber === bank_account &&
+        creator.bankIfsc === ifsc
+      ) {
+        return res.json({
+          verified: true,
+          nameAtBank: creator.bankNameAtBank || '',
+          bankName: 'Cached', 
+          reason: 'ACCOUNT_IS_VALID'
+        });
+      }
+    }
+
+    const verificationResult = await verifyBankAccount({ bank_account, ifsc, name, phone });
+
+    let isVerified = false;
+    let needsReview = false;
+    let reason = '';
+    let nameAtBank = '';
+    let bankName = '';
+
+    if (verificationResult && verificationResult.account_status) {
+      isVerified = verificationResult.account_status === 'VALID';
+      reason = verificationResult.account_status_code || (isVerified ? 'VALID' : 'INVALID');
+      nameAtBank = verificationResult.name_at_bank || '';
+      bankName = verificationResult.bank_name || '';
+      
+      const partialMatches = ['GOOD_PARTIAL_MATCH', 'MODERATE_PARTIAL_MATCH', 'POOR_PARTIAL_MATCH', 'NO_MATCH'];
+      if (verificationResult.name_match_result && partialMatches.includes(verificationResult.name_match_result)) {
+        needsReview = true;
+      }
+    } else if (verificationResult) {
+      // It's an error response from Cashfree (no account_status)
+      isVerified = false;
+      reason = verificationResult.message || verificationResult.code || 'API Error: Please verify credentials or endpoint';
+      console.error('Cashfree API Error Response:', verificationResult);
+    } else {
+      isVerified = false;
+      reason = 'Unknown error (no response)';
+    }
+
+    // Save details pass or fail
+    creator.bankAccountNumber = bank_account;
+    creator.bankIfsc = ifsc;
+    creator.bankAccountName = name || ''; // user-provided name
+    creator.bankVerificationStatus = isVerified ? 'verified' : 'failed';
+    creator.bankNameAtBank = nameAtBank;
+    creator.bankVerifiedAt = new Date();
+    creator.bankNeedsReview = needsReview;
+    if (pan) creator.pan = pan;
+    
+    // Set bankLinked to true only if verified
+    creator.bankLinked = isVerified;
+
+    await creator.save();
+
+    res.json({
+      verified: isVerified,
+      nameAtBank,
+      bankName,
+      reason
+    });
+  } catch (err) {
+    console.error('Bank verification error:', err);
+    res.status(500).json({ message: 'Server error during bank verification' });
+  }
 });
 
 module.exports = router;

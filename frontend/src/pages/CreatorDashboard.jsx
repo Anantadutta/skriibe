@@ -28,6 +28,7 @@ const CreatorDashboard = () => {
   const [copied, setCopied] = useState(false);
   const [now, setNow] = useState(Date.now());
   const [isSavingStatus, setIsSavingStatus] = useState(false);
+  const [abusivePopupQuestion, setAbusivePopupQuestion] = useState(null);
 
   const currencySymbol = getCurrencySymbol(creator?.phone);
 
@@ -83,6 +84,19 @@ const CreatorDashboard = () => {
     fetchQuestions();
     fetchPayouts();
   }, [location.state?.creator]);
+
+  useEffect(() => {
+    if (questions.length > 0) {
+      const resolvedAbusiveQ = questions.find(q => 
+        q.status === 'resolved' && 
+        q.adminDecision === 'abusive' && 
+        !localStorage.getItem(`ack_abusive_${q._id || q.id}`)
+      );
+      if (resolvedAbusiveQ) {
+        setAbusivePopupQuestion(resolvedAbusiveQ);
+      }
+    }
+  }, [questions]);
 
   const cleanUsername = username ? username.replace('@', '') : '';
   const show404 = username ? (cleanUsername !== creator.handle && cleanUsername !== mockCreator.username) : false;
@@ -192,22 +206,6 @@ const CreatorDashboard = () => {
   const dynamicWeeklyEarnings = questions
     .filter(q => ['answered', 'flagged'].includes(q.status?.toLowerCase()) && !q.isFollowUp && new Date(q.createdAt) >= oneWeekAgo)
     .reduce((sum, q) => sum + (q.amountPaid || q.pricePaid || creator.pricePerQuestion || 0), 0);
-
-  const [abusivePopupQuestion, setAbusivePopupQuestion] = useState(null);
-
-  useEffect(() => {
-    if (questions.length > 0) {
-      const resolvedAbusiveQ = questions.find(q => 
-        q.status === 'resolved' && 
-        q.adminDecision === 'abusive' && 
-        !localStorage.getItem(`ack_abusive_${q._id || q.id}`)
-      );
-      if (resolvedAbusiveQ) {
-        setAbusivePopupQuestion(resolvedAbusiveQ);
-      }
-    }
-  }, [questions]);
-
   const handleAcknowledgeAbusive = () => {
     if (abusivePopupQuestion) {
       localStorage.setItem(`ack_abusive_${abusivePopupQuestion._id || abusivePopupQuestion.id}`, 'true');

@@ -25,7 +25,7 @@ export const savePricing = (data) => api.post('/creators/onboarding/pricing', da
 
 export const toggleLive = (isLive) => api.post('/creators/toggle-live', { isLive });
 
-export const linkBank = (data) => api.post('/creators/link-bank', data);
+export const linkBank = (data) => api.post('/creator/verify-bank', data);
 
 export const logout = () => api.post('/creators/logout');
 

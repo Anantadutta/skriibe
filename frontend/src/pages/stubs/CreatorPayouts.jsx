@@ -324,12 +324,19 @@ const CreatorPayouts = () => {
                 return;
               }
               try {
-                await linkBank({ 
+                const res = await linkBank({ 
                   pan: formattedPan,
-                  accountName: accountName.trim(),
-                  accountNumber: accountNumber.trim(),
+                  name: accountName.trim(),
+                  bank_account: accountNumber.trim(),
                   ifsc: ifsc.trim()
                 });
+                
+                if (!res.data.verified) {
+                  setErrorMessage(`Bank verification failed: ${res.data.reason || 'Invalid account details. Please try again.'}`);
+                  setShowErrorModal(true);
+                  return;
+                }
+                
                 await toggleLive(true); // Automatically turn green (go live)
                 navigate('/creator/dashboard');
               } catch (error) {

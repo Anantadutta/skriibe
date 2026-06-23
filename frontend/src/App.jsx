@@ -66,8 +66,13 @@ import FanNotifications from './pages/fan/FanNotifications';
 import FanProfile from './pages/fan/FanProfile';
 import FanToCreatorUpgrade from './pages/fan/FanToCreatorUpgrade';
 import CreatorProfile from './pages/fan/CreatorProfile';
+import ErrorBoundary from './components/ErrorBoundary';
 
 const CreatorRoute = () => {
+  return <Outlet />;
+};
+
+const ProtectedRoute = ({ children, allowedRole }) => {
   return <Outlet />;
 };
 
@@ -196,7 +201,11 @@ function App() {
             <Route path="/creator/:handle" element={<CreatorProfile />} />
             
             <Route element={<CreatorRoute />}>
-              <Route path="/creator/dashboard" element={<CreatorDashboard />} />
+              <Route path="/creator/dashboard" element={
+                <ErrorBoundary>
+                  <CreatorDashboard />
+                </ErrorBoundary>
+              } />
               <Route path="/creator/dashboard/reply/:id" element={<CreatorReplyScreen />} />
               <Route path="/creator/inbox/delete/:id" element={<CreatorDeleteQuestion />} />
               <Route path="/creator/inbox" element={<CreatorInbox />} />
