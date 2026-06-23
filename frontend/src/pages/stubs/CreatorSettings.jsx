@@ -24,6 +24,7 @@ const CreatorSettings = () => {
 
   const [creator, setCreator] = useState(location.state?.creator || mockCreator);
   const [highlightPause, setHighlightPause] = useState(location.state?.highlightPause || false);
+  const [customAlert, setCustomAlert] = useState(null);
   const currencySymbol = getCurrencySymbol(creator?.phone);
 
   useEffect(() => {
@@ -64,26 +65,6 @@ const CreatorSettings = () => {
   const [questionPrice, setQuestionPrice] = useState(creator.price || creator.pricePerQuestion || 99);
   const [dailyCap, setDailyCap] = useState(creator.dailyCap || 50);
 
-  useEffect(() => {
-    if (creator) {
-      if (creator.price || creator.pricePerQuestion) setQuestionPrice(creator.price || creator.pricePerQuestion);
-      if (creator.dailyCap) setDailyCap(creator.dailyCap);
-      if (creator.weeklyGoal) setWeeklyGoal(creator.weeklyGoal);
-      if (creator.bio) setBio(creator.bio);
-      if (creator.phone) setPhone(creator.phone);
-      if (creator.email) setEmail(creator.email);
-      if (creator.instagramHandle) setInstagram(creator.instagramHandle);
-      else if (creator.handle) setInstagram(`@${creator.handle}`);
-      if (creator.avatarUrl) {
-        setAvatar(creator.avatarUrl);
-      } else {
-        const dName = creator.name || creator.displayName || creator.handle || 'C';
-        setAvatar(dName[0].toUpperCase());
-      }
-      if (creator.isPaused !== undefined) setIsPaused(creator.isPaused);
-      if (creator.expertise) setExpertiseList(creator.expertise);
-    }
-  }, [creator]);
   const [isPaused, setIsPaused] = useState(creator.isPaused || false);
   const [showPauseModal, setShowPauseModal] = useState(false);
   const formattedFollowers = creator.instagramFollowers 
@@ -115,6 +96,44 @@ const CreatorSettings = () => {
   
   const [email, setEmail] = useState(creator.email || '');
   const [isEditingEmail, setIsEditingEmail] = useState(false);
+
+  useEffect(() => {
+    if (creator) {
+      if (!isEditingPrice && (creator.price || creator.pricePerQuestion)) setQuestionPrice(creator.price || creator.pricePerQuestion);
+      if (!isEditingCap && creator.dailyCap) setDailyCap(creator.dailyCap);
+      if (!isEditingGoal && creator.weeklyGoal) setWeeklyGoal(creator.weeklyGoal);
+      if (!isEditingBio && creator.bio) setBio(creator.bio);
+      if (!isEditingPhone && creator.phone) setPhone(creator.phone);
+      if (!isEditingEmail && creator.email) setEmail(creator.email);
+      if (!isEditingInstagram) {
+        if (creator.instagramHandle) setInstagram(creator.instagramHandle);
+        else if (creator.handle) setInstagram(`@${creator.handle}`);
+      }
+      if (creator.avatarUrl) {
+        setAvatar(creator.avatarUrl);
+      } else {
+        const dName = creator.name || creator.displayName || creator.handle || 'C';
+        setAvatar(dName[0].toUpperCase());
+      }
+      if (creator.isPaused !== undefined) setIsPaused(creator.isPaused);
+      if (!isEditingExpertise && creator.expertise) setExpertiseList(creator.expertise);
+    }
+  }, [creator, isEditingPrice, isEditingCap, isEditingGoal, isEditingBio, isEditingPhone, isEditingEmail, isEditingInstagram, isEditingExpertise]);
+  const emailContainerRef = useRef(null);
+
+  useEffect(() => {
+    const handleEmailClickOutside = (event) => {
+      if (emailContainerRef.current && !emailContainerRef.current.contains(event.target)) {
+        setIsEditingEmail(false);
+      }
+    };
+    if (isEditingEmail) {
+      document.addEventListener('mousedown', handleEmailClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleEmailClickOutside);
+    };
+  }, [isEditingEmail]);
 
   const [isCopied, setIsCopied] = useState(false);
   const [isPausedFeedback, setIsPausedFeedback] = useState(false);
@@ -173,7 +192,7 @@ const CreatorSettings = () => {
     const file = e.target.files[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
-        alert("Image must be smaller than 5 Megabytes.");
+        setCustomAlert("Image must be smaller than 5 Megabytes.");
         return;
       }
       const url = URL.createObjectURL(file);
@@ -218,6 +237,14 @@ const CreatorSettings = () => {
   };
 
   const handleSaveExpertise = async () => {
+    if (expertiseList.length < 1) {
+      setCustomAlert("Please select at least 1 expertise.");
+      return;
+    }
+    if (expertiseList.length > 2) {
+      setCustomAlert("You can select a maximum of 2 expertises.");
+      return;
+    }
     try {
       const finalExpertise = expertiseList.map(t => t === 'Others' ? (customExpertise.trim() || 'Others') : t);
       await api.post('/creators/settings', { expertise: finalExpertise });
@@ -230,6 +257,10 @@ const CreatorSettings = () => {
   };
 
   const handleSaveGoal = async () => {
+    if (Number(weeklyGoal) < 100) {
+      setCustomAlert("Weekly Earnings Goal cannot be less than 100.");
+      return;
+    }
     try {
       await api.post('/creators/settings', { weeklyGoal: Number(weeklyGoal) });
       setIsEditingGoal(false);
@@ -250,6 +281,10 @@ const CreatorSettings = () => {
   };
 
   const handleSaveCap = async () => {
+    if (Number(dailyCap) < 10) {
+      setCustomAlert("Daily Question Cap cannot be less than 10.");
+      return;
+    }
     try {
       await api.post('/creators/settings', { dailyCap: Number(dailyCap) });
       setIsEditingCap(false);
@@ -260,6 +295,11 @@ const CreatorSettings = () => {
   };
 
   const handleSavePhone = async () => {
+    const digitsOnly = phone.replace(/\D/g, '');
+    if (digitsOnly.length < 10) {
+      setCustomAlert("Phone number must have at least 10 digits.");
+      return;
+    }
     try {
       await api.post('/creators/settings', { phone });
       setIsEditingPhone(false);
@@ -280,6 +320,11 @@ const CreatorSettings = () => {
   };
 
   const handleSaveEmail = async () => {
+    const lowerEmail = email.toLowerCase();
+    if (!lowerEmail.includes('@') || !lowerEmail.includes('gmail.com')) {
+      setCustomAlert("Email must include @ and gmail.com");
+      return;
+    }
     try {
       await api.post('/creators/settings', { email });
       setIsEditingEmail(false);
@@ -803,7 +848,7 @@ const CreatorSettings = () => {
                         
                         {/* Action Buttons Inside Dropdown */}
                         <div style={{ display: 'flex', gap: '8px', marginTop: '8px', paddingTop: '8px', borderTop: '1px solid #2A2A2A' }}>
-                          <button onClick={() => { setIsEditingExpertise(false); setIsDropdownOpen(false); }} style={{ flex: 1, background: 'transparent', border: '1px solid #475569', color: '#94a3b8', borderRadius: '8px', padding: '6px', fontSize: '0.8rem', cursor: 'pointer' }}>Cancel</button>
+                          <button onClick={() => { setIsEditingExpertise(false); setIsDropdownOpen(false); setExpertiseList(creator.expertise || []); }} style={{ flex: 1, background: 'transparent', border: '1px solid #475569', color: '#94a3b8', borderRadius: '8px', padding: '6px', fontSize: '0.8rem', cursor: 'pointer' }}>Cancel</button>
                           <button onClick={() => { handleSaveExpertise(); setIsDropdownOpen(false); }} style={{ flex: 1, background: '#38BDF8', border: 'none', color: '#0E0E0E', borderRadius: '8px', padding: '6px', fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer' }}>Save</button>
                         </div>
                       </div>
@@ -884,11 +929,14 @@ const CreatorSettings = () => {
                   <div style={{ color: '#ffffff', fontSize: '0.95rem', fontWeight: 700 }}>Email Address</div>
                 </div>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0, flex: 1, justifyContent: 'flex-end' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0, flex: 1, justifyContent: 'flex-end' }} ref={emailContainerRef}>
                 {isEditingEmail ? (
                   <>
                     <input 
-                      type="email" value={email} onChange={(e) => setEmail(e.target.value)}
+                      type="email" 
+                      value={email} 
+                      onChange={(e) => setEmail(e.target.value)}
+                      onFocus={(e) => e.target.setSelectionRange(0, 0)}
                       style={{ background: '#16161e', border: '1px solid #29C5F6', color: '#ffffff', borderRadius: '8px', padding: '8px', fontSize: '0.95rem', width: '100%', maxWidth: '160px', outline: 'none', fontWeight: 500, fontFamily: 'monospace' }} autoFocus
                     />
                     <button style={{ background: '#38BDF8', border: 'none', color: '#0E0E0E', borderRadius: '12px', padding: '8px 16px', fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer', flexShrink: 0 }} onClick={handleSaveEmail}>Save</button>
@@ -988,7 +1036,7 @@ const CreatorSettings = () => {
                     window.location.href = '/discovery';
                   }
                 } catch (err) {
-                  alert('Failed to switch to Fan mode');
+                  setCustomAlert('Failed to switch to Fan mode');
                 }
               }}
               style={{
@@ -1186,6 +1234,47 @@ const CreatorSettings = () => {
         </div>
       )}
       
+      {customAlert && (
+        <div style={{
+          position: 'fixed',
+          top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0,0,0,0.6)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999
+        }}>
+          <div style={{
+            background: '#15151D',
+            border: '1px solid #232330',
+            borderRadius: '16px',
+            padding: '24px',
+            maxWidth: '400px',
+            width: '90%',
+            boxShadow: '0 10px 40px rgba(0,0,0,0.5)',
+            textAlign: 'center'
+          }}>
+            <div style={{ fontSize: '18px', fontWeight: '600', color: '#fff', marginBottom: '20px' }}>
+              {customAlert}
+            </div>
+            <button 
+              onClick={() => setCustomAlert(null)}
+              style={{
+                background: '#00FFA3',
+                color: '#000',
+                border: 'none',
+                padding: '10px 24px',
+                borderRadius: '8px',
+                fontWeight: '700',
+                cursor: 'pointer'
+              }}
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
+
       {cropImageSrc && (
         <ImageCropperModal 
           imageSrc={cropImageSrc} 

@@ -26,6 +26,7 @@ const FanDiscovery = () => {
   const [creators, setCreators] = useState([]);
   const [loading, setLoading] = useState(true);
   const [fanName, setFanName] = useState('Fan');
+  const [fanAvatar, setFanAvatar] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
   const debounceTimeout = useRef(null);
@@ -93,6 +94,9 @@ const FanDiscovery = () => {
         const res = await getFanMe();
         if (res.success && res.fan && res.fan.name) {
           setFanName(res.fan.name.split(' ')[0]);
+          if (res.fan.avatarUrl) {
+            setFanAvatar(res.fan.avatarUrl);
+          }
         }
       } catch (err) {
         console.error('Failed to fetch fan profile', err);
@@ -177,9 +181,14 @@ const FanDiscovery = () => {
               fontWeight: 900,
               fontSize: '1.4rem',
               color: '#000',
-              zIndex: 1
+              zIndex: 1,
+              overflow: 'hidden'
             }}>
-              {fanName.charAt(0).toUpperCase()}
+              {fanAvatar ? (
+                <img src={fanAvatar} alt={fanName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              ) : (
+                fanName.charAt(0).toUpperCase()
+              )}
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', zIndex: 1 }}>

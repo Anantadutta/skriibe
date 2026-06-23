@@ -29,4 +29,8 @@ export const linkBank = (data) => api.post('/creator/verify-bank', data);
 
 export const logout = () => api.post('/creators/logout');
 
+export const uploadAvatar = (formData) => api.post('/creators/avatar', formData, {
+  headers: { 'Content-Type': 'multipart/form-data' }
+});
+
 export default {};

@@ -174,7 +174,7 @@ const ImageCropperModal = ({ imageSrc, onCropComplete, onClose }) => {
     }}>
       <div style={{
         width: '90%', maxWidth: '500px', backgroundColor: '#0F172A',
-        borderRadius: '16px', overflow: 'hidden',
+        borderRadius: '16px', overflowY: 'auto', overflowX: 'hidden', maxHeight: '90vh',
         border: '1px solid rgba(255,255,255,0.1)'
       }}>
         <div style={{ padding: '16px', borderBottom: '1px solid rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -184,7 +184,7 @@ const ImageCropperModal = ({ imageSrc, onCropComplete, onClose }) => {
         
         <div 
           ref={containerRef}
-          style={{ position: 'relative', width: '100%', height: '350px', overflow: 'hidden', backgroundColor: '#000', cursor: isDragging ? 'grabbing' : 'grab', touchAction: 'none' }}
+          style={{ position: 'relative', width: '100%', height: 'min(50vh, 350px)', minHeight: '260px', overflow: 'hidden', backgroundColor: '#000', cursor: isDragging ? 'grabbing' : 'grab', touchAction: 'none' }}
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}

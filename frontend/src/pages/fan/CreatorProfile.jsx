@@ -60,6 +60,7 @@ const CreatorProfile = () => {
         if (res.data?.fan) {
           setBuyerName(res.data.fan.name || '');
           setBuyerEmail(res.data.fan.email || '');
+          setBuyerPhone(res.data.fan.whatsappPhone || res.data.fan.phone || '');
           let activeBan = res.data.fan.isBanned || false;
           if (activeBan && res.data.fan.banExpiresAt) {
             if (new Date(res.data.fan.banExpiresAt) < new Date()) {
@@ -75,6 +76,7 @@ const CreatorProfile = () => {
           if (cRes.data?.creator) {
             setBuyerName(cRes.data.creator.name || '');
             setBuyerEmail(cRes.data.creator.email || '');
+            setBuyerPhone(cRes.data.creator.phone || '');
             setIsLoggedIn(true);
           }
         } catch (e) {

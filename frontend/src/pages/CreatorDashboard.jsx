@@ -281,6 +281,38 @@ const CreatorDashboard = () => {
         }}>
           {/* Logo & Greeting */}
           <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '10px' }}>
+            <button
+              onClick={() => {
+                localStorage.clear();
+                navigate('/creator/login');
+              }}
+              style={{
+                background: 'rgba(255, 255, 255, 0.05)',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+                borderRadius: '50%',
+                color: '#ffffff',
+                width: '32px',
+                height: '32px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                padding: 0,
+                marginBottom: '4px'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                e.currentTarget.style.transform = 'translateX(-2px)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                e.currentTarget.style.transform = 'translateX(0)';
+              }}
+              title="Logout to Login Screen"
+            >
+              ←
+            </button>
             {/* Aesthetic Glow Shader */}
             <div style={{
               position: 'absolute',

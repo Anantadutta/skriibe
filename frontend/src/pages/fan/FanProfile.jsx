@@ -22,6 +22,7 @@ const FanProfile = () => {
   const [showAvatarMenu, setShowAvatarMenu] = useState(false);
   const avatarInputRef = useRef(null);
   const menuRef = useRef(null);
+  const emailContainerRef = useRef(null);
 
   const { roles, setAuthData } = useAuth();
   const navigate = useNavigate();
@@ -78,6 +79,20 @@ const FanProfile = () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [showAvatarMenu]);
+
+  useEffect(() => {
+    const handleEmailClickOutside = (event) => {
+      if (emailContainerRef.current && !emailContainerRef.current.contains(event.target)) {
+        setIsEditingEmail(false);
+      }
+    };
+    if (isEditingEmail) {
+      document.addEventListener('mousedown', handleEmailClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleEmailClickOutside);
+    };
+  }, [isEditingEmail]);
 
   const handleAvatarChange = (e) => {
     const file = e.target.files[0];
@@ -249,75 +264,80 @@ const FanProfile = () => {
                 </div>
                 <div style={{ overflow: 'hidden' }}>
                   <h2 style={{ margin: '0 0 8px 0', fontSize: '24px', fontWeight: '700' }}>{fanProfile.name || 'Fan'}</h2>
-                  {isEditingEmail ? (
-                    <input 
-                      type="email"
-                      value={newEmail}
-                      onChange={(e) => setNewEmail(e.target.value)}
+                  <div ref={emailContainerRef} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    {isEditingEmail ? (
+                      <input 
+                        type="email"
+                        value={newEmail}
+                        onChange={(e) => setNewEmail(e.target.value)}
+                        disabled={savingEmail}
+                        onFocus={(e) => {
+                          e.target.setSelectionRange(0, 0);
+                        }}
+                        style={{
+                          background: 'rgba(255,255,255,0.05)',
+                          border: '1px solid rgba(255,255,255,0.2)',
+                          color: '#fff',
+                          padding: '6px 12px',
+                          borderRadius: '6px',
+                          fontSize: '14px',
+                          width: '100%',
+                          outline: 'none',
+                          maxWidth: '250px'
+                        }}
+                        autoFocus
+                      />
+                    ) : (
+                      <div style={{ color: '#94a3b8', fontSize: '16px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{fanProfile.email}</div>
+                    )}
+                    <button 
+                      onClick={async () => {
+                        if (isEditingEmail) {
+                          if (!newEmail || newEmail === fanProfile.email) {
+                            setIsEditingEmail(false);
+                            return;
+                          }
+                          setSavingEmail(true);
+                          try {
+                            const res = await updateFanProfile(newEmail);
+                            if (res.success) {
+                              setFanProfile(res.fan);
+                              setIsEditingEmail(false);
+                            }
+                          } catch (err) {
+                            alert('Failed to update email');
+                          } finally {
+                            setSavingEmail(false);
+                          }
+                        } else {
+                          setNewEmail(fanProfile.email);
+                          setIsEditingEmail(true);
+                        }
+                      }}
                       disabled={savingEmail}
                       style={{
-                        background: 'rgba(255,255,255,0.05)',
+                        background: 'transparent',
                         border: '1px solid rgba(255,255,255,0.2)',
                         color: '#fff',
-                        padding: '6px 12px',
+                        padding: '4px 12px',
                         borderRadius: '6px',
-                        fontSize: '14px',
-                        width: '100%',
-                        outline: 'none',
-                        maxWidth: '250px'
-                      }}
-                      autoFocus
-                    />
-                  ) : (
-                    <div style={{ color: '#94a3b8', fontSize: '16px', wordBreak: 'break-all' }}>{fanProfile.email}</div>
-                  )}
+                        fontWeight: '600',
+                        cursor: savingEmail ? 'not-allowed' : 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        fontSize: '12px',
+                        opacity: savingEmail ? 0.6 : 1,
+                        flexShrink: 0
+                    }}>
+                      {!isEditingEmail && (
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                      )}
+                      {isEditingEmail ? (savingEmail ? 'Saving...' : 'Save') : 'Edit'}
+                    </button>
+                  </div>
                 </div>
               </div>
-              <button 
-                onClick={async () => {
-                  if (isEditingEmail) {
-                    if (!newEmail || newEmail === fanProfile.email) {
-                      setIsEditingEmail(false);
-                      return;
-                    }
-                    setSavingEmail(true);
-                    try {
-                      const res = await updateFanProfile(newEmail);
-                      if (res.success) {
-                        setFanProfile(res.fan);
-                        setIsEditingEmail(false);
-                      }
-                    } catch (err) {
-                      alert('Failed to update email');
-                    } finally {
-                      setSavingEmail(false);
-                    }
-                  } else {
-                    setNewEmail(fanProfile.email);
-                    setIsEditingEmail(true);
-                  }
-                }}
-                disabled={savingEmail}
-                style={{
-                  background: 'transparent',
-                  border: '1px solid rgba(255,255,255,0.2)',
-                  color: '#fff',
-                  padding: '8px 16px',
-                  borderRadius: '8px',
-                  fontWeight: '600',
-                  cursor: savingEmail ? 'not-allowed' : 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  fontSize: '14px',
-                  opacity: savingEmail ? 0.6 : 1,
-                  flexShrink: 0
-              }}>
-                {!isEditingEmail && (
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
-                )}
-                {isEditingEmail ? (savingEmail ? 'Saving...' : 'Save') : 'Edit'}
-              </button>
             </div>
           </div>
 

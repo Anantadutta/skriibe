@@ -69,9 +69,6 @@ router.post('/profile', verifyCreatorToken, async (req, res) => {
     );
 
 
-    // Send Welcome Email
-    sendWelcomeEmail(updatedCreator.email, updatedCreator.name, updatedCreator.handle).catch(e => console.error("Failed to send welcome email", e));
-
     res.json({ success: true, creator: updatedCreator });
   } catch (err) {
     console.error(err);
@@ -105,6 +102,7 @@ router.post('/activate', verifyCreatorToken, async (req, res) => {
 
     // Re-issue JWT with full profile context (now it includes handle)
     const token = issueToken(updatedCreator);
+    sendWelcomeEmail(updatedCreator.email, updatedCreator.name, updatedCreator.handle).catch(e => console.error("Failed to send welcome email", e));
 
     res.json({ success: true, creator: updatedCreator, pageUrl: `/@${updatedCreator.handle}`, token });
   } catch (err) {

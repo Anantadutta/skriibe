@@ -419,12 +419,6 @@ router.post('/onboarding/profile', verifyCreatorToken, async (req, res) => {
   }
 
   // Send Welcome Emails asynchronously (don't block the response)
-
-  
-  sendWelcomeEmail(email, name, handle).catch(err => {
-    console.error('Failed to send onboarding welcome email:', err);
-  });
-
   res.json({ success: true, creator: updatedCreator });
 });
 
@@ -452,6 +446,10 @@ router.post('/onboarding/pricing', verifyCreatorToken, async (req, res) => {
     res.clearCookie('creator_token', getClearCookieOptions());
     return res.status(401).json({ message: 'Session expired or user deleted. Please log in again.' });
   }
+
+  sendWelcomeEmail(updatedCreator.email, updatedCreator.name, updatedCreator.handle).catch(err => {
+    console.error('Failed to send onboarding welcome email:', err);
+  });
 
   res.json({ 
     success: true, 

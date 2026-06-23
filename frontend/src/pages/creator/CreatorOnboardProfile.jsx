@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { saveProfile, getMe } from '../../services/creatorApi';
+import { saveProfile, getMe, uploadAvatar } from '../../services/creatorApi';
 import { PhoneFrame } from '../../components/ama/layout/PhoneFrame';
 import { Field } from '../../components/ama/ui/Field';
 import ImageCropperModal from '../../components/common/ImageCropperModal';
@@ -198,11 +198,22 @@ const CreatorOnboardProfile = () => {
       const finalHandle = form.handle;
       const finalExpertise = form.expertise.map(t => t === 'Others' ? customExpertise.trim() : t);
 
+      // Upload the avatar if there is a new one selected
+      if (avatarFile) {
+        try {
+          const formData = new FormData();
+          formData.append('avatar', avatarFile);
+          await uploadAvatar(formData);
+        } catch (uploadErr) {
+          console.error('Avatar upload failed:', uploadErr);
+          // We can choose to show an error or continue without the avatar
+        }
+      }
+
       const res = await saveProfile({
         ...form,
         expertise: finalExpertise,
-        handle: finalHandle,
-        avatarUrl: avatarPreview || null
+        handle: finalHandle
       });
 
       const creatorPayload = res.data?.creator || res.creator || res.data;

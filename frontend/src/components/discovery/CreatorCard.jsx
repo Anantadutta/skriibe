@@ -153,7 +153,7 @@ const CreatorCard = ({ creator }) => {
         background: '#15151D',
         border: '1px solid #232330',
         borderRadius: '16px',
-        padding: '16px 12px',
+        padding: '16px 6px',
         marginTop: '20px',
         display: 'flex',
         alignItems: 'center',
@@ -166,10 +166,10 @@ const CreatorCard = ({ creator }) => {
             ₹
           </div>
           <span style={{ fontSize: '18px', fontWeight: '800', color: '#ffffff' }}>₹{displayPrice}</span>
-          <span style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>Per Question</span>
+          <span style={{ fontSize: '10px', color: '#64748b', marginTop: '2px', whiteSpace: 'nowrap', textAlign: 'center' }}>Per Question</span>
         </div>
         
-        <div style={{ width: '1px', height: '40px', background: '#2a2a35' }}></div>
+        <div style={{ width: '1px', height: '40px', background: '#2a2a35', margin: '0 4px' }}></div>
 
         {/* Reply Rate */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1 }}>
@@ -180,10 +180,10 @@ const CreatorCard = ({ creator }) => {
             </svg>
           </div>
           <span style={{ fontSize: '18px', fontWeight: '800', color: '#00FFA3' }}>{stats?.replyRate ?? 0}%</span>
-          <span style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>Reply Rate</span>
+          <span style={{ fontSize: '10px', color: '#64748b', marginTop: '2px', whiteSpace: 'nowrap', textAlign: 'center' }}>Reply Rate</span>
         </div>
 
-        <div style={{ width: '1px', height: '40px', background: '#2a2a35' }}></div>
+        <div style={{ width: '1px', height: '40px', background: '#2a2a35', margin: '0 4px' }}></div>
 
         {/* Avg Response */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1 }}>
@@ -194,7 +194,7 @@ const CreatorCard = ({ creator }) => {
             </svg>
           </div>
           <span style={{ fontSize: '18px', fontWeight: '800', color: '#fbbf24' }}>{formatTime(stats?.avgReplyTime || '2h')}</span>
-          <span style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>Avg Response</span>
+          <span style={{ fontSize: '10px', color: '#64748b', marginTop: '2px', whiteSpace: 'nowrap', textAlign: 'center' }}>Avg Response</span>
         </div>
       </div>
 

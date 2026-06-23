@@ -32,9 +32,18 @@ const FanExplore = () => {
   const [activeCategory, setActiveCategory] = useState('All');
   const [selectedCustomCategory, setSelectedCustomCategory] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const creatorsPerPage = 10;
 
   // Debounce ref
   const debounceTimeout = useRef(null);
+  const gridRef = useRef(null);
+
+  useEffect(() => {
+    if (gridRef.current) {
+      gridRef.current.scrollTop = 0;
+    }
+  }, [currentPage]);
 
   const fetchCreators = async (query = '', cat = 'All') => {
     setLoading(true);
@@ -78,6 +87,7 @@ const FanExplore = () => {
   const handleSearchChange = (e) => {
     const val = e.target.value;
     setSearchQuery(val);
+    setCurrentPage(1);
     
     if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
     debounceTimeout.current = setTimeout(() => {
@@ -88,6 +98,7 @@ const FanExplore = () => {
   const handleCategoryClick = (cat) => {
     setActiveCategory(cat);
     setSelectedCustomCategory(null);
+    setCurrentPage(1);
     fetchCreators(searchQuery, cat);
   };
 
@@ -106,9 +117,12 @@ const FanExplore = () => {
     return true;
   });
 
+  const totalPages = Math.ceil(filteredCreators.length / creatorsPerPage);
+  const paginatedCreators = filteredCreators.slice((currentPage - 1) * creatorsPerPage, currentPage * creatorsPerPage);
+
   return (
     <div style={{
-      minHeight: '100vh',
+      height: '100vh',
       background: '#0a0a0f',
       color: '#ffffff',
       fontFamily: 'Inter, var(--font-body, sans-serif)',
@@ -116,7 +130,7 @@ const FanExplore = () => {
       flexDirection: 'column'
     }}>
       <FanNavbar />
-      <main style={{ flex: 1, padding: 'min(40px, 5vw)', maxWidth: '1200px', margin: '0 auto', width: '100%', boxSizing: 'border-box', overflowX: 'hidden' }}>
+      <main style={{ flex: 1, padding: 'min(40px, 5vw)', maxWidth: '1200px', margin: '0 auto', width: '100%', boxSizing: 'border-box', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
         
         {/* Search & Filters */}
         <div style={{ marginBottom: '40px' }}>
@@ -204,23 +218,49 @@ const FanExplore = () => {
           )}
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexShrink: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <h2 style={{ margin: 0, fontSize: '24px', fontWeight: '700' }}>
               {searchQuery ? 'Search results' : 'Explore creators'}
             </h2>
           </div>
-          <div style={{ color: '#94a3b8', fontSize: '14px' }}>
-            {filteredCreators.length} creators
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              {currentPage > 1 && (
+                <button 
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: '18px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '32px', height: '32px', borderRadius: '50%', backgroundColor: 'rgba(255,255,255,0.05)' }}
+                >
+                  &lt;
+                </button>
+              )}
+              {currentPage < totalPages && (
+                <button 
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: '18px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '32px', height: '32px', borderRadius: '50%', backgroundColor: 'rgba(255,255,255,0.05)' }}
+                >
+                  &gt;
+                </button>
+              )}
+            </div>
+            <div style={{ color: '#94a3b8', fontSize: '14px' }}>
+              {filteredCreators.length} creators
+            </div>
           </div>
         </div>
 
-        <div style={{
-          display: 'grid',
+        <div 
+          ref={gridRef}
+          style={{
+            display: 'grid',
           gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
-          gap: '20px'
+          gap: '20px',
+          flex: 1,
+          overflowY: 'auto',
+          paddingBottom: '20px',
+          paddingRight: '10px' // for scrollbar
         }}>
-          {filteredCreators.map(creator => (
+          {paginatedCreators.map(creator => (
             <CreatorCard key={creator.id || creator.handle} creator={creator} />
           ))}
           

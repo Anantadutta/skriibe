@@ -36,7 +36,6 @@ const FanBottomNav = () => {
   const navItems = [
     { label: 'Home', path: '/discovery', icon: (active) => <HomeIcon active={active} /> },
     { label: 'Explore', path: '/explore', icon: (active) => <ExploreIcon active={active} /> },
-    { label: 'Switch to creator mode', isAction: true, icon: () => <UploadIcon /> },
     { label: 'Inbox', path: '/fan/history', icon: (active) => <InboxIcon active={active} />, hasBadge: true },
     { label: 'Profile', path: '/fan/profile', icon: (active) => <ProfileIcon active={active} /> }
   ];

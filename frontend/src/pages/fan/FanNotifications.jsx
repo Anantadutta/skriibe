@@ -59,8 +59,38 @@ const FanNotifications = () => {
       <FanNavbar />
       
       <main style={{ flex: 1, padding: '40px', maxWidth: '800px', margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
-        <h1 style={{ fontSize: '36px', fontWeight: '800', marginBottom: '8px' }}>Notifications</h1>
-        <p style={{ color: '#94a3b8', marginBottom: '40px' }}>Stay updated on answers and creator activity.</p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '8px' }}>
+          <button 
+            onClick={() => navigate(-1)} 
+            style={{ 
+              background: 'rgba(255, 255, 255, 0.05)', 
+              border: '1px solid rgba(255, 255, 255, 0.08)', 
+              borderRadius: '50%', 
+              color: '#ffffff', 
+              width: '40px', 
+              height: '40px', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              fontSize: '20px',
+              padding: 0
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+              e.currentTarget.style.transform = 'translateX(-2px)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+              e.currentTarget.style.transform = 'translateX(0)';
+            }}
+          >
+            ←
+          </button>
+          <h1 style={{ fontSize: '36px', fontWeight: '800', margin: 0 }}>Notifications</h1>
+        </div>
+        <p style={{ color: '#94a3b8', marginBottom: '40px', marginLeft: '56px' }}>Stay updated on answers and creator activity.</p>
         
         {loading ? (
           <div style={{ color: '#94a3b8', textAlign: 'center', padding: '40px' }}>Loading notifications...</div>
