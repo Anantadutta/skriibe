@@ -67,7 +67,7 @@ const allowedOrigins = [
 if (process.env.FRONTEND_URL) allowedOrigins.push(process.env.FRONTEND_URL);
 
 const originCheck = function (origin, callback) {
-  if (!origin || allowedOrigins.indexOf(origin) !== -1 || (origin && origin.endsWith('.vercel.app'))) {
+  if (!origin || allowedOrigins.indexOf(origin) !== -1) {
     callback(null, true);
   } else {
     callback(new Error('Not allowed by CORS'));
