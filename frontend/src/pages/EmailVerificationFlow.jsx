@@ -53,7 +53,8 @@ const EmailVerificationFlow = () => {
 
     setLoading(true);
     try {
-      const res = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/email-verification/send-code`, { email: targetEmail });
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      const res = await axios.post(`${apiUrl}/email-verification/send-code`, { email: targetEmail });
       if (res.data.success) {
         setStep(2);
         setResendCooldown(30);
@@ -70,7 +71,8 @@ const EmailVerificationFlow = () => {
     setError('');
     setLoading(true);
     try {
-      const res = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/email-verification/verify-code`, { 
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      const res = await axios.post(`${apiUrl}/email-verification/verify-code`, { 
         email, 
         code: finalCode 
       });
