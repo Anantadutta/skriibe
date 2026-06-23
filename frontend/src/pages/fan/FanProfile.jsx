@@ -18,11 +18,16 @@ const FanProfile = () => {
   const [newEmail, setNewEmail] = useState('');
   const [savingEmail, setSavingEmail] = useState(false);
   
+  const [isEditingPhone, setIsEditingPhone] = useState(false);
+  const [newPhone, setNewPhone] = useState('');
+  const [savingPhone, setSavingPhone] = useState(false);
+
   const [cropImageSrc, setCropImageSrc] = useState(null);
   const [showAvatarMenu, setShowAvatarMenu] = useState(false);
   const avatarInputRef = useRef(null);
   const menuRef = useRef(null);
   const emailContainerRef = useRef(null);
+  const phoneContainerRef = useRef(null);
 
   const { roles, setAuthData } = useAuth();
   const navigate = useNavigate();
@@ -86,11 +91,20 @@ const FanProfile = () => {
         setIsEditingEmail(false);
       }
     };
+    const handlePhoneClickOutside = (event) => {
+      if (phoneContainerRef.current && !phoneContainerRef.current.contains(event.target)) {
+        setIsEditingPhone(false);
+      }
+    };
     if (isEditingEmail) {
       document.addEventListener('mousedown', handleEmailClickOutside);
     }
+    if (isEditingPhone) {
+      document.addEventListener('mousedown', handlePhoneClickOutside);
+    }
     return () => {
       document.removeEventListener('mousedown', handleEmailClickOutside);
+      document.removeEventListener('mousedown', handlePhoneClickOutside);
     };
   }, [isEditingEmail]);
 
@@ -299,7 +313,7 @@ const FanProfile = () => {
                           }
                           setSavingEmail(true);
                           try {
-                            const res = await updateFanProfile(newEmail);
+                            const res = await updateFanProfile({ email: newEmail });
                             if (res.success) {
                               setFanProfile(res.fan);
                               setIsEditingEmail(false);
@@ -334,6 +348,80 @@ const FanProfile = () => {
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
                       )}
                       {isEditingEmail ? (savingEmail ? 'Saving...' : 'Save') : 'Edit'}
+                    </button>
+                  </div>
+
+                  <div ref={phoneContainerRef} style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '8px' }}>
+                    {isEditingPhone ? (
+                      <input 
+                        type="text"
+                        value={newPhone}
+                        onChange={(e) => setNewPhone(e.target.value)}
+                        disabled={savingPhone}
+                        onFocus={(e) => {
+                          e.target.setSelectionRange(0, 0);
+                        }}
+                        placeholder="+1 234 567 8900"
+                        style={{
+                          background: 'rgba(255,255,255,0.05)',
+                          border: '1px solid rgba(255,255,255,0.2)',
+                          color: '#fff',
+                          padding: '6px 12px',
+                          borderRadius: '6px',
+                          fontSize: '14px',
+                          width: '100%',
+                          outline: 'none',
+                          maxWidth: '250px'
+                        }}
+                        autoFocus
+                      />
+                    ) : (
+                      <div style={{ color: '#94a3b8', fontSize: '16px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{fanProfile.phone || 'Add Phone Number'}</div>
+                    )}
+                    <button 
+                      onClick={async () => {
+                        if (isEditingPhone) {
+                          if (!newPhone || newPhone === fanProfile.phone) {
+                            setIsEditingPhone(false);
+                            return;
+                          }
+                          setSavingPhone(true);
+                          try {
+                            const res = await updateFanProfile({ phone: newPhone });
+                            if (res.success) {
+                              setFanProfile(res.fan);
+                              setIsEditingPhone(false);
+                            }
+                          } catch (err) {
+                            alert('Failed to update phone');
+                          } finally {
+                            setSavingPhone(false);
+                          }
+                        } else {
+                          setNewPhone(fanProfile.phone || '');
+                          setIsEditingPhone(true);
+                        }
+                      }}
+                      disabled={savingPhone}
+                      style={{
+                        background: 'transparent',
+                        border: '1px solid rgba(255,255,255,0.2)',
+                        color: '#fff',
+                        padding: '4px 12px',
+                        borderRadius: '6px',
+                        fontWeight: '600',
+                        cursor: savingPhone ? 'not-allowed' : 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        fontSize: '12px',
+                        opacity: savingPhone ? 0.6 : 1,
+                        flexShrink: 0
+                    }}>
+                      {!isEditingPhone && (
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                      )}
+                      {isEditingPhone ? (savingPhone ? 'Saving...' : 'Save') : 'Edit'}
                     </button>
                   </div>
                 </div>

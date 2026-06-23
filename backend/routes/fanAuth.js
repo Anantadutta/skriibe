@@ -187,20 +187,29 @@ router.get('/me', verifyFanToken, async (req, res) => {
 
 router.put('/me', verifyFanToken, async (req, res) => {
   try {
-    const { email } = req.body;
-    if (!email) {
-      return res.status(400).json({ success: false, message: 'Email is required' });
+    const { email, phone } = req.body;
+    if (!email && !phone) {
+      return res.status(400).json({ success: false, message: 'Email or phone is required' });
     }
 
     await connectDB();
-    const existingFan = await Fan.findOne({ email: email.toLowerCase(), _id: { $ne: req.fan.fanId } });
-    if (existingFan) {
-      return res.status(400).json({ success: false, message: 'Email already in use' });
+    
+    const updateData = {};
+    if (email) {
+      const existingFan = await Fan.findOne({ email: email.toLowerCase(), _id: { $ne: req.fan.fanId } });
+      if (existingFan) {
+        return res.status(400).json({ success: false, message: 'Email already in use' });
+      }
+      updateData.email = email.toLowerCase();
+    }
+    
+    if (phone) {
+      updateData.phone = phone;
     }
 
     const fan = await Fan.findByIdAndUpdate(
       req.fan.fanId,
-      { email: email.toLowerCase() },
+      updateData,
       { new: true }
     ).select('-password');
 

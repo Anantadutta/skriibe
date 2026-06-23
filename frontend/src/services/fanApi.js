@@ -13,8 +13,8 @@ export const getFanMe = async () => {
   return response.data;
 };
 
-export const updateFanProfile = async (email) => {
-  const response = await api.put('/fan-auth/me', { email });
+export const updateFanProfile = async (updateData) => {
+  const response = await api.put('/fan-auth/me', updateData);
   return response.data;
 };
 
