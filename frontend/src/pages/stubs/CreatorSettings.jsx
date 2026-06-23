@@ -905,6 +905,10 @@ const CreatorSettings = () => {
                   <>
                     <input 
                       type="text" value={phone} onChange={(e) => setPhone(e.target.value)}
+                      onFocus={(e) => {
+                        const target = e.target;
+                        setTimeout(() => target.setSelectionRange(0, 0), 0);
+                      }}
                       style={{ background: '#16161e', border: '1px solid #29C5F6', color: '#ffffff', borderRadius: '8px', padding: '8px', fontSize: '0.95rem', width: '120px', outline: 'none', fontWeight: 500, fontFamily: 'monospace' }} autoFocus
                     />
                     <button style={{ background: '#38BDF8', border: 'none', color: '#0E0E0E', borderRadius: '12px', padding: '8px 16px', fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer' }} onClick={handleSavePhone}>Save</button>
@@ -934,10 +938,13 @@ const CreatorSettings = () => {
                 {isEditingEmail ? (
                   <>
                     <input 
-                      type="email" 
+                      type="text" 
                       value={email} 
                       onChange={(e) => setEmail(e.target.value)}
-                      onFocus={(e) => e.target.setSelectionRange(0, 0)}
+                      onFocus={(e) => {
+                        const target = e.target;
+                        setTimeout(() => target.setSelectionRange(0, 0), 0);
+                      }}
                       style={{ background: '#16161e', border: '1px solid #29C5F6', color: '#ffffff', borderRadius: '8px', padding: '8px', fontSize: '0.95rem', width: '100%', maxWidth: '160px', outline: 'none', fontWeight: 500, fontFamily: 'monospace' }} autoFocus
                     />
                     <button style={{ background: '#38BDF8', border: 'none', color: '#0E0E0E', borderRadius: '12px', padding: '8px 16px', fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer', flexShrink: 0 }} onClick={handleSaveEmail}>Save</button>

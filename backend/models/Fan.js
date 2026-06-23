@@ -19,6 +19,7 @@ const FanSchema = new mongoose.Schema({
   resetPasswordToken: { type: String },
   resetPasswordExpires: { type: Date },
   whatsappPhone: { type: String, default: '' },
+  phone: { type: String, default: '' },
   whatsappConsent: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now }
 });

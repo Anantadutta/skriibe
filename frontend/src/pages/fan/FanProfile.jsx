@@ -281,12 +281,13 @@ const FanProfile = () => {
                   <div ref={emailContainerRef} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                     {isEditingEmail ? (
                       <input 
-                        type="email"
+                        type="text"
                         value={newEmail}
                         onChange={(e) => setNewEmail(e.target.value)}
                         disabled={savingEmail}
                         onFocus={(e) => {
-                          e.target.setSelectionRange(0, 0);
+                          const target = e.target;
+                          setTimeout(() => target.setSelectionRange(0, 0), 0);
                         }}
                         style={{
                           background: 'rgba(255,255,255,0.05)',
@@ -359,7 +360,8 @@ const FanProfile = () => {
                         onChange={(e) => setNewPhone(e.target.value)}
                         disabled={savingPhone}
                         onFocus={(e) => {
-                          e.target.setSelectionRange(0, 0);
+                          const target = e.target;
+                          setTimeout(() => target.setSelectionRange(0, 0), 0);
                         }}
                         placeholder="+1 234 567 8900"
                         style={{
