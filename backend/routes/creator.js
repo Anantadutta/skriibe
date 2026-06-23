@@ -14,7 +14,7 @@ const Question = require('../models/Question');
 const AdminAlert = require('../models/AdminAlert');
 const { sendWelcomeEmail, sendProfileSubmittedEmail,
  sendQuestionAnsweredEmail, sendFollowUpAnsweredEmail } = require('../utils/emailService');
-const { verifyBankAccount } = require('../utils/cashfreeService');
+const { verifyBankAccount, verifyPan } = require('../utils/cashfreeService');
 
 const { verifyCreatorToken } = require('../middleware/auth');
 
@@ -856,6 +856,13 @@ router.post('/verify-bank', verifyCreatorToken, async (req, res) => {
       return res.status(400).json({ message: 'Invalid IFSC code format.' });
     }
 
+    if (pan) {
+      const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
+      if (!panRegex.test(pan)) {
+        return res.status(400).json({ message: 'Invalid PAN format.' });
+      }
+    }
+
     await connectDB();
     const creator = await Creator.findById(req.creator.creatorId);
     if (!creator) {
@@ -863,73 +870,124 @@ router.post('/verify-bank', verifyCreatorToken, async (req, res) => {
     }
 
     // Debouncing for production: if unchanged and already verified, skip API call
-    if (process.env.CASHFREE_ENV === 'production') {
-      if (
-        creator.bankVerificationStatus === 'verified' &&
-        creator.bankAccountNumber === bank_account &&
-        creator.bankIfsc === ifsc
-      ) {
-        return res.json({
-          verified: true,
-          nameAtBank: creator.bankNameAtBank || '',
-          bankName: 'Cached', 
-          reason: 'ACCOUNT_IS_VALID'
-        });
+    let bankVerified = false;
+    let bankReason = '';
+    let nameAtBank = '';
+    let bankNameStr = '';
+    let bankNeedsReview = false;
+
+    if (
+      process.env.CASHFREE_ENV === 'production' &&
+      creator.bankVerificationStatus === 'verified' &&
+      creator.bankAccountNumber === bank_account &&
+      creator.bankIfsc === ifsc
+    ) {
+      bankVerified = true;
+      nameAtBank = creator.bankNameAtBank || '';
+      bankNameStr = 'Cached';
+      bankReason = 'ACCOUNT_IS_VALID';
+    } else {
+      const verificationResult = await verifyBankAccount({ bank_account, ifsc, name, phone });
+
+      if (verificationResult && verificationResult.account_status) {
+        bankVerified = verificationResult.account_status === 'VALID';
+        bankReason = verificationResult.account_status_code || (bankVerified ? 'VALID' : 'INVALID');
+        nameAtBank = verificationResult.name_at_bank || '';
+        bankNameStr = verificationResult.bank_name || '';
+        
+        const partialMatches = ['GOOD_PARTIAL_MATCH', 'MODERATE_PARTIAL_MATCH', 'POOR_PARTIAL_MATCH', 'NO_MATCH'];
+        if (verificationResult.name_match_result && partialMatches.includes(verificationResult.name_match_result)) {
+          bankNeedsReview = true;
+        }
+      } else if (verificationResult) {
+        bankVerified = false;
+        bankReason = verificationResult.message || verificationResult.code || 'API Error: Please verify credentials or endpoint';
+      } else {
+        bankVerified = false;
+        bankReason = 'Unknown error (no response)';
       }
     }
 
-    const verificationResult = await verifyBankAccount({ bank_account, ifsc, name, phone });
+    if (!bankVerified) {
+      creator.bankAccountNumber = bank_account;
+      creator.bankIfsc = ifsc;
+      creator.bankAccountName = name || '';
+      creator.bankVerificationStatus = 'failed';
+      creator.bankLinked = false;
+      await creator.save();
+      return res.json({ verified: false, reason: `Bank verification failed: ${bankReason}` });
+    }
 
-    let isVerified = false;
-    let needsReview = false;
-    let reason = '';
-    let nameAtBank = '';
-    let bankName = '';
+    // --- PAN Verification ---
+    let panVerified = false;
+    let panReason = '';
+    let panRegisteredName = '';
 
-    if (verificationResult && verificationResult.account_status) {
-      isVerified = verificationResult.account_status === 'VALID';
-      reason = verificationResult.account_status_code || (isVerified ? 'VALID' : 'INVALID');
-      nameAtBank = verificationResult.name_at_bank || '';
-      bankName = verificationResult.bank_name || '';
-      
-      const partialMatches = ['GOOD_PARTIAL_MATCH', 'MODERATE_PARTIAL_MATCH', 'POOR_PARTIAL_MATCH', 'NO_MATCH'];
-      if (verificationResult.name_match_result && partialMatches.includes(verificationResult.name_match_result)) {
-        needsReview = true;
+    if (pan) {
+      if (
+        process.env.CASHFREE_ENV === 'production' &&
+        creator.panVerificationStatus === 'verified' &&
+        creator.panNumber === pan
+      ) {
+        panVerified = true;
+        panRegisteredName = creator.panRegisteredName || '';
+        panReason = 'VALID';
+      } else {
+        const panResult = await verifyPan({ pan, name });
+        if (panResult && panResult.valid) {
+          panVerified = true;
+          panRegisteredName = panResult.registered_name || '';
+          panReason = 'VALID';
+        } else if (panResult && panResult.valid === false) {
+          panVerified = false;
+          panReason = panResult.message || 'Invalid PAN';
+        } else if (panResult) {
+          panVerified = false;
+          panReason = panResult.message || panResult.code || 'PAN API Error';
+        } else {
+          panVerified = false;
+          panReason = 'Unknown PAN error';
+        }
       }
-    } else if (verificationResult) {
-      // It's an error response from Cashfree (no account_status)
-      isVerified = false;
-      reason = verificationResult.message || verificationResult.code || 'API Error: Please verify credentials or endpoint';
-      console.error('Cashfree API Error Response:', verificationResult);
-    } else {
-      isVerified = false;
-      reason = 'Unknown error (no response)';
+    }
+
+    if (pan && !panVerified) {
+      creator.panNumber = pan;
+      creator.panVerificationStatus = 'failed';
+      await creator.save();
+      return res.json({ verified: false, reason: `PAN verification failed: ${panReason}` });
     }
 
     // Save details pass or fail
     creator.bankAccountNumber = bank_account;
     creator.bankIfsc = ifsc;
     creator.bankAccountName = name || ''; // user-provided name
-    creator.bankVerificationStatus = isVerified ? 'verified' : 'failed';
+    creator.bankVerificationStatus = 'verified';
     creator.bankNameAtBank = nameAtBank;
     creator.bankVerifiedAt = new Date();
-    creator.bankNeedsReview = needsReview;
-    if (pan) creator.pan = pan;
-    
-    // Set bankLinked to true only if verified
-    creator.bankLinked = isVerified;
+    creator.bankNeedsReview = bankNeedsReview;
+    creator.bankLinked = true;
+
+    if (pan) {
+      creator.panNumber = pan;
+      creator.panVerificationStatus = 'verified';
+      creator.panRegisteredName = panRegisteredName;
+      creator.panVerifiedAt = new Date();
+      // Optional: check if panRegisteredName matches user provided name, else needs review
+      // We'll keep it simple for now based on 'valid' flag
+    }
 
     await creator.save();
 
     res.json({
-      verified: isVerified,
+      verified: true,
       nameAtBank,
-      bankName,
-      reason
+      bankName: bankNameStr,
+      reason: 'Bank and PAN Verified'
     });
   } catch (err) {
-    console.error('Bank verification error:', err);
-    res.status(500).json({ message: 'Server error during bank verification' });
+    console.error('Bank/PAN verification error:', err);
+    res.status(500).json({ message: 'Server error during verification' });
   }
 });
 

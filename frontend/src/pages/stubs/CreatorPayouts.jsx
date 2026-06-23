@@ -58,7 +58,7 @@ const CreatorPayouts = () => {
   const [accountNumber, setAccountNumber] = useState(creator.bankAccountNumber || '');
   const [confirmAccount, setConfirmAccount] = useState(creator.bankAccountNumber || '');
   const [ifsc, setIfsc] = useState(creator.bankIfsc || '');
-  const [panNumber, setPanNumber] = useState(creator.pan || '');
+  const [panNumber, setPanNumber] = useState(creator.panNumber || creator.pan || '');
   const [phone, setPhone] = useState(creator.phone || '');
 
   useEffect(() => {
@@ -71,14 +71,14 @@ const CreatorPayouts = () => {
           setAccountNumber(res.creator.bankAccountNumber || '');
           setConfirmAccount(res.creator.bankAccountNumber || '');
           setIfsc(res.creator.bankIfsc || '');
-          setPanNumber(res.creator.pan || '');
+          setPanNumber(res.creator.panNumber || res.creator.pan || '');
           setPhone(res.creator.phone || '');
         }
       } catch (error) {
         console.error('Failed to fetch creator:', error);
       }
     };
-    if (!location.state?.creator || !creator.pan) {
+    if (!location.state?.creator || (!creator.panNumber && !creator.pan)) {
       fetchCreator();
     }
   }, [location.state?.creator]);
@@ -332,7 +332,8 @@ const CreatorPayouts = () => {
                 });
                 
                 if (!res.data.verified) {
-                  setErrorMessage(`Bank verification failed: ${res.data.reason || 'Invalid account details. Please try again.'}`);
+                  const errorReason = res.data.reason || 'Invalid account details. Please try again.';
+                  setErrorMessage(errorReason);
                   setShowErrorModal(true);
                   return;
                 }
@@ -340,8 +341,9 @@ const CreatorPayouts = () => {
                 await toggleLive(true); // Automatically turn green (go live)
                 navigate('/creator/dashboard');
               } catch (error) {
-                console.error('Failed to link bank:', error);
-                setErrorMessage('Failed to link bank account. Please try again.');
+                console.error('Failed to link payouts:', error);
+                const serverMsg = error.response?.data?.message || 'Failed to link payout details. Please try again.';
+                setErrorMessage(serverMsg);
                 setShowErrorModal(true);
               }
             }}

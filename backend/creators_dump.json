@@ -7,13 +7,6 @@
     "handle": "anantadutta"
   },
   {
-    "_id": "6a37ad2a952588b382928868",
-    "name": "dd",
-    "price": 99,
-    "pricePerQuestion": 99,
-    "handle": "rev"
-  },
-  {
     "_id": "6a37b08856041c6f734aa520",
     "name": "ghbthrb",
     "price": 49,
@@ -188,5 +181,18 @@
     "price": 49,
     "pricePerQuestion": 49,
     "handle": "vvcv"
+  },
+  {
+    "_id": "6a3a455af04ab629cfc87218",
+    "name": "freccv",
+    "price": 499,
+    "pricePerQuestion": 499,
+    "handle": "cfcdfcfd"
+  },
+  {
+    "_id": "6a3a5660078bd336cbbe1b1e",
+    "name": "",
+    "price": 99,
+    "pricePerQuestion": 99
   }
 ]

@@ -58,12 +58,14 @@ const CreatorSignup = () => {
         localStorage.setItem('isReturningCreator', 'true');
         localStorage.removeItem('bankLinked');
         
+        const nextRoute = (res.data.token && res.data.creator) ? '/onboard/profile' : '/creator/login';
+        const nextState = (res.data.token && res.data.creator) ? { creator: res.data.creator } : { message: 'Registration successful! Please log in.' };
+
         if (res.data.token && res.data.creator) {
           setAuthData(['creator'], 'creator', res.data.token);
-          navigate('/onboard/profile', { state: { creator: res.data.creator } });
-        } else {
-          navigate('/creator/login', { state: { message: 'Registration successful! Please log in.' } });
         }
+        
+        navigate('/verify-email', { state: { email, nextRoute, nextState } });
       }
     } catch (err) {
       console.error("Signup error:", err);

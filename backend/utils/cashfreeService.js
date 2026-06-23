@@ -18,6 +18,7 @@ const verifyBankAccount = async ({ bank_account, ifsc, name, phone }) => {
   const headers = {
     'Content-Type': 'application/json',
     'x-client-id': process.env.CASHFREE_CLIENT_ID,
+    'x-client-secret': process.env.CASHFREE_CLIENT_SECRET
   };
 
   if (isProd && process.env.CASHFREE_PRIVATE_KEY) {
@@ -41,9 +42,6 @@ const verifyBankAccount = async ({ bank_account, ifsc, name, phone }) => {
     
     headers['x-cf-signature'] = signature;
     headers['x-request-id'] = `req_${timestamp}`;
-  } else {
-    // Fallback to client secret for Sandbox, or if Production Private Key isn't set yet
-    headers['x-client-secret'] = process.env.CASHFREE_CLIENT_SECRET;
   }
 
   try {
@@ -67,6 +65,68 @@ const verifyBankAccount = async ({ bank_account, ifsc, name, phone }) => {
   }
 };
 
+/**
+ * Calls the Cashfree PAN Verification Sync API.
+ * @param {Object} params
+ * @param {string} params.pan
+ * @param {string} params.name
+ * @returns {Promise<Object>} The response data from Cashfree.
+ */
+const verifyPan = async ({ pan, name }) => {
+  const isProd = process.env.CASHFREE_ENV === 'production';
+  const baseUrl = isProd 
+    ? 'https://api.cashfree.com/verification/pan' 
+    : 'https://sandbox.cashfree.com/verification/pan';
+
+  const headers = {
+    'Content-Type': 'application/json',
+    'x-client-id': process.env.CASHFREE_CLIENT_ID,
+    'x-client-secret': process.env.CASHFREE_CLIENT_SECRET
+  };
+
+  if (isProd && process.env.CASHFREE_PRIVATE_KEY) {
+    const crypto = require('crypto');
+    const timestamp = Math.floor(Date.now() / 1000).toString();
+    const dataToEncrypt = `${process.env.CASHFREE_CLIENT_ID}.${timestamp}`;
+    
+    // Support keys pasted directly into .env (which might have literal \n strings)
+    const publicKey = process.env.CASHFREE_PRIVATE_KEY.replace(/\\n/g, '\n');
+    
+    // Cashfree requires the payload to be encrypted using the provided Public Key
+    const buffer = Buffer.from(dataToEncrypt, 'utf8');
+    const encrypted = crypto.publicEncrypt(
+      {
+        key: publicKey,
+        padding: crypto.constants.RSA_PKCS1_OAEP_PADDING
+      },
+      buffer
+    );
+    const signature = encrypted.toString('base64');
+    
+    headers['x-cf-signature'] = signature;
+    headers['x-request-id'] = `req_${timestamp}`;
+  }
+
+  try {
+    const response = await axios.post(
+      baseUrl,
+      {
+        pan,
+        name
+      },
+      { headers }
+    );
+    return response.data;
+  } catch (error) {
+    if (error.response && error.response.data) {
+      // Return the error from Cashfree
+      return error.response.data;
+    }
+    throw error;
+  }
+};
+
 module.exports = {
-  verifyBankAccount
+  verifyBankAccount,
+  verifyPan
 };

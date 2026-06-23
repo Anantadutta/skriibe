@@ -42,10 +42,10 @@ const FanSignup = () => {
       const res = await fanSignup(name, email, password, '', whatsappConsent);
       if (res.data.success) {
         setAuthData(['fan'], 'fan', res.data.token);
-        // Just redirect to explore page for now after successful signup
+        // Redirect to email verification and let it redirect to explore/next path
         const queryParams = new URLSearchParams(window.location.search);
-        const redirect = queryParams.get('redirect');
-        navigate(redirect || '/discovery');
+        const nextRoute = queryParams.get('redirect') || '/discovery';
+        navigate('/verify-email', { state: { email, nextRoute, nextState: {} } });
       }
     } catch (err) {
       console.error("Signup error:", err);

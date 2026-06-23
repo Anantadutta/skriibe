@@ -6,7 +6,11 @@ const runWeeklySweep = async () => {
     console.log('Starting weekly sweep of available balances...');
     try {
         // Find all creators who have an availableBalance > 0
-        const creatorsWithBalance = await Creator.find({ availableBalance: { $gt: 0 } }).select('_id');
+        const creatorsWithBalance = await Creator.find({ 
+            availableBalance: { $gt: 0 },
+            bankLinked: true,
+            panVerificationStatus: 'verified'
+        }).select('_id');
         
         let sweptCount = 0;
         let totalSweptAmount = 0;

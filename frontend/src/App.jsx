@@ -66,6 +66,7 @@ import FanNotifications from './pages/fan/FanNotifications';
 import FanProfile from './pages/fan/FanProfile';
 import FanToCreatorUpgrade from './pages/fan/FanToCreatorUpgrade';
 import CreatorProfile from './pages/fan/CreatorProfile';
+import EmailVerificationFlow from './pages/EmailVerificationFlow';
 import ErrorBoundary from './components/ErrorBoundary';
 
 const CreatorRoute = () => {
@@ -173,6 +174,7 @@ function App() {
             <Route path="/refunds" element={<Refunds />} />
             <Route path="/agreement" element={<Agreement />} />
             <Route path="/guidelines" element={<Guidelines />} />
+            <Route path="/verify-email" element={<EmailVerificationFlow />} />
             
             {/* Creator Onboarding */}
             <Route path="/creator/signup" element={<CreatorSignup />} />

@@ -456,7 +456,7 @@ const CreatorOnboardProfile = () => {
               marginBottom: '16px'
             }}>
               <button
-                onClick={() => navigate('/discovery')}
+                onClick={() => navigate('/')}
                 style={{
                   position: 'absolute',
                   left: 0,

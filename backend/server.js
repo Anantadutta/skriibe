@@ -259,6 +259,7 @@ app.use('/api/buyers', require('./routes/buyers'));
 app.use('/api/creators', require('./routes/creators'));
 app.use('/api/questions', require('./routes/questions'));
 app.use('/api/admin', require('./routes/admin'));
+app.use('/api/email-verification', require('./routes/emailVerification'));
 
 const errorHandler = require('./middleware/errorHandler');
 app.use(errorHandler);
