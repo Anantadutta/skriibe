@@ -68,6 +68,24 @@ router.post('/profile', verifyCreatorToken, async (req, res) => {
       { new: true }
     );
 
+    // Sync name and avatar to associated Fan profile
+    const Fan = require('../models/Fan');
+    let fan = null;
+    if (updatedCreator.fanId) {
+      fan = await Fan.findById(updatedCreator.fanId);
+    } else {
+      fan = await Fan.findOne({ email: updatedCreator.email.toLowerCase() });
+    }
+    if (fan) {
+      fan.name = updatedCreator.name;
+      fan.avatarUrl = updatedCreator.avatarUrl;
+      await fan.save();
+      
+      if (!updatedCreator.fanId) {
+        updatedCreator.fanId = fan._id;
+        await updatedCreator.save();
+      }
+    }
 
     res.json({ success: true, creator: updatedCreator });
   } catch (err) {

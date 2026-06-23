@@ -848,6 +848,7 @@ const CreatorSettings = () => {
                         
                         {/* Action Buttons Inside Dropdown */}
                         <div style={{ display: 'flex', gap: '8px', marginTop: '8px', paddingTop: '8px', borderTop: '1px solid #2A2A2A' }}>
+                          <button onClick={() => { setExpertiseList([]); setCustomExpertise(''); }} style={{ flex: 1, background: 'transparent', border: '1px solid #ef4444', color: '#ef4444', borderRadius: '8px', padding: '6px', fontSize: '0.75rem', cursor: 'pointer', whiteSpace: 'nowrap' }}>Clear All</button>
                           <button onClick={() => { setIsEditingExpertise(false); setIsDropdownOpen(false); setExpertiseList(creator.expertise || []); }} style={{ flex: 1, background: 'transparent', border: '1px solid #475569', color: '#94a3b8', borderRadius: '8px', padding: '6px', fontSize: '0.8rem', cursor: 'pointer' }}>Cancel</button>
                           <button onClick={() => { handleSaveExpertise(); setIsDropdownOpen(false); }} style={{ flex: 1, background: '#38BDF8', border: 'none', color: '#0E0E0E', borderRadius: '8px', padding: '6px', fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer' }}>Save</button>
                         </div>

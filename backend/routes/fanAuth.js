@@ -540,6 +540,18 @@ router.post('/switch-role', verifyFanToken, async (req, res) => {
       }
     }
 
+    if (role === 'fan') {
+      const Creator = require('../models/Creator');
+      const creatorProfile = await Creator.findOne({
+        $or: [{ fanId: fan._id }, { email: fan.email }]
+      });
+      
+      if (creatorProfile) {
+        if (creatorProfile.name) fan.name = creatorProfile.name;
+        if (creatorProfile.avatarUrl) fan.avatarUrl = creatorProfile.avatarUrl;
+      }
+    }
+
     fan.activeRole = role;
     await fan.save();
 

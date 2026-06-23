@@ -54,6 +54,24 @@ router.post('/avatar', verifyCreatorToken, upload.single('avatar'), async (req, 
       { new: true }
     );
     
+    // Sync avatar to associated Fan profile
+    const Fan = require('../models/Fan');
+    let fan = null;
+    if (updatedCreator.fanId) {
+      fan = await Fan.findById(updatedCreator.fanId);
+    } else {
+      fan = await Fan.findOne({ email: updatedCreator.email.toLowerCase() });
+    }
+    if (fan) {
+      fan.avatarUrl = avatarUrl;
+      await fan.save();
+      
+      if (!updatedCreator.fanId) {
+        updatedCreator.fanId = fan._id;
+        await updatedCreator.save();
+      }
+    }
+    
     res.json({ success: true, avatarUrl: updatedCreator.avatarUrl });
   } catch (err) {
     console.error('Avatar upload error:', err);
