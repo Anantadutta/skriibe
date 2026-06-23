@@ -21,30 +21,39 @@ const verifyBankAccount = async ({ bank_account, ifsc, name, phone }) => {
     'x-client-secret': process.env.CASHFREE_CLIENT_SECRET
   };
 
-  if (isProd && process.env.CASHFREE_PRIVATE_KEY) {
-    const crypto = require('crypto');
-    const timestamp = Math.floor(Date.now() / 1000).toString();
-    const dataToEncrypt = `${process.env.CASHFREE_CLIENT_ID}.${timestamp}`;
-    
-    // Support keys pasted directly into .env (which might have literal \n strings)
-    const publicKey = process.env.CASHFREE_PRIVATE_KEY.replace(/\\n/g, '\n');
-    
-    // Cashfree requires the payload to be encrypted using the provided Public Key
-    const buffer = Buffer.from(dataToEncrypt, 'utf8');
-    const encrypted = crypto.publicEncrypt(
-      {
-        key: publicKey,
-        padding: crypto.constants.RSA_PKCS1_OAEP_PADDING
-      },
-      buffer
-    );
-    const signature = encrypted.toString('base64');
-    
-    headers['x-cf-signature'] = signature;
-    headers['x-request-id'] = `req_${timestamp}`;
-  }
-
   try {
+    if (isProd && process.env.CASHFREE_PRIVATE_KEY) {
+      const crypto = require('crypto');
+      const timestamp = Math.floor(Date.now() / 1000).toString();
+      const dataToEncrypt = `${process.env.CASHFREE_CLIENT_ID}.${timestamp}`;
+      
+      // Support keys pasted directly into .env (which might have literal \n strings)
+      let publicKey = process.env.CASHFREE_PRIVATE_KEY.replace(/\\n/g, '\n').trim();
+      
+      // Add PEM headers if missing
+      if (!publicKey.includes('BEGIN')) {
+        publicKey = `-----BEGIN PUBLIC KEY-----\n${publicKey}\n-----END PUBLIC KEY-----`;
+      }
+      
+      try {
+        // Cashfree requires the payload to be encrypted using the provided Public Key
+        const buffer = Buffer.from(dataToEncrypt, 'utf8');
+        const encrypted = crypto.publicEncrypt(
+          {
+            key: publicKey,
+            padding: crypto.constants.RSA_PKCS1_OAEP_PADDING
+          },
+          buffer
+        );
+        const signature = encrypted.toString('base64');
+        
+        headers['x-cf-signature'] = signature;
+        headers['x-request-id'] = `req_${timestamp}`;
+      } catch (cryptoErr) {
+        console.warn('Failed to generate x-cf-signature. Check if CASHFREE_PRIVATE_KEY is a valid RSA Public Key.', cryptoErr.message);
+        // Will continue without signature. If Cashfree requires it, it will return a 4xx error.
+      }
+    }
     const response = await axios.post(
       baseUrl,
       {
@@ -84,30 +93,39 @@ const verifyPan = async ({ pan, name }) => {
     'x-client-secret': process.env.CASHFREE_CLIENT_SECRET
   };
 
-  if (isProd && process.env.CASHFREE_PRIVATE_KEY) {
-    const crypto = require('crypto');
-    const timestamp = Math.floor(Date.now() / 1000).toString();
-    const dataToEncrypt = `${process.env.CASHFREE_CLIENT_ID}.${timestamp}`;
-    
-    // Support keys pasted directly into .env (which might have literal \n strings)
-    const publicKey = process.env.CASHFREE_PRIVATE_KEY.replace(/\\n/g, '\n');
-    
-    // Cashfree requires the payload to be encrypted using the provided Public Key
-    const buffer = Buffer.from(dataToEncrypt, 'utf8');
-    const encrypted = crypto.publicEncrypt(
-      {
-        key: publicKey,
-        padding: crypto.constants.RSA_PKCS1_OAEP_PADDING
-      },
-      buffer
-    );
-    const signature = encrypted.toString('base64');
-    
-    headers['x-cf-signature'] = signature;
-    headers['x-request-id'] = `req_${timestamp}`;
-  }
-
   try {
+    if (isProd && process.env.CASHFREE_PRIVATE_KEY) {
+      const crypto = require('crypto');
+      const timestamp = Math.floor(Date.now() / 1000).toString();
+      const dataToEncrypt = `${process.env.CASHFREE_CLIENT_ID}.${timestamp}`;
+      
+      // Support keys pasted directly into .env (which might have literal \n strings)
+      let publicKey = process.env.CASHFREE_PRIVATE_KEY.replace(/\\n/g, '\n').trim();
+      
+      // Add PEM headers if missing
+      if (!publicKey.includes('BEGIN')) {
+        publicKey = `-----BEGIN PUBLIC KEY-----\n${publicKey}\n-----END PUBLIC KEY-----`;
+      }
+      
+      try {
+        // Cashfree requires the payload to be encrypted using the provided Public Key
+        const buffer = Buffer.from(dataToEncrypt, 'utf8');
+        const encrypted = crypto.publicEncrypt(
+          {
+            key: publicKey,
+            padding: crypto.constants.RSA_PKCS1_OAEP_PADDING
+          },
+          buffer
+        );
+        const signature = encrypted.toString('base64');
+        
+        headers['x-cf-signature'] = signature;
+        headers['x-request-id'] = `req_${timestamp}`;
+      } catch (cryptoErr) {
+        console.warn('Failed to generate x-cf-signature. Check if CASHFREE_PRIVATE_KEY is a valid RSA Public Key.', cryptoErr.message);
+        // Will continue without signature. If Cashfree requires it, it will return a 4xx error.
+      }
+    }
     const response = await axios.post(
       baseUrl,
       {
