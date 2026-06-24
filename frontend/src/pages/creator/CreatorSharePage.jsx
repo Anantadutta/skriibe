@@ -99,15 +99,7 @@ const CreatorSharePage = () => {
     setTimeout(() => setCopiedBio(false), 2000);
   };
 
-  // Deep Link opens
-  const openInstagram = () => {
-    // Instagram doesn't support web share intents, so we just open the site
-    window.open('https://instagram.com', '_blank');
-  };
-
-  const openYouTube = () => {
-    window.open('https://studio.youtube.com', '_blank');
-  };
+  // Deep Link opens moved below
 
   const generateQRCanvas = async () => {
     const qrCanvasSrc = qrRef2.current?.querySelector('canvas');
@@ -195,7 +187,7 @@ const CreatorSharePage = () => {
     return () => clearTimeout(timer);
   }, [handle, fullShareUrl]);
 
-  const openWhatsApp = async () => {
+  const shareWithQR = async (fallbackAction) => {
     try {
       if (navigator.canShare && navigator.share) {
         const canvas = await generateQRCanvas();
@@ -206,7 +198,7 @@ const CreatorSharePage = () => {
             if (navigator.canShare({ files: [file] })) {
               await navigator.share({
                 title: 'My skriibe',
-                text: shareUrl,
+                text: `Ask me anything on skriibe! ${fullShareUrl}`,
                 files: [file]
               });
               return;
@@ -219,25 +211,49 @@ const CreatorSharePage = () => {
     }
     
     // Fallback
-    window.open(`https://wa.me/?text=${encodeURIComponent(shareUrl)}`, '_blank');
+    fallbackAction();
+  };
+
+  const openInstagram = () => {
+    shareWithQR(() => {
+      window.open('https://instagram.com', '_blank');
+    });
+  };
+
+  const openYouTube = () => {
+    shareWithQR(() => {
+      window.open('https://studio.youtube.com', '_blank');
+    });
+  };
+
+  const openWhatsApp = () => {
+    shareWithQR(() => {
+      window.open(`https://wa.me/?text=${encodeURIComponent(shareUrl)}`, '_blank');
+    });
   };
 
   const openLinkedIn = () => {
-    window.open(`https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(fullShareUrl)}`, '_blank');
+    shareWithQR(() => {
+      window.open(`https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(fullShareUrl)}`, '_blank');
+    });
   };
 
   const openX = () => {
-    window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(fullShareUrl)}`, '_blank');
+    shareWithQR(() => {
+      window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(fullShareUrl)}`, '_blank');
+    });
   };
 
   const openFacebook = () => {
-    const fbUrl = creator?.facebook || creator?.socials?.facebook || creator?.socialLinks?.facebook;
-    if (fbUrl) {
-      const urlToOpen = fbUrl.startsWith('http') ? fbUrl : `https://facebook.com/${fbUrl}`;
-      window.open(urlToOpen, '_blank');
-    } else {
-      window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(fullShareUrl)}`, '_blank');
-    }
+    shareWithQR(() => {
+      const fbUrl = creator?.facebook || creator?.socials?.facebook || creator?.socialLinks?.facebook;
+      if (fbUrl) {
+        const urlToOpen = fbUrl.startsWith('http') ? fbUrl : `https://facebook.com/${fbUrl}`;
+        window.open(urlToOpen, '_blank');
+      } else {
+        window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(fullShareUrl)}`, '_blank');
+      }
+    });
   };
 
   const downloadSkriibeQRCode = async () => {
@@ -712,7 +728,9 @@ const CreatorSharePage = () => {
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <rect x="0" y="0" width="24" height="24" rx="5.4" fill="#000000" />
-                  <path d="M16.9 6h2.2l-4.8 5.5 5.6 7.5h-4.4l-3.5-4.5-3.9 4.5H5.8l5.2-5.9L5.5 6h2.3l3.1 4.1L16.9 6zM15.4 17.7h1.2L8.2 7.3H6.9l8.5 10.4z" fill="#ffffff" />
+                  <g transform="translate(4.4, 4) scale(0.666)">
+                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" fill="#ffffff" />
+                  </g>
                 </svg>
               </div>
               <span style={{ fontSize: '11px', color: '#94a3b8' }}>X</span>

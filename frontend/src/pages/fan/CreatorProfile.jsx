@@ -385,8 +385,8 @@ const CreatorProfile = () => {
             </div>
 
             {/* Bio */}
-            <div style={{ color: '#94a3b8', fontSize: '14px', lineHeight: '1.6', textAlign: 'center', padding: '0 16px', marginBottom: '32px' }}>
-              {creator.bio}
+            <div style={{ color: '#94a3b8', fontSize: '14px', lineHeight: '1.6', textAlign: 'center', padding: '0 16px', marginBottom: '32px', whiteSpace: 'pre-wrap' }}>
+              {creator.bio || "Welcome to my skriibe! Ask me anything. I'll get back to you within 24 hours"}
             </div>
 
             {/* Large Bottom Booking Card */}
@@ -418,7 +418,7 @@ const CreatorProfile = () => {
               </div>
 
               <div style={{ color: '#94a3b8', fontSize: '14px', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span style={{ color: '#fb923c' }}>⚡</span> Reply guaranteed within 24 hours
+                <span style={{ color: '#fb923c' }}>⚡</span> I'll reply within 24 hrs
               </div>
 
               <button
@@ -520,7 +520,7 @@ const CreatorProfile = () => {
             {/* Question Section */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
               <div style={{ background: '#131313', border: '1px solid #2a2a2a', borderRadius: '16px', padding: '12px 16px' }}>
-                <div style={{ color: '#64748b', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '8px' }}>ASK YOUR QUESTION <span style={{ color: '#ef4444' }}>*</span> <span style={{ color: '#475569', fontWeight: 'normal' }}>(MIN 20 CHARACTERS, MAX 500 CHARACTERS)</span></div>
+                <div style={{ color: '#64748b', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '8px' }}>ASK YOUR QUESTION <span style={{ color: '#ef4444' }}>*</span></div>
                 <textarea 
                   value={question}
                   onChange={(e) => setQuestion(e.target.value)}

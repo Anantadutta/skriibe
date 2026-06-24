@@ -483,12 +483,31 @@ router.post('/onboarding/pricing', verifyCreatorToken, async (req, res) => {
 router.post('/link-bank', verifyCreatorToken, async (req, res) => {
   const { pan, accountName, accountNumber, ifsc, phone } = req.body || {};
   await connectDB();
-  const updateData = { bankLinked: true };
-  if (pan) updateData.pan = pan;
+  
+  const creator = await Creator.findById(req.creator.creatorId);
+  if (!creator) {
+    res.clearCookie('creator_token', getClearCookieOptions());
+    return res.status(401).json({ success: false, error: 'Creator not found' });
+  }
+
+  const updateData = {};
+  if (pan) updateData.panNumber = pan; // Also fixes existing bug where pan was saved to non-existent 'pan' field instead of 'panNumber'
   if (accountName) updateData.bankAccountName = accountName;
   if (accountNumber) updateData.bankAccountNumber = accountNumber;
   if (ifsc) updateData.bankIfsc = ifsc;
   if (phone) updateData.phone = phone;
+
+  // STRICT SAFEGUARD: Only mark bankLinked if the current values perfectly match the verified values
+  const finalAccount = accountNumber || creator.bankAccountNumber;
+  const finalIfsc = ifsc || creator.bankIfsc;
+
+  if (finalAccount && finalIfsc && finalAccount === creator.verifiedAccountNumber && finalIfsc === creator.verifiedIfsc) {
+    updateData.bankLinked = true;
+  } else {
+    // A change was made that does not match verified records
+    updateData.bankLinked = false;
+    updateData.bankVerificationStatus = 'pending';
+  }
 
   const updatedCreator = await Creator.findByIdAndUpdate(
     req.creator.creatorId,

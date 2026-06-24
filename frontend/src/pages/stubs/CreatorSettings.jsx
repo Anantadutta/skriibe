@@ -608,7 +608,7 @@ const CreatorSettings = () => {
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                   <div style={{ color: '#ffffff', fontSize: '0.95rem', fontWeight: 700 }}>Question price</div>
-                  <div style={{ color: '#64748b', fontSize: '0.8rem' }}>What fans pay per question</div>
+                  <div style={{ color: '#64748b', fontSize: '0.8rem' }}>What fans pay per message.</div>
                 </div>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>

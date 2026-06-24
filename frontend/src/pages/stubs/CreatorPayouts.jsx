@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { mockCreator } from '../../mock/questions';
-import { getMe, linkBank, toggleLive } from '../../services/creatorApi';
+import { getMe, linkBank, toggleLive, verifyIfsc } from '../../services/creatorApi';
 
-const InputCard = ({ label, value, onChange, placeholder, type = 'text', isUppercase = false }) => {
+const InputCard = ({ label, value, onChange, placeholder, type = 'text', isUppercase = false, onBlur, error }) => {
   const [focused, setFocused] = useState(false);
   return (
+    <div>
     <div style={{
       background: '#1A1A1A',
-      border: focused ? '1px solid #29C5F6' : '1px solid #2A2A2A',
+      border: error ? '1px solid #EF4444' : (focused ? '1px solid #29C5F6' : '1px solid #2A2A2A'),
       borderRadius: '16px',
       padding: '16px 20px',
       display: 'flex',
@@ -31,7 +32,10 @@ const InputCard = ({ label, value, onChange, placeholder, type = 'text', isUpper
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         onFocus={() => setFocused(true)}
-        onBlur={() => setFocused(false)}
+        onBlur={(e) => {
+          setFocused(false);
+          if (onBlur) onBlur(e);
+        }}
         className="payout-input"
         style={{
           background: 'transparent',
@@ -46,6 +50,8 @@ const InputCard = ({ label, value, onChange, placeholder, type = 'text', isUpper
         }}
       />
     </div>
+    {error && <div style={{ color: '#EF4444', fontSize: '0.85rem', marginTop: '6px', paddingLeft: '8px', fontWeight: 600 }}>{error}</div>}
+    </div>
   );
 };
 
@@ -58,6 +64,7 @@ const CreatorPayouts = () => {
   const [accountNumber, setAccountNumber] = useState(creator.bankAccountNumber || '');
   const [confirmAccount, setConfirmAccount] = useState(creator.bankAccountNumber || '');
   const [ifsc, setIfsc] = useState(creator.bankIfsc || '');
+  const [ifscError, setIfscError] = useState('');
   const [panNumber, setPanNumber] = useState(creator.panNumber || creator.pan || '');
   const [phone, setPhone] = useState(creator.phone || '');
 
@@ -268,8 +275,26 @@ const CreatorPayouts = () => {
           <InputCard 
             label="IFSC CODE *" 
             value={ifsc} 
-            onChange={setIfsc} 
+            onChange={(val) => {
+              setIfsc(val);
+              if (ifscError) setIfscError('');
+            }} 
             placeholder="e.g. HDFC0001234"
+            onBlur={async () => {
+              if (ifsc.trim()) {
+                try {
+                  const res = await verifyIfsc(ifsc.trim());
+                  if (!res.data.verified) {
+                    setIfscError(res.data.reason || 'Invalid IFSC code');
+                  } else {
+                    setIfscError('');
+                  }
+                } catch (err) {
+                  console.error(err);
+                }
+              }
+            }}
+            error={ifscError}
           />
 
 
@@ -320,6 +345,24 @@ const CreatorPayouts = () => {
               }
               if (accountNumber !== confirmAccount) {
                 setErrorMessage('Account numbers do not match.');
+                setShowErrorModal(true);
+                return;
+              }
+              
+              // Explicitly verify IFSC code again in case user didn't trigger onBlur
+              try {
+                const ifscRes = await verifyIfsc(ifsc.trim());
+                if (!ifscRes.data || !ifscRes.data.verified) {
+                  setIfscError(ifscRes.data?.reason || 'Invalid IFSC code');
+                  setErrorMessage(ifscRes.data?.reason || 'Please enter a valid IFSC code.');
+                  setShowErrorModal(true);
+                  return;
+                } else {
+                  setIfscError(''); // clear any old error
+                }
+              } catch (err) {
+                console.error('IFSC Verification failed during submit:', err);
+                setErrorMessage('Could not verify IFSC. Please try again.');
                 setShowErrorModal(true);
                 return;
               }

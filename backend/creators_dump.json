@@ -91,7 +91,8 @@
     "_id": "6a39270995bfa155c2040702",
     "name": "Ananta",
     "price": 99,
-    "pricePerQuestion": 99
+    "pricePerQuestion": 99,
+    "handle": "ananta"
   },
   {
     "_id": "6a39273980f0d6b1931461d5",
@@ -137,22 +138,9 @@
   {
     "_id": "6a3950364efc0bdcfe2bebb2",
     "name": "Vasundhara Keshan",
-    "price": 99,
-    "pricePerQuestion": 99
-  },
-  {
-    "_id": "6a396d67a53dd1ba90363723",
-    "name": "Tarundeep Singh",
-    "price": 99,
-    "pricePerQuestion": 99,
-    "handle": "tarun0502"
-  },
-  {
-    "_id": "6a3975ada53dd1ba90363725",
-    "name": "Tarunadjfbadsjb",
-    "price": 99,
-    "pricePerQuestion": 99,
-    "handle": "adjfgdsigf"
+    "price": 10,
+    "pricePerQuestion": 10,
+    "handle": "whyyy"
   },
   {
     "_id": "6a3a1f2cffc8c3ddf884765b",
@@ -190,10 +178,17 @@
     "handle": "cfcdfcfd"
   },
   {
-    "_id": "6a3a57db46d03f2053b3bf3c",
-    "name": "Ananta .",
+    "_id": "6a3a6c13fe9780f577b2fd94",
+    "name": "Ananta Dutta",
     "price": 1,
     "pricePerQuestion": 1,
-    "handle": "dddddd"
+    "handle": "dded"
+  },
+  {
+    "_id": "6a3b75e28c388d7981372998",
+    "name": "Tarundeep Singh",
+    "price": 1,
+    "pricePerQuestion": 1,
+    "handle": "tarun_05"
   }
 ]

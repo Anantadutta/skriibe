@@ -29,7 +29,7 @@ const StepOne = () => (
                 Your DM inbox is overflowing.<br /><span className="italic text-skriibe-blue">You're earning <span className="text-white">Rs.0.</span></span>
             </h3>
             <p className="font-roboto text-gray-400 text-base leading-relaxed mb-6">
-                You created content. You built expertise. You attracted thousands of followers. And now they flood your DMs with questions — every single day. Finance. Fitness. Career. Business. Real questions from people who genuinely need help.
+                You created content. You built expertise. You attracted thousands of followers. And now they flood your DMs with questions every single day. Finance. Fitness. Career. Business. Real questions from people who genuinely need help.
             </p>
             <div className="font-roboto p-4 bg-skriibe-d3 rounded-xl border-l-[3px] border-skriibe-blue text-sm text-gray-400 leading-relaxed">
                 The average Indian creator with 10,000 followers gets <strong>47 unanswered DMs per week.</strong> At Rs.99 per reply, that's Rs.4,653 left on the table — every week.
@@ -114,13 +114,13 @@ const StepTwo = ({ theme }) => {
             {/* 1. Text Material - Comes first on mobile and desktop */}
             <div className="flex flex-col">
                 <div className="inline-flex w-fit items-center gap-2 px-3.5 py-1.5 rounded-full bg-skriibe-blue/10 border border-skriibe-blue/20 text-[11px] font-bold text-skriibe-blue tracking-wider uppercase mb-5">
-                    Step 02 · 5-minute setup
+                    Step 02 · 2-minute setup
                 </div>
                 <h3 className="font-libre text-[clamp(32px,4vw,48px)] leading-[1.1] mb-6 text-white">
                     Your skriibe page.<br /><span className="italic text-skriibe-blue">One link. That's it.</span>
                 </h3>
                 <p className="font-roboto text-gray-400 text-lg leading-relaxed mb-8">
-                    Sign up with your phone number. Enter your expertise. Choose your price. Your page goes live at <span className="text-skriibe-blue font-semibold">skriibe.com/@yourhandle</span>. Drop it in your Instagram bio. You're done.
+                    Sign up with your emailid. Enter your expertise. Choose your price. Your page goes live at <span className="text-skriibe-blue font-semibold">skriibe.com/@yourhandle</span>. Drop it in your Instagram bio. You're done.
                 </p>
 
                 <div className="font-roboto p-6 bg-skriibe-d3 rounded-2xl border-l-[4px] border-skriibe-blue text-sm md:text-base text-gray-400 leading-relaxed mb-10">

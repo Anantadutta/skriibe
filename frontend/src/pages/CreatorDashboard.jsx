@@ -43,7 +43,7 @@ const CreatorDashboard = () => {
       try {
         const res = await getMe();
         if (res.success) {
-          if (!res.creator.phone) {
+          if (!res.creator.handle && !res.creator.onboardingComplete && !res.creator.ama_enabled) {
             navigate('/onboard/profile', { replace: true });
             return;
           }

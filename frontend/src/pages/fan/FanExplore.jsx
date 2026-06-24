@@ -3,6 +3,7 @@ import CreatorCard from '../../components/discovery/CreatorCard';
 import FanNavbar from '../../components/fan/layout/FanNavbar';
 import FanBottomNav from '../../components/fan/layout/FanBottomNav';
 import { getLiveCreators } from '../../services/discoveryApi';
+import { getFanMe } from '../../services/fanApi';
 import { io } from 'socket.io-client';
 
 const PREDEFINED_CATEGORIES = [
@@ -28,6 +29,7 @@ const categories = [
 
 const FanExplore = () => {
   const [creators, setCreators] = useState([]);
+  const [fanCreatorHandle, setFanCreatorHandle] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
   const [selectedCustomCategory, setSelectedCustomCategory] = useState(null);
@@ -79,6 +81,18 @@ const FanExplore = () => {
       ));
     });
 
+    const fetchFanProfile = async () => {
+      try {
+        const res = await getFanMe();
+        if (res.success && res.fan && res.fan.creatorHandle) {
+          setFanCreatorHandle(res.fan.creatorHandle);
+        }
+      } catch (err) {
+        console.error('Failed to fetch fan profile', err);
+      }
+    };
+    fetchFanProfile();
+
     return () => {
       socket.disconnect();
     };
@@ -111,6 +125,7 @@ const FanExplore = () => {
 
   const filteredCreators = creators.filter(c => {
     if (c.isPaused) return false;
+    if (c.handle === fanCreatorHandle) return false;
     if (activeCategory === 'Others' && selectedCustomCategory) {
       return (c.expertise || []).includes(selectedCustomCategory);
     }
@@ -130,8 +145,19 @@ const FanExplore = () => {
       flexDirection: 'column'
     }}>
       <FanNavbar />
-      <main style={{ flex: 1, padding: 'min(40px, 5vw)', maxWidth: '1200px', margin: '0 auto', width: '100%', boxSizing: 'border-box', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+      <main style={{ flex: 1, padding: 'min(40px, 5vw) min(40px, 5vw) 0', maxWidth: '1200px', margin: '0 auto', width: '100%', boxSizing: 'border-box', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
         
+        {/* Scrollable Content Area */}
+        <div 
+          ref={gridRef}
+          style={{ 
+            flex: 1, 
+            overflowY: 'auto', 
+            paddingRight: '10px',
+            display: 'flex',
+            flexDirection: 'column'
+          }}
+        >
         {/* Search & Filters */}
         <div style={{ marginBottom: '40px' }}>
           <div style={{
@@ -224,42 +250,16 @@ const FanExplore = () => {
               {searchQuery ? 'Search results' : 'Explore creators'}
             </h2>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              {currentPage > 1 && (
-                <button 
-                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                  style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: '18px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '32px', height: '32px', borderRadius: '50%', backgroundColor: 'rgba(255,255,255,0.05)' }}
-                >
-                  &lt;
-                </button>
-              )}
-              {currentPage < totalPages && (
-                <button 
-                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                  style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: '18px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '32px', height: '32px', borderRadius: '50%', backgroundColor: 'rgba(255,255,255,0.05)' }}
-                >
-                  &gt;
-                </button>
-              )}
-            </div>
-            <div style={{ color: '#94a3b8', fontSize: '14px' }}>
-              {filteredCreators.length} creators
-            </div>
-          </div>
         </div>
 
         <div 
-          ref={gridRef}
           style={{
             display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
-          gap: '20px',
-          flex: 1,
-          overflowY: 'auto',
-          paddingBottom: '20px',
-          paddingRight: '10px' // for scrollbar
-        }}>
+            gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
+            gap: '20px',
+            paddingBottom: '20px'
+          }}
+        >
           {paginatedCreators.map(creator => (
             <CreatorCard key={creator.id || creator.handle} creator={creator} />
           ))}
@@ -279,6 +279,38 @@ const FanExplore = () => {
             </div>
           )}
         </div>
+        </div>
+
+        {/* Pagination Controls at Bottom */}
+        {filteredCreators.length > 0 && (
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '16px', marginTop: '16px', marginBottom: '16px', flexShrink: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              {currentPage > 1 && (
+                <button 
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  style={{ background: 'rgba(255,255,255,0.05)', border: 'none', color: '#fff', fontSize: '18px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '40px', height: '40px', borderRadius: '50%', transition: 'background 0.2s' }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+                >
+                  &lt;
+                </button>
+              )}
+              {currentPage < totalPages && (
+                <button 
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  style={{ background: 'rgba(255,255,255,0.05)', border: 'none', color: '#fff', fontSize: '18px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '40px', height: '40px', borderRadius: '50%', transition: 'background 0.2s' }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+                >
+                  &gt;
+                </button>
+              )}
+            </div>
+            <div style={{ color: '#94a3b8', fontSize: '14px' }}>
+              Page {currentPage} of {Math.max(1, totalPages)} • {filteredCreators.length} creators
+            </div>
+          </div>
+        )}
       </main>
       <FanBottomNav />
     </div>

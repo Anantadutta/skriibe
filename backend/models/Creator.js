@@ -31,6 +31,8 @@ const CreatorSchema = new mongoose.Schema({
   bankAccountName: { type: String },
   bankAccountNumber: { type: String },
   bankIfsc: { type: String },
+  verifiedAccountNumber: { type: String },
+  verifiedIfsc: { type: String },
   bankVerificationStatus: { type: String, enum: ['pending', 'verified', 'failed'], default: 'pending' },
   bankNameAtBank: { type: String },
   bankVerifiedAt: { type: Date },

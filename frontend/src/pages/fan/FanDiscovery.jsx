@@ -27,6 +27,7 @@ const FanDiscovery = () => {
   const [loading, setLoading] = useState(true);
   const [fanName, setFanName] = useState('Fan');
   const [fanAvatar, setFanAvatar] = useState(null);
+  const [fanCreatorHandle, setFanCreatorHandle] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
   const debounceTimeout = useRef(null);
@@ -97,6 +98,9 @@ const FanDiscovery = () => {
           if (res.fan.avatarUrl) {
             setFanAvatar(res.fan.avatarUrl);
           }
+          if (res.fan.creatorHandle) {
+            setFanCreatorHandle(res.fan.creatorHandle);
+          }
         }
       } catch (err) {
         console.error('Failed to fetch fan profile', err);
@@ -117,7 +121,7 @@ const FanDiscovery = () => {
     };
   }, []);
 
-  const filteredCreators = creators.filter(c => !c.isPaused);
+  const filteredCreators = creators.filter(c => !c.isPaused && c.handle !== fanCreatorHandle);
   const isSearching = searchQuery !== '' || activeCategory !== 'All';
   const displayCreators = isSearching ? filteredCreators : filteredCreators.slice(0, 4);
 

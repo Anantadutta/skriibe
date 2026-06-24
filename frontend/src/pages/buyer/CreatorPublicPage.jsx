@@ -491,7 +491,7 @@ const CreatorPublicPage = () => {
 
           <div style={{ background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '16px', padding: '16px', display: 'flex', flexDirection: 'column' }}>
             <div style={{ color: '#64748b', fontSize: '0.7rem', fontWeight: '800', letterSpacing: '2px', textTransform: 'uppercase' }}>
-              ASK YOUR QUESTION <span style={{ color: '#ef4444' }}>*</span> <span style={{ color: '#64748b' }}>(MIN 20 CHARACTERS, MAX 500 CHARACTERS)</span>
+              ASK YOUR QUESTION <span style={{ color: '#ef4444' }}>*</span>
             </div>
             <textarea 
               className="unified-input"

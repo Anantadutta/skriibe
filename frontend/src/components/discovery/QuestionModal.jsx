@@ -203,7 +203,7 @@ const QuestionModal = ({ creator, onClose }) => {
               </div>
 
               <div style={{ color: '#94a3b8', fontSize: '14px', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span style={{ color: '#fb923c' }}>⚡</span> Reply guaranteed within 24 hours
+                <span style={{ color: '#fb923c' }}>⚡</span> I'll reply within 24 hrs
               </div>
 
               <button

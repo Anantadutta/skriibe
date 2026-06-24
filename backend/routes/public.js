@@ -99,7 +99,8 @@ router.get('/creators', async (req, res) => {
       const cleanSearch = search.replace(/^@/, '');
       query.$or = [
         { name: { $regex: cleanSearch, $options: 'i' } },
-        { handle: { $regex: cleanSearch, $options: 'i' } }
+        { handle: { $regex: cleanSearch, $options: 'i' } },
+        { instagramHandle: { $regex: cleanSearch, $options: 'i' } }
       ];
     }
 

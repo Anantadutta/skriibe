@@ -31,6 +31,13 @@ const CreatorCard = ({ creator }) => {
     return `${time.toFixed(1)}h`;
   };
 
+  const truncateBio = (text) => {
+    if (!text) return '';
+    const words = text.trim().split(/\s+/);
+    if (words.length <= 4) return text;
+    return words.slice(0, 4).join(' ') + '...';
+  };
+
   return (
     <div style={{
       background: '#0B0B14',
@@ -42,6 +49,8 @@ const CreatorCard = ({ creator }) => {
       color: '#ffffff',
       transition: 'transform 0.2s, box-shadow 0.2s',
       boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
+      height: '100%',
+      boxSizing: 'border-box'
     }}
     onMouseEnter={(e) => {
       e.currentTarget.style.transform = 'translateY(-2px)';
@@ -139,13 +148,13 @@ const CreatorCard = ({ creator }) => {
         color: '#94a3b8',
         fontSize: '14px',
         lineHeight: '1.5',
-        marginTop: '20px',
+        marginTop: 'auto',
         display: '-webkit-box',
         WebkitLineClamp: 2,
         WebkitBoxOrient: 'vertical',
         overflow: 'hidden',
       }}>
-        {bio || "Welcome to my skriibe! Ask me anything. I'll get back to you within 24 hours"}
+        {truncateBio(bio || "Welcome to my skriibe! Ask me anything. I'll get back to you within 24 hours")}
       </div>
 
       {/* Stats Inner Card */}
@@ -166,7 +175,7 @@ const CreatorCard = ({ creator }) => {
             ₹
           </div>
           <span style={{ fontSize: '18px', fontWeight: '800', color: '#ffffff' }}>₹{displayPrice}</span>
-          <span style={{ fontSize: '10px', color: '#64748b', marginTop: '2px', whiteSpace: 'nowrap', textAlign: 'center' }}>Per Question</span>
+          <span style={{ fontSize: '10px', color: '#64748b', marginTop: '2px', whiteSpace: 'nowrap', textAlign: 'center' }}>Per Message</span>
         </div>
         
         <div style={{ width: '1px', height: '40px', background: '#2a2a35', margin: '0 4px' }}></div>

@@ -14,7 +14,7 @@ const Question = require('../models/Question');
 const AdminAlert = require('../models/AdminAlert');
 const { sendWelcomeEmail, sendProfileSubmittedEmail,
  sendQuestionAnsweredEmail, sendFollowUpAnsweredEmail } = require('../utils/emailService');
-const { verifyBankAccount, verifyPan } = require('../utils/cashfreeService');
+const { verifyBankAccount, verifyPan, verifyIfsc } = require('../utils/cashfreeService');
 
 const { verifyCreatorToken } = require('../middleware/auth');
 
@@ -587,9 +587,21 @@ router.post('/delete-account', async (req, res) => {
       });
     }
 
-    // Delete creator
+    // Delete creator, associated fan, and creator profile
     const Creator = require('../models/Creator');
-    await Creator.findByIdAndDelete(creatorId);
+    const creatorToDelete = await Creator.findById(creatorId);
+    
+    if (creatorToDelete) {
+      const Fan = require('../models/Fan');
+      const CreatorProfile = require('../models/CreatorProfile');
+      
+      const fanToDelete = await Fan.findOne({ email: creatorToDelete.email });
+      if (fanToDelete) {
+        await CreatorProfile.findOneAndDelete({ user: fanToDelete._id });
+        await Fan.findByIdAndDelete(fanToDelete._id);
+      }
+      await Creator.findByIdAndDelete(creatorId);
+    }
 
     res.json({ success: true });
   } catch (err) {
@@ -855,6 +867,61 @@ router.post('/logout', (req, res) => {
 });
 
 /**
+ * @route POST /api/creator/verify-ifsc
+ * @desc Verify IFSC code using Cashfree API
+ */
+router.post('/verify-ifsc', verifyCreatorToken, async (req, res) => {
+  try {
+    const { ifsc } = req.body;
+
+    if (!ifsc) {
+      return res.status(400).json({ message: 'IFSC is required.' });
+    }
+
+    // Basic IFSC format validation
+    const ifscRegex = /^[A-Z]{4}0[A-Z0-9]{6}$/;
+    if (!ifscRegex.test(ifsc)) {
+      return res.status(400).json({ 
+        message: 'Invalid IFSC format.', 
+        verified: false, 
+        reason: 'Invalid format.' 
+      });
+    }
+
+    const verificationResult = await verifyIfsc(ifsc);
+    console.log(`[IFSC Verification API] IFSC: ${ifsc}`, verificationResult);
+
+    // If it's an error from Cashfree (status code outside 2xx)
+    if (verificationResult.type === 'not_found_error' || verificationResult.code === 'ifsc_not_found' || verificationResult.type === 'validation_error') {
+      return res.json({
+        verified: false,
+        reason: verificationResult.message || 'Invalid IFSC code',
+        raw: verificationResult
+      });
+    }
+
+    // Explicitly check for status: 'VALID' in a successful 200 response
+    if (verificationResult.status === 'VALID') {
+      return res.json({
+        verified: true,
+        data: verificationResult
+      });
+    }
+
+    // Fallback if status is something else
+    return res.json({
+      verified: false,
+      reason: 'IFSC could not be verified',
+      raw: verificationResult
+    });
+
+  } catch (error) {
+    console.error('Error in /verify-ifsc route:', error);
+    res.status(500).json({ message: 'Internal server error', error: error.message });
+  }
+});
+
+/**
  * @route POST /api/creator/verify-bank
  * @desc Verify bank account using Cashfree API
  */
@@ -978,6 +1045,8 @@ router.post('/verify-bank', verifyCreatorToken, async (req, res) => {
     creator.bankAccountNumber = bank_account;
     creator.bankIfsc = ifsc;
     creator.bankAccountName = name || ''; // user-provided name
+    creator.verifiedAccountNumber = bank_account;
+    creator.verifiedIfsc = ifsc;
     creator.bankVerificationStatus = 'verified';
     creator.bankNameAtBank = nameAtBank;
     creator.bankVerifiedAt = new Date();

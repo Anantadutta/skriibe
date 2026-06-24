@@ -22,7 +22,7 @@ const verifyBankAccount = async ({ bank_account, ifsc, name, phone }) => {
   };
 
   try {
-    if (isProd && process.env.CASHFREE_PRIVATE_KEY) {
+    if (process.env.CASHFREE_PRIVATE_KEY) {
       const crypto = require('crypto');
       const timestamp = Math.floor(Date.now() / 1000).toString();
       const dataToEncrypt = `${process.env.CASHFREE_CLIENT_ID}.${timestamp}`;
@@ -75,6 +75,70 @@ const verifyBankAccount = async ({ bank_account, ifsc, name, phone }) => {
 };
 
 /**
+ * Calls the Cashfree IFSC Verification API.
+ * @param {string} ifsc
+ * @returns {Promise<Object>} The response data from Cashfree.
+ */
+const verifyIfsc = async (ifsc) => {
+  const isProd = process.env.CASHFREE_ENV === 'production';
+  const baseUrl = isProd 
+    ? `https://api.cashfree.com/verification/ifsc` 
+    : `https://sandbox.cashfree.com/verification/ifsc`;
+
+  const headers = {
+    'Content-Type': 'application/json',
+    'x-client-id': process.env.CASHFREE_CLIENT_ID,
+    'x-client-secret': process.env.CASHFREE_CLIENT_SECRET
+  };
+
+  try {
+    if (process.env.CASHFREE_PRIVATE_KEY) {
+      const crypto = require('crypto');
+      const timestamp = Math.floor(Date.now() / 1000).toString();
+      const dataToEncrypt = `${process.env.CASHFREE_CLIENT_ID}.${timestamp}`;
+      
+      let publicKey = process.env.CASHFREE_PRIVATE_KEY.replace(/\\n/g, '\n').trim();
+      
+      if (!publicKey.includes('BEGIN')) {
+        publicKey = `-----BEGIN PUBLIC KEY-----\n${publicKey}\n-----END PUBLIC KEY-----`;
+      }
+      
+      try {
+        const buffer = Buffer.from(dataToEncrypt, 'utf8');
+        const encrypted = crypto.publicEncrypt(
+          {
+            key: publicKey,
+            padding: crypto.constants.RSA_PKCS1_OAEP_PADDING
+          },
+          buffer
+        );
+        const signature = encrypted.toString('base64');
+        
+        headers['x-cf-signature'] = signature;
+        headers['x-request-id'] = `req_${timestamp}`;
+      } catch (cryptoErr) {
+        console.warn('Failed to generate x-cf-signature. Check if CASHFREE_PRIVATE_KEY is a valid RSA Public Key.', cryptoErr.message);
+      }
+    }
+    
+    // Add verification_id as per Cashfree docs
+    const verification_id = `ifsc_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+
+    const response = await axios.post(
+      baseUrl,
+      { verification_id, ifsc },
+      { headers }
+    );
+    return response.data;
+  } catch (error) {
+    if (error.response && error.response.data) {
+      return error.response.data;
+    }
+    throw error;
+  }
+};
+
+/**
  * Calls the Cashfree PAN Verification Sync API.
  * @param {Object} params
  * @param {string} params.pan
@@ -94,7 +158,7 @@ const verifyPan = async ({ pan, name }) => {
   };
 
   try {
-    if (isProd && process.env.CASHFREE_PRIVATE_KEY) {
+    if (process.env.CASHFREE_PRIVATE_KEY) {
       const crypto = require('crypto');
       const timestamp = Math.floor(Date.now() / 1000).toString();
       const dataToEncrypt = `${process.env.CASHFREE_CLIENT_ID}.${timestamp}`;
@@ -146,5 +210,6 @@ const verifyPan = async ({ pan, name }) => {
 
 module.exports = {
   verifyBankAccount,
-  verifyPan
+  verifyPan,
+  verifyIfsc
 };

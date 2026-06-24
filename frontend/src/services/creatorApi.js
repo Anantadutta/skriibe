@@ -27,6 +27,8 @@ export const toggleLive = (isLive) => api.post('/creators/toggle-live', { isLive
 
 export const linkBank = (data) => api.post('/creator/verify-bank', data);
 
+export const verifyIfsc = (ifsc) => api.post('/creator/verify-ifsc', { ifsc });
+
 export const logout = () => api.post('/creators/logout');
 
 export const uploadAvatar = (formData) => api.post('/creators/avatar', formData, {

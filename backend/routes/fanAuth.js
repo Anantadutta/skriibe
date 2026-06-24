@@ -174,9 +174,16 @@ router.post('/avatar', verifyFanToken, upload.single('avatar'), async (req, res)
 router.get('/me', verifyFanToken, async (req, res) => {
   try {
     await connectDB();
-    const fan = await Fan.findById(req.fan.fanId).select('-password');
+    const fan = await Fan.findById(req.fan.fanId).select('-password').lean();
     if (!fan) {
       return res.status(404).json({ success: false, message: 'Fan not found' });
+    }
+    if (fan.roles && fan.roles.includes('creator')) {
+      const Creator = require('../models/Creator');
+      const creatorDoc = await Creator.findOne({ email: fan.email });
+      if (creatorDoc) {
+        fan.creatorHandle = creatorDoc.handle;
+      }
     }
     res.json({ success: true, fan });
   } catch (err) {
@@ -574,12 +581,10 @@ router.delete('/profile', verifyFanToken, async (req, res) => {
     
     await Fan.findByIdAndDelete(req.fan.fanId);
     
-    if (fan.roles && fan.roles.includes('creator')) {
-      const Creator = require('../models/Creator');
-      const CreatorProfile = require('../models/CreatorProfile');
-      await Creator.findOneAndDelete({ fanId: fan._id });
-      await CreatorProfile.findOneAndDelete({ user: fan._id });
-    }
+    const Creator = require('../models/Creator');
+    const CreatorProfile = require('../models/CreatorProfile');
+    await Creator.findOneAndDelete({ email: fan.email });
+    await CreatorProfile.findOneAndDelete({ user: fan._id });
 
     res.json({ success: true, message: 'Account deleted successfully' });
   } catch (err) {
