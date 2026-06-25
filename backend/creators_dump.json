@@ -1,12 +1,5 @@
 [
   {
-    "_id": "6a37a3f73ac733675a603aa7",
-    "name": "Ananta Dutta",
-    "price": 99,
-    "pricePerQuestion": 99,
-    "handle": "anantadutta"
-  },
-  {
     "_id": "6a37b08856041c6f734aa520",
     "name": "ghbthrb",
     "price": 49,
@@ -178,17 +171,22 @@
     "handle": "cfcdfcfd"
   },
   {
-    "_id": "6a3a6c13fe9780f577b2fd94",
-    "name": "Ananta Dutta",
-    "price": 1,
-    "pricePerQuestion": 1,
-    "handle": "dded"
-  },
-  {
     "_id": "6a3b75e28c388d7981372998",
     "name": "Tarundeep Singh",
     "price": 1,
     "pricePerQuestion": 1,
     "handle": "tarun_05"
+  },
+  {
+    "_id": "6a3c0c7e9852e95029e50dcd",
+    "name": "",
+    "price": 99,
+    "pricePerQuestion": 99
+  },
+  {
+    "_id": "6a3c1ca23c05763435a98c38",
+    "name": "",
+    "price": 99,
+    "pricePerQuestion": 99
   }
 ]

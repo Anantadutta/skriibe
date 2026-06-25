@@ -20,11 +20,13 @@ const CreatorConnectInstagram = () => {
       const username = params.get('username');
       const followers = params.get('followers');
       const pic = params.get('pic');
+      const name = params.get('name');
       
       const igDataObj = {
         handle: username,
         followers: followers ? parseInt(followers, 10) : 0,
-        avatarUrl: pic ? decodeURIComponent(pic) : ''
+        avatarUrl: pic ? decodeURIComponent(pic) : '',
+        name: name ? decodeURIComponent(name) : ''
       };
       
       setIgData(igDataObj);
@@ -39,9 +41,9 @@ const CreatorConnectInstagram = () => {
 
   const handleConnect = () => {
     setLoading(true);
-    // Redirect to backend instagram auth route
     const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-    window.location.href = `${apiUrl}/auth/instagram`;
+    const stateToken = localStorage.getItem('creator_token') || '';
+    window.location.href = `${apiUrl}/auth/instagram?state=${stateToken}`;
   };
 
   const handleSkip = () => {

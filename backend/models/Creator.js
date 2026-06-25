@@ -47,6 +47,14 @@ const CreatorSchema = new mongoose.Schema({
   instagramHandle: { type: String },
   instagramFollowers: { type: mongoose.Schema.Types.Mixed },
   instagramAccessToken: { type: String }, // encrypted
+  instagramMedia: [{
+    id: String,
+    caption: String,
+    media_type: String,
+    media_url: String,
+    thumbnail_url: String,
+    permalink: String
+  }],
 
   stats: {
     totalAnswered: { type: Number, default: 0 },

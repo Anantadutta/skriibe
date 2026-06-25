@@ -432,8 +432,9 @@ router.get('/facebook/callback', async (req, res, next) => {
 
 router.get('/instagram', (req, res) => {
   const clientId = process.env.INSTAGRAM_APP_ID;
-  const redirectUri = process.env.INSTAGRAM_REDIRECT_URI || 'http://localhost:5000/api/auth/instagram/callback';
-  const url = `https://www.instagram.com/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&scope=instagram_business_basic,instagram_business_manage_messages,instagram_business_manage_comments&response_type=code`;
+  const redirectUri = process.env.INSTAGRAM_REDIRECT_URI;
+  const state = req.query.state || '';
+  const url = `https://www.instagram.com/oauth/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=instagram_business_basic,instagram_business_manage_messages,instagram_business_manage_comments&response_type=code&state=${state}`;
   res.redirect(url);
 });
 
@@ -447,7 +448,7 @@ router.get('/instagram/callback', async (req, res) => {
 
     const clientId = process.env.INSTAGRAM_APP_ID;
     const clientSecret = process.env.INSTAGRAM_APP_SECRET;
-    const redirectUri = process.env.INSTAGRAM_REDIRECT_URI || 'http://localhost:5000/api/auth/instagram/callback';
+    const redirectUri = process.env.INSTAGRAM_REDIRECT_URI;
 
     // Step 1 - Exchange code for short-lived access token
     const tokenRes = await axios.post('https://api.instagram.com/oauth/access_token', new URLSearchParams({
@@ -464,34 +465,63 @@ router.get('/instagram/callback', async (req, res) => {
     const longLivedToken = longTokenRes.data.access_token;
 
     // Step 3 - Fetch Instagram profile
-    const userRes = await axios.get(`https://graph.instagram.com/v19.0/me?fields=id,username,name,profile_picture_url,followers_count&access_token=${longLivedToken}`);
+    const userRes = await axios.get(`https://graph.instagram.com/v19.0/me?fields=id,username,name,profile_picture_url,followers_count,account_type&access_token=${longLivedToken}`);
     
-    const { username, name, profile_picture_url, followers_count } = userRes.data;
+    const { username, name, profile_picture_url, followers_count, account_type } = userRes.data;
+
+    if (account_type && account_type.toUpperCase() === 'PERSONAL') {
+      return res.redirect(`${frontendUrl}/creator/connect-instagram?instagram=error&reason=requires_professional_account`);
+    }
+
+    // Step 4 - Fetch recent media
+    let instagramMedia = [];
+    try {
+      const mediaRes = await axios.get(`https://graph.instagram.com/v19.0/me/media?fields=id,caption,media_type,media_url,thumbnail_url,permalink&limit=6&access_token=${longLivedToken}`);
+      instagramMedia = mediaRes.data.data || [];
+    } catch (mediaErr) {
+      console.error('Failed to fetch Instagram media:', mediaErr.response?.data || mediaErr.message);
+    }
 
     // Encrypt token
     const cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(process.env.ENCRYPTION_KEY || '12345678901234567890123456789012'), Buffer.alloc(16, 0));
     let encryptedToken = cipher.update(longLivedToken, 'utf8', 'hex');
     encryptedToken += cipher.final('hex');
 
-    // Step 4 - Update DB if user is logged in
+    // Step 5 - Update DB if user is logged in
     const token = req.query.state || req.cookies?.creator_token;
     if (token) {
       const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret');
       await connectDB();
-      await Creator.findByIdAndUpdate(decoded.creatorId, {
-        instagramConnected: true,
-        instagramHandle: username,
-        instagramFollowers: followers_count || 0,
-        instagramAccessToken: encryptedToken
-      });
+      const existingCreator = await Creator.findById(decoded.creatorId);
+      if (existingCreator) {
+        const updateData = {
+          instagramConnected: true,
+          instagramHandle: username,
+          instagramFollowers: followers_count || 0,
+          instagramAccessToken: encryptedToken,
+          instagramMedia: instagramMedia
+        };
+        
+        if (!existingCreator.name && name) updateData.name = name;
+        if (!existingCreator.handle && username) updateData.handle = username;
+        if (!existingCreator.avatarUrl && profile_picture_url) updateData.avatarUrl = profile_picture_url;
+        
+        await Creator.findByIdAndUpdate(decoded.creatorId, updateData);
+      }
     }
 
     // Redirect to frontend
-    let redirectUrl = `${frontendUrl}/creator/connect-instagram?instagram=success&username=${username}`;
-    if (followers_count !== undefined) {
+    let redirectUrl = `${frontendUrl}/creator/connect-instagram?instagram=success`;
+    if (username && username !== 'undefined') {
+      redirectUrl += `&username=${encodeURIComponent(username)}`;
+    }
+    if (name && name !== 'undefined') {
+      redirectUrl += `&name=${encodeURIComponent(name)}`;
+    }
+    if (followers_count !== undefined && followers_count !== 'undefined') {
       redirectUrl += `&followers=${followers_count}`;
     }
-    if (profile_picture_url) {
+    if (profile_picture_url && profile_picture_url !== 'undefined') {
       redirectUrl += `&pic=${encodeURIComponent(profile_picture_url)}`;
     }
     

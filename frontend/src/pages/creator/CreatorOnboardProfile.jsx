@@ -33,6 +33,7 @@ const CreatorOnboardProfile = () => {
   const [avatarFile, setAvatarFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [loadingCreator, setLoadingCreator] = useState(true);
+  const [instagramMedia, setInstagramMedia] = useState([]);
   const [error, setError] = useState('');
 
   const [bioFocused, setBioFocused] = useState(false);
@@ -76,6 +77,9 @@ const CreatorOnboardProfile = () => {
           if (creator.avatarUrl) {
             setAvatarPreview(creator.avatarUrl);
           }
+          if (creator.instagramMedia) {
+            setInstagramMedia(creator.instagramMedia);
+          }
         }
       } catch (err) {
         console.error('Failed to fetch creator data:', err);
@@ -95,10 +99,11 @@ const CreatorOnboardProfile = () => {
         const data = JSON.parse(decodeURIComponent(igData));
         setForm(prev => ({
           ...prev,
+          handle: data.handle || prev.handle || '',
           instagramHandle: data.handle || prev.instagramHandle,
           instagramFollowers: data.followers || prev.instagramFollowers,
           instagramConnected: true,
-          name: data.name || prev.name,
+          name: data.name || prev.name || '',
           bio: data.bio || prev.bio,
         }));
         if (data.avatarUrl) setAvatarPreview(data.avatarUrl);
@@ -115,7 +120,8 @@ const CreatorOnboardProfile = () => {
 
   const handleInstagramConnect = () => {
     const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-    window.location.href = `${apiUrl}/auth/instagram`;
+    const stateToken = localStorage.getItem('creator_token') || '';
+    window.location.href = `${apiUrl}/auth/instagram?state=${stateToken}`;
   };
 
   const handleToggleTag = (tag) => {
@@ -529,7 +535,108 @@ const CreatorOnboardProfile = () => {
               marginBottom: '24px'
             }}>
               
+              {/* INSTAGRAM CONNECT CARD */}
+              <div className="ig-connect-card" style={{ display: 'block' }}>
+                {form.instagramConnected ? (
+                  <div style={{ padding: '8px 0' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '8px' }}>
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="url(#ig-gradient)" stroke="none">
+                        <path d="M7.75 2h8.5A5.75 5.75 0 0 1 22 7.75v8.5A5.75 5.75 0 0 1 16.25 22h-8.5A5.75 5.75 0 0 1 2 16.25v-8.5A5.75 5.75 0 0 1 7.75 2z" opacity="0.1"/>
+                        <path d="M16.25 2h-8.5A5.75 5.75 0 0 0 2 7.75v8.5A5.75 5.75 0 0 0 7.75 22h8.5A5.75 5.75 0 0 0 22 16.25v-8.5A5.75 5.75 0 0 0 16.25 2zm3.75 14.25A3.75 3.75 0 0 1 16.25 20h-8.5A3.75 3.75 0 0 1 4 16.25v-8.5A3.75 3.75 0 0 1 7.75 4h8.5A3.75 3.75 0 0 1 20 7.75v8.5z" fill="url(#ig-gradient)"/>
+                        <path d="M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10zm0 8a3 3 0 1 1 0-6 3 3 0 0 1 0 6z" fill="url(#ig-gradient)"/>
+                        <circle cx="17" cy="7" r="1.2" fill="url(#ig-gradient)"/>
+                      </svg>
+                      <h3 style={{ fontSize: '16px', fontWeight: 700, margin: '0', color: '#fff' }}>@{form.instagramHandle}</h3>
+                    </div>
+                    <p style={{ fontSize: '13px', color: '#06b6d4', margin: '0 0 16px', fontWeight: 600 }}>
+                      {Number(form.instagramFollowers).toLocaleString()} Followers
+                    </p>
+                    <button 
+                      onClick={handleInstagramConnect}
+                      style={{
+                        background: 'transparent',
+                        border: '1px solid rgba(255,255,255,0.2)',
+                        color: '#94a3b8',
+                        padding: '6px 16px',
+                        borderRadius: '999px',
+                        fontSize: '11px',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Reconnect Instagram
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <div style={{ marginBottom: '16px' }}>
+                      <svg width="40" height="40" viewBox="0 0 24 24" fill="url(#ig-gradient)" stroke="none">
+                        <defs>
+                          <linearGradient id="ig-gradient" x1="0%" y1="100%" x2="100%" y2="0%">
+                            <stop offset="0%" stopColor="#f09433"/>
+                            <stop offset="25%" stopColor="#e6683c"/>
+                            <stop offset="50%" stopColor="#dc2743"/>
+                            <stop offset="75%" stopColor="#cc2366"/>
+                            <stop offset="100%" stopColor="#bc1888"/>
+                          </linearGradient>
+                        </defs>
+                        <path d="M7.75 2h8.5A5.75 5.75 0 0 1 22 7.75v8.5A5.75 5.75 0 0 1 16.25 22h-8.5A5.75 5.75 0 0 1 2 16.25v-8.5A5.75 5.75 0 0 1 7.75 2z" opacity="0.1"/>
+                        <path d="M16.25 2h-8.5A5.75 5.75 0 0 0 2 7.75v8.5A5.75 5.75 0 0 0 7.75 22h8.5A5.75 5.75 0 0 0 22 16.25v-8.5A5.75 5.75 0 0 0 16.25 2zm3.75 14.25A3.75 3.75 0 0 1 16.25 20h-8.5A3.75 3.75 0 0 1 4 16.25v-8.5A3.75 3.75 0 0 1 7.75 4h8.5A3.75 3.75 0 0 1 20 7.75v8.5z" fill="url(#ig-gradient)"/>
+                        <path d="M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10zm0 8a3 3 0 1 1 0-6 3 3 0 0 1 0 6z" fill="url(#ig-gradient)"/>
+                        <circle cx="17" cy="7" r="1.2" fill="url(#ig-gradient)"/>
+                      </svg>
+                    </div>
+                    <h3 style={{ fontSize: '15px', fontWeight: 700, margin: '0 0 8px', color: '#fff' }}>Connect Instagram</h3>
+                    <p style={{ fontSize: '11px', color: '#94a3b8', margin: '0 0 16px', lineHeight: 1.4 }}>
+                      Link your Instagram account to quickly set up your profile! We'll automatically fetch your profile photo, username, and follower count from Instagram.
+                    </p>
+                    <button 
+                      onClick={handleInstagramConnect}
+                      style={{
+                        width: '100%',
+                        padding: '12px',
+                        background: 'linear-gradient(45deg, #f09433, #dc2743, #bc1888)',
+                        border: 'none',
+                        borderRadius: '999px',
+                        color: '#fff',
+                        fontWeight: 700,
+                        fontSize: '14px',
+                        cursor: 'pointer',
+                        boxShadow: '0 4px 15px rgba(220, 39, 67, 0.4)',
+                        marginBottom: '12px'
+                      }}
+                    >
+                      Connect @Instagram
+                    </button>
+                    <div style={{ fontSize: '9px', color: '#64748b' }}>
+                      Read-only access. We never post on your behalf.
+                    </div>
+                  </>
+                )}
+              </div>
 
+              {/* CONNECTED INSTAGRAM MEDIA GRID */}
+              {form.instagramConnected && instagramMedia && instagramMedia.length > 0 && (
+                <div style={{ marginBottom: '24px' }}>
+                  <h3 style={{ fontSize: '14px', fontWeight: 600, color: '#fff', marginBottom: '12px' }}>
+                    Connected Media from @{form.instagramHandle}
+                  </h3>
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(3, 1fr)',
+                    gap: '8px'
+                  }}>
+                    {instagramMedia.map((media) => (
+                      <a key={media.id} href={media.permalink} target="_blank" rel="noopener noreferrer" style={{ display: 'block', aspectRatio: '1', borderRadius: '8px', overflow: 'hidden', backgroundColor: '#1e293b' }}>
+                        <img 
+                          src={media.media_type === 'VIDEO' ? (media.thumbnail_url || media.media_url) : media.media_url} 
+                          alt={media.caption || 'Instagram Post'} 
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        />
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* AVATAR UPLOAD CIRCLE — violet dashed glowing circle */}
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
