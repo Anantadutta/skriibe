@@ -617,26 +617,40 @@ const CreatorOnboardProfile = () => {
               </div>
 
               {/* CONNECTED INSTAGRAM MEDIA GRID */}
-              {form.instagramConnected && instagramMedia && instagramMedia.length > 0 && (
+              {form.instagramConnected && (
                 <div style={{ marginBottom: '24px' }}>
                   <h3 style={{ fontSize: '14px', fontWeight: 600, color: '#fff', marginBottom: '12px' }}>
-                    Connected Media from @{form.instagramHandle}
+                    Connected Media from @{form.instagramHandle || form.handle}
                   </h3>
-                  <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(3, 1fr)',
-                    gap: '8px'
-                  }}>
-                    {instagramMedia.map((media) => (
-                      <a key={media.id} href={media.permalink} target="_blank" rel="noopener noreferrer" style={{ display: 'block', aspectRatio: '1', borderRadius: '8px', overflow: 'hidden', backgroundColor: '#1e293b' }}>
-                        <img 
-                          src={media.media_type === 'VIDEO' ? (media.thumbnail_url || media.media_url) : media.media_url} 
-                          alt={media.caption || 'Instagram Post'} 
-                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                        />
-                      </a>
-                    ))}
-                  </div>
+                  
+                  {(!instagramMedia || instagramMedia.length === 0) ? (
+                    <div style={{ padding: '24px', textAlign: 'center', background: 'rgba(255,255,255,0.03)', borderRadius: '12px', color: '#94a3b8', fontSize: '12px' }}>
+                      No recent posts found.
+                    </div>
+                  ) : (
+                    <div style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))',
+                      gap: '8px'
+                    }}>
+                      {instagramMedia.map((media) => (
+                        <a key={media.id} href={media.permalink} target="_blank" rel="noopener noreferrer" style={{ display: 'block', aspectRatio: '1', borderRadius: '8px', overflow: 'hidden', backgroundColor: '#1e293b', position: 'relative' }}>
+                          <img 
+                            src={media.media_type === 'VIDEO' || media.media_type === 'REEL' ? (media.thumbnail_url || media.media_url) : media.media_url} 
+                            alt={media.caption || 'Instagram Post'} 
+                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                          />
+                          {(media.media_type === 'VIDEO' || media.media_type === 'REEL') && (
+                            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.2)' }}>
+                              <svg width="24" height="24" viewBox="0 0 24 24" fill="white" opacity="0.8">
+                                <path d="M8 5v14l11-7z" />
+                              </svg>
+                            </div>
+                          )}
+                        </a>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
 
