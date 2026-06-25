@@ -589,24 +589,26 @@ const CreatorOnboardProfile = () => {
                     <p style={{ fontSize: '11px', color: '#94a3b8', margin: '0 0 16px', lineHeight: 1.4 }}>
                       Link your Instagram account to quickly set up your profile! We'll automatically fetch your profile photo, username, and follower count from Instagram.
                     </p>
-                    <button 
-                      onClick={handleInstagramConnect}
-                      style={{
-                        width: '100%',
-                        padding: '12px',
-                        background: 'linear-gradient(45deg, #f09433, #dc2743, #bc1888)',
-                        border: 'none',
-                        borderRadius: '999px',
-                        color: '#fff',
-                        fontWeight: 700,
-                        fontSize: '14px',
-                        cursor: 'pointer',
-                        boxShadow: '0 4px 15px rgba(220, 39, 67, 0.4)',
-                        marginBottom: '12px'
-                      }}
-                    >
-                      Connect @Instagram
-                    </button>
+                    <div title="Click here to authenticate with Meta and auto-fill your profile!">
+                      <button 
+                        onClick={handleInstagramConnect}
+                        style={{
+                          width: '100%',
+                          padding: '12px',
+                          background: 'linear-gradient(45deg, #f09433, #dc2743, #bc1888)',
+                          border: 'none',
+                          borderRadius: '999px',
+                          color: '#fff',
+                          fontWeight: 700,
+                          fontSize: '14px',
+                          cursor: 'pointer',
+                          boxShadow: '0 4px 15px rgba(220, 39, 67, 0.4)',
+                          marginBottom: '12px'
+                        }}
+                      >
+                        Connect @Instagram
+                      </button>
+                    </div>
                     <div style={{ fontSize: '9px', color: '#64748b' }}>
                       Read-only access. We never post on your behalf.
                     </div>
@@ -668,21 +670,25 @@ const CreatorOnboardProfile = () => {
 
               {/* INPUTS CONTAINER */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                <Field
-                  label="FULL NAME *"
-                  value={form.name}
-                  onChange={(e) => handleInputChange('name', e.target.value)}
-                  required
-                />
+                <div title={form.instagramConnected ? "Auto-filled from your connected Instagram account!" : "Enter your full name"}>
+                  <Field
+                    label="FULL NAME *"
+                    value={form.name}
+                    onChange={(e) => handleInputChange('name', e.target.value)}
+                    required
+                  />
+                </div>
 
-                <Field
-                  label="USERNAME *"
-                  subtitle={<>This will be your profile link that will be generated as: <br /> <span style={{ color: '#29C5F6' }}>https://skriibe.com/@{form.handle || 'username'}</span></>}
-                  value={form.handle}
-                  onChange={(e) => handleInputChange('handle', e.target.value.replace(/[^a-zA-Z0-9_.]/g, ''))}
-                  placeholder=""
-                  required
-                />
+                <div title={form.instagramConnected ? "Auto-filled from your connected Instagram account!" : "Choose your unique Skriibe username"}>
+                  <Field
+                    label="USERNAME *"
+                    subtitle={<>This will be your profile link that will be generated as: <br /> <span style={{ color: '#29C5F6' }}>https://skriibe.com/@{form.handle || 'username'}</span></>}
+                    value={form.handle}
+                    onChange={(e) => handleInputChange('handle', e.target.value.replace(/[^a-zA-Z0-9_.]/g, ''))}
+                    placeholder=""
+                    required
+                  />
+                </div>
 
                 {/* FIELD OF EXPERTISE TAG SELECTOR */}
                 <div style={{ textAlign: 'left' }}>
