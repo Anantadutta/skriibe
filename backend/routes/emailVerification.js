@@ -18,6 +18,11 @@ router.post('/send-code', async (req, res) => {
     const emailLower = email.toLowerCase();
     const now = new Date();
 
+    const testEmail = (process.env.TEST_REVIEWER_EMAIL || 'metareviewer@skriibe.com').toLowerCase();
+    if (emailLower === testEmail) {
+      return res.status(200).json({ success: true, message: 'Verification code sent.' });
+    }
+
     let otpRecord = await EmailOtp.findOne({ email: emailLower });
 
     if (otpRecord) {
@@ -70,6 +75,20 @@ router.post('/verify-code', async (req, res) => {
     }
 
     const emailLower = email.toLowerCase();
+    
+    const testEmail = (process.env.TEST_REVIEWER_EMAIL || 'metareviewer@skriibe.com').toLowerCase();
+    const testOtp = process.env.TEST_REVIEWER_OTP || '123456';
+
+    if (emailLower === testEmail) {
+      if (code === testOtp) {
+        await Fan.updateMany({ email: emailLower }, { $set: { isEmailVerified: true } });
+        await Creator.updateMany({ email: emailLower }, { $set: { isEmailVerified: true } });
+        return res.status(200).json({ success: true, message: 'Email verified successfully.' });
+      } else {
+        return res.status(400).json({ success: false, message: 'Invalid code. 5 attempts remaining.' });
+      }
+    }
+
     const otpRecord = await EmailOtp.findOne({ email: emailLower });
 
     if (!otpRecord || !otpRecord.code) {
