@@ -120,7 +120,7 @@ const CreatorOnboardProfile = () => {
 
   const handleInstagramConnect = () => {
     const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-    const stateToken = localStorage.getItem('creator_token') || '';
+    const stateToken = localStorage.getItem('skriibe_token') || '';
     window.location.href = `${apiUrl}/auth/instagram?state=${stateToken}`;
   };
 
