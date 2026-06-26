@@ -50,12 +50,12 @@ const CreatorLogin = () => {
       }
       
       if (creator.isLive) {
-        navigate('/creator/dashboard', { state: { creator } });
+        navigate('/creator/dashboard', { state: { creator }, replace: true });
       } else {
         if (!creator.handle) {
-          navigate('/onboard/profile', { state: { creator } });
+          navigate('/onboard/profile', { state: { creator }, replace: true });
         } else {
-          navigate('/onboard/pricing', { state: { creator } });
+          navigate('/onboard/pricing', { state: { creator }, replace: true });
         }
       }
     } catch (err) {
