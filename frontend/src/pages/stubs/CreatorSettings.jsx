@@ -174,7 +174,7 @@ const CreatorSettings = () => {
           </svg>
         </div>
         <h2 style={{ margin: '0 0 12px', fontSize: '1.5rem', fontWeight: 700 }}>Account deleted</h2>
-        <p style={{ margin: 0, color: '#94a3b8', fontSize: '0.95rem', lineHeight: '1.5' }}>
+        <p style={{ margin: 0, color: '#94a3b8', fontSize: '0.85rem', lineHeight: '1.5' }}>
           Sorry to see you go. All your questions, earnings, and profile data have been permanently removed.
         </p>
       </div>
@@ -262,6 +262,10 @@ const CreatorSettings = () => {
       setCustomAlert("Weekly Earnings Goal cannot be less than 100.");
       return;
     }
+    if (Number(weeklyGoal) > 20000) {
+      setCustomAlert("Weekly Earnings Goal cannot be more than 20,000.");
+      return;
+    }
     try {
       await api.post('/creators/settings', { weeklyGoal: Number(weeklyGoal) });
       setIsEditingGoal(false);
@@ -284,6 +288,10 @@ const CreatorSettings = () => {
   const handleSaveCap = async () => {
     if (Number(dailyCap) < 10) {
       setCustomAlert("Daily Question Cap cannot be less than 10.");
+      return;
+    }
+    if (Number(dailyCap) > 100) {
+      setCustomAlert("Daily Question Cap cannot be more than 100.");
       return;
     }
     try {
@@ -489,7 +497,7 @@ const CreatorSettings = () => {
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '1.4rem', fontWeight: 800, color: '#fff' }}>
                 {creator.name || creator.displayName || 'okayyy'}
               </div>
-              <div style={{ color: '#94A3B8', fontSize: '0.95rem' }}>
+              <div style={{ color: '#94A3B8', fontSize: '0.85rem' }}>
                 skriibe.com/@{creator.handle || creator.username || 'ok_90'}
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '4px' }}>
@@ -618,15 +626,15 @@ const CreatorSettings = () => {
                   {currencySymbol}
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                  <div style={{ color: '#ffffff', fontSize: '0.95rem', fontWeight: 700 }}>Question price</div>
-                  <div style={{ color: '#64748b', fontSize: '0.8rem' }}>What fans pay per message.</div>
+                  <div style={{ color: '#ffffff', fontSize: '0.85rem', fontWeight: 700 }}>Question price</div>
+                  <div style={{ color: '#64748b', fontSize: '0.75rem' }}>What fans pay per message.</div>
                 </div>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 {isEditingPrice ? (
                   <>
                     <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                      <span style={{ position: 'absolute', left: '10px', color: '#94a3b8', fontSize: '0.95rem' }}>{currencySymbol}</span>
+                      <span style={{ position: 'absolute', left: '10px', color: '#94a3b8', fontSize: '0.85rem' }}>{currencySymbol}</span>
                       <input 
                         type="text" 
                         inputMode="numeric"
@@ -639,7 +647,7 @@ const CreatorSettings = () => {
                           color: '#ffffff',
                           borderRadius: '8px',
                           padding: '8px 10px 8px 24px',
-                          fontSize: '0.95rem',
+                          fontSize: '0.85rem',
                           width: '70px',
                           outline: 'none',
                           fontWeight: 600,
@@ -658,7 +666,7 @@ const CreatorSettings = () => {
                   </>
                 ) : (
                   <>
-                    <span style={{ color: '#ffffff', fontWeight: 700, fontSize: '1.05rem' }}>{currencySymbol}{questionPrice}</span>
+                    <span style={{ color: '#ffffff', fontWeight: 700, fontSize: '0.9rem' }}>{currencySymbol}{questionPrice}</span>
                     <button 
                       onClick={() => setIsEditingPrice(true)}
                       style={{
@@ -677,8 +685,8 @@ const CreatorSettings = () => {
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="3" y1="15" x2="21" y2="15"></line><line x1="9" y1="3" x2="9" y2="21"></line><line x1="15" y1="3" x2="15" y2="21"></line></svg>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                  <div style={{ color: '#ffffff', fontSize: '0.95rem', fontWeight: 700 }}>Daily question cap</div>
-                  <div style={{ color: '#64748b', fontSize: '0.8rem' }}>Max questions you'll take a day</div>
+                  <div style={{ color: '#ffffff', fontSize: '0.85rem', fontWeight: 700 }}>Daily question cap</div>
+                  <div style={{ color: '#64748b', fontSize: '0.75rem' }}>Max questions you'll take a day</div>
                 </div>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -690,10 +698,19 @@ const CreatorSettings = () => {
                         inputMode="numeric"
                         pattern="[0-9]*"
                         value={dailyCap} 
-                        onChange={(e) => setDailyCap(e.target.value)}
+                        onChange={(e) => {
+                          if (e.target.value === '') {
+                            setDailyCap('');
+                            return;
+                          }
+                          let val = parseInt(e.target.value.replace(/\D/g, ''));
+                          if (isNaN(val)) return;
+                          if (val > 100) val = 100;
+                          setDailyCap(val.toString());
+                        }}
                         style={{
                           background: '#16161e', border: '1px solid #29C5F6', color: '#ffffff',
-                          borderRadius: '8px', padding: '8px 10px', fontSize: '0.95rem', width: '60px',
+                          borderRadius: '8px', padding: '8px 10px', fontSize: '0.85rem', width: '60px',
                           outline: 'none', fontWeight: 600, boxSizing: 'border-box', textAlign: 'center'
                         }}
                         autoFocus
@@ -709,7 +726,7 @@ const CreatorSettings = () => {
                   </>
                 ) : (
                   <>
-                    <span style={{ color: '#ffffff', fontWeight: 700, fontSize: '1.05rem' }}>{dailyCap} / day</span>
+                    <span style={{ color: '#ffffff', fontWeight: 700, fontSize: '0.9rem' }}>{dailyCap} / day</span>
                     <button 
                       onClick={() => setIsEditingCap(true)}
                       style={{
@@ -730,22 +747,22 @@ const CreatorSettings = () => {
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                  <div style={{ color: '#ffffff', fontSize: '0.95rem', fontWeight: 700 }}>Set your Weekly Earnings Goal</div>
-                  <div style={{ color: '#64748b', fontSize: '0.8rem' }}>Set your target</div>
+                  <div style={{ color: '#ffffff', fontSize: '0.85rem', fontWeight: 700 }}>Set your Weekly Earnings Goal</div>
+                  <div style={{ color: '#64748b', fontSize: '0.75rem' }}>Set your target</div>
                 </div>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 {isEditingGoal ? (
                   <>
                     <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                      <span style={{ position: 'absolute', left: '12px', color: '#94a3b8', fontSize: '0.95rem', fontWeight: 500 }}>{currencySymbol}</span>
+                      <span style={{ position: 'absolute', left: '12px', color: '#94a3b8', fontSize: '0.85rem', fontWeight: 500 }}>{currencySymbol}</span>
                       <input 
                         type="number" 
                         value={weeklyGoal} 
                         onChange={(e) => setWeeklyGoal(e.target.value)}
                         style={{
                           background: '#16161e', border: '1px solid #29C5F6', color: '#ffffff',
-                          borderRadius: '8px', padding: '8px 10px 8px 24px', fontSize: '0.95rem', width: '80px',
+                          borderRadius: '8px', padding: '8px 10px 8px 24px', fontSize: '0.85rem', width: '80px',
                           outline: 'none', fontWeight: 600, boxSizing: 'border-box'
                         }}
                         autoFocus
@@ -761,7 +778,7 @@ const CreatorSettings = () => {
                   </>
                 ) : (
                   <>
-                    <span style={{ color: '#ffffff', fontWeight: 700, fontSize: '1.05rem' }}>{currencySymbol}{weeklyGoal}</span>
+                    <span style={{ color: '#ffffff', fontWeight: 700, fontSize: '0.9rem' }}>{currencySymbol}{weeklyGoal}</span>
                     <button 
                       onClick={() => setIsEditingGoal(true)}
                       style={{
@@ -780,8 +797,8 @@ const CreatorSettings = () => {
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                  <div style={{ color: '#ffffff', fontSize: '0.95rem', fontWeight: 700 }}>Expertise</div>
-                  <div style={{ color: '#64748b', fontSize: '0.8rem' }}>Your creator categories</div>
+                  <div style={{ color: '#ffffff', fontSize: '0.85rem', fontWeight: 700 }}>Expertise</div>
+                  <div style={{ color: '#64748b', fontSize: '0.75rem' }}>Your creator categories</div>
                 </div>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -793,7 +810,7 @@ const CreatorSettings = () => {
                       onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                       style={{
                         background: '#16161e', border: '1px solid #29C5F6', color: '#ffffff',
-                        borderRadius: '8px', padding: '8px 12px', fontSize: '0.95rem', width: '200px',
+                        borderRadius: '8px', padding: '8px 12px', fontSize: '0.85rem', width: '200px',
                         outline: 'none', fontWeight: 600, boxSizing: 'border-box', cursor: 'pointer',
                         display: 'flex', justifyContent: 'space-between', alignItems: 'center'
                       }}
@@ -801,7 +818,7 @@ const CreatorSettings = () => {
                       <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                         {expertiseList.length > 0 ? expertiseList.join(', ') : 'Select...'}
                       </span>
-                      <span style={{ fontSize: '0.8rem', marginLeft: '8px', color: '#94a3b8' }}>▼</span>
+                      <span style={{ fontSize: '0.75rem', marginLeft: '8px', color: '#94a3b8' }}>▼</span>
                     </div>
 
                     {/* Dropdown Menu */}
@@ -860,7 +877,7 @@ const CreatorSettings = () => {
                         {/* Action Buttons Inside Dropdown */}
                         <div style={{ display: 'flex', gap: '8px', marginTop: '8px', paddingTop: '8px', borderTop: '1px solid #2A2A2A' }}>
                           <button onClick={() => { setExpertiseList([]); setCustomExpertise(''); }} style={{ flex: 1, background: 'transparent', border: '1px solid #ef4444', color: '#ef4444', borderRadius: '8px', padding: '6px', fontSize: '0.75rem', cursor: 'pointer', whiteSpace: 'nowrap' }}>Clear All</button>
-                          <button onClick={() => { setIsEditingExpertise(false); setIsDropdownOpen(false); setExpertiseList(creator.expertise || []); }} style={{ flex: 1, background: 'transparent', border: '1px solid #475569', color: '#94a3b8', borderRadius: '8px', padding: '6px', fontSize: '0.8rem', cursor: 'pointer' }}>Cancel</button>
+                          <button onClick={() => { setIsEditingExpertise(false); setIsDropdownOpen(false); setExpertiseList(creator.expertise || []); }} style={{ flex: 1, background: 'transparent', border: '1px solid #475569', color: '#94a3b8', borderRadius: '8px', padding: '6px', fontSize: '0.75rem', cursor: 'pointer' }}>Cancel</button>
                           <button onClick={() => { handleSaveExpertise(); setIsDropdownOpen(false); }} style={{ flex: 1, background: '#38BDF8', border: 'none', color: '#0E0E0E', borderRadius: '8px', padding: '6px', fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer' }}>Save</button>
                         </div>
                       </div>
@@ -869,7 +886,7 @@ const CreatorSettings = () => {
                 ) : (
                   <>
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
-                      <span style={{ color: '#ffffff', fontWeight: 700, fontSize: '0.95rem', textAlign: 'right', maxWidth: '120px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      <span style={{ color: '#ffffff', fontWeight: 700, fontSize: '0.85rem', textAlign: 'right', maxWidth: '120px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                         {expertiseList.length > 0 ? expertiseList.join(', ') : 'None'}
                       </span>
                     </div>
@@ -908,7 +925,7 @@ const CreatorSettings = () => {
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                  <div style={{ color: '#ffffff', fontSize: '0.95rem', fontWeight: 700 }}>Phone number</div>
+                  <div style={{ color: '#ffffff', fontSize: '0.85rem', fontWeight: 700 }}>Phone number</div>
                 </div>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -920,13 +937,13 @@ const CreatorSettings = () => {
                         const target = e.target;
                         setTimeout(() => target.setSelectionRange(0, 0), 0);
                       }}
-                      style={{ background: '#16161e', border: '1px solid #29C5F6', color: '#ffffff', borderRadius: '8px', padding: '8px', fontSize: '0.95rem', width: '120px', outline: 'none', fontWeight: 500, fontFamily: 'monospace' }} autoFocus
+                      style={{ background: '#16161e', border: '1px solid #29C5F6', color: '#ffffff', borderRadius: '8px', padding: '8px', fontSize: '0.85rem', width: '120px', outline: 'none', fontWeight: 500, fontFamily: 'monospace' }} autoFocus
                     />
                     <button style={{ background: '#38BDF8', border: 'none', color: '#0E0E0E', borderRadius: '12px', padding: '8px 16px', fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer' }} onClick={handleSavePhone}>Save</button>
                   </>
                 ) : (
                   <>
-                    <span style={{ color: '#64748b', fontWeight: 500, fontFamily: 'monospace, Consolas', fontSize: '0.95rem' }}>
+                    <span style={{ color: '#64748b', fontWeight: 500, fontFamily: 'monospace, Consolas', fontSize: '0.85rem' }}>
                       {phone.length === 10 && !phone.includes('+') ? `+91 ${phone.substring(0, 5)} ${phone.substring(5, 10)}` : phone}
                     </span>
                     <button style={{ background: '#252530', border: 'none', color: '#ffffff', borderRadius: '12px', padding: '8px 14px', fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer' }} onClick={() => setIsEditingPhone(true)}>Edit</button>
@@ -942,7 +959,7 @@ const CreatorSettings = () => {
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                  <div style={{ color: '#ffffff', fontSize: '0.95rem', fontWeight: 700 }}>Email Address</div>
+                  <div style={{ color: '#ffffff', fontSize: '0.85rem', fontWeight: 700 }}>Email Address</div>
                 </div>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0, flex: 1, justifyContent: 'flex-end' }} ref={emailContainerRef}>
@@ -956,13 +973,13 @@ const CreatorSettings = () => {
                         const target = e.target;
                         setTimeout(() => target.setSelectionRange(0, 0), 0);
                       }}
-                      style={{ background: '#16161e', border: '1px solid #29C5F6', color: '#ffffff', borderRadius: '8px', padding: '8px', fontSize: '0.95rem', width: '100%', maxWidth: '160px', outline: 'none', fontWeight: 500, fontFamily: 'monospace' }} autoFocus
+                      style={{ background: '#16161e', border: '1px solid #29C5F6', color: '#ffffff', borderRadius: '8px', padding: '8px', fontSize: '0.85rem', width: '100%', maxWidth: '160px', outline: 'none', fontWeight: 500, fontFamily: 'monospace' }} autoFocus
                     />
                     <button style={{ background: '#38BDF8', border: 'none', color: '#0E0E0E', borderRadius: '12px', padding: '8px 16px', fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer', flexShrink: 0 }} onClick={handleSaveEmail}>Save</button>
                   </>
                 ) : (
                   <>
-                    <span style={{ color: '#64748b', fontWeight: 500, fontFamily: 'monospace, Consolas', fontSize: '0.95rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{email}</span>
+                    <span style={{ color: '#64748b', fontWeight: 500, fontFamily: 'monospace, Consolas', fontSize: '0.85rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{email}</span>
                     <button style={{ background: '#252530', border: 'none', color: '#ffffff', borderRadius: '12px', padding: '8px 14px', fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer', flexShrink: 0 }} onClick={() => setIsEditingEmail(true)}>{email ? 'Edit' : 'Add'}</button>
                   </>
                 )}
@@ -977,8 +994,8 @@ const CreatorSettings = () => {
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="5" width="20" height="14" rx="2" ry="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                  <div style={{ color: '#ffffff', fontSize: '0.95rem', fontWeight: 700 }}>Bank Account</div>
-                  <div style={{ color: '#64748b', fontSize: '0.8rem' }}>{creator.bankLinked ? 'Linked' : 'Not linked'}</div>
+                  <div style={{ color: '#ffffff', fontSize: '0.85rem', fontWeight: 700 }}>Bank Account</div>
+                  <div style={{ color: '#64748b', fontSize: '0.75rem' }}>{creator.bankLinked ? 'Linked' : 'Not linked'}</div>
                 </div>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -1017,8 +1034,8 @@ const CreatorSettings = () => {
               transition: 'background-color 1s ease'
             }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                <div style={{ color: '#ef4444', fontSize: '0.95rem', fontWeight: 700 }}>Pause my page temporarily</div>
-                <div style={{ color: '#64748b', fontSize: '0.8rem' }}>Hide from discovery</div>
+                <div style={{ color: '#ef4444', fontSize: '0.85rem', fontWeight: 700 }}>Pause my page temporarily</div>
+                <div style={{ color: '#64748b', fontSize: '0.75rem' }}>Hide from discovery</div>
               </div>
               <button style={{
                 background: isPaused ? '#ef4444' : 'transparent', border: '1px solid rgba(239, 68, 68, 0.3)', color: isPaused ? '#ffffff' : '#ef4444',
@@ -1031,8 +1048,8 @@ const CreatorSettings = () => {
             {/* Delete account */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                <div style={{ color: '#ef4444', fontSize: '0.95rem', fontWeight: 700 }}>Delete account</div>
-                <div style={{ color: '#64748b', fontSize: '0.8rem' }}>This can't be undone</div>
+                <div style={{ color: '#ef4444', fontSize: '0.85rem', fontWeight: 700 }}>Delete account</div>
+                <div style={{ color: '#64748b', fontSize: '0.75rem' }}>This can't be undone</div>
               </div>
               <button style={{
                 background: 'transparent', border: '1px solid rgba(239, 68, 68, 0.3)', color: '#ef4444',
@@ -1077,7 +1094,7 @@ const CreatorSettings = () => {
 
           <button style={{
             background: 'transparent', border: 'none', color: '#f87171',
-            fontSize: '1.05rem', fontWeight: 700, cursor: 'pointer', marginTop: '8px'
+            fontSize: '0.9rem', fontWeight: 700, cursor: 'pointer', marginTop: '8px'
           }} onClick={() => {
             localStorage.clear();
             window.location.href = '/';
@@ -1181,11 +1198,11 @@ const CreatorSettings = () => {
             <div style={{ display: 'flex', gap: '12px' }}>
               <button style={{
                 flex: 1, background: '#2A2A2A', border: 'none', color: '#ffffff',
-                padding: '12px', borderRadius: '12px', fontWeight: 600, fontSize: '0.95rem', cursor: 'pointer'
+                padding: '12px', borderRadius: '12px', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer'
               }} onClick={() => setShowPauseModal(false)}>Cancel</button>
               <button style={{
                 flex: 1, background: isPaused ? '#10B981' : '#ef4444', border: 'none', color: '#ffffff',
-                padding: '12px', borderRadius: '12px', fontWeight: 600, fontSize: '0.95rem', cursor: 'pointer'
+                padding: '12px', borderRadius: '12px', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer'
               }} onClick={() => handleConfirmPause(!isPaused)}>
                 {isPaused ? 'Yes, unpause' : 'Yes, pause page'}
               </button>
@@ -1217,11 +1234,11 @@ const CreatorSettings = () => {
                 <div style={{ display: 'flex', gap: '12px' }}>
                   <button style={{
                     flex: 1, background: '#2A2A2A', border: 'none', color: '#ffffff',
-                    padding: '12px', borderRadius: '12px', fontWeight: 600, fontSize: '0.95rem', cursor: 'pointer'
+                    padding: '12px', borderRadius: '12px', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer'
                   }} onClick={() => setDeleteModalStep(0)}>Cancel</button>
                   <button style={{
                     flex: 1, background: '#ef4444', border: 'none', color: '#ffffff',
-                    padding: '12px', borderRadius: '12px', fontWeight: 600, fontSize: '0.95rem', cursor: 'pointer'
+                    padding: '12px', borderRadius: '12px', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer'
                   }} onClick={() => setDeleteModalStep(2)}>Yes, delete</button>
                 </div>
               </>
@@ -1243,14 +1260,14 @@ const CreatorSettings = () => {
                 <div style={{ display: 'flex', gap: '12px' }}>
                   <button style={{
                     flex: 1, background: '#2A2A2A', border: 'none', color: '#ffffff',
-                    padding: '12px', borderRadius: '12px', fontWeight: 600, fontSize: '0.95rem', cursor: 'pointer'
+                    padding: '12px', borderRadius: '12px', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer'
                   }} onClick={() => { setDeleteModalStep(0); setDeleteInputValue(''); }}>Cancel</button>
                   <button style={{
                     flex: 1, 
                     background: deleteInputValue.trim().length > 0 ? '#ef4444' : '#2A2A2A', 
                     border: 'none', 
                     color: deleteInputValue.trim().length > 0 ? '#ffffff' : '#64748b',
-                    padding: '12px', borderRadius: '12px', fontWeight: 600, fontSize: '0.95rem', 
+                    padding: '12px', borderRadius: '12px', fontWeight: 600, fontSize: '0.85rem', 
                     cursor: deleteInputValue.trim().length > 0 ? 'pointer' : 'not-allowed',
                     transition: 'all 0.2s ease'
                   }} 

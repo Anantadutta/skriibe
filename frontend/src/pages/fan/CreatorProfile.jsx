@@ -532,7 +532,7 @@ const CreatorProfile = () => {
             {/* Question Section */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
               <div style={{ background: '#131313', border: '1px solid #2a2a2a', borderRadius: '16px', padding: '12px 16px' }}>
-                <div style={{ color: '#64748b', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '8px' }}>ASK YOUR QUESTION <span style={{ color: '#ef4444' }}>*</span></div>
+                <div style={{ color: '#64748b', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '8px' }}>TYPE YOUR MESSAGE HERE <span style={{ color: '#ef4444' }}>*</span></div>
                 <textarea 
                   value={question}
                   onChange={(e) => setQuestion(e.target.value)}

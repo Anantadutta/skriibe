@@ -36,11 +36,10 @@ router.get('/dashboard', async (req, res) => {
 
     const slaLimit = new Date(Date.now() - 48 * 60 * 60 * 1000);
 
-    // Calculate actual open questions (within SLA)
+    // Calculate total open questions irrespective of time
     const openQuestionsCount = await Question.countDocuments({
       status: 'submitted',
-      paymentStatus: 'paid',
-      createdAt: { $gte: slaLimit }
+      paymentStatus: 'paid'
     });
 
     // Calculate actual SLA breaches: pending for > 24 hours
