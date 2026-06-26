@@ -10,11 +10,6 @@ const SmartLoginRedirect = ({ children }) => {
     const checkSession = async () => {
       const token = localStorage.getItem('skriibe_token');
       
-      if (!token) {
-        setLoading(false);
-        return;
-      }
-
       try {
         const res = await api.get('/auth/status');
         const data = res.data;
