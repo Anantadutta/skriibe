@@ -546,4 +546,75 @@ router.post('/check-handle', async (req, res) => {
   }
 });
 
+router.get('/status', async (req, res) => {
+  try {
+    let token = null;
+    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
+      token = req.headers.authorization.split(' ')[1];
+    }
+    if (!token) {
+      token = req.cookies?.creator_token || req.cookies?.fan_token;
+    }
+
+    if (!token) return res.json({ authenticated: false });
+
+    const jwt = require('jsonwebtoken');
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret');
+    } catch (err) {
+      return res.json({ authenticated: false });
+    }
+
+    await connectDB();
+
+    // Check Fan Token
+    if (decoded.fanId) {
+      const Fan = require('../models/Fan');
+      const fan = await Fan.findById(decoded.fanId).lean();
+      
+      if (fan && fan.roles && fan.roles.includes('creator') && fan.email) {
+        const Creator = require('../models/Creator');
+        const creator = await Creator.findOne({ email: fan.email }).lean();
+        
+        if (creator) {
+          return res.json({
+            authenticated: true,
+            isCreator: true,
+            creator: {
+              isLive: creator.isLive,
+              handle: creator.handle
+            }
+          });
+        }
+      }
+      
+      return res.json({ authenticated: true, isCreator: false });
+    }
+    
+    // Check Creator Token
+    if (decoded.creatorId || decoded.email) {
+      const Creator = require('../models/Creator');
+      const query = decoded.creatorId ? { _id: decoded.creatorId } : { email: decoded.email.toLowerCase() };
+      const creator = await Creator.findOne(query).lean();
+      
+      if (creator) {
+        return res.json({
+          authenticated: true,
+          isCreator: true,
+          creator: {
+            isLive: creator.isLive,
+            handle: creator.handle
+          }
+        });
+      }
+    }
+
+    res.json({ authenticated: false });
+  } catch (error) {
+    console.error('Auth Status Error:', error);
+    res.json({ authenticated: false });
+  }
+});
+
 module.exports = router;

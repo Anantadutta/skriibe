@@ -11,6 +11,7 @@ import Footer from './components/Footer';
 // Context
 import { CreatorOnboardingProvider } from './context/CreatorOnboardingContext';
 import { AuthProvider } from './context/AuthContext';
+import SmartLoginRedirect from './components/SmartLoginRedirect';
 
 // Pages
 import About from './pages/About';
@@ -178,7 +179,11 @@ function App() {
             
             {/* Creator Onboarding */}
             <Route path="/creator/signup" element={<CreatorSignup />} />
-            <Route path="/creator/login" element={<CreatorLogin />} />
+            <Route path="/creator/login" element={
+              <SmartLoginRedirect>
+                <CreatorLogin />
+              </SmartLoginRedirect>
+            } />
             <Route path="/creator/forgot-password" element={<CreatorForgotPassword />} />
             <Route path="/creator/reset-password/:token" element={<CreatorResetPassword />} />
             <Route path="/creator/verify-otp" element={<CreatorVerifyOTP />} />
