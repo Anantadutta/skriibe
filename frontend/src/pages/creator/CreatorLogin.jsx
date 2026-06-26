@@ -49,10 +49,14 @@ const CreatorLogin = () => {
         setAuthData(['creator'], 'creator', token);
       }
       
-      if (creator.onboardingComplete || creator.ama_enabled || creator.handle) {
+      if (creator.isLive) {
         navigate('/creator/dashboard', { state: { creator } });
       } else {
-        navigate('/onboard/profile', { state: { creator } });
+        if (!creator.handle) {
+          navigate('/onboard/profile', { state: { creator } });
+        } else {
+          navigate('/onboard/pricing', { state: { creator } });
+        }
       }
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed. Try again.');
