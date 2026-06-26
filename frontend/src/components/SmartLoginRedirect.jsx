@@ -9,6 +9,7 @@ const SmartLoginRedirect = ({ children }) => {
   useEffect(() => {
     const checkSession = async () => {
       const token = localStorage.getItem('skriibe_token');
+      
       if (!token) {
         setLoading(false);
         return;
@@ -29,11 +30,9 @@ const SmartLoginRedirect = ({ children }) => {
             navigate('/onboard/profile', { replace: true });
           }
         } else {
-          // If not a creator or not authenticated, render login form
           setLoading(false);
         }
       } catch (err) {
-        console.error('Failed to verify session status:', err);
         setLoading(false);
       }
     };

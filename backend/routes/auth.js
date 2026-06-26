@@ -593,10 +593,16 @@ router.get('/status', async (req, res) => {
     }
     
     // Check Creator Token
-    if (decoded.creatorId || decoded.email) {
+    if (decoded.creatorId || decoded.email || decoded.phone) {
       const Creator = require('../models/Creator');
-      const query = decoded.creatorId ? { _id: decoded.creatorId } : { email: decoded.email.toLowerCase() };
-      const creator = await Creator.findOne(query).lean();
+      let creator;
+      if (decoded.creatorId) {
+         creator = await Creator.findById(decoded.creatorId).lean();
+      } else if (decoded.email) {
+         creator = await Creator.findOne({ email: decoded.email.toLowerCase() }).lean();
+      } else if (decoded.phone) {
+         creator = await Creator.findOne({ phone: decoded.phone }).lean();
+      }
       
       if (creator) {
         return res.json({
