@@ -188,7 +188,7 @@ const FanSignup = () => {
               }}>
                 <TransparentLogo src="/logo.png" alt="skriibe logo" style={{ width: '100%', height: 'auto', transform: 'scale(1.8)' }} />
               </div>
-              <div style={{ color: '#ffffff', fontSize: '18px', fontFamily: 'var(--font-body)', fontWeight: '600', marginBottom: '8px' }}>
+              <div style={{ color: '#ffffff', fontSize: '18px', fontFamily: 'var(--font-body)', fontWeight: '400', marginBottom: '8px' }}>
                 Join as a Fan. Connect with creators.
               </div>
               <div style={{ color: '#94a3b8', fontSize: '14px', fontFamily: 'var(--font-body)', fontWeight: '400' }}>
@@ -207,7 +207,7 @@ const FanSignup = () => {
                 letterSpacing: '1.5px',
                 fontWeight: '600'
               }}>
-                YOUR NAME
+                NAME
               </label>
 
               <div style={{
@@ -261,7 +261,7 @@ const FanSignup = () => {
                 letterSpacing: '1.5px',
                 fontWeight: '600'
               }}>
-                YOUR EMAIL ID
+                EMAIL ID
               </label>
 
               <div style={{

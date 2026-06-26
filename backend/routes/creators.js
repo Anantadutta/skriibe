@@ -571,7 +571,7 @@ router.post('/logout', (req, res) => {
  * @desc Update general settings
  */
 router.post('/settings', verifyCreatorToken, async (req, res) => {
-  const { weeklyGoal, pricePerQuestion, dailyCap, autoPause, isPaused, bio, phone, instagramHandle, expertise, email } = req.body;
+  const { weeklyGoal, pricePerQuestion, dailyCap, autoPause, isPaused, pauseReason, bio, phone, instagramHandle, expertise, email } = req.body;
   const updateData = {};
   if (typeof weeklyGoal === 'number') updateData.weeklyGoal = weeklyGoal;
   if (typeof pricePerQuestion === 'number') {
@@ -596,6 +596,26 @@ router.post('/settings', verifyCreatorToken, async (req, res) => {
   if (!updatedCreator) {
     res.clearCookie('creator_token', getClearCookieOptions());
     return res.status(401).json({ message: 'Session expired or user deleted. Please log in again.' });
+  }
+
+  if (isPaused === true) {
+    const AccountActionLog = require('../models/AccountActionLog');
+    const AdminAlert = require('../models/AdminAlert');
+    await AccountActionLog.create({
+      userType: 'creator',
+      action: 'pause',
+      reason: pauseReason || 'No reason provided',
+      userEmail: updatedCreator.email,
+      userName: updatedCreator.name || updatedCreator.handle
+    });
+    await AdminAlert.create({
+      type: 'creator_pause',
+      title: 'Creator Paused Account',
+      message: `Creator ${updatedCreator.name || updatedCreator.handle} paused their account.`
+    });
+    if (req.io) {
+      req.io.emit('new-admin-alert');
+    }
   }
 
   res.json({ success: true, creator: updatedCreator });

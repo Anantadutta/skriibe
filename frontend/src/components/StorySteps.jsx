@@ -120,7 +120,7 @@ const StepTwo = ({ theme }) => {
                     Your skriibe page.<br /><span className="italic text-skriibe-blue">One link. That's it.</span>
                 </h3>
                 <p className="font-roboto text-gray-400 text-lg leading-relaxed mb-8">
-                    Sign up with your emailid. Enter your expertise. Choose your price. Your page goes live at <span className="text-skriibe-blue font-semibold">skriibe.com/@yourhandle</span>. Drop it in your Instagram bio. You're done.
+                    Sign up with your Email Id. Enter your expertise. Choose your price. Your page goes live at <span className="text-skriibe-blue font-semibold">skriibe.com/@yourhandle</span>. Drop it in your Instagram bio. You're done.
                 </p>
 
                 <div className="font-roboto p-6 bg-skriibe-d3 rounded-2xl border-l-[4px] border-skriibe-blue text-sm md:text-base text-gray-400 leading-relaxed mb-10">

@@ -115,8 +115,13 @@ const CreatorDisputes = () => {
                       <div style={{ color: '#94a3b8', fontSize: '0.85rem' }}>Buyer: {d.buyerName || d.followerName || 'Anonymous'}</div>
                     </div>
                   </div>
-                  <div style={{ background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b', border: '1px solid rgba(245, 158, 11, 0.2)', padding: '6px 12px', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 'bold', letterSpacing: '1px', alignSelf: 'flex-start' }}>
-                    {isAbuse ? 'ABUSE FLAGGED' : 'REJECTED'}
+                  <div style={{ display: 'flex', gap: '8px', alignSelf: 'flex-start' }}>
+                    <div style={{ background: '#1d4ed8', color: '#fff', padding: '6px 12px', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 'bold', letterSpacing: '1px' }}>
+                      Dispute #{d.disputeId || d._id.slice(-6)}
+                    </div>
+                    <div style={{ background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b', border: '1px solid rgba(245, 158, 11, 0.2)', padding: '6px 12px', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 'bold', letterSpacing: '1px' }}>
+                      {isAbuse ? 'ABUSE FLAGGED' : 'REJECTED'}
+                    </div>
                   </div>
                 </div>
 

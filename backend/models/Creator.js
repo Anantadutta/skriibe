@@ -61,6 +61,11 @@ const CreatorSchema = new mongoose.Schema({
     replyRate: { type: Number, default: 0 },
     avgReplyTime: { type: Number, default: 0 }
   },
+  commissionOverride: {
+    creatorShare: { type: Number },
+    startDate: { type: Date },
+    endDate: { type: Date }
+  },
   availableBalance: { type: Number, default: 0 },
   lifetimePaid: { type: Number, default: 0 },
   authProvider: { type: String, default: 'local' },

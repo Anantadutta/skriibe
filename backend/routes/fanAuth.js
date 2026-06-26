@@ -579,6 +579,25 @@ router.delete('/profile', verifyFanToken, async (req, res) => {
       return res.status(404).json({ success: false, message: 'Fan not found' });
     }
     
+    const AccountActionLog = require('../models/AccountActionLog');
+    await AccountActionLog.create({
+      userType: 'fan',
+      action: 'delete',
+      reason: req.body.reason || 'No reason provided',
+      userEmail: fan.email,
+      userName: fan.name || 'Anonymous Fan'
+    });
+
+    const AdminAlert = require('../models/AdminAlert');
+    await AdminAlert.create({
+      type: 'fan_delete',
+      title: 'Fan Deleted Account',
+      message: `Fan ${fan.name || 'Anonymous'} deleted their account.`
+    });
+    if (req.io) {
+      req.io.emit('new-admin-alert');
+    }
+
     await Fan.findByIdAndDelete(req.fan.fanId);
     
     const Creator = require('../models/Creator');

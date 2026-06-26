@@ -197,7 +197,7 @@ const DisclaimerQuestion = () => {
           <>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               <Field 
-                label="YOUR NAME" 
+                label="NAME" 
                 value={form.name} 
                 onChange={(e) => setForm({...form, name: e.target.value})}
                 onBlur={() => handleBlur('name')}

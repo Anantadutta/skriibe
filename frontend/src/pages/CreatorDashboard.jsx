@@ -222,6 +222,7 @@ const CreatorDashboard = () => {
       flexDirection: 'column',
       alignItems: 'center',
       boxSizing: 'border-box',
+      overflowX: 'hidden',
       fontFamily: 'system-ui, -apple-system, sans-serif'
     }}>
       <style dangerouslySetInnerHTML={{ __html: `
@@ -282,11 +283,17 @@ const CreatorDashboard = () => {
           {/* Logo & Greeting */}
           <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '10px' }}>
             <button
-              onClick={() => {
-                localStorage.clear();
-                navigate('/creator/login');
+              onClick={(e) => {
+                e.preventDefault();
+                localStorage.removeItem('skriibe_token');
+                localStorage.removeItem('creator_token');
+                localStorage.removeItem('auth_roles');
+                localStorage.removeItem('auth_activeRole');
+                window.location.href = '/creator/login';
               }}
               style={{
+                position: 'relative',
+                zIndex: 10,
                 background: 'rgba(255, 255, 255, 0.05)',
                 border: '1px solid rgba(255, 255, 255, 0.08)',
                 borderRadius: '50%',
@@ -840,9 +847,11 @@ const CreatorDashboard = () => {
       <div style={{
         position: 'fixed',
         bottom: 0,
-        left: '50%',
-        transform: 'translateX(-50%)',
-        width: '390px',
+        left: 0,
+        right: 0,
+        margin: '0 auto',
+        width: '100%',
+        maxWidth: '390px',
         background: '#0E0E0E',
         borderTop: '1px solid #1A1A1A',
         display: 'flex',
@@ -855,7 +864,7 @@ const CreatorDashboard = () => {
           return (
             <div
               key={item.route}
-              onClick={() => navigate(item.route)}
+              onClick={() => navigate(item.route, { state: { creator } })}
               style={{
                 display: 'flex',
                 flexDirection: 'column',

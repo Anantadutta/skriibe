@@ -147,6 +147,18 @@ router.post('/submit-question', async (req, res) => {
       status: question.paymentStatus
     });
 
+    if (isFollowUp) {
+      await AdminAlert.create({
+        type: 'follow_up',
+        title: 'New Follow-up Question',
+        message: `A fan asked a follow-up question for order #${orderNumber}`,
+        referenceId: question._id
+      });
+      if (req.io) {
+        req.io.emit('new-admin-alert');
+      }
+    }
+
     return res.json({
       success: true,
       questionId: question._id,
@@ -220,12 +232,22 @@ router.post('/question/:id/flag', async (req, res) => {
     
     question.status = 'flagged';
     if (reason) question.flagReason = reason;
+    
+    if (!question.disputeId) {
+      const counter = await Counter.findByIdAndUpdate(
+        { _id: 'buyerDisputeId' },
+        { $inc: { seq: 1 } },
+        { new: true, upsert: true }
+      );
+      question.disputeId = 'bu' + String(counter.seq).padStart(4, '0');
+    }
+    
     await question.save();
     
     await AdminAlert.create({
       type: 'buyer_flag',
       title: 'Fan flagged question',
-      message: `Fan flagged answered question #${question._id.toString().slice(-6)}.`,
+      message: `Fan flagged answered question #${question.disputeId}.`,
       referenceId: question._id
     });
 

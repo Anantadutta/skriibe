@@ -47,6 +47,7 @@ const BuyerManagement = () => {
                 <div style={{ color: '#fff', fontWeight: 'bold', fontSize: '1rem' }}>{fan.name || 'Anonymous User'}</div>
                 <div style={{ color: '#94a3b8', fontSize: '0.85rem' }}>{fan.email}</div>
                 <div style={{ color: '#64748b', fontSize: '0.75rem' }}>Joined: {new Date(fan.createdAt).toLocaleDateString()}</div>
+                <div style={{ color: '#38BDF8', fontSize: '0.75rem', marginTop: '2px', fontWeight: 'bold' }}>Total Questions Asked: {fan.totalQuestionsAsked || 0}</div>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                 {fan.isBanned ? (

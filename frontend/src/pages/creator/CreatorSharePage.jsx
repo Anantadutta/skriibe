@@ -47,6 +47,7 @@ const CreatorSharePage = () => {
   const [showQRModal, setShowQRModal] = useState(location.state?.openQR || false);
 
   useEffect(() => {
+    window.scrollTo(0, 0);
     if (location.state?.isNewlyLive) {
       setShowBanner(true);
       confetti({ particleCount: 100, spread: 70, origin: { y: 0.3 } });
@@ -102,7 +103,7 @@ const CreatorSharePage = () => {
   // Deep Link opens moved below
 
   const generateQRCanvas = async () => {
-    const qrCanvasSrc = qrRef2.current?.querySelector('canvas');
+    const qrCanvasSrc = qrRef2.current?.querySelector('canvas') || qrRef.current?.querySelector('canvas');
     if (!qrCanvasSrc) return null;
 
     const canvas = document.createElement('canvas');
@@ -188,29 +189,29 @@ const CreatorSharePage = () => {
   }, [handle, fullShareUrl]);
 
   const shareWithQR = async (fallbackAction) => {
+    // Generate and download the QR image automatically so the user can attach it manually
     try {
-      if (navigator.canShare && navigator.share) {
-        const canvas = await generateQRCanvas();
-        if (canvas) {
-          const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
-          if (blob) {
-            const file = new File([blob], `${handle}-skriibe-qr.png`, { type: 'image/png' });
-            if (navigator.canShare({ files: [file] })) {
-              await navigator.share({
-                title: 'My skriibe',
-                text: `Ask me anything on skriibe! ${fullShareUrl}`,
-                files: [file]
-              });
-              return;
-            }
+      const canvas = await generateQRCanvas();
+      if (canvas) {
+        const url = canvas.toDataURL('image/png');
+        const link = document.createElement('a');
+        link.download = `${handle}-skriibe-qr.png`;
+        link.href = url;
+        link.click();
+        
+        // Also attempt to copy the image to clipboard if supported
+        canvas.toBlob((blob) => {
+          if (blob && navigator.clipboard && navigator.clipboard.write) {
+            navigator.clipboard.write([
+              new ClipboardItem({ 'image/png': blob })
+            ]).catch(err => console.log('Clipboard write failed:', err));
           }
-        }
+        }, 'image/png');
       }
-    } catch (err) {
-      console.log('Web Share API failed', err);
+    } catch (e) {
+      console.log('Failed to generate fallback QR', e);
     }
-    
-    // Fallback
+
     fallbackAction();
   };
 
@@ -560,34 +561,8 @@ const CreatorSharePage = () => {
           height: '32px',
           justifyContent: 'space-between'
         }}>
-          {/* Back button */}
-          <button
-            onClick={() => navigate('/creator/dashboard', { state: { creator } })}
-            style={{
-              background: 'rgba(255, 255, 255, 0.05)',
-              border: '1px solid rgba(255, 255, 255, 0.08)',
-              borderRadius: '50%',
-              color: '#ffffff',
-              width: '32px',
-              height: '32px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              transition: 'all 0.2s',
-              padding: 0
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-              e.currentTarget.style.transform = 'translateX(-2px)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
-              e.currentTarget.style.transform = 'translateX(0)';
-            }}
-          >
-            ←
-          </button>
+          {/* Empty div to preserve flex layout (space-between) since back button is removed */}
+          <div style={{ width: '32px', height: '32px' }}></div>
           
           <div style={{ color: '#ffffff', fontSize: '16px', fontWeight: 700, letterSpacing: '0.2px' }}>
             My <span style={{ color: '#818cf8' }}>skriibe</span> page
@@ -881,6 +856,18 @@ const CreatorSharePage = () => {
           </div>
         </div>
       )}
+
+      {/* Hidden QR Code for programmatic sharing when modal is closed */}
+      <div ref={qrRef} style={{ position: 'absolute', opacity: 0, pointerEvents: 'none', zIndex: -100 }}>
+        <QRCodeCanvas 
+          value={fullShareUrl}
+          size={180}
+          bgColor="#ffffff"
+          fgColor="#000000"
+          level="H"
+          includeMargin={false}
+        />
+      </div>
     </div>
   );
 };

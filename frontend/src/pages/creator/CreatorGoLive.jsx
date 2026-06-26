@@ -15,6 +15,7 @@ const CreatorGoLive = () => {
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
+    window.scrollTo(0, 0);
     // If no creator data, we should try to navigate back or to dashboard
     if (!creatorData) {
       navigate('/onboard/profile');

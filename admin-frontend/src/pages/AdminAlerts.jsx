@@ -58,6 +58,14 @@ const AdminAlerts = () => {
       case 'fan_signup':
         navigate('/admin/buyers');
         break;
+      case 'follow_up':
+        navigate('/admin/transactions');
+        break;
+      case 'creator_delete':
+      case 'creator_pause':
+      case 'fan_delete':
+        navigate('/admin/account-actions');
+        break;
       default:
         break;
     }
@@ -73,6 +81,10 @@ const AdminAlerts = () => {
       case 'creator_flag': return { icon: '🚩', bg: 'rgba(239, 68, 68, 0.1)', color: '#EF4444' };
       case 'buyer_flag': return { icon: '🚩', bg: 'rgba(239, 68, 68, 0.1)', color: '#EF4444' };
       case 'payout_ready': return { icon: '💰', bg: 'rgba(34, 197, 94, 0.1)', color: '#22C55E' };
+      case 'follow_up': return { icon: '🔄', bg: 'rgba(139, 92, 246, 0.1)', color: '#8B5CF6' };
+      case 'creator_delete': return { icon: '🗑️', bg: 'rgba(239, 68, 68, 0.1)', color: '#EF4444' };
+      case 'creator_pause': return { icon: '⏸️', bg: 'rgba(245, 158, 11, 0.1)', color: '#F59E0B' };
+      case 'fan_delete': return { icon: '🗑️', bg: 'rgba(239, 68, 68, 0.1)', color: '#EF4444' };
       default: return { icon: '🔔', bg: 'rgba(148, 163, 184, 0.1)', color: '#94a3b8' };
     }
   };

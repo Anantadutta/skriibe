@@ -280,7 +280,25 @@ router.post('/questions/:id/reply', verifyCreatorToken, async (req, res) => {
       return res.status(404).json({ message: 'Question not found or unauthorized' });
     }
 
-    const creatorSharePercentage = parseFloat(process.env.CREATOR_SHARE_PERCENTAGE || '1.00');
+    // Default logic: Temporarily 100% (1.00), later will shift to 80% (0.80)
+    let creatorSharePercentage = 1.0; 
+    
+    // Check if there is an active override
+    const creatorDocForCommission = await Creator.findById(req.creator.creatorId);
+    if (creatorDocForCommission && creatorDocForCommission.commissionOverride && creatorDocForCommission.commissionOverride.startDate) {
+      const now = new Date();
+      const start = new Date(creatorDocForCommission.commissionOverride.startDate);
+      const end = creatorDocForCommission.commissionOverride.endDate ? new Date(creatorDocForCommission.commissionOverride.endDate) : null;
+      
+      if (now >= start && (!end || now <= end)) {
+        // Within the valid period -> use override
+        creatorSharePercentage = creatorDocForCommission.commissionOverride.creatorShare / 100;
+      } else if (end && now > end) {
+        // Override has expired -> auto shifts to 80 20
+        creatorSharePercentage = 0.8;
+      }
+    }
+
     const grossAmount = question.amountPaid || 0; 
     
     if (grossAmount > 0) {
@@ -382,23 +400,31 @@ router.post('/questions/:id/reject', verifyCreatorToken, async (req, res) => {
 
     await connectDB();
     const Question = require('../models/Question');
-    const question = await Question.findOneAndUpdate(
-      { _id: id, creatorId: req.creator.creatorId },
-      { 
-        status: 'rejected',
-        rejectReason: reason || 'expertise'
-      },
-      { new: true }
-    );
-
+    const Counter = require('../models/Counter');
+    
+    let question = await Question.findOne({ _id: id, creatorId: req.creator.creatorId });
     if (!question) {
       return res.status(404).json({ message: 'Question not found or unauthorized' });
     }
 
+    question.status = 'rejected';
+    question.rejectReason = reason || 'expertise';
+
+    if (!question.disputeId) {
+      const counter = await Counter.findByIdAndUpdate(
+        { _id: 'creatorDisputeId' },
+        { $inc: { seq: 1 } },
+        { new: true, upsert: true }
+      );
+      question.disputeId = 'cr' + String(counter.seq).padStart(4, '0');
+    }
+
+    await question.save();
+
     await AdminAlert.create({
       type: 'creator_reject',
       title: 'Creator rejected question',
-      message: `Creator rejected question #${question._id.toString().slice(-6)}: ${reason || 'expertise'}`,
+      message: `Creator rejected question #${question.disputeId}: ${reason || 'expertise'}`,
       referenceId: question._id
     });
 
@@ -425,23 +451,31 @@ router.post('/questions/:id/flag', verifyCreatorToken, async (req, res) => {
 
     await connectDB();
     const Question = require('../models/Question');
-    const question = await Question.findOneAndUpdate(
-      { _id: id, creatorId: req.creator.creatorId },
-      { 
-        status: 'rejected',
-        rejectReason: 'abuse'
-      },
-      { new: true }
-    );
+    const Counter = require('../models/Counter');
 
+    let question = await Question.findOne({ _id: id, creatorId: req.creator.creatorId });
     if (!question) {
       return res.status(404).json({ message: 'Question not found or unauthorized' });
     }
 
+    question.status = 'rejected';
+    question.rejectReason = 'abuse';
+
+    if (!question.disputeId) {
+      const counter = await Counter.findByIdAndUpdate(
+        { _id: 'creatorDisputeId' },
+        { $inc: { seq: 1 } },
+        { new: true, upsert: true }
+      );
+      question.disputeId = 'cr' + String(counter.seq).padStart(4, '0');
+    }
+
+    await question.save();
+
     await AdminAlert.create({
       type: 'creator_flag',
       title: 'Creator flagged abuse',
-      message: `Creator flagged question #${question._id.toString().slice(-6)} for abuse.`,
+      message: `Creator flagged question #${question.disputeId} for abuse.`,
       referenceId: question._id
     });
 
@@ -579,19 +613,30 @@ router.post('/delete-account', async (req, res) => {
       return res.json({ success: true, message: "Reason saved, but no creator to delete." });
     }
     
-    // Save reason
-    if (reason) {
-      await DeletedAccountReason.create({
-        creatorId: creatorId,
-        reason: reason
-      });
-    }
-
     // Delete creator, associated fan, and creator profile
     const Creator = require('../models/Creator');
     const creatorToDelete = await Creator.findById(creatorId);
     
     if (creatorToDelete) {
+      const AccountActionLog = require('../models/AccountActionLog');
+      await AccountActionLog.create({
+        userType: 'creator',
+        action: 'delete',
+        reason: reason || 'No reason provided',
+        userEmail: creatorToDelete.email,
+        userName: creatorToDelete.name || creatorToDelete.handle
+      });
+
+      const AdminAlert = require('../models/AdminAlert');
+      await AdminAlert.create({
+        type: 'creator_delete',
+        title: 'Creator Deleted Account',
+        message: `Creator ${creatorToDelete.name || creatorToDelete.handle} deleted their account.`,
+      });
+      if (req.io) {
+        req.io.emit('new-admin-alert');
+      }
+
       const Fan = require('../models/Fan');
       const CreatorProfile = require('../models/CreatorProfile');
       
@@ -624,10 +669,9 @@ router.post('/delete-account', async (req, res) => {
 router.get('/payouts', verifyCreatorToken, async (req, res) => {
   try {
     await connectDB();
-    const CREATOR_SHARE = 1.00;
     const now = new Date();
-    const creatorData = await Creator.findById(req.creator.creatorId).select('createdAt');
-    const createdAtDate = creatorData?.createdAt || new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const creatorDocForCommission = await Creator.findById(req.creator.creatorId).select('createdAt commissionOverride');
+    const createdAtDate = creatorDocForCommission?.createdAt || new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
     const normalizedCreatedAt = new Date(createdAtDate);
     normalizedCreatedAt.setHours(0, 0, 0, 0);
@@ -659,9 +703,6 @@ router.get('/payouts', verifyCreatorToken, async (req, res) => {
     }
 
     // Include questions from both routes:
-    // - fans route sets paymentStatus:'paid' immediately
-    // - buyers route sets paymentStatus:'pending' until Razorpay goes live
-    // So we match on amountPaid > 0 (the actual money) rather than paymentStatus.
     const answeredPaid = await Question.find({
       creatorId:    req.creator.creatorId,
       status:       { $in: ['answered', 'flagged'] },
@@ -680,8 +721,23 @@ router.get('/payouts', verifyCreatorToken, async (req, res) => {
     let inEscrowQuestions = 0;
 
     for (const q of answeredPaid) {
-      const gross          = q.amountPaid || 0;
-      const creatorEarning = gross * CREATOR_SHARE;
+      const gross = q.amountPaid || 0;
+      
+      // Calculate dynamic creator share based on when it was answered
+      let dynamicCreatorShare = 1.0; 
+      if (creatorDocForCommission && creatorDocForCommission.commissionOverride && creatorDocForCommission.commissionOverride.startDate) {
+        const qAnsweredAt = new Date(q.answeredAt);
+        const start = new Date(creatorDocForCommission.commissionOverride.startDate);
+        const end = creatorDocForCommission.commissionOverride.endDate ? new Date(creatorDocForCommission.commissionOverride.endDate) : null;
+        
+        if (qAnsweredAt >= start && (!end || qAnsweredAt <= end)) {
+          dynamicCreatorShare = creatorDocForCommission.commissionOverride.creatorShare / 100;
+        } else if (end && qAnsweredAt > end) {
+          dynamicCreatorShare = 0.8;
+        }
+      }
+      
+      const creatorEarning = gross * dynamicCreatorShare;
       const answeredMonth  = new Date(q.answeredAt.getFullYear(), q.answeredAt.getMonth(), 1);
 
       // Weekly cycle logic: questions answered from lastBoundary to now

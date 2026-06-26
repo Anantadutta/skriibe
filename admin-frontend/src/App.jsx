@@ -18,6 +18,10 @@ import UnbanBuyer from './pages/UnbanBuyer';
 import AdminAlerts from './pages/AdminAlerts';
 import AdminLogin from './pages/AdminLogin';
 import OpenQuestions from './pages/OpenQuestions';
+import Transactions from './pages/Transactions';
+import DeletionPauseReasons from './pages/DeletionPauseReasons';
+import CommissionSettings from './pages/CommissionSettings';
+import CreatorBankDetails from './pages/CreatorBankDetails';
 import AdminLayout from './components/AdminLayout';
 
 // Authentication guard
@@ -56,6 +60,10 @@ function App() {
             <Route path="buyers/confirm-block" element={<ConfirmBlock />} />
             <Route path="buyers/unban" element={<UnbanBuyer />} />
             <Route path="alerts" element={<AdminAlerts />} />
+            <Route path="transactions" element={<Transactions />} />
+            <Route path="account-actions" element={<DeletionPauseReasons />} />
+            <Route path="commission" element={<CommissionSettings />} />
+            <Route path="bank-details" element={<CreatorBankDetails />} />
             <Route path="" element={<Navigate to="/admin/dashboard" replace />} />
           </Route>
         </Route>

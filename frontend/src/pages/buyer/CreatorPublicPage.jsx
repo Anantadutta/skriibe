@@ -78,6 +78,12 @@ const CreatorPublicPage = () => {
         if (res.data?.fan) {
           setBuyerName(res.data.fan.name || '');
           setBuyerEmail(res.data.fan.email || '');
+
+          let fetchedPhone = res.data.fan.whatsappPhone || res.data.fan.phone || '';
+          if (fetchedPhone.startsWith('+91')) {
+            fetchedPhone = fetchedPhone.replace(/^\+91/, '');
+          }
+          setBuyerPhone(fetchedPhone);
         }
       } catch (err) {
         try {
@@ -85,6 +91,12 @@ const CreatorPublicPage = () => {
           if (cRes.data?.creator) {
             setBuyerName(cRes.data.creator.name || '');
             setBuyerEmail(cRes.data.creator.email || '');
+
+            let fetchedPhone = cRes.data.creator.phone || '';
+            if (fetchedPhone.startsWith('+91')) {
+              fetchedPhone = fetchedPhone.replace(/^\+91/, '');
+            }
+            setBuyerPhone(fetchedPhone);
           }
         } catch (e) {
           // not logged in, leave empty
@@ -448,7 +460,7 @@ const CreatorPublicPage = () => {
           
           <div style={{ background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '16px', padding: '16px' }}>
             <div style={{ color: '#64748b', fontSize: '0.7rem', fontWeight: '800', letterSpacing: '2px', textTransform: 'uppercase' }}>
-              YOUR NAME <span style={{ color: '#ef4444' }}>*</span>
+              NAME <span style={{ color: '#ef4444' }}>*</span>
             </div>
             <input 
               className="unified-input" 

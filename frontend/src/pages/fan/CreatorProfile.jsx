@@ -60,7 +60,13 @@ const CreatorProfile = () => {
         if (res.data?.fan) {
           setBuyerName(res.data.fan.name || '');
           setBuyerEmail(res.data.fan.email || '');
-          setBuyerPhone(res.data.fan.whatsappPhone || res.data.fan.phone || '');
+          
+          let fetchedPhone = res.data.fan.whatsappPhone || res.data.fan.phone || '';
+          if (fetchedPhone.startsWith('+91')) {
+            fetchedPhone = fetchedPhone.replace(/^\+91/, '');
+          }
+          setBuyerPhone(fetchedPhone);
+
           let activeBan = res.data.fan.isBanned || false;
           if (activeBan && res.data.fan.banExpiresAt) {
             if (new Date(res.data.fan.banExpiresAt) < new Date()) {
@@ -76,7 +82,13 @@ const CreatorProfile = () => {
           if (cRes.data?.creator) {
             setBuyerName(cRes.data.creator.name || '');
             setBuyerEmail(cRes.data.creator.email || '');
-            setBuyerPhone(cRes.data.creator.phone || '');
+            
+            let fetchedPhone = cRes.data.creator.phone || '';
+            if (fetchedPhone.startsWith('+91')) {
+              fetchedPhone = fetchedPhone.replace(/^\+91/, '');
+            }
+            setBuyerPhone(fetchedPhone);
+            
             setIsLoggedIn(true);
           }
         } catch (e) {
@@ -544,7 +556,7 @@ const CreatorProfile = () => {
               
               {/* Name */}
               <div style={{ background: '#131313', border: '1px solid #2a2a2a', borderRadius: '16px', padding: '12px 16px' }}>
-                <div style={{ color: '#64748b', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '4px' }}>YOUR NAME <span style={{ color: '#ef4444' }}>*</span></div>
+                <div style={{ color: '#64748b', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '4px' }}>NAME <span style={{ color: '#ef4444' }}>*</span></div>
                 <input 
                   type="text" 
                   value={buyerName}

@@ -9,6 +9,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showSlaModal, setShowSlaModal] = useState(false);
 
   const getLocalDateString = () => {
     const d = new Date();
@@ -94,15 +95,41 @@ const Dashboard = () => {
 
           <div className="font-wide text-blue" style={{ fontSize: '2rem' }}>₹{data.gmvToday.toLocaleString()}</div>
           <div className="text-muted" style={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase' }}>
-            {dateRange.startDate === dateRange.endDate ? 'REVENUE TODAY' : 'REVENUE'}
+            {dateRange.startDate === dateRange.endDate ? 'TOTAL AMOUNT INVOLVED TODAY' : 'TOTAL AMOUNT INVOLVED'}
           </div>
         </div>
         <div 
           className="bg-card" 
-          style={{ padding: '24px 20px', display: 'flex', flexDirection: 'column', gap: '8px' }}
+          style={{ padding: '16px 20px 24px 20px', display: 'flex', flexDirection: 'column', gap: '8px', position: 'relative' }}
         >
+          {/* Date Filter Inside Card */}
+          <div 
+            style={{ display: 'flex', gap: '8px', marginBottom: '12px', alignItems: 'center', flexWrap: 'wrap' }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: '#13131A', border: '1px solid #2A2A2A', borderRadius: '6px', padding: '4px 8px' }}>
+              <span style={{ color: '#64748b', fontSize: '0.7rem' }}>From:</span>
+              <input 
+                type="date" 
+                value={dateRange.startDate}
+                onChange={(e) => setDateRange(prev => ({ ...prev, startDate: e.target.value }))}
+                style={{ background: 'transparent', border: 'none', color: '#e2e8f0', fontSize: '0.75rem', outline: 'none', cursor: 'pointer' }}
+              />
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: '#13131A', border: '1px solid #2A2A2A', borderRadius: '6px', padding: '4px 8px' }}>
+              <span style={{ color: '#64748b', fontSize: '0.7rem' }}>To:</span>
+              <input 
+                type="date" 
+                value={dateRange.endDate}
+                onChange={(e) => setDateRange(prev => ({ ...prev, endDate: e.target.value }))}
+                style={{ background: 'transparent', border: 'none', color: '#e2e8f0', fontSize: '0.75rem', outline: 'none', cursor: 'pointer' }}
+              />
+            </div>
+          </div>
+
           <div className="font-wide text-green" style={{ fontSize: '2rem' }}>₹{data.revenue.toLocaleString()}</div>
-          <div className="text-muted" style={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '1px' }}>PROFIT</div>
+          <div className="text-muted" style={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase' }}>
+            {dateRange.startDate === dateRange.endDate ? 'PROFIT TODAY' : 'PROFIT'}
+          </div>
         </div>
       </div>
 
@@ -117,7 +144,7 @@ const Dashboard = () => {
           <div className="text-muted" style={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '1px' }}>ACTIVE CREATORS</div>
         </div>
         <div 
-          onClick={() => navigate('/admin/alerts')}
+          onClick={() => setShowSlaModal(true)}
           className="bg-card" 
           style={{ padding: '24px 20px', display: 'flex', flexDirection: 'column', gap: '8px', cursor: 'pointer' }}
         >
@@ -144,6 +171,45 @@ const Dashboard = () => {
       </div>
 
       {/* Removed Recent Activity section */}
+      
+      {/* SLA Modal */}
+      {showSlaModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(4px)' }}>
+          <div style={{ background: '#13131A', width: '90%', maxWidth: '600px', borderRadius: '16px', border: '1px solid #1E1E2D', padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px', maxHeight: '80vh', overflowY: 'auto' }}>
+            <h2 className="font-wide" style={{ margin: 0, fontSize: '1.5rem', color: '#fff' }}>SLA Breaches (>{24}h Pending)</h2>
+            <p style={{ color: '#94a3b8', fontSize: '0.9rem', margin: 0 }}>These questions have been paid for but not answered within 24 hours.</p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '12px' }}>
+              {data.breachedQuestions && data.breachedQuestions.length > 0 ? (
+                data.breachedQuestions.map(bq => (
+                  <div key={bq._id} style={{ background: '#0F0F13', padding: '16px', borderRadius: '8px', border: '1px solid #2A2A35' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <div style={{ color: '#fff', fontWeight: 'bold' }}>To: {bq.creatorId?.name || 'Unknown'} (@{bq.creatorId?.handle || 'unknown'})</div>
+                      <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                        <div style={{ color: '#10B981', fontWeight: 'bold' }}>₹{bq.amountPaid || 0}</div>
+                        <div style={{ color: '#EF4444', fontSize: '0.8rem', fontWeight: 'bold' }}>{Math.floor((new Date() - new Date(bq.createdAt)) / (1000 * 60 * 60))}h Overdue</div>
+                      </div>
+                    </div>
+                    <div style={{ color: '#94a3b8', fontSize: '0.85rem', marginBottom: '8px' }}>From: {bq.fanId?.name || bq.buyerName || 'Anonymous Buyer'}</div>
+                    <div style={{ color: '#e2e8f0', fontSize: '0.9rem', fontStyle: 'italic', background: '#1a1a24', padding: '8px', borderRadius: '4px' }}>
+                      "{bq.questionText}"
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div style={{ color: '#64748b', textAlign: 'center', padding: '24px' }}>No active SLA breaches! 🚀</div>
+              )}
+            </div>
+
+            <button 
+              onClick={() => setShowSlaModal(false)}
+              style={{ background: '#2A2A35', color: '#fff', border: 'none', padding: '12px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', marginTop: '8px' }}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -111,8 +111,13 @@ const BuyerDisputes = () => {
                   </div>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-end' }}>
-                  <div style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', padding: '4px 12px', borderRadius: '12px', fontSize: '0.8rem', fontWeight: 'bold' }}>
-                    DISPUTED
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <div style={{ background: '#1d4ed8', color: '#fff', padding: '4px 12px', borderRadius: '12px', fontSize: '0.8rem', fontWeight: 'bold' }}>
+                      Dispute #{d.disputeId || d._id.slice(-6)}
+                    </div>
+                    <div style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', padding: '4px 12px', borderRadius: '12px', fontSize: '0.8rem', fontWeight: 'bold' }}>
+                      DISPUTED
+                    </div>
                   </div>
                   {d.isBuyerBanned && (
                     <div style={{ background: '#EF4444', color: '#ffffff', padding: '4px 8px', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 'bold', textTransform: 'uppercase' }}>

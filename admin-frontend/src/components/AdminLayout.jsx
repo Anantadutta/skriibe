@@ -28,6 +28,10 @@ const AdminLayout = () => {
     { name: 'Buyer Health', path: '/admin/buyers', icon: '🛒' },
     { name: 'Creator Disputes', path: '/admin/creator-disputes', icon: '⚔️' },
     { name: 'Buyer Disputes', path: '/admin/buyer-disputes', icon: '⚖️' },
+    { name: 'Transactions', path: '/admin/transactions', icon: '💳' },
+    { name: 'Account Actions', path: '/admin/account-actions', icon: '🚪' },
+    { name: 'Commission %', path: '/admin/commission', icon: '⚙️' },
+    { name: 'Bank Details', path: '/admin/bank-details', icon: '🏦' },
     { name: 'Analytics', path: '/admin/analytics', icon: '📈' },
   ];
 

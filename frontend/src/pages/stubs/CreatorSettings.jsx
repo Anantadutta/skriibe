@@ -24,6 +24,7 @@ const CreatorSettings = () => {
 
   const [creator, setCreator] = useState(location.state?.creator || mockCreator);
   const [highlightPause, setHighlightPause] = useState(location.state?.highlightPause || false);
+  const [pauseReason, setPauseReason] = useState('');
   const [customAlert, setCustomAlert] = useState(null);
   const currencySymbol = getCurrencySymbol(creator?.phone);
 
@@ -340,9 +341,19 @@ const CreatorSettings = () => {
 
   const handleConfirmPause = async (newPausedState) => {
     try {
-      await api.post('/creators/settings', { isPaused: newPausedState });
+      if (newPausedState && !pauseReason.trim()) {
+        alert("Please provide a reason for pausing your account.");
+        return;
+      }
+      await api.post('/creators/settings', { 
+        isPaused: newPausedState,
+        pauseReason: newPausedState ? pauseReason : ''
+      });
       setIsPaused(newPausedState);
       setCreator(prev => ({ ...prev, isPaused: newPausedState }));
+      if (!newPausedState) {
+        setPauseReason('');
+      }
     } catch (err) {
       console.error('Failed to update pause state', err);
     } finally {
@@ -1080,9 +1091,11 @@ const CreatorSettings = () => {
       <div style={{
         position: 'fixed',
         bottom: 0,
-        left: '50%',
-        transform: 'translateX(-50%)',
-        width: '390px',
+        left: 0,
+        right: 0,
+        margin: '0 auto',
+        width: '100%',
+        maxWidth: '390px',
         background: '#0E0E0E',
         borderTop: '1px solid #1A1A1A',
         display: 'flex',
@@ -1095,7 +1108,7 @@ const CreatorSettings = () => {
           return (
             <div
               key={item.route}
-              onClick={() => navigate(item.route)}
+              onClick={() => navigate(item.route, { state: { creator } })}
               style={{
                 display: 'flex',
                 flexDirection: 'column',
@@ -1145,6 +1158,26 @@ const CreatorSettings = () => {
                 : "Are you sure you want to pause your page? Your profile will be temporarily hidden from the discovery page and you won't be able to receive new questions until you unpause."
               }
             </p>
+            {!isPaused && (
+              <textarea
+                value={pauseReason}
+                onChange={(e) => setPauseReason(e.target.value)}
+                placeholder="Please tell us why you are pausing your account..."
+                style={{
+                  width: '100%',
+                  minHeight: '80px',
+                  background: '#2A2A2A',
+                  border: '1px solid #333',
+                  borderRadius: '12px',
+                  color: '#fff',
+                  padding: '12px',
+                  marginBottom: '24px',
+                  fontFamily: 'inherit',
+                  resize: 'vertical',
+                  boxSizing: 'border-box'
+                }}
+              />
+            )}
             <div style={{ display: 'flex', gap: '12px' }}>
               <button style={{
                 flex: 1, background: '#2A2A2A', border: 'none', color: '#ffffff',

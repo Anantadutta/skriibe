@@ -637,16 +637,19 @@ const FanProfile = () => {
                   onClick={async () => {
                     const confirmDelete = window.confirm("Are you sure you want to permanently delete your account? This action cannot be undone.");
                     if (confirmDelete) {
-                      try {
-                        const res = await api.delete('/fan-auth/profile');
-                        if (res.data.success) {
-                          localStorage.clear();
-                          window.location.href = '/fan/login';
-                        } else {
-                          alert(res.data.message || 'Failed to delete account');
+                      const reason = window.prompt("Please tell us why you are leaving (optional):", "");
+                      if (reason !== null) {
+                        try {
+                          const res = await api.delete('/fan-auth/profile', { data: { reason } });
+                          if (res.data.success) {
+                            localStorage.clear();
+                            window.location.href = '/fan/login';
+                          } else {
+                            alert(res.data.message || 'Failed to delete account');
+                          }
+                        } catch (err) {
+                          alert(err.response?.data?.message || 'Error deleting account');
                         }
-                      } catch (err) {
-                        alert(err.response?.data?.message || 'Error deleting account');
                       }
                     }
                   }}

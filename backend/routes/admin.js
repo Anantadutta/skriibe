@@ -43,31 +43,64 @@ router.get('/dashboard', async (req, res) => {
       createdAt: { $gte: slaLimit }
     });
 
-    // Calculate total questions asked in the last 24 hours (for SLA Breaches card, as requested)
+    // Calculate actual SLA breaches: pending for > 24 hours
     const last24Hours = new Date(Date.now() - 24 * 60 * 60 * 1000);
-    const slaBreachesCount = await Question.countDocuments({
-      createdAt: { $gte: last24Hours }
-    });
+    const breachedQuestions = await Question.find({
+      status: 'submitted',
+      paymentStatus: 'paid',
+      createdAt: { $lt: last24Hours }
+    }).populate('creatorId', 'name handle').populate('fanId', 'name email');
+    const slaBreachesCount = breachedQuestions.length;
 
     // Active creators
     const activeCreatorsCount = await Creator.countDocuments({ isLive: true });
 
-    // Financials: Only count questions that have been answered and paid
+    // Financials: Count all questions that have been paid within the date range
     const todayQuestions = await Question.find({
-      status: 'answered',
       paymentStatus: 'paid',
-      answeredAt: { $gte: startOfDay, $lte: endOfDay }
+      createdAt: { $gte: startOfDay, $lte: endOfDay }
     });
     
-    const gmvToday = todayQuestions.reduce((sum, q) => sum + (q.amountPaid || 99), 0);
-    // Assuming 20% platform fee
-    const revenue = gmvToday * 0.20;
+    const creatorIds = [...new Set(todayQuestions.map(q => q.creatorId.toString()))];
+    const creators = await Creator.find({ _id: { $in: creatorIds } });
+    const creatorMap = {};
+    creators.forEach(c => creatorMap[c._id.toString()] = c);
+
+    let gmvToday = 0;
+    let revenue = 0;
+    const now = new Date();
+
+    todayQuestions.forEach(q => {
+      const amount = q.amountPaid || 99;
+      gmvToday += amount;
+
+      const creator = creatorMap[q.creatorId.toString()];
+      let creatorSharePercentage = 1.0; // default temporarily 100%
+
+      if (creator && creator.commissionOverride && creator.commissionOverride.startDate) {
+        const start = new Date(creator.commissionOverride.startDate);
+        const end = creator.commissionOverride.endDate ? new Date(creator.commissionOverride.endDate) : null;
+        
+        if (now >= start && (!end || now <= end)) {
+          creatorSharePercentage = creator.commissionOverride.creatorShare / 100;
+        } else if (end && now > end) {
+          creatorSharePercentage = 0.8; // shifted to 80% if expired
+        }
+      }
+
+      const skriibeSharePercentage = Math.max(0, 1.0 - creatorSharePercentage);
+      revenue += (amount * skriibeSharePercentage);
+    });
+
+    gmvToday = Math.round(gmvToday);
+    revenue = Math.round(revenue);
 
     const dashboardData = {
       gmvToday: gmvToday,
       revenue: revenue,
       activeCreators: activeCreatorsCount || await Creator.countDocuments(), // Fallback to all if none live
       slaBreaches: slaBreachesCount,
+      breachedQuestions: breachedQuestions,
       actionMetrics: {
         openQuestions: openQuestionsCount,
         refundsToday: 0 // Placeholder or calculate if there is refund logic
@@ -84,6 +117,48 @@ router.get('/dashboard', async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Server error fetching dashboard' });
+  }
+});
+
+/**
+ * @route GET /api/admin/transactions
+ * @desc Get all transactions (questions and nested follow-ups)
+ */
+router.get('/transactions', async (req, res) => {
+  try {
+    const questions = await Question.find({})
+      .populate('creatorId', 'name handle avatarUrl')
+      .populate('fanId', 'name')
+      .sort({ createdAt: -1 })
+      .lean();
+
+    const parentQuestions = questions.filter(q => !q.isFollowUp);
+    const followUps = questions.filter(q => q.isFollowUp);
+
+    // Group follow-ups under parents
+    parentQuestions.forEach(pq => {
+      pq.followUps = followUps.filter(fq => String(fq.parentQuestionId) === String(pq._id));
+    });
+
+    res.json(parentQuestions);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error fetching transactions' });
+  }
+});
+
+/**
+ * @route GET /api/admin/account-actions
+ * @desc Get all account deletion and pause logs
+ */
+router.get('/account-actions', async (req, res) => {
+  try {
+    const AccountActionLog = require('../models/AccountActionLog');
+    const logs = await AccountActionLog.find({}).sort({ createdAt: -1 });
+    res.json(logs);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error fetching account actions' });
   }
 });
 
@@ -325,8 +400,15 @@ router.post('/creators/:id/mark-paid', async (req, res) => {
 router.get('/fans', async (req, res) => {
   try {
     await connectDB();
-    const fans = await Fan.find({}).sort({ createdAt: -1 });
-    res.json(fans);
+    const fans = await Fan.find({}).sort({ createdAt: -1 }).lean();
+    
+    const fansWithStats = await Promise.all(fans.map(async (fan) => {
+      // paymentStatus: 'paid' implies it was actually asked, but let's count all questions linked to them
+      const totalQuestionsAsked = await Question.countDocuments({ fanId: fan._id });
+      return { ...fan, totalQuestionsAsked };
+    }));
+    
+    res.json(fansWithStats);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Server error fetching fans' });
@@ -478,59 +560,75 @@ router.get('/alerts', async (req, res) => {
 
     let alerts = await AdminAlert.find().sort({ createdAt: -1 });
 
-    // Auto-backfill if no alerts found, so the user can immediately see history
-    if (alerts.length === 0) {
-      const disputes = await Question.find({ status: { $in: ['rejected', 'flagged'] } });
-      for (const d of disputes) {
-        if (d.status === 'rejected') {
-          await AdminAlert.create({
-            type: 'creator_reject',
-            title: 'Creator rejected question',
-            message: `Creator rejected question #${d._id.toString().slice(-6)}: ${d.rejectReason || 'expertise'}`,
-            referenceId: d._id,
-            createdAt: d.updatedAt
-          });
-        } else if (d.status === 'flagged') {
-          await AdminAlert.create({
-            type: 'buyer_flag',
-            title: 'Buyer flagged a reply',
-            message: `Buyer flagged reply for question #${d._id.toString().slice(-6)}`,
-            referenceId: d._id,
-            createdAt: d.updatedAt
-          });
-        }
+    // Dynamically backfill/sync alerts for old data that might have missed the trigger
+    const disputes = await Question.find({ status: { $in: ['rejected', 'flagged'] } });
+    for (const d of disputes) {
+      if (d.status === 'rejected') {
+        await AdminAlert.updateOne(
+          { referenceId: d._id, type: { $in: ['creator_reject', 'creator_flag'] } },
+          { 
+            $setOnInsert: { 
+              type: d.rejectReason === 'abuse' ? 'creator_flag' : 'creator_reject',
+              title: d.rejectReason === 'abuse' ? 'Creator flagged abuse' : 'Creator rejected question',
+              message: `Creator rejected question #${d.disputeId || d._id.toString().slice(-6)}: ${d.rejectReason || 'expertise'}`,
+              referenceId: d._id,
+              createdAt: d.updatedAt
+            }
+          },
+          { upsert: true }
+        );
+      } else if (d.status === 'flagged') {
+        await AdminAlert.updateOne(
+          { referenceId: d._id, type: 'buyer_flag' },
+          {
+            $setOnInsert: {
+              type: 'buyer_flag',
+              title: 'Buyer flagged a reply',
+              message: `Buyer flagged reply for question #${d.disputeId || d._id.toString().slice(-6)}`,
+              referenceId: d._id,
+              createdAt: d.updatedAt
+            }
+          },
+          { upsert: true }
+        );
       }
-      
-      const creators = await Creator.find({}).sort({ createdAt: -1 }).limit(5);
-      for (const c of creators) {
-        await AdminAlert.create({
-          type: 'creator_signup',
-          title: 'Creator Signup / Login',
-          message: `Creator activity via Phone: ${c.phone || c.email}`,
-          referenceId: c._id,
-          createdAt: c.createdAt
-        });
-      }
-
-      const fans = await Fan.find({}).sort({ createdAt: -1 }).limit(5);
-      for (const f of fans) {
-        await AdminAlert.create({
-          type: 'fan_signup',
-          title: 'Fan Signup / Login',
-          message: `Fan activity: ${f.email || f.phone}`,
-          referenceId: f._id,
-          createdAt: f.createdAt
-        });
-      }
-
-      // Fetch again after backfilling
-      alerts = await AdminAlert.find().sort({ createdAt: -1 });
     }
+      
+    // Fetch latest alerts after sync
+    alerts = await AdminAlert.find().sort({ createdAt: -1 });
 
     res.json(alerts);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Server error fetching alerts' });
+  }
+});
+
+/**
+ * @route POST /api/admin/creators/:id/commission
+ * @desc Set a time-bound commission override for a creator
+ */
+router.post('/creators/:id/commission', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { creatorShare, startDate, endDate } = req.body;
+    
+    await connectDB();
+    const creator = await Creator.findById(id);
+    if (!creator) return res.status(404).json({ error: 'Creator not found' });
+
+    creator.commissionOverride = {
+      creatorShare: parseFloat(creatorShare),
+      startDate: new Date(startDate),
+      endDate: new Date(endDate)
+    };
+    
+    await creator.save();
+    
+    res.json({ success: true, message: 'Commission override saved successfully', creator });
+  } catch (err) {
+    console.error('Commission override error:', err.message, err.stack);
+    res.status(500).json({ error: 'Server error: ' + err.message });
   }
 });
 

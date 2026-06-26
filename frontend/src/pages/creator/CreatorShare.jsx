@@ -10,6 +10,7 @@ const CreatorShare = () => {
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
+    window.scrollTo(0, 0);
     if (!creatorData) {
       navigate('/creator/dashboard');
       return;

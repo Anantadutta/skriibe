@@ -160,7 +160,7 @@ const CreatorForgotPassword = () => {
                   letterSpacing: '1.5px',
                   fontWeight: '600'
                 }}>
-                  YOUR EMAIL ID
+                  EMAIL ID
                 </label>
 
                 <div style={{

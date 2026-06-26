@@ -48,6 +48,7 @@ const QuestionSchema = new mongoose.Schema(
     expiresAt: { type: Date }, // SLA deadline — set on creation based on creator's responseTime
     
     // Admin Resolution
+    disputeId: { type: String, unique: true, sparse: true },
     adminNotes: { type: String, default: '' },
     adminDecision: { type: String, enum: ['pending', 'creator_wins', 'fan_wins', 'banned', 'deleted'], default: 'pending' },
     isBuyerBanned: { type: Boolean, default: false }
