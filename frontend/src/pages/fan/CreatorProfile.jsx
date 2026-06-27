@@ -341,7 +341,7 @@ const CreatorProfile = () => {
             </div>
             
             <div style={{ color: '#94a3b8', fontSize: '14px', marginBottom: '16px' }}>
-              @{creator.handle}
+              {creator.handle}
             </div>
 
             {/* Instagram Linked Pill */}

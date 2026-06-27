@@ -158,7 +158,7 @@ const CommissionSettings = () => {
             <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#64748b' }}>🔍</span>
             <input 
               type="text" 
-              placeholder="Search by name or @username..."
+              placeholder="Search by name or username..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               style={{

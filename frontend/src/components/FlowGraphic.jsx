@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 const FlowGraphic = () => {
   const nodes = [
     { id: 'social', initial: 'I', label: 'Instagram', sub: 'Discovery', color: '#FF4D4D' },
-    { id: 'link', initial: 'L', label: 'Link in bio', sub: 'skriibe.com/@you', color: '#2D9CDB' },
+    { id: 'link', initial: 'L', label: 'Link in bio', sub: 'skriibe.com/you', color: '#2D9CDB' },
     { id: 'pay', initial: 'P', label: 'Follower pays', sub: 'Rs.99 via UPI', color: '#27AE60' },
     { id: 'reply', initial: 'R', label: 'You reply', sub: 'Dashboard', color: '#2F80ED' },
     { id: 'earn', initial: 'E', label: 'You earn', sub: 'Rs.99 / reply', color: '#F2C94C' }

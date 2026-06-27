@@ -82,7 +82,7 @@ const CreatorSharePage = () => {
     : [];
   const primaryExpertise = expertiseList[0] || 'expertise';
 
-  const shareUrl = `skriibe.com/@${handle}`;
+  const shareUrl = `skriibe.com/${handle}`;
   const fullShareUrl = `https://${shareUrl}`;
 
   // Bio template to display & copy
@@ -168,7 +168,7 @@ const CreatorSharePage = () => {
     ctx.font = 'bold 50px "Inter", "Segoe UI", sans-serif';
     ctx.fillStyle = '#3db4f2'; // Skriibe blue for handle
     ctx.textAlign = 'center';
-    ctx.fillText(`@${handle}`, width / 2, cardY + cardHeight - 50);
+    ctx.fillText(`${handle}`, width / 2, cardY + cardHeight - 50);
 
     return canvas;
   };
@@ -626,7 +626,7 @@ const CreatorSharePage = () => {
             </span>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', background: '#0f0f13', padding: '12px 16px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
               <span style={{ fontSize: '14px', fontWeight: 600, color: '#e2e8f0', wordBreak: 'break-all' }}>
-                <span style={{ color: '#94a3b8' }}>skriibe.com/</span>@{username || handle}
+                <span style={{ color: '#94a3b8' }}>skriibe.com/</span>{username || handle}
               </span>
               <button onClick={copyLinkToClipboard} style={{ background: '#232328', border: 'none', color: '#e2e8f0', cursor: 'pointer', display: 'flex', padding: '8px', borderRadius: '8px' }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -791,7 +791,7 @@ const CreatorSharePage = () => {
                 includeMargin={false}
               />
               <div style={{ marginTop: '24px', color: '#38bdf8', fontSize: '18px', fontWeight: 800, letterSpacing: '0.5px' }}>
-                @{username || handle}
+                {username || handle}
               </div>
             </div>
 

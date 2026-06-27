@@ -40,7 +40,7 @@ const CreatorShare = () => {
     return () => clearInterval(interval);
   }, [creatorData, navigate]);
 
-  const profileUrl = `skriibe.com/@${creatorData?.handle || 'creator'}`;
+  const profileUrl = `skriibe.com/${creatorData?.handle || 'creator'}`;
 
   const handleCopy = () => {
     navigator.clipboard.writeText(profileUrl);

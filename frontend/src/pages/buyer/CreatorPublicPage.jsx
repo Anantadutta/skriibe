@@ -250,7 +250,7 @@ const CreatorPublicPage = () => {
               </span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem' }}>
-              <span style={{ color: '#64748b' }}>@{creator.handle}</span>
+              <span style={{ color: '#64748b' }}>{creator.handle}</span>
             </div>
             {/* Instagram linked badge */}
             <div style={{

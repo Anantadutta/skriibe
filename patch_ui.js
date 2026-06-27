@@ -89,7 +89,7 @@ const newTopCard = `{/* CONSOLIDATED TOP CARD */}
             <button onClick={() => navigate('/creator/dashboard', { state: { creator } })} className="copy-link-btn" style={{ flex: 1, background: '#1A1A1A', border: '1px solid #2A2A2A', color: '#ffffff', boxShadow: 'none' }}>
               <span>Open Dashboard</span>
             </button>
-            <button onClick={() => navigate(\`/@\${username}\`)} className="copy-link-btn" style={{ flex: 1, background: 'linear-gradient(90deg, #7c3aed, #06b6d4)' }}>
+            <button onClick={() => navigate(\`/\${username}\`)} className="copy-link-btn" style={{ flex: 1, background: 'linear-gradient(90deg, #7c3aed, #06b6d4)' }}>
               <span>View My Page →</span>
             </button>
           </div>

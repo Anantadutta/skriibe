@@ -84,7 +84,17 @@ const AdminRoute = () => {
 
 function LandingPage({ theme, toggleTheme }) {
   const location = useLocation();
-  const showDeletedToast = location.state?.accountDeleted;
+  const [showDeletedToast, setShowDeletedToast] = useState(false);
+
+  useEffect(() => {
+    if (location.state?.accountDeleted) {
+      setShowDeletedToast(true);
+      const timer = setTimeout(() => {
+        setShowDeletedToast(false);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [location.state?.accountDeleted]);
 
   return (
     <div className={`min-h-screen transition-colors duration-300 ${theme === 'light' ? 'bg-white text-black' : 'bg-black text-white'}`}>

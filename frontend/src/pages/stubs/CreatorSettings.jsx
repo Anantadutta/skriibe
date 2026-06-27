@@ -498,7 +498,7 @@ const CreatorSettings = () => {
                 {creator.name || creator.displayName || 'okayyy'}
               </div>
               <div style={{ color: '#94A3B8', fontSize: '0.85rem' }}>
-                skriibe.com/@{creator.handle || creator.username || 'ok_90'}
+                skriibe.com/{creator.handle || creator.username || 'ok_90'}
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '4px' }}>
                 {expertiseList.map((exp, idx) => (

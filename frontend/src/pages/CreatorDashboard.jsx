@@ -124,7 +124,7 @@ const CreatorDashboard = () => {
   };
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(`skriibe.com/@${creator.handle || 'tanvi'}`);
+    navigator.clipboard.writeText(`skriibe.com/${creator.handle || 'tanvi'}`);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -846,7 +846,7 @@ const CreatorDashboard = () => {
 
             <div>
               <div style={{ fontWeight: 800, fontSize: '0.95rem', color: '#fff' }}>Share your link & get more questions</div>
-              <div style={{ color: '#38BDF8', fontSize: '0.85rem', marginTop: '4px' }}>skriibe.com/@{creator.handle || 'tanvi'}</div>
+              <div style={{ color: '#38BDF8', fontSize: '0.85rem', marginTop: '4px' }}>skriibe.com/{creator.handle || 'tanvi'}</div>
             </div>
           </div>
           <button 
