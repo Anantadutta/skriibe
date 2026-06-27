@@ -598,9 +598,9 @@ router.post('/delete-account', async (req, res) => {
         const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret');
         creatorId = decoded.creatorId;
         
-        if (!creatorId && decoded.fanId) {
+        if (!creatorId && decoded.email) {
           const Creator = require('../models/Creator');
-          const foundCreator = await Creator.findOne({ fanId: decoded.fanId });
+          const foundCreator = await Creator.findOne({ email: decoded.email.toLowerCase() });
           if (foundCreator) {
             creatorId = foundCreator._id;
           }
