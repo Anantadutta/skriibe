@@ -530,9 +530,8 @@ const CreatorPublicPage = () => {
 
         {/* WORD COUNT & VALIDATION */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '-8px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 4px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', color: '#64748b', fontSize: '13px', marginTop: '12px' }}>
-              Min 20 characters, Max 500 characters
+          <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', padding: '0 4px' }}>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', color: '#64748b', fontSize: '13px', marginTop: '12px' }}>
               <span style={{ color: questionText.length > 500 || (questionText.length > 0 && questionText.length < 20) ? '#ef4444' : '#64748b' }}>
                 {questionText.length}/500 Characters
               </span>

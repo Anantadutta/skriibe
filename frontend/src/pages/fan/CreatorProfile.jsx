@@ -593,8 +593,7 @@ const CreatorProfile = () => {
                 />
               </div>
               
-              <div style={{ display: 'flex', justifyContent: 'space-between', color: '#64748b', fontSize: '12px', padding: '0 4px' }}>
-                <span>Min 20 characters, Max 500 characters</span>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', color: '#64748b', fontSize: '12px', padding: '0 4px' }}>
                 <span style={{ color: question.length > 500 ? '#ef4444' : '#64748b' }}>
                   {question.length}/500 Characters
                 </span>

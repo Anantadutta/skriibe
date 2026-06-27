@@ -281,10 +281,9 @@ const CreatorReplyScreen = () => {
                 {/* Reply Editor */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                   <label style={{ fontSize: '0.95rem', color: '#ffffff', fontWeight: 800 }}>
-                    Your reply <span style={{ color: '#94a3b8', fontWeight: 500 }}>(Min 100 characters, Max 1000 characters)</span> <span style={{ color: '#38BDF8' }}>*</span>
+                    Your reply <span style={{ color: '#38BDF8' }}>*</span>
                   </label>
                   
-
 
                   <textarea
                     value={replyText}
@@ -310,7 +309,7 @@ const CreatorReplyScreen = () => {
                   {/* Character Count Validator */}
                   <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'flex-start', fontSize: '0.85rem', fontWeight: 700, color: '#94a3b8' }}>
                     <div style={{ color: isMinMet ? '#34D399' : (replyText.trim().length > 0 ? '#ef4444' : '#94a3b8') }}>
-                      {charCount}/1000 characters
+                      {charCount}/1000 Characters
                     </div>
                   </div>
                 </div>
