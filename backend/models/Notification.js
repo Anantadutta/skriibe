@@ -6,7 +6,6 @@ const NotificationSchema = new mongoose.Schema(
     questionId: { type: mongoose.Schema.Types.ObjectId, ref: 'Question', required: true },
     title: { type: String, required: true },
     message: { type: String, required: true },
-    answerText: { type: String, required: false },
     isRead: { type: Boolean, default: false },
   },
   { timestamps: true }

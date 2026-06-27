@@ -6,7 +6,6 @@ import api from '../../services/api';
 const FanNotifications = () => {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [expandedNotifId, setExpandedNotifId] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -45,12 +44,6 @@ const FanNotifications = () => {
         setNotifications(prev => prev.map(n => n._id === notif._id ? { ...n, isRead: false } : n));
       }
     }
-    
-    if (notif.title === 'Follow-up Answered!') {
-      setExpandedNotifId(prev => prev === notif._id ? null : notif._id);
-      return;
-    }
-
     // Navigate to history to see the answer
     navigate('/fan/history');
   };
@@ -138,20 +131,12 @@ const FanNotifications = () => {
                   <div style={{ width: '8px', height: '8px', background: '#38bdf8', borderRadius: '50%', position: 'absolute', left: '16px', top: '32px' }} />
                 )}
                 <div style={{ fontSize: '24px', marginLeft: notif.isRead ? '0' : '16px' }}>🔔</div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', width: '100%' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   <div style={{ fontWeight: 'bold', fontSize: '16px', color: notif.isRead ? '#e2e8f0' : '#ffffff' }}>{notif.title}</div>
                   <div style={{ color: '#94a3b8', fontSize: '14px', lineHeight: '1.5' }}>{notif.message}</div>
                   <div style={{ color: '#64748b', fontSize: '12px', marginTop: '4px' }}>
                     {new Date(notif.createdAt).toLocaleDateString()} · {new Date(notif.createdAt).toLocaleTimeString()}
                   </div>
-                  {expandedNotifId === notif._id && notif.answerText && (
-                    <div style={{ marginTop: '16px', background: '#0a1922', padding: '20px', borderRadius: '16px', border: '1px solid rgba(56, 189, 248, 0.2)' }}>
-                      <div style={{ color: '#38bdf8', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '12px', textTransform: 'uppercase' }}>CREATOR'S FOLLOW-UP ANSWER</div>
-                      <div style={{ color: '#fff', fontSize: '16px', lineHeight: '1.6', wordBreak: 'break-all', overflowWrap: 'anywhere', whiteSpace: 'pre-wrap' }}>
-                        {notif.answerText}
-                      </div>
-                    </div>
-                  )}
                 </div>
               </div>
             ))}

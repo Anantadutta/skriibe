@@ -672,7 +672,7 @@ const CreatorOnboardProfile = () => {
                 <div title={form.instagramConnected ? "Auto-filled from your connected Instagram account!" : "Choose your unique Skriibe username"}>
                   <Field
                     label="USERNAME *"
-                    subtitle={<>This will be your profile link that will be generated as: <br /> <span style={{ color: '#29C5F6' }}>https://skriibe.com/@{form.handle || 'username'}</span></>}
+                    subtitle={<>This will be your profile link that will be generated as: <br /> <span style={{ color: '#29C5F6' }}>https://skriibe.com/{form.handle || 'username'}</span></>}
                     value={form.handle}
                     onChange={(e) => handleInputChange('handle', e.target.value.replace(/[^a-zA-Z0-9_.]/g, ''))}
                     placeholder=""
