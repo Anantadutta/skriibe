@@ -1274,15 +1274,11 @@ const CreatorSettings = () => {
                   disabled={deleteInputValue.trim().length === 0}
                   onClick={async () => {
                     try {
-                      await fetch((import.meta.env.VITE_API_URL || 'http://localhost:5000') + '/api/creator/delete-account', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        credentials: 'include',
-                        body: JSON.stringify({ reason: deleteInputValue.trim() })
-                      });
+                      await api.post('/creator/delete-account', { reason: deleteInputValue.trim() });
                     } catch(err) {
                       console.error("Failed to delete account", err);
                     }
+                    localStorage.clear();
                     setIsAccountDeleted(true);
                   }}>Delete forever</button>
                 </div>

@@ -597,14 +597,15 @@ router.post('/delete-account', async (req, res) => {
         const jwt = require('jsonwebtoken');
         const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret');
         creatorId = decoded.creatorId;
+        
+        if (!creatorId && decoded.fanId) {
+          const Creator = require('../models/Creator');
+          const foundCreator = await Creator.findOne({ fanId: decoded.fanId });
+          if (foundCreator) {
+            creatorId = foundCreator._id;
+          }
+        }
       } catch(e) {}
-    }
-
-    // For testing from stubs: if no token, grab the first creator in the DB
-    if (!creatorId) {
-      const Creator = require('../models/Creator');
-      const firstCreator = await Creator.findOne();
-      if (firstCreator) creatorId = firstCreator._id;
     }
 
     if (!creatorId) {
