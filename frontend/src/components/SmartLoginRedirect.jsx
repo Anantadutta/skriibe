@@ -17,10 +17,8 @@ const SmartLoginRedirect = ({ children }) => {
         if (data.authenticated && data.isCreator) {
           const { isLive, handle } = data.creator;
 
-          if (isLive) {
+          if (handle) {
             navigate('/creator/dashboard', { replace: true });
-          } else if (handle) {
-            navigate('/onboard/pricing', { replace: true });
           } else {
             navigate('/onboard/profile', { replace: true });
           }

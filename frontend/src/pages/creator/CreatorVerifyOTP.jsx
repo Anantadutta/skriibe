@@ -83,14 +83,10 @@ const CreatorVerifyOTP = () => {
       if (token) {
         setAuthData(['creator'], 'creator', token);
       }
-      if (creator.isLive) {
+      if (creator.handle) {
         navigate('/creator/dashboard', { state: { creator }, replace: true });
       } else {
-        if (!creator.handle) {
-          navigate('/onboard/profile', { state: { creator }, replace: true });
-        } else {
-          navigate('/onboard/pricing', { state: { creator }, replace: true });
-        }
+        navigate('/onboard/profile', { state: { creator }, replace: true });
       }
     } catch (err) {
       setError(err.response?.data?.message || 'Invalid OTP');

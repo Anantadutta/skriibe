@@ -107,6 +107,8 @@ const CreatorPayouts = () => {
   const [payoutStats, setPayoutStats] = useState({ lifetimePaid: 0, thisMonth: 0, inEscrow: 0, available: 0, nextPayoutDate: null, availableQuestions: 0, availableGross: 0, availableFee: 0, inEscrowQuestions: 0, pendingList: [], underReviewAmount: 0, underReviewQuestionsCount: 0, underReviewList: [] });
   const [creatorCreatedAt, setCreatorCreatedAt] = useState(null);
   const [currencySymbol, setCurrencySymbol] = useState('₹');
+  const [questions, setQuestions] = useState([]);
+  const [creator, setCreator] = useState(null);
 
   const [historyFilter, setHistoryFilter] = useState('Date: Newest First');
   const [showFilterMenu, setShowFilterMenu] = useState(false);
@@ -128,12 +130,25 @@ const CreatorPayouts = () => {
       .catch(() => {});
   };
 
+  const fetchQuestions = async () => {
+    try {
+      const res = await api.get(`/creator/questions?t=${Date.now()}`);
+      if (res.data.success) {
+        setQuestions(res.data.questions);
+      }
+    } catch (err) {
+      console.error('Error fetching questions:', err);
+    }
+  };
+
   useEffect(() => {
     fetchPayouts();
+    fetchQuestions();
 
     getMe()
       .then(res => {
         if (res.data && res.data.creator) {
+          setCreator(res.data.creator);
           if (res.data.creator.createdAt) setCreatorCreatedAt(res.data.creator.createdAt);
           if (res.data.creator.phone) setCurrencySymbol(getCurrencySymbol(res.data.creator.phone));
         }
@@ -145,10 +160,12 @@ const CreatorPayouts = () => {
 
     socket.on('new-question', () => {
       fetchPayouts();
+      fetchQuestions();
     });
 
     socket.on('question-status-changed', () => {
       fetchPayouts();
+      fetchQuestions();
     });
 
     return () => {
@@ -182,9 +199,152 @@ const CreatorPayouts = () => {
     return [{ month: 'All Time', items: allItems }];
   };
 
+  const getPayoutInfo = (createdAtStr) => {
+    const now = new Date();
+    
+    const getNextTuesdayAfter = (date) => {
+      const d = new Date(date);
+      d.setHours(0, 0, 0, 0);
+      const day = d.getDay();
+      let diff = (7 - day + 2) % 7;
+      if (diff === 0) diff = 7;
+      d.setDate(d.getDate() + diff);
+      
+      const originalDate = new Date(date);
+      originalDate.setHours(0,0,0,0);
+      const msDiff = d.getTime() - originalDate.getTime();
+      const daysDiff = Math.round(msDiff / (1000 * 3600 * 24));
+      
+      if (daysDiff < 7) {
+        d.setDate(d.getDate() + 7);
+      }
+      return d;
+    };
+
+    if (!createdAtStr) {
+      return { 
+        nextPayoutDate: getNextTuesdayAfter(now), 
+        lastPayoutDate: new Date(0) 
+      };
+    }
+
+    const createdAt = new Date(createdAtStr);
+    const firstPayout = getNextTuesdayAfter(createdAt);
+    
+    if (now < firstPayout) {
+      return {
+        nextPayoutDate: firstPayout,
+        lastPayoutDate: new Date(0)
+      };
+    } else {
+      const lastPayout = new Date(now);
+      lastPayout.setHours(0,0,0,0);
+      const day = lastPayout.getDay();
+      const diff = (day + 7 - 2) % 7;
+      lastPayout.setDate(lastPayout.getDate() - diff);
+      
+      const nextPayout = new Date(lastPayout);
+      nextPayout.setDate(nextPayout.getDate() + 7);
+      
+      return {
+        nextPayoutDate: nextPayout,
+        lastPayoutDate: lastPayout
+      };
+    }
+  };
+
+  const { nextPayoutDate, lastPayoutDate } = getPayoutInfo(creatorCreatedAt);
+
+  const getCommissionRate = (questionDate) => {
+    let rate = 0.8;
+    if (creator?.commissionOverride?.startDate) {
+       const start = new Date(creator.commissionOverride.startDate);
+       const end = creator.commissionOverride.endDate ? new Date(creator.commissionOverride.endDate) : null;
+       start.setHours(0,0,0,0);
+       if (end) end.setHours(23,59,59,999);
+       
+       const qDate = new Date(questionDate);
+       
+       if (qDate >= start && (!end || qDate <= end)) {
+          rate = (creator.commissionOverride.creatorShare || 80) / 100;
+       }
+    }
+    return rate;
+  };
+
+  const dynamicEligibleQuestionsList = questions
+    .filter(q => ['answered', 'satisfied'].includes(q.status?.toLowerCase()) && !q.isFollowUp && new Date(q.createdAt) >= lastPayoutDate);
+
+  const dynamicTotalRevenue = dynamicEligibleQuestionsList
+    .reduce((sum, q) => sum + (q.amountPaid || q.pricePaid || creator?.pricePerQuestion || 0), 0);
+
+  const dynamicAvailable = dynamicEligibleQuestionsList
+    .reduce((sum, q) => {
+      const amount = q.amountPaid || q.pricePaid || creator?.pricePerQuestion || 0;
+      return sum + (amount * getCommissionRate(q.createdAt));
+    }, 0);
+
+  const dynamicEligibleCount = dynamicEligibleQuestionsList.length;
+  
+  const dynamicLifetimeList = questions
+    .filter(q => ['answered', 'satisfied', 'flagged', 'rejected'].includes(q.status?.toLowerCase()) && !q.isFollowUp && new Date(q.createdAt) < lastPayoutDate);
+
+  const dynamicLifetimePaid = dynamicLifetimeList
+    .reduce((sum, q) => {
+      const amount = q.amountPaid || q.pricePaid || creator?.pricePerQuestion || 0;
+      return sum + (amount * getCommissionRate(q.createdAt));
+    }, 0);
+
+  const dynamicProtectedList = questions
+    .filter(q => ['submitted', 'pending'].includes(q.status?.toLowerCase()) && !q.isFollowUp);
+
+  const dynamicProtected = dynamicProtectedList
+    .reduce((sum, q) => {
+      const amount = q.amountPaid || q.pricePaid || creator?.pricePerQuestion || 0;
+      return sum + (amount * getCommissionRate(q.createdAt));
+    }, 0);
+
+  const dynamicProtectedCount = dynamicProtectedList.length;
+  
+  const dynamicUnderReviewList = questions
+    .filter(q => ['flagged', 'rejected'].includes(q.status?.toLowerCase()) && !q.isFollowUp);
+
+  const dynamicUnderReviewAmount = dynamicUnderReviewList
+    .reduce((sum, q) => {
+      const amount = q.amountPaid || q.pricePaid || creator?.pricePerQuestion || 0;
+      return sum + (amount * getCommissionRate(q.createdAt));
+    }, 0);
+
+  const dynamicUnderReviewCount = dynamicUnderReviewList.length;
+
+  const formattedUnderReviewList = dynamicUnderReviewList.map(q => {
+    const d = new Date(q.createdAt);
+    const dateStr = d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+    const rawAmount = q.amountPaid || q.pricePaid || creator?.pricePerQuestion || 0;
+    return {
+      id: q._id || q.id,
+      buyerName: q.buyerName || q.followerName || 'Anonymous',
+      date: dateStr,
+      amount: rawAmount * getCommissionRate(q.createdAt),
+      status: q.status === 'flagged' ? 'Support Investigation' : 'Fan Review',
+      adminMessage: q.adminMessage || ''
+    };
+  });
+
+  const formattedPendingList = dynamicProtectedList.map(q => {
+    const d = new Date(q.createdAt);
+    const dateStr = d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+    const rawAmount = q.amountPaid || q.pricePaid || creator?.pricePerQuestion || 0;
+    return {
+      id: q._id || q.id,
+      buyerName: q.buyerName || q.followerName || 'Anonymous',
+      date: dateStr,
+      amount: rawAmount * getCommissionRate(q.createdAt)
+    };
+  });
+
   const getNextPayoutDate = () => {
-    if (!payoutStats.nextPayoutDate) return "...";
-    return new Date(payoutStats.nextPayoutDate).toLocaleDateString('en-IN', {
+    return nextPayoutDate.toLocaleDateString('en-IN', {
       weekday: 'long',
       day: 'numeric',
       month: 'short',
@@ -302,7 +462,7 @@ const CreatorPayouts = () => {
                   <div style={{ display: 'flex', alignItems: 'center', gap: '5px', color: '#686860', fontSize: '12px', marginBottom: '8px' }}>
                     Available for Payout 
                   </div>
-                  <div style={{ fontSize: '34px', fontWeight: '800', letterSpacing: '-1px', marginBottom: '14px' }}>{fmt(payoutStats.available)}</div>
+                  <div style={{ fontSize: '34px', fontWeight: '800', letterSpacing: '-1px', marginBottom: '14px' }}>{fmt(dynamicAvailable)}</div>
                   <div style={{ color: '#686860', fontSize: '12px', marginBottom: '3px' }}>Next Payout</div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '7px', color: '#3DD9FF', fontSize: '13px', fontWeight: '600', marginBottom: '18px' }}>
                     <CalendarIcon color="#3DD9FF" /> {getNextPayoutDate()}
@@ -324,9 +484,9 @@ const CreatorPayouts = () => {
                 <Card style={{ padding: '18px' }}>
                   <div style={{ fontSize: '10px', fontWeight: '700', color: '#686860', letterSpacing: '1px', marginBottom: '14px' }}>OVERVIEW</div>
                   {[
-                    ['Eligible Questions', payoutStats.availableQuestions ? payoutStats.availableQuestions.toString() : '0'],
-                    ['Total Revenue', fmt(payoutStats.availableGross || 0)],
-                    ['Your Earnings', fmt(payoutStats.available || 0)],
+                    ['Eligible Questions', dynamicEligibleCount.toString()],
+                    ['Total Revenue', fmt(dynamicTotalRevenue)],
+                    ['Your Earnings', fmt(dynamicAvailable)],
             
                   ].map(([label, value], i, arr) => (
                     <div key={label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', paddingBottom: i < arr.length - 1 ? '12px' : 0, borderBottom: i < arr.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none', marginBottom: i < arr.length - 1 ? '12px' : 0 }}>
@@ -345,8 +505,8 @@ const CreatorPayouts = () => {
                   <div style={{ display: 'flex', alignItems: 'center', gap: '5px', color: '#686860', fontSize: '12px', marginBottom: '8px' }}>
                     Protected Amount
                   </div>
-                  <div style={{ fontSize: '34px', fontWeight: '800', letterSpacing: '-1px', marginBottom: '4px' }}>{fmt(payoutStats.inEscrow)}</div>
-                  <div style={{ color: '#686860', fontSize: '12px', marginBottom: '12px' }}>{payoutStats.inEscrowQuestions || 0} Questions</div>
+                  <div style={{ fontSize: '34px', fontWeight: '800', letterSpacing: '-1px', marginBottom: '4px' }}>{fmt(dynamicProtected)}</div>
+                  <div style={{ color: '#686860', fontSize: '12px', marginBottom: '12px' }}>{dynamicProtectedCount} Questions</div>
                   <div style={{ backgroundColor: 'rgba(59,130,246,0.07)', border: '1px solid rgba(59,130,246,0.2)', borderRadius: '12px', padding: '14px', display: 'flex', gap: '10px', width: '100%', boxSizing: 'border-box' }}>
                     <div style={{ color: '#60A5FA', flexShrink: 0, marginTop: '2px' }}><InfoIcon color="#60A5FA" /></div>
                     <div style={{ fontSize: '12px', color: '#A8A8A0', lineHeight: '1.6' }}>
@@ -358,8 +518,8 @@ const CreatorPayouts = () => {
 
                 <div style={{ fontSize: '10px', fontWeight: '700', color: '#686860', letterSpacing: '1px', marginBottom: '10px' }}>PENDING QUESTIONS</div>
                 <Card style={{ overflow: 'hidden', marginBottom: '14px' }}>
-                  {payoutStats.pendingList && payoutStats.pendingList.length > 0 ? payoutStats.pendingList.map((item, i) => (
-                    <div key={item.id} onClick={() => navigate('/creator/inbox')} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderBottom: i < payoutStats.pendingList.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none', cursor: 'pointer' }}>
+                  {formattedPendingList && formattedPendingList.length > 0 ? formattedPendingList.map((item, i) => (
+                    <div key={item.id} onClick={() => navigate('/creator/inbox')} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderBottom: i < formattedPendingList.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none', cursor: 'pointer' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                         <CalendarIcon />
                         <div>
@@ -386,7 +546,7 @@ const CreatorPayouts = () => {
             {/* ── UNDER REVIEW ── */}
             {activeTab === 'Under Review' && (
               <>
-                {payoutStats.underReviewQuestionsCount > 0 ? (
+                {dynamicUnderReviewCount > 0 ? (
                   <>
                     <Card style={{ padding: '20px', marginBottom: '16px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
@@ -401,20 +561,20 @@ const CreatorPayouts = () => {
                           Under Review 
                         </div>
                       </div>
-                      <div style={{ fontSize: '34px', fontWeight: '800', letterSpacing: '-1px', marginBottom: '4px' }}>{fmt(payoutStats.underReviewAmount)}</div>
-                      <div style={{ color: '#686860', fontSize: '12px', marginBottom: '16px' }}>{payoutStats.underReviewQuestionsCount || 0} Questions</div>
+                      <div style={{ fontSize: '34px', fontWeight: '800', letterSpacing: '-1px', marginBottom: '4px' }}>{fmt(dynamicUnderReviewAmount)}</div>
+                      <div style={{ color: '#686860', fontSize: '12px', marginBottom: '16px' }}>{dynamicUnderReviewCount} Questions</div>
                       <div style={{ backgroundColor: 'rgba(251,146,60,0.07)', border: '1px solid rgba(251,146,60,0.2)', borderRadius: '12px', padding: '14px', display: 'flex', gap: '10px' }}>
                         <div style={{ color: '#FB923C', flexShrink: 0, marginTop: '1px' }}><InfoIcon color="#FB923C" /></div>
                         <div style={{ fontSize: '12px', color: '#A8A8A0', lineHeight: '1.6' }}>
-                          A fan has raised a dispute for these questions. Our team is reviewing it. You will be notified once it's resolved.
+                          These questions were flagged or rejected. Our team is reviewing them. You will be notified once resolved.
                         </div>
                       </div>
                     </Card>
 
                     <div style={{ fontSize: '10px', fontWeight: '700', color: '#686860', letterSpacing: '1px', marginBottom: '10px' }}>QUESTIONS UNDER REVIEW</div>
                     <Card style={{ overflow: 'hidden' }}>
-                      {payoutStats.underReviewList && payoutStats.underReviewList.map((item, i) => (
-                        <div key={item.id} onClick={() => navigate('/creator/inbox')} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderBottom: i < (payoutStats.underReviewList?.length || 0) - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none', cursor: 'pointer' }}>
+                      {formattedUnderReviewList.map((item, i) => (
+                        <div key={item.id} onClick={() => navigate('/creator/inbox')} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderBottom: i < formattedUnderReviewList.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none', cursor: 'pointer' }}>
                           <div>
                             <div style={{ fontSize: '14px', fontWeight: '700', marginBottom: '3px' }}>{item.buyerName}</div>
                             <div style={{ fontSize: '11px', color: item.adminMessage ? '#8b5cf6' : '#FB923C', fontWeight: '600' }}>{item.status}</div>
@@ -506,8 +666,8 @@ const CreatorPayouts = () => {
                     </svg>
                     LIFETIME PAID
                   </div>
-                  <div style={{ fontSize: '42px', fontWeight: '900', letterSpacing: '-1.5px', color: '#fff', display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '4px', lineHeight: 1 }}>
-                    <span style={{ color: '#E2E8F0', fontSize: '32px' }}>{currencySymbol}</span>{(payoutStats.lifetimePaid || 0)}
+                  <div style={{ fontSize: '42px', fontWeight: '900', letterSpacing: '-1px', color: '#fff', display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '4px', lineHeight: 1 }}>
+                    <span style={{ color: '#E2E8F0', fontSize: '32px' }}>{currencySymbol}</span>{dynamicLifetimePaid}
                   </div>
                   <div style={{ color: '#64748B', fontSize: '13px', fontWeight: '500', marginBottom: '24px' }}>
                     Total amount credited to your account

@@ -130,7 +130,6 @@ const CreatorDisputeScreen = () => {
             {(dispute.buyerEmail || dispute.buyerPhone) && (
               <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>{dispute.buyerEmail || dispute.buyerPhone}</span>
             )}
-            <span style={{ fontSize: '0.7rem', color: '#f59e0b', background: 'rgba(245, 158, 11, 0.1)', padding: '2px 6px', borderRadius: '4px', fontWeight: 'bold' }}>First dispute by buyer</span>
           </div>
         </div>
         <hr style={{ border: 'none', borderTop: '1px solid #1e1e2d', margin: 0 }} />

@@ -45,9 +45,13 @@ router.post('/', verifyFanToken, async (req, res) => {
           return res.status(403).json({ message: 'Your account is temporarily restricted from sending questions.' });
         } else {
           fanUser.banExpiresAt = null;
-          await fanUser.save();
         }
       }
+      
+      if (buyerPhone && !fanUser.whatsappPhone && !fanUser.phone) {
+        fanUser.whatsappPhone = buyerPhone;
+      }
+      await fanUser.save();
     }
 
     const creator = await Creator.findById(creatorId);

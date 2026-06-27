@@ -99,7 +99,10 @@ const CreatorInbox = () => {
   };
 
   const pendingRoots = roots.filter(r => getThreadStatus(r, childrenMap[r._id || r.id] || []) === 'submitted');
-  const repliedRoots = roots.filter(r => getThreadStatus(r, childrenMap[r._id || r.id] || []) === 'answered');
+  const repliedRoots = roots.filter(r => {
+    const s = getThreadStatus(r, childrenMap[r._id || r.id] || []);
+    return ['answered', 'satisfied', 'resolved'].includes(s);
+  });
   const flaggedRoots = roots.filter(r => {
     const s = getThreadStatus(r, childrenMap[r._id || r.id] || []);
     return s === 'flagged' || s === 'resolved_abusive' || s === 'rejected';
@@ -244,7 +247,7 @@ const CreatorInbox = () => {
             const displayedQuestions = activeTab === 'All' ? roots : roots.filter(q => {
               const status = getThreadStatus(q, childrenMap[q._id || q.id] || []);
               if (activeTab === 'Pending') return status === 'submitted';
-              if (activeTab === 'Replied') return status === 'answered';
+              if (activeTab === 'Replied') return ['answered', 'satisfied', 'resolved'].includes(status);
               if (activeTab === 'Flagged') {
                 if (flaggedSubFilter === 'Flagged') return status === 'flagged' || status === 'resolved_abusive';
                 if (flaggedSubFilter === 'Rejected') return status === 'rejected';
@@ -262,7 +265,7 @@ const CreatorInbox = () => {
               const threadStatus = getThreadStatus(rootQuestion, children);
               
               const isPending = threadStatus === 'submitted';
-              const isReplied = threadStatus === 'answered';
+              const isReplied = ['answered', 'satisfied', 'resolved'].includes(threadStatus);
               const isFlagged = threadStatus === 'flagged' || threadStatus === 'resolved_abusive';
               const isRejected = threadStatus === 'rejected';
               
@@ -295,15 +298,18 @@ const CreatorInbox = () => {
 
               const renderMessage = (q, isChild, rootQ = null) => {
                 const qIsPending = q.status?.toLowerCase() === 'submitted';
-                const qIsReplied = q.status?.toLowerCase() === 'answered';
+                const qIsReplied = ['answered', 'satisfied', 'resolved'].includes(q.status?.toLowerCase());
                 const qIsFlagged = q.status?.toLowerCase() === 'flagged' || q.status?.toLowerCase() === 'resolved_abusive';
                 const qIsRejected = q.status?.toLowerCase() === 'rejected';
+                const qIsExpired = q.status?.toLowerCase() === 'expired';
 
                 let subtitle = '';
-                if (qIsPending) subtitle = 'new question';
-                else if (qIsReplied) subtitle = 'replied earlier';
-                else if (qIsFlagged) subtitle = 'reported by you';
-                else if (qIsRejected) subtitle = 'rejected by you';
+                if (qIsPending) subtitle = 'New Question';
+                else if (qIsReplied) subtitle = 'Replied';
+                else if (qIsFlagged) subtitle = 'Reported by you';
+                else if (qIsRejected) subtitle = 'Rejected by you';
+                else if (qIsExpired) subtitle = 'Expired';
+                else subtitle = q.status || '';
 
                 const diffMs = now - new Date(q.createdAt || now).getTime();
                 const hoursAgo = Math.floor(diffMs / (1000 * 60 * 60));
@@ -336,8 +342,8 @@ const CreatorInbox = () => {
                           {(q.buyerName || q.followerName || 'A')[0].toUpperCase()}
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column' }}>
-                          <div style={{ color: '#FBBF24', fontSize: '0.8rem', fontWeight: 600, marginBottom: '2px' }}>
-                            {isChild ? 'Follow-up Question' : (qIsPending ? 'New Question' : (qIsReplied ? 'Replied' : (qIsFlagged ? 'Reported by you' : 'Rejected by you')))}
+                          <div style={{ color: '#FBBF24', fontSize: '0.8rem', fontWeight: 600, marginBottom: '8px', paddingRight: '120px' }}>
+                            {isChild ? 'Follow-up Question' : subtitle}
                           </div>
                           <div style={{ fontSize: '1rem', fontWeight: 700, color: '#fff' }}>
                             {q.buyerName || q.followerName} <span style={{ color: '#38BDF8' }}>· {isChild ? 'Free' : `₹${q.amountPaid || q.pricePaid || 99}`}</span>

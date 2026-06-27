@@ -224,7 +224,7 @@ const sendWelcomeEmail = async (email, name, handle) => {
                       <h1 style="font-family: 'Dancing Script', cursive; font-size: 48px; color: #004F71; margin: 0 0 30px 0; font-weight: 700;">You're welcome</h1>
                       <h2 style="font-family: 'Inter', sans-serif; font-size: 20px; color: #1a1a1a; margin: 0 0 20px 0; font-weight: 700;">Dear ${name}</h2>
                       <p style="font-family: 'Inter', sans-serif; font-size: 16px; color: #333333; line-height: 1.6; margin: 0 0 20px 0; font-style: italic;">
-                        Your Skriibe profile is now live and ready to receive questions from your community.
+                        Your Skriibe profile is now live and ready to receive messages from your community.
                       </p>
                       <p style="font-family: 'Inter', sans-serif; font-size: 16px; color: #333333; line-height: 1.6; margin: 0 0 20px 0;">
                         We built Skriibe around a simple idea: meaningful conversations are valuable. Your knowledge, experience, and perspective can help someone move forward, and now there's a dedicated place for those conversations to happen.
@@ -449,16 +449,16 @@ const sendFollowUpAskedEmail = async (email, fanName, creatorName, dashboardLink
     const { data, error } = await resend.emails.send({
       from: 'skriibe <founder@skriibe.com>',
       to: [email],
-      subject: `New FOLLOW-UP Question from ${fanName}`,
+      subject: `You've Received a Follow-Up ✨`,
       html: `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff; color: #1A1A1A;">
           <h2>Hi ${creatorName},</h2>
-          <p><strong>${fanName}</strong> has just asked a <strong>FOLLOW-UP QUESTION</strong> to your recent answer.</p>
-          <p>Please check your inbox to reply to their follow-up.</p>
+          <p>You've received a follow-up message in your Skriibe inbox.</p>
+          <p>Open your inbox to read it and reply.</p>
           <div style="margin: 30px 0;">
-            <a href="${dashboardLink}" style="background-color: #06b6d4; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">View in Dashboard</a>
+            <a href="${dashboardLink}" style="background-color: #06b6d4; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">Reply Now</a>
           </div>
-          <p style="font-size: 12px; color: #888;">— Team skriibe</p>
+          <p style="font-size: 12px; color: #888;">— Team Skriibe</p>
         </div>
       `
     });
@@ -519,16 +519,16 @@ const sendNewQuestionEmail = async (email, fanName, creatorName, dashboardLink, 
     const { data, error } = await resend.emails.send({
       from: 'skriibe <founder@skriibe.com>',
       to: [email],
-      subject: `🎉 New Question from ${fanName}!`,
+      subject: `You've Received a New Message ✨`,
       html: `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff; color: #1A1A1A;">
           <h2>Hi ${creatorName},</h2>
-          <p>Awesome news! <strong>${fanName}</strong> has just asked you a new question.</p>
-          <p>Please log in to your dashboard to view the question and reply. Remember to answer within 24 hours to keep your reply rate high!</p>
+          <p>A new message has arrived in your Skriibe inbox.</p>
+          <p>Open your inbox to read it and reply.</p>
           <div style="margin: 30px 0;">
-            <a href="${dashboardLink}" style="background-color: #06b6d4; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">View Question & Reply</a>
+            <a href="${dashboardLink}" style="background-color: #06b6d4; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">Reply Now</a>
           </div>
-          <p style="font-size: 12px; color: #888;">— Team skriibe</p>
+          <p style="font-size: 12px; color: #888;">— Team Skriibe</p>
         </div>
       `
     });

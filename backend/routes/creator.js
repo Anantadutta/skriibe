@@ -345,7 +345,7 @@ router.post('/questions/:id/reply', verifyCreatorToken, async (req, res) => {
 
       if (question.buyerEmail) {
         const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
-        const answerLink = `${frontendUrl}/fan/history`;
+        const answerLink = `${frontendUrl}/fan/history?qId=${question._id}`;
         if (question.isFollowUp) {
           sendFollowUpAnsweredEmail(question.buyerEmail, question.buyerName, creatorName, answerLink)
             .catch(e => console.error("Failed to send follow up answered email", e));

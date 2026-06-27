@@ -128,7 +128,7 @@ const Footer = ({ theme }) => {
             </a>
           </div>
           <p className={`${theme === 'light' ? 'text-gray-600' : 'text-[#a3a3a3]'} text-[15px] leading-relaxed max-w-sm mt-2`}>
-            A creator monetization platform that lets creators get paid to answer their followers' questions — turning free DMs into guaranteed, paid conversations delivered within 24 hours.
+            A creator monetization platform that lets creators get paid to answer their followers' messages — turning free DMs into guaranteed, paid conversations delivered within 24 hours.
           </p>
           <div className="flex gap-5 mt-2">
             {/* Instagram */}

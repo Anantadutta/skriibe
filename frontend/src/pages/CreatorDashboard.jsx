@@ -201,11 +201,85 @@ const CreatorDashboard = () => {
     ? Math.round((repliedQuestions.length / denominator) * 100)
     : 0;
 
-  const oneWeekAgo = new Date();
-  oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+  const getPayoutInfo = (createdAtStr) => {
+    const now = new Date();
+    
+    const getNextTuesdayAfter = (date) => {
+      const d = new Date(date);
+      d.setHours(0, 0, 0, 0);
+      const day = d.getDay();
+      let diff = (7 - day + 2) % 7;
+      if (diff === 0) diff = 7;
+      d.setDate(d.getDate() + diff);
+      
+      const originalDate = new Date(date);
+      originalDate.setHours(0,0,0,0);
+      const msDiff = d.getTime() - originalDate.getTime();
+      const daysDiff = Math.round(msDiff / (1000 * 3600 * 24));
+      
+      if (daysDiff < 7) {
+        d.setDate(d.getDate() + 7);
+      }
+      return d;
+    };
+
+    if (!createdAtStr) {
+      return { 
+        nextPayoutDate: getNextTuesdayAfter(now), 
+        lastPayoutDate: new Date(0) 
+      };
+    }
+
+    const createdAt = new Date(createdAtStr);
+    const firstPayout = getNextTuesdayAfter(createdAt);
+    
+    if (now < firstPayout) {
+      return {
+        nextPayoutDate: firstPayout,
+        lastPayoutDate: new Date(0)
+      };
+    } else {
+      const lastPayout = new Date(now);
+      lastPayout.setHours(0,0,0,0);
+      const day = lastPayout.getDay();
+      const diff = (day + 7 - 2) % 7;
+      lastPayout.setDate(lastPayout.getDate() - diff);
+      
+      const nextPayout = new Date(lastPayout);
+      nextPayout.setDate(nextPayout.getDate() + 7);
+      
+      return {
+        nextPayoutDate: nextPayout,
+        lastPayoutDate: lastPayout
+      };
+    }
+  };
+
+  const { lastPayoutDate } = getPayoutInfo(creator?.createdAt);
+
+  const getCommissionRate = (questionDate) => {
+    let rate = 0.8;
+    if (creator?.commissionOverride?.startDate) {
+       const start = new Date(creator.commissionOverride.startDate);
+       const end = creator.commissionOverride.endDate ? new Date(creator.commissionOverride.endDate) : null;
+       start.setHours(0,0,0,0);
+       if (end) end.setHours(23,59,59,999);
+       
+       const qDate = new Date(questionDate);
+       
+       if (qDate >= start && (!end || qDate <= end)) {
+          rate = (creator.commissionOverride.creatorShare || 80) / 100;
+       }
+    }
+    return rate;
+  };
+
   const dynamicWeeklyEarnings = questions
-    .filter(q => ['answered', 'flagged'].includes(q.status?.toLowerCase()) && !q.isFollowUp && new Date(q.createdAt) >= oneWeekAgo)
-    .reduce((sum, q) => sum + (q.amountPaid || q.pricePaid || creator.pricePerQuestion || 0), 0);
+    .filter(q => ['answered', 'satisfied'].includes(q.status?.toLowerCase()) && !q.isFollowUp && new Date(q.createdAt) >= lastPayoutDate)
+    .reduce((sum, q) => {
+      const amount = q.amountPaid || q.pricePaid || creator?.pricePerQuestion || 0;
+      return sum + (amount * getCommissionRate(q.createdAt));
+    }, 0);
   const handleAcknowledgeAbusive = () => {
     if (abusivePopupQuestion) {
       localStorage.setItem(`ack_abusive_${abusivePopupQuestion._id || abusivePopupQuestion.id}`, 'true');
@@ -453,7 +527,7 @@ const CreatorDashboard = () => {
             </div>
             <div style={{ display: 'flex', alignItems: 'baseline', marginTop: '4px' }}>
               <span style={{ fontSize: '2.2rem', color: '#29C5F6', marginRight: '4px' }}>{currencySymbol}</span>
-              <span style={{ fontSize: '3rem', fontWeight: 900, color: '#fff', letterSpacing: '-1.5px' }}>{Math.round(payoutStats.available || 0)}</span>
+              <span style={{ fontSize: '3rem', fontWeight: 900, color: '#fff', letterSpacing: '-1.5px' }}>{Math.round(dynamicWeeklyEarnings || 0)}</span>
             </div>
             
             <div style={{ color: '#94a3b8', fontSize: '0.85rem', fontWeight: 600, marginTop: '8px' }}>

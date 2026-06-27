@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import api from '../../services/api';
 import { getCreatorProfile } from '../../services/discoveryApi';
+import { getFanHistory } from '../../services/fanApi';
 import PaymentButton from '../../components/PaymentButton';
 
 const CreatorProfile = () => {
@@ -98,6 +99,28 @@ const CreatorProfile = () => {
     };
     fetchUser();
   }, []);
+
+  const [followUpThread, setFollowUpThread] = useState([]);
+
+  useEffect(() => {
+    if (isFollowUp && parentQuestionId && isLoggedIn) {
+      const fetchThread = async () => {
+        try {
+          const res = await getFanHistory();
+          if (res.success && res.questions) {
+            const thread = [
+              res.questions.find(q => q._id === parentQuestionId),
+              ...res.questions.filter(q => q.parentQuestionId === parentQuestionId)
+            ].filter(Boolean).sort((a,b) => new Date(a.createdAt) - new Date(b.createdAt));
+            setFollowUpThread(thread);
+          }
+        } catch (e) {
+          console.error('Failed to fetch follow-up thread', e);
+        }
+      };
+      fetchThread();
+    }
+  }, [isFollowUp, parentQuestionId, isLoggedIn]);
 
   if (loading) {
     return (
@@ -227,7 +250,7 @@ const CreatorProfile = () => {
               Question sent!
             </h2>
             <p style={{ color: '#94a3b8', margin: '0 0 32px', fontSize: '15px', lineHeight: '1.6', textAlign: 'center' }}>
-              <span style={{ color: '#fff', fontWeight: '600' }}>{creator.name}</span> will reply within 24 hours. You'll be notified on both channels.
+              <span style={{ color: '#fff', fontWeight: '600' }}>{creator.name}</span> {isFollowUp ? 'has received your follow-up.' : 'will reply within 24 hours.'} You'll be notified on both channels.
             </p>
 
             {/* Delivery Channels Box */}
@@ -429,36 +452,42 @@ const CreatorProfile = () => {
                 )}
               </div>
 
-              <div style={{ color: '#94a3b8', fontSize: '14px', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span style={{ color: '#fb923c' }}>⚡</span> I'll reply within 24 hrs
-              </div>
+              {!isFollowUp && (
+                <div style={{ color: '#94a3b8', fontSize: '14px', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ color: '#fb923c' }}>⚡</span> I'll reply within 24 hrs
+                </div>
+              )}
 
               <button
                 onClick={() => {
+                  if (creator.isLive === false && !isPreview) {
+                    alert('Creator is offline. Ask when the creator is back live again.');
+                    return;
+                  }
+                  if (isBanned || isPreview) return;
                   if (!isLoggedIn && !isPreview) {
                     navigate(`/fan/login?redirect=/${handle}`);
                   } else {
                     setStep('ask');
                   }
                 }}
-                disabled={isBanned || isPreview}
                 style={{
-                  background: (isBanned || isPreview) ? '#333' : 'linear-gradient(90deg, #34d399, #10b981)',
-                  color: (isBanned || isPreview) ? '#888' : '#000',
+                  background: (isBanned || isPreview || creator.isLive === false) ? '#333' : 'linear-gradient(90deg, #34d399, #10b981)',
+                  color: (isBanned || isPreview || creator.isLive === false) ? '#888' : '#000',
                   border: 'none',
                   borderRadius: '100px',
                   padding: '16px',
                   fontWeight: '700',
                   fontSize: '16px',
                   width: '100%',
-                  cursor: (isBanned || isPreview) ? 'not-allowed' : 'pointer',
+                  cursor: (isBanned || isPreview || creator.isLive === false) ? 'not-allowed' : 'pointer',
                   transition: 'transform 0.2s',
-                  boxShadow: (isBanned || isPreview) ? 'none' : '0 4px 14px rgba(16, 185, 129, 0.3)',
+                  boxShadow: (isBanned || isPreview || creator.isLive === false) ? 'none' : '0 4px 14px rgba(16, 185, 129, 0.3)',
                 }}
-                onMouseOver={(e) => { if (!isBanned && !isPreview) e.currentTarget.style.transform = 'scale(1.02)' }}
-                onMouseOut={(e) => { if (!isBanned && !isPreview) e.currentTarget.style.transform = 'scale(1)' }}
+                onMouseOver={(e) => { if (!isBanned && !isPreview && creator.isLive !== false) e.currentTarget.style.transform = 'scale(1.02)' }}
+                onMouseOut={(e) => { if (!isBanned && !isPreview && creator.isLive !== false) e.currentTarget.style.transform = 'scale(1)' }}
               >
-                {isPreview ? 'Preview Mode' : (isBanned ? 'Action Restricted' : (isFollowUp ? 'Ask for free →' : 'Ask Now →'))}
+                {isPreview ? 'Preview Mode' : (isBanned ? 'Action Restricted' : (creator.isLive === false ? 'Creator Offline' : (isFollowUp ? 'Ask for free →' : 'Ask Now →')))}
               </button>
             </div>
 
@@ -491,6 +520,29 @@ const CreatorProfile = () => {
               </h2>
             </div>
 
+            {/* Follow Up Thread Display */}
+            {isFollowUp && followUpThread.length > 0 && (
+              <div style={{ marginBottom: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <h3 style={{ margin: 0, color: '#fff', fontSize: '16px', fontWeight: '700' }}>Previous Conversation</h3>
+                <div style={{ background: '#131313', border: '1px solid #1f1f1f', borderRadius: '16px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  {followUpThread.map((q, idx) => (
+                    <div key={q._id || idx} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div style={{ color: '#38bdf8', fontSize: '12px', fontWeight: '600' }}>{q.buyerName || 'You'}</div>
+                      </div>
+                      <div style={{ color: '#e2e8f0', fontSize: '14px', lineHeight: '1.5' }}>{q.questionText}</div>
+                      {q.answerText && (
+                        <div style={{ marginTop: '4px', borderLeft: '2px solid #10b981', paddingLeft: '12px' }}>
+                          <div style={{ color: '#10b981', fontSize: '12px', fontWeight: '600', marginBottom: '4px' }}>{creator.name} replied:</div>
+                          <div style={{ color: '#94a3b8', fontSize: '14px', lineHeight: '1.5', whiteSpace: 'pre-wrap' }}>{q.answerText}</div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Disclaimer Box */}
             <div style={{
               background: '#1a110b',
@@ -504,7 +556,7 @@ const CreatorProfile = () => {
               </div>
               <ol style={{ color: '#d1d5db', fontSize: '13px', lineHeight: '1.6', margin: 0, paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '12px', listStyleType: 'decimal' }}>
                 <li style={{ paddingLeft: '4px' }}>Ask one clear question, per payment for the best response.</li>
-                <li style={{ paddingLeft: '4px' }}>Full refund if there's no reply within 24 hours.</li>
+                {!isFollowUp && <li style={{ paddingLeft: '4px' }}>Full refund if there's no reply within 24 hours.</li>}
                 <li style={{ paddingLeft: '4px' }}>Be respectful. Abusive, hateful, or vulgar content is not allowed.</li>
                 <li style={{ paddingLeft: '4px' }}>Share only what's needed for a helpful answer</li>
               </ol>
@@ -609,15 +661,17 @@ const CreatorProfile = () => {
                 disabled={!agreed || question.length < 20 || question.length > 500 || !buyerName.trim() || !buyerEmail.trim() || buyerPhone.length !== 10 || submitLoading}
                 style={{
                   width: '100%',
-                  background: '#10b981',
-                  color: '#0E0E0E',
-                  border: 'none',
+                  background: (!agreed || question.length < 20 || question.length > 500 || !buyerName.trim() || !buyerEmail.trim() || buyerPhone.length !== 10 || submitLoading) ? '#062c19' : 'linear-gradient(90deg, #34d399, #10b981)',
+                  color: (!agreed || question.length < 20 || question.length > 500 || !buyerName.trim() || !buyerEmail.trim() || buyerPhone.length !== 10 || submitLoading) ? '#10b981' : '#000',
+                  border: (!agreed || question.length < 20 || question.length > 500 || !buyerName.trim() || !buyerEmail.trim() || buyerPhone.length !== 10 || submitLoading) ? '1px solid rgba(16, 185, 129, 0.2)' : 'none',
                   borderRadius: '16px',
                   padding: '18px',
                   fontSize: '1.1rem',
                   fontWeight: '800',
-                  cursor: (!agreed || (question.trim() ? question.trim().split(/\s+/).length : 0) < 20 || (question.trim() ? question.trim().split(/\s+/).length : 0) > 500 || !buyerName.trim() || !buyerEmail.trim() || buyerPhone.length !== 10 || submitLoading) ? 'not-allowed' : 'pointer',
-                  opacity: (!agreed || (question.trim() ? question.trim().split(/\s+/).length : 0) < 20 || (question.trim() ? question.trim().split(/\s+/).length : 0) > 500 || !buyerName.trim() || !buyerEmail.trim() || buyerPhone.length !== 10 || submitLoading) ? 0.5 : 1
+                  cursor: (!agreed || question.length < 20 || question.length > 500 || !buyerName.trim() || !buyerEmail.trim() || buyerPhone.length !== 10 || submitLoading) ? 'not-allowed' : 'pointer',
+                  opacity: (!agreed || question.length < 20 || question.length > 500 || !buyerName.trim() || !buyerEmail.trim() || buyerPhone.length !== 10 || submitLoading) ? 0.6 : 1,
+                  boxShadow: (!agreed || question.length < 20 || question.length > 500 || !buyerName.trim() || !buyerEmail.trim() || buyerPhone.length !== 10 || submitLoading) ? 'none' : '0 4px 20px rgba(16, 185, 129, 0.4)',
+                  transition: 'all 0.2s ease-in-out'
                 }}
               >
                 {submitLoading ? 'Processing...' : 'Ask for free.'}

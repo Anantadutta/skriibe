@@ -327,21 +327,33 @@ const CreatorPublicPage = () => {
             </span>
           </div>
 
-          <div style={{ fontSize: '0.9rem', color: '#94a3b8' }}>
-            Reply guaranteed within {creator.responseTime || '24'} hours
-          </div>
+          {!isFollowUp && (
+            <div style={{ fontSize: '0.9rem', color: '#94a3b8' }}>
+              Reply guaranteed within {creator.responseTime || '24'} hours
+            </div>
+          )}
 
           <button
-            onClick={() => setStep(1)}
-            style={{
-              background: '#29C5F6', color: '#0E0E0E', width: '100%', border: 'none',
-              borderRadius: '16px', padding: '18px', fontSize: '1.1rem', fontWeight: '800',
-              cursor: 'pointer', marginTop: '8px', transition: 'transform 0.2s'
+            onClick={() => {
+              if (creator.isLive === false) {
+                alert('Creator is offline. Ask when the creator is back live again.');
+                return;
+              }
+              setStep(1);
             }}
-            onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(0.98)'}
-            onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+            style={{
+              background: creator.isLive === false ? '#1A1A1A' : '#29C5F6',
+              color: creator.isLive === false ? '#94a3b8' : '#0E0E0E',
+              width: '100%', border: 'none',
+              borderRadius: '16px', padding: '18px', fontSize: '1.1rem', fontWeight: '800',
+              cursor: creator.isLive === false ? 'not-allowed' : 'pointer',
+              marginTop: '8px', transition: 'transform 0.2s',
+              opacity: creator.isLive === false ? 0.8 : 1
+            }}
+            onMouseEnter={(e) => { if (creator.isLive !== false) e.currentTarget.style.transform = 'scale(0.98)' }}
+            onMouseLeave={(e) => { if (creator.isLive !== false) e.currentTarget.style.transform = 'scale(1)' }}
           >
-            Ask Now →
+            {creator.isLive === false ? 'Creator Offline' : 'Ask Now →'}
           </button>
         </div>
 
@@ -433,9 +445,9 @@ const CreatorPublicPage = () => {
           </div>
           <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '8px', color: '#94a3b8', fontSize: '0.85rem', lineHeight: '1.5' }}>
             <li style={{ display: 'flex', gap: '8px' }}><span style={{ color: '#f97316', fontWeight: 'bold' }}>1.</span> Ask one clear question per payment for the best response.</li>
-            <li style={{ display: 'flex', gap: '8px' }}><span style={{ color: '#f97316', fontWeight: 'bold' }}>2.</span> Full refund if there's no reply within 24 hours.</li>
-            <li style={{ display: 'flex', gap: '8px' }}><span style={{ color: '#f97316', fontWeight: 'bold' }}>3.</span> Be respectful. Abusive, hateful, or vulgar content is not allowed.</li>
-            <li style={{ display: 'flex', gap: '8px' }}><span style={{ color: '#f97316', fontWeight: 'bold' }}>4.</span> Share only what's needed for a helpful answer</li>
+            {!isFollowUp && <li style={{ display: 'flex', gap: '8px' }}><span style={{ color: '#f97316', fontWeight: 'bold' }}>2.</span> Full refund if there's no reply within 24 hours.</li>}
+            <li style={{ display: 'flex', gap: '8px' }}><span style={{ color: '#f97316', fontWeight: 'bold' }}>{isFollowUp ? '2.' : '3.'}</span> Be respectful. Abusive, hateful, or vulgar content is not allowed.</li>
+            <li style={{ display: 'flex', gap: '8px' }}><span style={{ color: '#f97316', fontWeight: 'bold' }}>{isFollowUp ? '3.' : '4.'}</span> Share only what's needed for a helpful answer</li>
           </ul>
           
           <label style={{
@@ -621,7 +633,7 @@ const CreatorPublicPage = () => {
             Question sent!
           </h2>
           <p style={{ margin: '0 0 4px', fontSize: '1rem', color: '#64748b' }}>
-            {creator.name || creator.displayName} will reply within 24 hours.
+            {creator.name || creator.displayName} {isFollowUp ? 'has received your follow-up.' : 'will reply within 24 hours.'}
           </p>
           <p style={{ margin: 0, fontSize: '1rem', color: '#64748b' }}>
             You'll be notified on both channels.

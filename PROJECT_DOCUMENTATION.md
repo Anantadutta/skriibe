@@ -288,8 +288,8 @@ admin-frontend/
 ### For Creators
 
 - ✅ Create and manage live AMA sessions
-- ✅ Real-time question display with moderation
-- ✅ Reply to fan questions
+- ✅ Real-time message display with moderation
+- ✅ Reply to fan messages
 - ✅ Earnings dashboard and payment history
 - ✅ Fan management and blocking
 - ✅ Profile customization

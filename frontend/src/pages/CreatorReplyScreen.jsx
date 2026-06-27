@@ -276,13 +276,7 @@ const CreatorReplyScreen = () => {
               </div>
             ) : (
               <>
-                {/* SLA Warning Banner */}
-                {question.status !== 'satisfied' && (
-                  <div style={{ background: '#291E00', border: '1px solid #B45309', borderRadius: '16px', padding: '16px', display: 'flex', alignItems: 'center', gap: '12px', color: '#FBBF24' }}>
-                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#FBBF24' }} />
-                    <span style={{ fontWeight: '800', fontSize: '0.95rem', letterSpacing: '0.01em' }}>SLA: {calculateSLARemaining()}</span>
-                  </div>
-                )}
+
 
                 {/* Reply Editor */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -290,14 +284,7 @@ const CreatorReplyScreen = () => {
                     Your reply <span style={{ color: '#94a3b8', fontWeight: 500 }}>(Min 100 characters, Max 1000 characters)</span> <span style={{ color: '#38BDF8' }}>*</span>
                   </label>
                   
-                  {/* Quick Reply Chips */}
-                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                    {['Great question!', "Here's my take —", 'Short answer:'].map((chip, idx) => (
-                      <div key={idx} onClick={() => setReplyText(prev => prev ? prev + ' ' + chip : chip)} style={{ background: '#1E293B', color: '#94a3b8', padding: '10px 16px', borderRadius: '12px', fontSize: '0.9rem', fontWeight: 600, whiteSpace: 'nowrap', cursor: 'pointer' }}>
-                        {chip}
-                      </div>
-                    ))}
-                  </div>
+
 
                   <textarea
                     value={replyText}
@@ -321,17 +308,9 @@ const CreatorReplyScreen = () => {
                   />
 
                   {/* Character Count Validator */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', fontSize: '0.85rem', fontWeight: 700, color: '#94a3b8' }}>
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'flex-start', fontSize: '0.85rem', fontWeight: 700, color: '#94a3b8' }}>
                     <div style={{ color: isMinMet ? '#34D399' : (replyText.trim().length > 0 ? '#ef4444' : '#94a3b8') }}>
                       {charCount}/1000 characters
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
-                      <div>
-                        {isMinMet ? <span style={{ color: '#34D399' }}>valid ✓</span> : (charCount < 100 ? `${100 - charCount} left to minimum` : `${charCount - 1000} over maximum`)}
-                      </div>
-                      <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 500 }}>
-                        100 characters minimum
-                      </div>
                     </div>
                   </div>
                 </div>
@@ -384,23 +363,25 @@ const CreatorReplyScreen = () => {
                 </button>
 
                 {/* Action Button Grid */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '4px' }}>
-                  <button
-                    onClick={handleRejectClick}
-                    style={{
-                      background: '#1A1B23',
-                      border: 'none',
-                      color: '#ffffff',
-                      borderRadius: '16px',
-                      padding: '16px',
-                      fontWeight: 800,
-                      fontSize: '0.95rem',
-                      cursor: 'pointer',
-                      textAlign: 'center'
-                    }}
-                  >
-                    Reject & refund
-                  </button>
+                <div style={{ display: 'grid', gridTemplateColumns: question.isFollowUp ? '1fr' : '1fr 1fr', gap: '12px', marginTop: '4px' }}>
+                  {!question.isFollowUp && (
+                    <button
+                      onClick={handleRejectClick}
+                      style={{
+                        background: '#1A1B23',
+                        border: 'none',
+                        color: '#ffffff',
+                        borderRadius: '16px',
+                        padding: '16px',
+                        fontWeight: 800,
+                        fontSize: '0.95rem',
+                        cursor: 'pointer',
+                        textAlign: 'center'
+                      }}
+                    >
+                      Reject & refund
+                    </button>
+                  )}
                   <button
                     onClick={handleFlagClick}
                     style={{
@@ -891,7 +872,14 @@ complete.
             <div style={{ background: 'rgba(239, 68, 68, 0.05)', borderRadius: '16px', padding: '16px', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
               <div style={{ color: '#EF4444', fontSize: '0.8rem', fontWeight: 'bold', marginBottom: '8px', letterSpacing: '0.5px' }}>REASON</div>
               <div style={{ color: '#E2E8F0', fontSize: '0.95rem', lineHeight: '1.5' }}>
-                {question.flagReason || question.rejectReason || 'No reason provided'}
+                {(() => {
+                  const reason = question.flagReason || question.rejectReason;
+                  if (reason === 'expertise') return 'Outside my expertise';
+                  if (reason === 'vague') return 'Question is too vague';
+                  if (reason === 'inappropriate') return 'Inappropriate question';
+                  if (reason === 'abuse') return 'Flagged for abuse';
+                  return reason || 'No reason provided';
+                })()}
               </div>
             </div>
 

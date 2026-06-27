@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { CheckCircle2, ChevronRight, MessageSquare, PlayCircle, Star, PauseCircle } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
 import FanBottomNav from '../../components/fan/layout/FanBottomNav';
 import FanNavbar from '../../components/fan/layout/FanNavbar';
 import { getFanHistory, flagQuestion, satisfyQuestion } from '../../services/fanApi';
 import api from '../../services/api';
 
 const FanHistory = () => {
+  const location = useLocation();
   const flagOptions = [
     { category: "", options: [
       { label: "Irrelevant Answer", desc: "The response was vague and off topic" },
@@ -28,6 +30,43 @@ const FanHistory = () => {
         const data = await getFanHistory();
         if (data.success) {
           setQuestions(data.questions || []);
+          
+          const searchParams = new URLSearchParams(location.search);
+          const qId = searchParams.get('qId');
+          if (qId && data.questions) {
+            const targetQuestion = data.questions.find(q => q._id === qId);
+            if (targetQuestion) {
+              const rootId = targetQuestion.parentQuestionId || targetQuestion._id;
+              const rootQuestion = data.questions.find(q => q._id === rootId);
+              if (rootQuestion) {
+                setSelectedQuestion(rootQuestion);
+                
+                // Mark unread logic
+                const childrenMap = {};
+                data.questions.forEach(q => {
+                  if (q.isFollowUp && q.parentQuestionId) {
+                    if (!childrenMap[q.parentQuestionId]) childrenMap[q.parentQuestionId] = [];
+                    childrenMap[q.parentQuestionId].push(q);
+                  }
+                });
+                
+                const threadChildren = childrenMap[rootQuestion._id] || [];
+                const unreadChildren = threadChildren.filter(c => c.status === 'answered' && !c.fanRead);
+                if ((rootQuestion.status === 'answered' && !rootQuestion.fanRead) || unreadChildren.length > 0) {
+                  try {
+                    const toMark = [];
+                    if (rootQuestion.status === 'answered' && !rootQuestion.fanRead) toMark.push(rootQuestion._id);
+                    toMark.push(...unreadChildren.map(c => c._id));
+                    await Promise.all(toMark.map(id => api.post(`/questions/${id}/read`)));
+                    setQuestions(prev => prev.map(question => 
+                      toMark.includes(question._id) ? { ...question, fanRead: true } : question
+                    ));
+                    window.dispatchEvent(new Event('notificationRead'));
+                  } catch(e) { console.error('Failed to mark read', e); }
+                }
+              }
+            }
+          }
         } else {
           setError('Failed to fetch history');
         }
@@ -216,7 +255,7 @@ const FanHistory = () => {
                 fontWeight: 'bold',
                 textTransform: 'uppercase'
               }}>
-                {q.status === 'rejected' || q.status === 'flagged' ? 'UNDER REVIEW' : q.status}
+                {q.status === 'rejected' ? 'REJECTED' : (q.status === 'flagged' ? 'UNDER ADMIN REVIEW' : q.status)}
               </div>
             </div>
           </div>
@@ -233,7 +272,7 @@ const FanHistory = () => {
 
   const renderDetail = () => {
     const q = selectedQuestion;
-    const isAnswered = q.status === 'answered' && q.answeredAt;
+    const isAnswered = ['answered', 'satisfied'].includes(q.status) && q.answeredAt;
     let diffHours = 0;
     
     if (isAnswered) {
@@ -276,14 +315,14 @@ const FanHistory = () => {
             <div style={{ height: '1px', background: 'rgba(255,255,255,0.05)', margin: '4px 0' }} />
 
             <div style={{ background: '#1a1b23', borderRadius: '16px', padding: '20px', border: '1px solid rgba(255,255,255,0.05)' }}>
-              <div style={{ color: '#64748b', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '12px', textTransform: 'uppercase' }}>YOUR QUESTION</div>
+              <div style={{ color: '#64748b', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '12px', textTransform: 'uppercase' }}>{q.isFollowUp ? 'YOUR FOLLOW-UP' : 'YOUR QUESTION'}</div>
               <div style={{ color: '#94a3b8', fontSize: '15px', fontStyle: 'italic', lineHeight: '1.5', wordBreak: 'break-all', overflowWrap: 'anywhere' }}>
                 "{q.questionText}"
               </div>
             </div>
 
             <div style={{ background: '#0a1922', borderRadius: '16px', padding: '20px', border: '1px solid rgba(56, 189, 248, 0.2)' }}>
-              <div style={{ color: '#38bdf8', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '12px', textTransform: 'uppercase' }}>{creatorName.split(' ')[0]}'S ANSWER</div>
+              <div style={{ color: '#38bdf8', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '12px', textTransform: 'uppercase' }}>{creatorName.split(' ')[0]}'S {q.isFollowUp ? 'ANSWER' : 'FULL ANSWER'}</div>
               <div style={{ color: '#fff', fontSize: '16px', lineHeight: '1.6', wordBreak: 'break-all', overflowWrap: 'anywhere' }}>
                 {q.answerText}
               </div>
@@ -291,23 +330,23 @@ const FanHistory = () => {
 
             {(childrenMap[q._id] || []).map((child) => (
               <React.Fragment key={child._id}>
-                <div style={{ display: 'flex', justifyContent: 'center', margin: '-8px 0' }}>
-                  <div style={{ width: '2px', height: '24px', background: 'rgba(255,255,255,0.1)' }} />
-                </div>
-                <div style={{ background: '#1a1b23', borderRadius: '16px', padding: '20px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                  <div style={{ color: '#64748b', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '12px', textTransform: 'uppercase' }}>↳ YOUR FOLLOW-UP</div>
-                  <div style={{ color: '#94a3b8', fontSize: '15px', fontStyle: 'italic', lineHeight: '1.5', wordBreak: 'break-all', overflowWrap: 'anywhere' }}>
-                    "{child.questionText}"
-                  </div>
-                </div>
-                {child.status === 'answered' && child.answerText && (
+                {child.status !== 'submitted' && (
                   <>
-                    <div style={{ display: 'flex', justifyContent: 'center', margin: '-8px 0' }}>
-                      <div style={{ width: '2px', height: '24px', background: 'rgba(56, 189, 248, 0.2)' }} />
+                    <div style={{ height: '1px', background: 'rgba(255,255,255,0.05)', margin: '8px 0' }} />
+                    <div style={{ background: '#1a1b23', borderRadius: '16px', padding: '20px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                      <div style={{ color: '#64748b', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '12px', textTransform: 'uppercase' }}>YOUR FOLLOW-UP</div>
+                      <div style={{ color: '#94a3b8', fontSize: '15px', fontStyle: 'italic', lineHeight: '1.5', wordBreak: 'break-all', overflowWrap: 'anywhere' }}>
+                        "{child.questionText}"
+                      </div>
                     </div>
+                  </>
+                )}
+                {child.answerText && (
+                  <>
+                    <div style={{ height: '1px', background: 'rgba(255,255,255,0.05)', margin: '8px 0' }} />
                     <div style={{ background: '#0a1922', borderRadius: '16px', padding: '20px', border: '1px solid rgba(56, 189, 248, 0.2)' }}>
                       <div style={{ color: '#38bdf8', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '12px', textTransform: 'uppercase' }}>{creatorName.split(' ')[0]}'S ANSWER</div>
-                      <div style={{ color: '#fff', fontSize: '16px', lineHeight: '1.6', wordBreak: 'break-all', overflowWrap: 'anywhere' }}>
+                      <div style={{ color: '#fff', fontSize: '16px', lineHeight: '1.6' }}>
                         {child.answerText}
                       </div>
                     </div>
@@ -316,7 +355,7 @@ const FanHistory = () => {
               </React.Fragment>
             ))}
 
-            {q.followUpAllowed !== false && (
+            {!q.isFollowUp && q.followUpAllowed !== false && (
               <div style={{ background: hasFollowUp ? '#11131a' : '#062c19', borderRadius: '16px', padding: '16px', border: hasFollowUp ? '1px solid rgba(255,255,255,0.05)' : '1px solid rgba(16, 185, 129, 0.2)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', opacity: hasFollowUp ? 0.5 : 1 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                   <div style={{ color: '#fff', fontSize: '20px' }}>💬</div>
@@ -334,41 +373,50 @@ const FanHistory = () => {
               </div>
             )}
 
-            {q.status === 'satisfied' ? (
-              <div style={{ background: '#0a2e1c', color: '#10b981', borderRadius: '16px', padding: '16px', fontWeight: '800', fontSize: '15px', textAlign: 'center', marginTop: '8px', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
-                Satisfied with answer
-              </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '8px' }}>
-                <button 
-                  onClick={async () => {
-                    try {
-                      await satisfyQuestion(q._id);
-                      setQuestions(prev => prev.map(question => question._id === q._id ? { ...question, status: 'satisfied' } : question));
-                      if (selectedQuestion?._id === q._id) {
-                        setSelectedQuestion({ ...selectedQuestion, status: 'satisfied' });
+            {!q.isFollowUp && (
+              q.status === 'satisfied' ? (
+                <div style={{ background: '#0a2e1c', color: '#10b981', borderRadius: '16px', padding: '16px', fontWeight: '800', fontSize: '15px', textAlign: 'center', marginTop: '8px', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
+                  Satisfied with answer
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '8px' }}>
+                  <button 
+                    onClick={async () => {
+                      try {
+                        await satisfyQuestion(q._id);
+                        setQuestions(prev => prev.map(question => question._id === q._id ? { ...question, status: 'satisfied' } : question));
+                        if (selectedQuestion?._id === q._id) {
+                          setSelectedQuestion({ ...selectedQuestion, status: 'satisfied' });
+                        }
+                      } catch (e) {
+                        console.error('Failed to satisfy', e);
                       }
-                    } catch (e) {
-                      console.error('Failed to satisfy', e);
-                    }
-                  }}
-                  style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.2)', borderRadius: '16px', padding: '16px', color: '#10b981', fontWeight: '600', fontSize: '14px', cursor: 'pointer', transition: 'background 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }} 
-                  onMouseOver={(e) => e.currentTarget.style.background = 'rgba(16, 185, 129, 0.15)'} 
-                  onMouseOut={(e) => e.currentTarget.style.background = 'rgba(16, 185, 129, 0.1)'}
-                >
-                  <span style={{ fontSize: '18px' }}>🙂</span> Satisfied with answer
-                </button>
+                    }}
+                    style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.2)', borderRadius: '16px', padding: '16px', color: '#10b981', fontWeight: '600', fontSize: '14px', cursor: 'pointer', transition: 'background 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }} 
+                    onMouseOver={(e) => e.currentTarget.style.background = 'rgba(16, 185, 129, 0.15)'} 
+                    onMouseOut={(e) => e.currentTarget.style.background = 'rgba(16, 185, 129, 0.1)'}
+                  >
+                    <span style={{ fontSize: '18px' }}>🙂</span> Satisfied with answer
+                  </button>
 
-                <button 
-                  onClick={() => setIsFlagModalOpen(true)}
-                  style={{ background: 'transparent', border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: '16px', padding: '16px', color: '#ef4444', fontWeight: '600', fontSize: '14px', cursor: 'pointer', transition: 'background 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }} 
-                  onMouseOver={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.05)'} 
-                  onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
-                >
-                  <span style={{ fontSize: '16px' }}>⚑</span> Flag as incomplete (24hr window)
-                </button>
-              </div>
+                  <button 
+                    onClick={() => setIsFlagModalOpen(true)}
+                    style={{ background: 'transparent', border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: '16px', padding: '16px', color: '#ef4444', fontWeight: '600', fontSize: '14px', cursor: 'pointer', transition: 'background 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }} 
+                    onMouseOver={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.05)'} 
+                    onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
+                  >
+                    <span style={{ fontSize: '16px' }}>⚑</span> Flag as incomplete (24hr window)
+                  </button>
+                </div>
+              )
             )}
+
+            <button 
+              onClick={() => window.location.href = `/creator/${q.handle}`}
+              style={{ background: '#38bdf8', color: '#000', border: 'none', borderRadius: '16px', padding: '16px', fontWeight: '800', fontSize: '15px', cursor: 'pointer', marginTop: '8px', width: '100%' }}
+            >
+              Message Again
+            </button>
 
           </div>
         </div>
@@ -460,8 +508,11 @@ const FanHistory = () => {
               </div>
             )}
 
-            <button style={{ background: '#38bdf8', color: '#000', border: 'none', borderRadius: '16px', padding: '16px', fontWeight: '800', fontSize: '15px', cursor: 'pointer', marginTop: '8px' }}>
-              Ask {creatorName.split(' ')[0]} another question
+            <button 
+              onClick={() => window.location.href = `/creator/${q.handle}`}
+              style={{ background: '#38bdf8', color: '#000', border: 'none', borderRadius: '16px', padding: '16px', fontWeight: '800', fontSize: '15px', cursor: 'pointer', marginTop: '8px', width: '100%' }}
+            >
+              Message Again
             </button>
 
           </div>
@@ -497,10 +548,25 @@ const FanHistory = () => {
               </div>
             )}
             
-            {(q.status === 'rejected' || q.status === 'flagged') ? (
+            {q.status === 'rejected' ? (
               <div style={{ textAlign: 'center', padding: '32px', color: '#94a3b8', background: 'rgba(255,255,255,0.02)', borderRadius: '16px' }}>
-                  Status: <strong style={{ color: '#fbbf24', textTransform: 'uppercase' }}>UNDER REVIEW</strong>
-                  <p style={{ marginTop: '8px', fontSize: '14px', lineHeight: '1.5' }}>Thanks for reporting. We've removed this question from your open queue and will review it within 48 hours.</p>
+                  Status: <strong style={{ color: '#ef4444', textTransform: 'uppercase' }}>REJECTED</strong>
+                  <p style={{ marginTop: '8px', fontSize: '14px', lineHeight: '1.5', color: '#e2e8f0' }}>
+                    {q.rejectReason === 'inappropriate' ? (
+                      "Unfortunately, the creator has marked your message as inappropriate. This violates our guidelines and no refund will be issued."
+                    ) : q.rejectReason === 'abuse' ? (
+                      "Unfortunately, the creator has flagged your message for abuse. This violates our guidelines and no refund will be issued."
+                    ) : (
+                      `Unfortunately, the creator has marked your message: "${q.rejectReason === 'vague' ? 'Question is too vague' : 'Outside the creator\'s expertise'}". We've already started your refund, and it should be credited within 5-7 working days.`
+                    )}
+                  </p>
+              </div>
+            ) : q.status === 'flagged' ? (
+              <div style={{ textAlign: 'center', padding: '32px', color: '#94a3b8', background: 'rgba(255,255,255,0.02)', borderRadius: '16px' }}>
+                  Status: <strong style={{ color: '#fbbf24', textTransform: 'uppercase' }}>UNDER ADMIN REVIEW</strong>
+                  <p style={{ marginTop: '8px', fontSize: '14px', lineHeight: '1.5' }}>
+                    You flagged this answer. It is currently under admin review.
+                  </p>
               </div>
             ) : q.status === 'resolved' ? (
               <div style={{ textAlign: 'center', padding: '32px', color: '#94a3b8', background: 'rgba(255,255,255,0.02)', borderRadius: '16px' }}>
@@ -578,19 +644,20 @@ const FanHistory = () => {
               Select a reason for flagging this reply. This will open a dispute.
             </p>
             
-            <div style={{ maxHeight: '55vh', overflowY: 'auto', textAlign: 'left', marginBottom: '24px', paddingRight: '8px' }} className="custom-scrollbar">
-              {flagOptions.map((group, idx) => (
-                <div key={idx} style={{ marginBottom: '24px' }}>
-                  {group.category && <div style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', marginBottom: '12px', letterSpacing: '1px' }}>{group.category}</div>}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    {group.options.map((opt, oIdx) => (
-                      <div key={oIdx} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {!selectedFlagOption ? (
+              <div style={{ maxHeight: '55vh', overflowY: 'auto', textAlign: 'left', marginBottom: '24px', paddingRight: '8px' }} className="custom-scrollbar">
+                {flagOptions.map((group, idx) => (
+                  <div key={idx} style={{ marginBottom: '24px' }}>
+                    {group.category && <div style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', marginBottom: '12px', letterSpacing: '1px' }}>{group.category}</div>}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                      {group.options.map((opt, oIdx) => (
                         <button
+                          key={oIdx}
                           onClick={() => { setSelectedFlagOption(opt.label); setFlagReason(''); }}
                           style={{
                             width: '100%',
-                            background: selectedFlagOption === opt.label ? 'rgba(239, 68, 68, 0.05)' : '#15151A',
-                            border: selectedFlagOption === opt.label ? '1px solid rgba(239, 68, 68, 0.5)' : '1px solid rgba(255,255,255,0.06)',
+                            background: '#15151A',
+                            border: '1px solid rgba(255,255,255,0.06)',
                             borderRadius: '16px',
                             padding: '16px',
                             display: 'flex',
@@ -603,79 +670,109 @@ const FanHistory = () => {
                         >
                           <div style={{
                             width: '24px', height: '24px', borderRadius: '50%',
-                            border: selectedFlagOption === opt.label ? 'none' : '2px solid rgba(255,255,255,0.2)',
-                            background: selectedFlagOption === opt.label ? '#ef4444' : 'transparent',
+                            border: '2px solid rgba(255,255,255,0.2)',
+                            background: 'transparent',
                             flexShrink: 0
                           }} />
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                             <div style={{ color: '#ffffff', fontWeight: '800', fontSize: '1rem' }}>{opt.label}</div>
-                            <div style={{ color: selectedFlagOption === opt.label ? 'rgba(255,255,255,0.5)' : '#64748b', fontSize: '0.85rem' }}>{opt.desc}</div>
+                            <div style={{ color: '#64748b', fontSize: '0.85rem' }}>{opt.desc}</div>
                           </div>
                         </button>
-                        
-                        {selectedFlagOption === opt.label && (
-                          <div style={{
-                            background: '#15151A',
-                            border: '1px solid rgba(255,255,255,0.06)',
-                            borderRadius: '16px',
-                            padding: '16px',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            animation: 'fadeIn 0.3s ease-out'
-                          }}>
-                            <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: '800', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '8px' }}>
-                              Please explain
-                            </div>
-                            <textarea 
-                              placeholder="Write your reason here..."
-                              value={flagReason}
-                              onChange={(e) => setFlagReason(e.target.value)}
-                              autoFocus
-                              style={{
-                                background: 'transparent',
-                                border: 'none',
-                                color: '#ffffff',
-                                fontSize: '1rem',
-                                resize: 'none',
-                                outline: 'none',
-                                minHeight: '60px',
-                                fontFamily: 'inherit'
-                              }}
-                            />
-                          </div>
-                        )}
-                      </div>
-                    ))}
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div style={{ textAlign: 'left', marginBottom: '24px' }}>
+                <div style={{
+                  background: 'rgba(239, 68, 68, 0.05)',
+                  border: '1px solid rgba(239, 68, 68, 0.5)',
+                  borderRadius: '16px',
+                  padding: '16px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '16px',
+                  marginBottom: '16px'
+                }}>
+                  <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#ef4444', flexShrink: 0 }} />
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <div style={{ color: '#ffffff', fontWeight: '800', fontSize: '1rem' }}>{selectedFlagOption}</div>
+                    <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.85rem' }}>
+                      {flagOptions.flatMap(g => g.options).find(o => o.label === selectedFlagOption)?.desc}
+                    </div>
                   </div>
                 </div>
-              ))}
-            </div>
+
+                <div style={{
+                  background: '#15151A',
+                  border: '1px solid rgba(255,255,255,0.06)',
+                  borderRadius: '16px',
+                  padding: '16px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  animation: 'fadeIn 0.3s ease-out'
+                }}>
+                  <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: '800', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '8px' }}>
+                    Please explain
+                  </div>
+                  <textarea 
+                    placeholder="Write your reason here..."
+                    value={flagReason}
+                    onChange={(e) => setFlagReason(e.target.value)}
+                    autoFocus
+                    style={{
+                      background: 'transparent',
+                      border: 'none',
+                      color: '#ffffff',
+                      fontSize: '1rem',
+                      resize: 'none',
+                      outline: 'none',
+                      minHeight: '100px',
+                      fontFamily: 'inherit'
+                    }}
+                  />
+                </div>
+              </div>
+            )}
 
             <div style={{ display: 'flex', gap: '12px' }}>
-              <button 
-                onClick={() => { setIsFlagModalOpen(false); setSelectedFlagOption(''); setFlagReason(''); }}
-                disabled={isFlagging}
-                style={{ flex: 1, background: 'transparent', border: '1px solid #334155', color: '#cbd5e1', padding: '12px', borderRadius: '12px', fontWeight: '600', cursor: 'pointer' }}
-              >
-                Cancel
-              </button>
-              <button 
-                onClick={handleFlagConfirm}
-                disabled={!selectedFlagOption || !flagReason.trim() || isFlagging}
-                style={{ 
-                  flex: 1, 
-                  background: (!selectedFlagOption || !flagReason.trim() || isFlagging) ? '#3f3f46' : '#ef4444', 
-                  border: 'none', 
-                  color: (!selectedFlagOption || !flagReason.trim() || isFlagging) ? '#a1a1aa' : '#fff', 
-                  padding: '12px', 
-                  borderRadius: '12px', 
-                  fontWeight: 'bold', 
-                  cursor: (!selectedFlagOption || !flagReason.trim() || isFlagging) ? 'not-allowed' : 'pointer',
-                  transition: 'all 0.2s'
-                }}
-              >
-                {isFlagging ? 'Flagging...' : 'Yes, Flag it'}
-              </button>
+              {selectedFlagOption ? (
+                <>
+                  <button 
+                    onClick={() => { setSelectedFlagOption(''); setFlagReason(''); }}
+                    disabled={isFlagging}
+                    style={{ flex: 1, background: 'transparent', border: '1px solid #334155', color: '#cbd5e1', padding: '12px', borderRadius: '12px', fontWeight: '600', cursor: 'pointer' }}
+                  >
+                    Back
+                  </button>
+                  <button 
+                    onClick={handleFlagConfirm}
+                    disabled={!flagReason.trim() || isFlagging}
+                    style={{ 
+                      flex: 1, 
+                      background: (!flagReason.trim() || isFlagging) ? '#3f3f46' : '#ef4444', 
+                      border: 'none', 
+                      color: (!flagReason.trim() || isFlagging) ? '#a1a1aa' : '#fff', 
+                      padding: '12px', 
+                      borderRadius: '12px', 
+                      fontWeight: 'bold', 
+                      cursor: (!flagReason.trim() || isFlagging) ? 'not-allowed' : 'pointer',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    {isFlagging ? 'Submitting...' : 'Submit'}
+                  </button>
+                </>
+              ) : (
+                <button 
+                  onClick={() => { setIsFlagModalOpen(false); setSelectedFlagOption(''); setFlagReason(''); }}
+                  style={{ width: '100%', background: 'transparent', border: '1px solid #334155', color: '#cbd5e1', padding: '12px', borderRadius: '12px', fontWeight: '600', cursor: 'pointer' }}
+                >
+                  Cancel
+                </button>
+              )}
             </div>
           </div>
         </div>

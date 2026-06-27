@@ -52,8 +52,8 @@ const CommissionSettings = () => {
             };
           } else {
             initialOverrides[c._id] = {
-              creatorShare: 100,
-              skriibeShare: 0,
+              creatorShare: 80,
+              skriibeShare: 20,
               startDate: '',
               endDate: ''
             };
@@ -144,7 +144,7 @@ const CommissionSettings = () => {
         <h1 className="font-wide" style={{ margin: '0 0 8px 0', fontSize: '2rem', letterSpacing: '-0.03em' }}>Commission Settings</h1>
         <p style={{ margin: 0, color: '#94a3b8', lineHeight: '1.5' }}>
           Configure time-bound commission overrides per creator. <br/>
-          <span style={{ color: '#10B981', fontWeight: '500' }}>Note: The default platform rate is currently 100% to the creator. Once a creator's selected override time period expires, their rate will automatically shift to 80% Creator / 20% Skriibe.</span>
+          <span style={{ color: '#10B981', fontWeight: '500' }}>Note: The default platform rate is currently 80% Creator / 20% Skriibe. Once a creator's selected override time period expires, their rate will automatically shift back to 80% Creator / 20% Skriibe.</span>
         </p>
       </div>
 

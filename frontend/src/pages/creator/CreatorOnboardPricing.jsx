@@ -623,7 +623,7 @@ const CreatorOnboardPricing = () => {
                     letterSpacing: '0.1em',
                     fontWeight: 700
                   }}>
-                    DAILY QUESTION CAP
+                    DAILY MESSAGE CAP
                   </label>
                   <span style={{
                     color: '#ffffff',

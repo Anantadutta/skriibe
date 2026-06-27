@@ -431,10 +431,10 @@ const FanProfile = () => {
             </div>
           </div>
 
-          {/* Payout History Section */}
+          {/* Questions History Section */}
           <div style={{ marginTop: '48px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-              <h2 style={{ fontSize: '24px', fontWeight: '700', margin: 0 }}>Payout History</h2>
+              <h2 style={{ fontSize: '24px', fontWeight: '700', margin: 0 }}>Your Questions</h2>
               {!showAllQuestions && questions.length > 3 && (
                 <button 
                   onClick={() => setShowAllQuestions(true)}
@@ -486,7 +486,7 @@ const FanProfile = () => {
                           {q.status === 'submitted' ? 'Open' : q.status.charAt(0).toUpperCase() + q.status.slice(1)}
                       </div>
                       <div style={{ fontSize: '14px', fontWeight: '800', color: '#cbd5e1' }}>
-                          Rs. {q.price || 99}
+                          Rs. {q.amountPaid || q.price || 99}
                       </div>
                   </div>
                 </div>
