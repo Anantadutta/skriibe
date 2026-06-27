@@ -339,8 +339,11 @@ router.post('/questions/:id/reply', verifyCreatorToken, async (req, res) => {
       await Notification.create({
         fanId: question.fanId,
         questionId: question._id,
-        title: 'Question Answered!',
-        message: `${creatorName} has replied to your question.`
+        title: question.isFollowUp ? 'Follow-up Answered!' : 'Question Answered!',
+        message: question.isFollowUp 
+          ? `${creatorName} has replied to your follow-up.`
+          : `${creatorName} has replied to your question.`,
+        answerText: replyText
       });
 
       if (question.buyerEmail) {

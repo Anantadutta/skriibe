@@ -530,11 +530,11 @@ const CreatorProfile = () => {
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <div style={{ color: '#38bdf8', fontSize: '12px', fontWeight: '600' }}>{q.buyerName || 'You'}</div>
                       </div>
-                      <div style={{ color: '#e2e8f0', fontSize: '14px', lineHeight: '1.5' }}>{q.questionText}</div>
+                      <div style={{ color: '#e2e8f0', fontSize: '14px', lineHeight: '1.5', wordBreak: 'break-all', overflowWrap: 'anywhere' }}>{q.questionText}</div>
                       {q.answerText && (
                         <div style={{ marginTop: '4px', borderLeft: '2px solid #10b981', paddingLeft: '12px' }}>
                           <div style={{ color: '#10b981', fontSize: '12px', fontWeight: '600', marginBottom: '4px' }}>{creator.name} replied:</div>
-                          <div style={{ color: '#94a3b8', fontSize: '14px', lineHeight: '1.5', whiteSpace: 'pre-wrap' }}>{q.answerText}</div>
+                          <div style={{ color: '#94a3b8', fontSize: '14px', lineHeight: '1.5', whiteSpace: 'pre-wrap', wordBreak: 'break-all', overflowWrap: 'anywhere' }}>{q.answerText}</div>
                         </div>
                       )}
                     </div>

@@ -330,7 +330,6 @@ const FanHistory = () => {
 
             {(childrenMap[q._id] || []).map((child) => (
               <React.Fragment key={child._id}>
-                {child.status !== 'submitted' && (
                   <>
                     <div style={{ height: '1px', background: 'rgba(255,255,255,0.05)', margin: '8px 0' }} />
                     <div style={{ background: '#1a1b23', borderRadius: '16px', padding: '20px', border: '1px solid rgba(255,255,255,0.05)' }}>
@@ -340,13 +339,12 @@ const FanHistory = () => {
                       </div>
                     </div>
                   </>
-                )}
                 {child.answerText && (
                   <>
                     <div style={{ height: '1px', background: 'rgba(255,255,255,0.05)', margin: '8px 0' }} />
                     <div style={{ background: '#0a1922', borderRadius: '16px', padding: '20px', border: '1px solid rgba(56, 189, 248, 0.2)' }}>
                       <div style={{ color: '#38bdf8', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '12px', textTransform: 'uppercase' }}>{creatorName.split(' ')[0]}'S ANSWER</div>
-                      <div style={{ color: '#fff', fontSize: '16px', lineHeight: '1.6' }}>
+                      <div style={{ color: '#fff', fontSize: '16px', lineHeight: '1.6', wordBreak: 'break-all', overflowWrap: 'anywhere' }}>
                         {child.answerText}
                       </div>
                     </div>
@@ -375,7 +373,7 @@ const FanHistory = () => {
 
             {!q.isFollowUp && (
               q.status === 'satisfied' ? (
-                <div style={{ background: '#0a2e1c', color: '#10b981', borderRadius: '16px', padding: '16px', fontWeight: '800', fontSize: '15px', textAlign: 'center', marginTop: '8px', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
+                <div style={{ background: '#11131a', color: '#64748b', borderRadius: '16px', padding: '16px', fontWeight: '800', fontSize: '15px', textAlign: 'center', marginTop: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
                   Satisfied with answer
                 </div>
               ) : (
@@ -488,10 +486,35 @@ const FanHistory = () => {
 
             <div style={{ background: '#0a1922', borderRadius: '16px', padding: '20px', border: '1px solid rgba(56, 189, 248, 0.2)' }}>
               <div style={{ color: '#38bdf8', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '12px', textTransform: 'uppercase' }}>{creatorName.split(' ')[0]}'S FULL ANSWER</div>
-              <div style={{ color: '#fff', fontSize: '16px', lineHeight: '1.6' }}>
+              <div style={{ color: '#fff', fontSize: '16px', lineHeight: '1.6', wordBreak: 'break-all', overflowWrap: 'anywhere' }}>
                 {q.answerText}
               </div>
             </div>
+
+            {(childrenMap[q._id] || []).map((child) => (
+              <React.Fragment key={child._id}>
+                <>
+                  <div style={{ height: '1px', background: 'rgba(255,255,255,0.05)', margin: '8px 0' }} />
+                  <div style={{ background: '#1a1b23', borderRadius: '16px', padding: '20px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    <div style={{ color: '#64748b', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '12px', textTransform: 'uppercase' }}>YOUR FOLLOW-UP</div>
+                    <div style={{ color: '#94a3b8', fontSize: '15px', fontStyle: 'italic', lineHeight: '1.5', wordBreak: 'break-all', overflowWrap: 'anywhere' }}>
+                      "{child.questionText}"
+                    </div>
+                  </div>
+                </>
+                {child.answerText && (
+                  <>
+                    <div style={{ height: '1px', background: 'rgba(255,255,255,0.05)', margin: '8px 0' }} />
+                    <div style={{ background: '#0a1922', borderRadius: '16px', padding: '20px', border: '1px solid rgba(56, 189, 248, 0.2)' }}>
+                      <div style={{ color: '#38bdf8', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '12px', textTransform: 'uppercase' }}>{creatorName.split(' ')[0]}'S ANSWER</div>
+                      <div style={{ color: '#fff', fontSize: '16px', lineHeight: '1.6', wordBreak: 'break-all', overflowWrap: 'anywhere' }}>
+                        {child.answerText}
+                      </div>
+                    </div>
+                  </>
+                )}
+              </React.Fragment>
+            ))}
 
             {q.followUpAllowed !== false && (
               <div style={{ background: '#11131a', borderRadius: '16px', padding: '16px', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px' }}>
@@ -506,6 +529,30 @@ const FanHistory = () => {
                   Ask →
                 </button>
               </div>
+            )}
+
+            {!q.isFollowUp && (
+              q.status === 'satisfied' ? (
+                <div style={{ background: '#11131a', color: '#64748b', borderRadius: '16px', padding: '16px', fontWeight: '800', fontSize: '15px', textAlign: 'center', marginTop: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                  Satisfied with answer
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '8px' }}>
+                  <button 
+                    disabled
+                    style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '16px', padding: '16px', color: '#64748b', fontWeight: '600', fontSize: '14px', cursor: 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }} 
+                  >
+                    <span style={{ fontSize: '18px', opacity: 0.5 }}>🙂</span> Satisfied with answer
+                  </button>
+
+                  <button 
+                    disabled
+                    style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '16px', padding: '16px', color: '#64748b', fontWeight: '600', fontSize: '14px', cursor: 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }} 
+                  >
+                    <span style={{ fontSize: '16px', opacity: 0.5 }}>⚑</span> Flag as incomplete (Expired)
+                  </button>
+                </div>
+              )
             )}
 
             <button 
@@ -542,7 +589,7 @@ const FanHistory = () => {
             {q.answerText && (
               <div style={{ background: '#0a1922', borderRadius: '16px', padding: '20px', border: '1px solid rgba(56, 189, 248, 0.2)', marginBottom: '16px' }}>
                 <div style={{ color: '#38bdf8', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '12px', textTransform: 'uppercase' }}>{creatorName.split(' ')[0]}'S FULL ANSWER</div>
-                <div style={{ color: '#fff', fontSize: '16px', lineHeight: '1.6' }}>
+                <div style={{ color: '#fff', fontSize: '16px', lineHeight: '1.6', wordBreak: 'break-all', overflowWrap: 'anywhere' }}>
                   {q.answerText}
                 </div>
               </div>
