@@ -536,7 +536,7 @@ const FanProfile = () => {
                         const res = await upgradeToCreator();
                         if (res.success) {
                           setAuthData(['fan', 'creator'], 'creator', res.token);
-                          window.location.href = '/onboard/profile';
+                          window.location.href = '/creator/dashboard';
                         }
                       } catch (err) {
                         alert('Failed to upgrade to Creator');

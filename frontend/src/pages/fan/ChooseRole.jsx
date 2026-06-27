@@ -1,15 +1,20 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 
 const ChooseRole = () => {
   const navigate = useNavigate();
+  const { setAuthData, roles } = useAuth();
   const [loading, setLoading] = useState(false);
 
   const switchRole = async (role) => {
     setLoading(true);
     try {
-      await api.post('/fan-auth/switch-role', { role });
+      const res = await api.post('/fan-auth/switch-role', { role });
+      if (res.data.success) {
+        setAuthData(roles, role, res.data.token);
+      }
       if (role === 'creator') {
         navigate('/creator/dashboard');
       } else {

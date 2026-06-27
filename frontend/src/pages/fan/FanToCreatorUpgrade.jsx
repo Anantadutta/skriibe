@@ -14,7 +14,7 @@ const FanToCreatorUpgrade = () => {
         const res = await upgradeToCreator('', ' ', 'Others');
         if (res.success) {
           setAuthData(['fan', 'creator'], 'creator', res.token);
-          navigate('/onboard/profile', { replace: true });
+          navigate('/creator/dashboard', { replace: true });
         }
       } catch (err) {
         setError(err.response?.data?.message || 'Upgrade failed. Please try again.');

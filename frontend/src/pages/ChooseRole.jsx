@@ -13,7 +13,7 @@ const ChooseRole = () => {
     try {
       const res = await switchRole(role);
       if (res.success) {
-        setAuthData(roles, res.activeRole);
+        setAuthData(roles, res.activeRole, res.token);
         if (role === 'creator') {
           navigate('/creator/dashboard');
         } else {
