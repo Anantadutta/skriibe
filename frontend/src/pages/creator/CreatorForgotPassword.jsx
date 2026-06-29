@@ -21,7 +21,8 @@ const CreatorForgotPassword = () => {
     setMessage('');
     
     try {
-      const response = await fetch('/api/creators/forgot-password', {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      const response = await fetch(`${API_URL}/creators/forgot-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
