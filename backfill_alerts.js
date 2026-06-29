@@ -28,7 +28,7 @@ async function backfill() {
         await AdminAlert.create({
           type: 'buyer_flag',
           title: 'Buyer flagged a reply',
-          message: `Buyer flagged reply for question #${d._id.toString().slice(-6)}`,
+          message: `Buyer flagged reply for message #${d._id.toString().slice(-6)}`,
           referenceId: d._id,
           createdAt: d.updatedAt
         });

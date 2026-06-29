@@ -7,8 +7,8 @@ async function insert() {
     await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/skriibe');
     await AdminAlert.create({
       type: 'creator_reject',
-      title: 'Creator rejected question',
-      message: 'Creator rejected question #123456: testing backend',
+      title: 'Creator rejected message',
+      message: 'Creator rejected message #123456: testing backend',
       referenceId: new mongoose.Types.ObjectId()
     });
     console.log('Inserted successfully!');

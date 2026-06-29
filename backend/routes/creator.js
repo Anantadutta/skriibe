@@ -254,8 +254,8 @@ router.post('/questions/:id/reply', verifyCreatorToken, async (req, res) => {
     const { id } = req.params;
     const { replyText, followUpAllowed } = req.body;
     
-    if (!replyText || replyText.trim().length < 100) {
-      return res.status(400).json({ message: 'Reply must be at least 100 characters.' });
+    if (!replyText || replyText.trim().length < 20) {
+      return res.status(400).json({ message: 'Reply must be at least 20 characters.' });
     }
 
     await connectDB();
