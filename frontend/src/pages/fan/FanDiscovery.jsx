@@ -7,6 +7,7 @@ import { getLiveCreators } from '../../services/discoveryApi';
 import { getFanMe, switchRole } from '../../services/fanApi';
 import { useAuth } from '../../context/AuthContext';
 import { io } from 'socket.io-client';
+import { getThoughtOfTheDay } from '../../utils/dailyThoughts';
 
 const categories = [
   { id: 'All', label: 'All Categories', query: 'All creators' },
@@ -200,8 +201,7 @@ const FanDiscovery = () => {
                 Hey <span style={{ color: '#2DD4BF' }}>{fanName}</span> <span style={{ fontSize: '1.1rem' }}>👋</span>
               </div>
               <div style={{ fontSize: '0.85rem' }}>
-                <span style={{ color: '#94a3b8' }}>On your mind today 💭: </span>
-                <span style={{ color: '#64748b' }}>Need to consult on SIPs? 📈</span>
+                <span style={{ color: '#64748b' }}>{getThoughtOfTheDay()}</span>
               </div>
             </div>
           </div>
