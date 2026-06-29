@@ -338,7 +338,12 @@ const FanLogin = () => {
                 </button>
               </div>
 
-
+              {/* Forgot Password Link */}
+              <div style={{ textAlign: 'right', marginTop: '12px', paddingRight: '4px' }}>
+                <Link to="/fan/forgot-password" style={{ color: '#06b6d4', textDecoration: 'none', fontSize: '13px', fontWeight: '500' }}>
+                  Forgot Password?
+                </Link>
+              </div>
 
               {error && (
                 <div style={{

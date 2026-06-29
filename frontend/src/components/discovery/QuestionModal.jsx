@@ -84,7 +84,7 @@ const QuestionModal = ({ creator, onClose }) => {
         {success ? (
           <div style={{ textAlign: 'center', padding: '60px 20px', width: '100%' }}>
             <div style={{ fontSize: '64px', marginBottom: '24px' }}>✅</div>
-            <h2 style={{ margin: '0 0 12px', color: '#fff', fontSize: '28px' }}>Question sent!</h2>
+            <h2 style={{ margin: '0 0 12px', color: '#fff', fontSize: '28px' }}>Message sent!</h2>
             <p style={{ color: '#94a3b8', margin: 0, fontSize: '16px', lineHeight: '1.5' }}>
               You'll get a real answer directly from {creator.name} within {creator.responseTime || '24 hours'}.
             </p>

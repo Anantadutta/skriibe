@@ -75,6 +75,7 @@ router.get('/creators', async (req, res) => {
     let query = { 
       isPaused: { $ne: true },
       isBanned: { $ne: true },
+      handle: { $exists: true, $nin: [null, ''] },
       $or: [
         { suspensionUntil: { $exists: false } },
         { suspensionUntil: null },

@@ -330,7 +330,7 @@ const sendQuestionAnsweredEmail = async (email, name, creatorName, answerLink) =
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 30px; background-color: #ffffff; color: #1A1A1A; border-radius: 12px; border: 1px solid #eaeaea;">
           <h2 style="color: #0F172A; margin-bottom: 20px;">Hi ${name || 'there'}! 👋</h2>
           <p style="font-size: 16px; line-height: 1.5; color: #334155;">
-            The wait is over! Your favourite creator <strong>${creatorName}</strong> has just responded to your question.
+            The wait is over! Your favourite creator <strong>${creatorName}</strong> has just responded to your message.
           </p>
           <p style="font-size: 16px; line-height: 1.5; color: #334155;">
             Dive in and see what they had to say. You might even have the option to ask a follow-up if you need more details!
@@ -485,7 +485,7 @@ const sendFollowUpAnsweredEmail = async (email, fanName, creatorName, answerLink
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 30px; background-color: #ffffff; color: #1A1A1A; border-radius: 12px; border: 1px solid #eaeaea;">
           <h2 style="color: #0F172A; margin-bottom: 20px;">Hi ${fanName || 'there'}!</h2>
           <p style="font-size: 16px; line-height: 1.5; color: #334155;">
-            The conversation continues! <strong>${creatorName}</strong> has just dropped a reply to your follow-up question.
+            The conversation continues! <strong>${creatorName}</strong> has just dropped a reply to your follow-up message.
           </p>
           <p style="font-size: 16px; line-height: 1.5; color: #334155;">
             Go check out the extra details they've shared with you.

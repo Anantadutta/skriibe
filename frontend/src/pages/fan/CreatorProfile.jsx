@@ -247,7 +247,7 @@ const CreatorProfile = () => {
             </div>
 
             <h2 style={{ margin: '0 0 12px', color: '#fff', fontSize: '32px', fontWeight: '800', letterSpacing: '-0.5px' }}>
-              Question sent!
+              Message sent!
             </h2>
             <p style={{ color: '#94a3b8', margin: '0 0 32px', fontSize: '15px', lineHeight: '1.6', textAlign: 'center' }}>
               <span style={{ color: '#fff', fontWeight: '600' }}>{creator.name}</span> {isFollowUp ? 'has received your follow-up.' : 'will reply within 24 hours.'} You'll be notified on both channels.
@@ -310,7 +310,7 @@ const CreatorProfile = () => {
                   boxShadow: '0 4px 14px rgba(16, 185, 129, 0.2)'
                 }}
               >
-                View my question
+                View my message
               </button>
 
 
@@ -545,46 +545,49 @@ const CreatorProfile = () => {
 
             {/* Disclaimer Box */}
             <div style={{
-              background: '#1a110b',
-              border: '1px solid #451a03',
-              borderRadius: '16px',
-              padding: '24px',
-              marginBottom: '16px'
-            }}>
-              <div style={{ color: '#fb923c', fontSize: '12px', fontWeight: '800', letterSpacing: '1px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span>⚠️</span> READ BEFORE CONTINUING
-              </div>
-              <ol style={{ color: '#d1d5db', fontSize: '13px', lineHeight: '1.6', margin: 0, paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '12px', listStyleType: 'decimal' }}>
-                <li style={{ paddingLeft: '4px' }}>Ask one clear question, per payment for the best response.</li>
-                {!isFollowUp && <li style={{ paddingLeft: '4px' }}>Full refund if there's no reply within 24 hours.</li>}
-                <li style={{ paddingLeft: '4px' }}>Be respectful. Abusive, hateful, or vulgar content is not allowed.</li>
-                <li style={{ paddingLeft: '4px' }}>Share only what's needed for a helpful answer</li>
-              </ol>
-            </div>
+                  background: '#1a110b',
+                  border: '1px solid #451a03',
+                  borderRadius: '16px',
+                  padding: '24px',
+                  marginBottom: '16px'
+                }}>
+                  <div style={{ color: '#fb923c', fontSize: '12px', fontWeight: '800', letterSpacing: '1px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span>⚠️</span> READ BEFORE CONTINUING
+                  </div>
+                  <ol style={{ color: '#d1d5db', fontSize: '13px', lineHeight: '1.6', margin: 0, paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '12px', listStyleType: 'decimal' }}>
+                    <li style={{ paddingLeft: '4px' }}>Ask one clear question, per payment for the best response.</li>
+                    <li style={{ paddingLeft: '4px' }}>Full refund if there's no reply within 24 hours.</li>
+                    <li style={{ paddingLeft: '4px' }}>Be respectful. Abusive, hateful, or vulgar content is not allowed.</li>
+                    <li style={{ paddingLeft: '4px' }}>Share only what's needed for a helpful answer</li>
+                  </ol>
+                </div>
 
-            {/* Agreement Checkbox */}
-            <label style={{
-              display: 'flex', alignItems: 'flex-start', gap: '12px',
-              background: '#131313', border: '1px solid #1f1f1f',
-              borderRadius: '12px', padding: '16px', cursor: 'pointer',
-              marginBottom: '32px'
-            }}>
-              <input 
-                type="checkbox" 
-                checked={agreed}
-                onChange={(e) => setAgreed(e.target.checked)}
-                style={{ width: '20px', height: '20px', accentColor: '#38bdf8', cursor: 'pointer', marginTop: '2px', flexShrink: 0 }}
-              />
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <span style={{ color: '#fff', fontSize: '14px', fontWeight: '600' }}>I understand and agree</span>
-                <span style={{ color: '#94a3b8', fontSize: '12px', lineHeight: 1.4 }}>By logging in and using Skriibe, you agree to our <a href="https://www.skriibe.com/terms" style={{ color: '#38bdf8', textDecoration: 'none' }}>Terms of Service</a> and <a href="https://www.skriibe.com/privacy" style={{ color: '#38bdf8', textDecoration: 'none' }}>Privacy Policy</a>.</span>
-              </div>
-            </label>
+                {/* Agreement Checkbox */}
+                <label style={{
+                  display: 'flex', alignItems: 'flex-start', gap: '12px',
+                  background: '#131313', border: '1px solid #1f1f1f',
+                  borderRadius: '12px', padding: '16px', cursor: 'pointer',
+                  marginBottom: '32px'
+                }}>
+                  <input 
+                    type="checkbox" 
+                    checked={agreed}
+                    onChange={(e) => setAgreed(e.target.checked)}
+                    style={{ width: '20px', height: '20px', accentColor: '#38bdf8', cursor: 'pointer', marginTop: '2px', flexShrink: 0 }}
+                  />
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <span style={{ color: '#fff', fontSize: '14px', fontWeight: '600' }}>I understand and agree</span>
+                    <span style={{ color: '#94a3b8', fontSize: '12px', lineHeight: 1.4 }}>By logging in and using Skriibe, you agree to our <a href="https://www.skriibe.com/terms" style={{ color: '#38bdf8', textDecoration: 'none' }}>Terms of Service</a> and <a href="https://www.skriibe.com/privacy" style={{ color: '#38bdf8', textDecoration: 'none' }}>Privacy Policy</a>.</span>
+                  </div>
+                </label>
 
             {/* Question Section */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
               <div style={{ background: '#131313', border: '1px solid #2a2a2a', borderRadius: '16px', padding: '12px 16px' }}>
-                <div style={{ color: '#64748b', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '8px' }}>TYPE YOUR MESSAGE HERE <span style={{ color: '#ef4444' }}>*</span></div>
+                <div style={{ color: '#64748b', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '8px' }}>
+                  TYPE YOUR MESSAGE HERE <span style={{ color: '#ef4444' }}>*</span>
+                  <span style={{ color: '#64748b', fontSize: '9px', marginLeft: '6px', letterSpacing: 'normal', fontWeight: '600', textTransform: 'none' }}>(Min 20 and Max 500 characters)</span>
+                </div>
                 <textarea 
                   value={question}
                   onChange={(e) => setQuestion(e.target.value)}
@@ -600,52 +603,56 @@ const CreatorProfile = () => {
               </div>
             </div>
 
-            <h3 style={{ color: '#fff', fontSize: '18px', margin: '0 0 16px' }}>Your details</h3>
+            {!isFollowUp && (
+              <>
+                <h3 style={{ color: '#fff', fontSize: '18px', margin: '0 0 16px' }}>Your details</h3>
 
-            {/* Form Fields */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
-              
-              {/* Name */}
-              <div style={{ background: '#131313', border: '1px solid #2a2a2a', borderRadius: '16px', padding: '12px 16px' }}>
-                <div style={{ color: '#64748b', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '4px' }}>NAME <span style={{ color: '#ef4444' }}>*</span></div>
-                <input 
-                  type="text" 
-                  value={buyerName}
-                  onChange={(e) => setBuyerName(e.target.value)}
-                  placeholder="e.g. Amit Kumar"
-                  style={{ width: '100%', background: 'transparent', border: 'none', color: '#fff', fontSize: '15px', outline: 'none' }}
-                />
-              </div>
+                {/* Form Fields */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
+                  
+                  {/* Name */}
+                  <div style={{ background: '#131313', border: '1px solid #2a2a2a', borderRadius: '16px', padding: '12px 16px' }}>
+                    <div style={{ color: '#64748b', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '4px' }}>NAME <span style={{ color: '#ef4444' }}>*</span></div>
+                    <input 
+                      type="text" 
+                      value={buyerName}
+                      onChange={(e) => setBuyerName(e.target.value)}
+                      placeholder="e.g. Amit Kumar"
+                      style={{ width: '100%', background: 'transparent', border: 'none', color: '#fff', fontSize: '15px', outline: 'none' }}
+                    />
+                  </div>
 
-              {/* Email */}
-              <div style={{ background: '#131313', border: '1px solid #2a2a2a', borderRadius: '16px', padding: '12px 16px' }}>
-                <div style={{ color: '#64748b', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '4px' }}>EMAIL ADDRESS <span style={{ color: '#ef4444' }}>*</span></div>
-                <input 
-                  type="email" 
-                  value={buyerEmail}
-                  onChange={(e) => setBuyerEmail(e.target.value)}
-                  placeholder="e.g. amit@gmail.com"
-                  style={{ width: '100%', background: 'transparent', border: 'none', color: '#fff', fontSize: '15px', outline: 'none' }}
-                />
-              </div>
+                  {/* Email */}
+                  <div style={{ background: '#131313', border: '1px solid #2a2a2a', borderRadius: '16px', padding: '12px 16px' }}>
+                    <div style={{ color: '#64748b', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '4px' }}>EMAIL ADDRESS <span style={{ color: '#ef4444' }}>*</span></div>
+                    <input 
+                      type="email" 
+                      value={buyerEmail}
+                      onChange={(e) => setBuyerEmail(e.target.value)}
+                      placeholder="e.g. amit@gmail.com"
+                      style={{ width: '100%', background: 'transparent', border: 'none', color: '#fff', fontSize: '15px', outline: 'none' }}
+                    />
+                  </div>
 
-              {/* WhatsApp */}
-              <div style={{ background: '#131313', border: '1px solid #2a2a2a', borderRadius: '16px', padding: '12px 16px' }}>
-                <div style={{ color: '#64748b', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '4px' }}>WHATSAPP NUMBER <span style={{ color: '#ef4444' }}>*</span></div>
-                <input 
-                  type="tel" 
-                  maxLength={10}
-                  value={buyerPhone}
-                  onChange={(e) => setBuyerPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                  placeholder="e.g. 9876543210"
-                  style={{ width: '100%', background: 'transparent', border: 'none', color: '#fff', fontSize: '15px', outline: 'none' }}
-                />
-                <div style={{ fontSize: '11px', color: '#64748b', marginTop: '6px' }}>
-                  It should only be a 10 digit number.
+                  {/* WhatsApp */}
+                  <div style={{ background: '#131313', border: '1px solid #2a2a2a', borderRadius: '16px', padding: '12px 16px' }}>
+                    <div style={{ color: '#64748b', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '4px' }}>WHATSAPP NUMBER <span style={{ color: '#ef4444' }}>*</span></div>
+                    <input 
+                      type="tel" 
+                      maxLength={10}
+                      value={buyerPhone}
+                      onChange={(e) => setBuyerPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                      placeholder="e.g. 9876543210"
+                      style={{ width: '100%', background: 'transparent', border: 'none', color: '#fff', fontSize: '15px', outline: 'none' }}
+                    />
+                    <div style={{ fontSize: '11px', color: '#64748b', marginTop: '6px' }}>
+                      It should only be a 10 digit number.
+                    </div>
+                  </div>
+
                 </div>
-              </div>
-
-            </div>
+              </>
+            )}
 
             {submitError && (
               <div style={{ color: '#ef4444', fontSize: '14px', marginBottom: '16px', background: 'rgba(239,68,68,0.1)', padding: '12px', borderRadius: '8px', textAlign: 'center' }}>
@@ -657,19 +664,19 @@ const CreatorProfile = () => {
             {isFollowUp ? (
               <button
                 onClick={handleSubmit}
-                disabled={!agreed || question.length < 20 || question.length > 500 || !buyerName.trim() || !buyerEmail.trim() || buyerPhone.length !== 10 || submitLoading}
+                disabled={!agreed || question.length < 20 || question.length > 500 || submitLoading}
                 style={{
                   width: '100%',
-                  background: (!agreed || question.length < 20 || question.length > 500 || !buyerName.trim() || !buyerEmail.trim() || buyerPhone.length !== 10 || submitLoading) ? '#062c19' : 'linear-gradient(90deg, #34d399, #10b981)',
-                  color: (!agreed || question.length < 20 || question.length > 500 || !buyerName.trim() || !buyerEmail.trim() || buyerPhone.length !== 10 || submitLoading) ? '#10b981' : '#000',
-                  border: (!agreed || question.length < 20 || question.length > 500 || !buyerName.trim() || !buyerEmail.trim() || buyerPhone.length !== 10 || submitLoading) ? '1px solid rgba(16, 185, 129, 0.2)' : 'none',
+                  background: (!agreed || question.length < 20 || question.length > 500 || submitLoading) ? '#062c19' : 'linear-gradient(90deg, #34d399, #10b981)',
+                  color: (!agreed || question.length < 20 || question.length > 500 || submitLoading) ? '#10b981' : '#000',
+                  border: (!agreed || question.length < 20 || question.length > 500 || submitLoading) ? '1px solid rgba(16, 185, 129, 0.2)' : 'none',
                   borderRadius: '16px',
                   padding: '18px',
                   fontSize: '1.1rem',
                   fontWeight: '800',
-                  cursor: (!agreed || question.length < 20 || question.length > 500 || !buyerName.trim() || !buyerEmail.trim() || buyerPhone.length !== 10 || submitLoading) ? 'not-allowed' : 'pointer',
-                  opacity: (!agreed || question.length < 20 || question.length > 500 || !buyerName.trim() || !buyerEmail.trim() || buyerPhone.length !== 10 || submitLoading) ? 0.6 : 1,
-                  boxShadow: (!agreed || question.length < 20 || question.length > 500 || !buyerName.trim() || !buyerEmail.trim() || buyerPhone.length !== 10 || submitLoading) ? 'none' : '0 4px 20px rgba(16, 185, 129, 0.4)',
+                  cursor: (!agreed || question.length < 20 || question.length > 500 || submitLoading) ? 'not-allowed' : 'pointer',
+                  opacity: (!agreed || question.length < 20 || question.length > 500 || submitLoading) ? 0.6 : 1,
+                  boxShadow: (!agreed || question.length < 20 || question.length > 500 || submitLoading) ? 'none' : '0 4px 20px rgba(16, 185, 129, 0.4)',
                   transition: 'all 0.2s ease-in-out'
                 }}
               >

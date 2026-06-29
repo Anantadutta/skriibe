@@ -433,89 +433,94 @@ const CreatorPublicPage = () => {
         {/* READ BEFORE CONTINUING CARD */}
         <div style={{
           background: 'rgba(249, 115, 22, 0.03)',
-          border: '1px solid rgba(249, 115, 22, 0.2)',
-          borderRadius: '16px',
-          padding: '20px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '12px'
-        }}>
-          <div style={{ color: '#f97316', fontSize: '0.85rem', fontWeight: '800', letterSpacing: '1px', textTransform: 'uppercase' }}>
-            READ BEFORE CONTINUING
-          </div>
-          <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '8px', color: '#94a3b8', fontSize: '0.85rem', lineHeight: '1.5' }}>
-            <li style={{ display: 'flex', gap: '8px' }}><span style={{ color: '#f97316', fontWeight: 'bold' }}>1.</span> Ask one clear question per payment for the best response.</li>
-            {!isFollowUp && <li style={{ display: 'flex', gap: '8px' }}><span style={{ color: '#f97316', fontWeight: 'bold' }}>2.</span> Full refund if there's no reply within 24 hours.</li>}
-            <li style={{ display: 'flex', gap: '8px' }}><span style={{ color: '#f97316', fontWeight: 'bold' }}>{isFollowUp ? '2.' : '3.'}</span> Be respectful. Abusive, hateful, or vulgar content is not allowed.</li>
-            <li style={{ display: 'flex', gap: '8px' }}><span style={{ color: '#f97316', fontWeight: 'bold' }}>{isFollowUp ? '3.' : '4.'}</span> Share only what's needed for a helpful answer</li>
-          </ul>
-          
-          <label style={{
-            display: 'flex', alignItems: 'flex-start', gap: '12px', marginTop: '8px',
-            background: '#131313', padding: '12px 16px', borderRadius: '12px', cursor: 'pointer', border: '1px solid #1A1A1A'
+            border: '1px solid rgba(249, 115, 22, 0.2)',
+            borderRadius: '16px',
+            padding: '20px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '12px'
           }}>
-            <input 
-              type="checkbox" 
-              checked={termsAccepted} 
-              onChange={e => setTermsAccepted(e.target.checked)} 
-              style={{ width: '20px', height: '20px', accentColor: '#29C5F6', borderRadius: '4px', border: 'none', marginTop: '2px', flexShrink: 0 }} 
-            />
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-              <span style={{ fontSize: '0.95rem', fontWeight: '600', color: '#ffffff' }}>I understand and agree</span>
-              <span style={{ fontSize: '0.75rem', color: '#94a3b8', lineHeight: '1.4' }}>By logging in and using Skriibe, you agree to our <Link to="/terms" style={{ color: '#29C5F6', cursor: 'pointer', textDecoration: 'none' }}>Terms of Service</Link> and <Link to="/privacy" style={{ color: '#29C5F6', cursor: 'pointer', textDecoration: 'none' }}>Privacy Policy</Link>.</span>
+            <div style={{ color: '#f97316', fontSize: '0.85rem', fontWeight: '800', letterSpacing: '1px', textTransform: 'uppercase' }}>
+              READ BEFORE CONTINUING
             </div>
-          </label>
-        </div>
+            <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '8px', color: '#94a3b8', fontSize: '0.85rem', lineHeight: '1.5' }}>
+              <li style={{ display: 'flex', gap: '8px' }}><span style={{ color: '#f97316', fontWeight: 'bold' }}>1.</span> Ask one clear question per payment for the best response.</li>
+              <li style={{ display: 'flex', gap: '8px' }}><span style={{ color: '#f97316', fontWeight: 'bold' }}>2.</span> Full refund if there's no reply within 24 hours.</li>
+              <li style={{ display: 'flex', gap: '8px' }}><span style={{ color: '#f97316', fontWeight: 'bold' }}>3.</span> Be respectful. Abusive, hateful, or vulgar content is not allowed.</li>
+              <li style={{ display: 'flex', gap: '8px' }}><span style={{ color: '#f97316', fontWeight: 'bold' }}>4.</span> Share only what's needed for a helpful answer</li>
+            </ul>
+            
+            <label style={{
+              display: 'flex', alignItems: 'flex-start', gap: '12px', marginTop: '8px',
+              background: '#131313', padding: '12px 16px', borderRadius: '12px', cursor: 'pointer', border: '1px solid #1A1A1A'
+            }}>
+              <input 
+                type="checkbox" 
+                checked={termsAccepted} 
+                onChange={e => setTermsAccepted(e.target.checked)} 
+                style={{ width: '20px', height: '20px', accentColor: '#29C5F6', borderRadius: '4px', border: 'none', marginTop: '2px', flexShrink: 0 }} 
+              />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <span style={{ fontSize: '0.95rem', fontWeight: '600', color: '#ffffff' }}>I understand and agree</span>
+                <span style={{ fontSize: '0.75rem', color: '#94a3b8', lineHeight: '1.4' }}>By logging in and using Skriibe, you agree to our <Link to="/terms" style={{ color: '#29C5F6', cursor: 'pointer', textDecoration: 'none' }}>Terms of Service</Link> and <Link to="/privacy" style={{ color: '#29C5F6', cursor: 'pointer', textDecoration: 'none' }}>Privacy Policy</Link>.</span>
+              </div>
+            </label>
+          </div>
 
         {/* FORM FIELDS */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           
-          <div style={{ background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '16px', padding: '16px' }}>
-            <div style={{ color: '#64748b', fontSize: '0.7rem', fontWeight: '800', letterSpacing: '2px', textTransform: 'uppercase' }}>
-              NAME <span style={{ color: '#ef4444' }}>*</span>
-            </div>
-            <input 
-              className="unified-input" 
-              value={buyerName} 
-              onChange={e => setBuyerName(e.target.value)} 
-              placeholder="Amit Kumar" 
-            />
-          </div>
+          {!isFollowUp && (
+            <>
+              <div style={{ background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '16px', padding: '16px' }}>
+                <div style={{ color: '#64748b', fontSize: '0.7rem', fontWeight: '800', letterSpacing: '2px', textTransform: 'uppercase' }}>
+                  NAME <span style={{ color: '#ef4444' }}>*</span>
+                </div>
+                <input 
+                  className="unified-input" 
+                  value={buyerName} 
+                  onChange={e => setBuyerName(e.target.value)} 
+                  placeholder="Amit Kumar" 
+                />
+              </div>
 
-          <div style={{ background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '16px', padding: '16px' }}>
-            <div style={{ color: '#64748b', fontSize: '0.7rem', fontWeight: '800', letterSpacing: '2px', textTransform: 'uppercase' }}>
-              EMAIL ADDRESS <span style={{ color: '#ef4444' }}>*</span>
-            </div>
-            <input 
-              type="email"
-              className="unified-input" 
-              value={buyerEmail} 
-              onChange={e => setBuyerEmail(e.target.value)} 
-              placeholder="amit@gmail.com" 
-            />
-          </div>
+              <div style={{ background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '16px', padding: '16px' }}>
+                <div style={{ color: '#64748b', fontSize: '0.7rem', fontWeight: '800', letterSpacing: '2px', textTransform: 'uppercase' }}>
+                  EMAIL ADDRESS <span style={{ color: '#ef4444' }}>*</span>
+                </div>
+                <input 
+                  type="email"
+                  className="unified-input" 
+                  value={buyerEmail} 
+                  onChange={e => setBuyerEmail(e.target.value)} 
+                  placeholder="amit@gmail.com" 
+                />
+              </div>
 
-          <div style={{ background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '16px', padding: '16px' }}>
-            <div style={{ color: '#64748b', fontSize: '0.7rem', fontWeight: '800', letterSpacing: '2px', textTransform: 'uppercase' }}>
-              WHATSAPP NUMBER <span style={{ color: '#ef4444' }}>*</span>
-            </div>
-            <input 
-              type="tel"
-              className="unified-input" 
-              maxLength={10}
-              value={buyerPhone} 
-              onChange={e => setBuyerPhone(e.target.value.replace(/\D/g, '').slice(0, 10))} 
-              placeholder="9876543210" 
-              style={{ fontStyle: buyerPhone ? 'normal' : 'italic', color: buyerPhone ? '#ffffff' : '#475569' }}
-            />
-            <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '8px' }}>
-              It should only be a 10 digit number.
-            </div>
-          </div>
+              <div style={{ background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '16px', padding: '16px' }}>
+                <div style={{ color: '#64748b', fontSize: '0.7rem', fontWeight: '800', letterSpacing: '2px', textTransform: 'uppercase' }}>
+                  WHATSAPP NUMBER <span style={{ color: '#ef4444' }}>*</span>
+                </div>
+                <input 
+                  type="tel"
+                  className="unified-input" 
+                  maxLength={10}
+                  value={buyerPhone} 
+                  onChange={e => setBuyerPhone(e.target.value.replace(/\D/g, '').slice(0, 10))} 
+                  placeholder="9876543210" 
+                  style={{ fontStyle: buyerPhone ? 'normal' : 'italic', color: buyerPhone ? '#ffffff' : '#475569' }}
+                />
+                <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '8px' }}>
+                  It should only be a 10 digit number.
+                </div>
+              </div>
+            </>
+          )}
 
           <div style={{ background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '16px', padding: '16px', display: 'flex', flexDirection: 'column' }}>
             <div style={{ color: '#64748b', fontSize: '0.7rem', fontWeight: '800', letterSpacing: '2px', textTransform: 'uppercase' }}>
               TYPE YOUR MESSAGE HERE <span style={{ color: '#ef4444' }}>*</span>
+              <span style={{ color: '#64748b', fontSize: '0.65rem', marginLeft: '6px', textTransform: 'none', letterSpacing: 'normal', fontWeight: '600' }}>(Min 20 and Max 500 characters)</span>
             </div>
             <textarea 
               className="unified-input"
@@ -550,7 +555,7 @@ const CreatorPublicPage = () => {
               handlePayAndSubmit();
             }
           }}
-          disabled={!termsAccepted || !buyerName || !buyerEmail || buyerPhone.length !== 10 || questionText.length < 20 || questionText.length > 500 || submitting}
+          disabled={isFollowUp ? (!termsAccepted || questionText.length < 20 || questionText.length > 500 || submitting) : (!termsAccepted || !buyerName || !buyerEmail || buyerPhone.length !== 10 || questionText.length < 20 || questionText.length > 500 || submitting)}
           style={{
             width: '100%',
             background: '#29C5F6',
@@ -560,8 +565,8 @@ const CreatorPublicPage = () => {
             padding: '18px',
             fontSize: '1.1rem',
             fontWeight: '800',
-            cursor: (!termsAccepted || !buyerName || !buyerEmail || buyerPhone.length !== 10 || (questionText.trim() ? questionText.trim().split(/\s+/).length : 0) < 20 || (questionText.trim() ? questionText.trim().split(/\s+/).length : 0) > 500 || submitting) ? 'not-allowed' : 'pointer',
-            opacity: (!termsAccepted || !buyerName || !buyerEmail || buyerPhone.length !== 10 || (questionText.trim() ? questionText.trim().split(/\s+/).length : 0) < 20 || (questionText.trim() ? questionText.trim().split(/\s+/).length : 0) > 500 || submitting) ? 0.5 : 1,
+            cursor: (isFollowUp ? (!termsAccepted || questionText.length < 20 || questionText.length > 500 || submitting) : (!termsAccepted || !buyerName || !buyerEmail || buyerPhone.length !== 10 || questionText.length < 20 || questionText.length > 500 || submitting)) ? 'not-allowed' : 'pointer',
+            opacity: (isFollowUp ? (!termsAccepted || questionText.length < 20 || questionText.length > 500 || submitting) : (!termsAccepted || !buyerName || !buyerEmail || buyerPhone.length !== 10 || questionText.length < 20 || questionText.length > 500 || submitting)) ? 0.5 : 1,
             marginTop: '8px'
           }}
         >
@@ -629,7 +634,7 @@ const CreatorPublicPage = () => {
             transform: 'scaleX(1.1)',
             color: '#ffffff'
           }}>
-            Question sent!
+            Message sent!
           </h2>
           <p style={{ margin: '0 0 4px', fontSize: '1rem', color: '#64748b' }}>
             {creator.name || creator.displayName} {isFollowUp ? 'has received your follow-up.' : 'will reply within 24 hours.'}
@@ -718,7 +723,7 @@ const CreatorPublicPage = () => {
               cursor: 'pointer'
             }}
           >
-            View my question
+            View my message
           </button>
           
 
@@ -962,6 +967,7 @@ const CreatorPublicPage = () => {
                 </div>
               ))}
             </div>
+
             <select style={{ width: '100%', marginTop: '12px', background: '#2A2A2A', border: 'none', borderRadius: '8px', padding: '12px', color: '#ffffff', fontSize: '0.9rem', outline: 'none', cursor: 'pointer' }}>
               <option value="">Other Banks...</option>
               <option value="kotak">Kotak Mahindra Bank</option>

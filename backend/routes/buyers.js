@@ -7,6 +7,7 @@ const mongoose = require('mongoose');
 const crypto = require('crypto');
 const AdminAlert = require('../models/AdminAlert');
 const { sendOTPviaMSG91 } = require('../utils/smsService');
+const { sendFollowUpEmail } = require('../utils/resendService');
 const Creator = require('../models/Creator');
 const Question = require('../models/Question');
 const Counter = require('../models/Counter');
@@ -156,6 +157,13 @@ router.post('/submit-question', async (req, res) => {
       });
       if (req.io) {
         req.io.emit('new-admin-alert');
+      }
+
+      // Send email to creator
+      try {
+        await sendFollowUpEmail(creator.email, creator.name, question.buyerName, questionText, orderNumber);
+      } catch (emailErr) {
+        console.error('Failed to send follow up email to creator:', emailErr);
       }
     }
 

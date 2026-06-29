@@ -36,7 +36,4 @@ const sendEmailOtp = async (toEmail, otpCode) => {
   } catch (error) {
     console.error('Error sending Brevo email:', error.response?.data || error.message);
     throw error;
-  }
-};
-
 module.exports = { sendEmailOtp };

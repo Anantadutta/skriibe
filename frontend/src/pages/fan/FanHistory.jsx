@@ -371,15 +371,11 @@ const FanHistory = () => {
               </div>
             )}
 
-            {!q.isFollowUp && (
-              q.status === 'satisfied' ? (
-                <div style={{ background: '#11131a', color: '#64748b', borderRadius: '16px', padding: '16px', fontWeight: '800', fontSize: '15px', textAlign: 'center', marginTop: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                  Satisfied with answer
-                </div>
-              ) : (
+            {!q.isFollowUp && !hasFollowUp && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '8px' }}>
                   <button 
                     onClick={async () => {
+                      if (q.status === 'satisfied') return;
                       try {
                         await satisfyQuestion(q._id);
                         setQuestions(prev => prev.map(question => question._id === q._id ? { ...question, status: 'satisfied' } : question));
@@ -390,23 +386,24 @@ const FanHistory = () => {
                         console.error('Failed to satisfy', e);
                       }
                     }}
-                    style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.2)', borderRadius: '16px', padding: '16px', color: '#10b981', fontWeight: '600', fontSize: '14px', cursor: 'pointer', transition: 'background 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }} 
-                    onMouseOver={(e) => e.currentTarget.style.background = 'rgba(16, 185, 129, 0.15)'} 
-                    onMouseOut={(e) => e.currentTarget.style.background = 'rgba(16, 185, 129, 0.1)'}
+                    disabled={q.status === 'satisfied'}
+                    style={{ background: q.status === 'satisfied' ? 'transparent' : 'rgba(16, 185, 129, 0.1)', border: q.status === 'satisfied' ? '1px solid rgba(255,255,255,0.05)' : '1px solid rgba(16, 185, 129, 0.2)', borderRadius: '16px', padding: '16px', color: q.status === 'satisfied' ? '#64748b' : '#10b981', fontWeight: '600', fontSize: '14px', cursor: q.status === 'satisfied' ? 'not-allowed' : 'pointer', transition: 'background 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }} 
+                    onMouseOver={(e) => { if (q.status !== 'satisfied') e.currentTarget.style.background = 'rgba(16, 185, 129, 0.15)' }} 
+                    onMouseOut={(e) => { if (q.status !== 'satisfied') e.currentTarget.style.background = 'rgba(16, 185, 129, 0.1)' }}
                   >
-                    <span style={{ fontSize: '18px' }}>🙂</span> Satisfied with answer
+                    <span style={{ fontSize: '18px', opacity: q.status === 'satisfied' ? 0.5 : 1 }}>🙂</span> Satisfied with answer
                   </button>
 
                   <button 
                     onClick={() => setIsFlagModalOpen(true)}
-                    style={{ background: 'transparent', border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: '16px', padding: '16px', color: '#ef4444', fontWeight: '600', fontSize: '14px', cursor: 'pointer', transition: 'background 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }} 
-                    onMouseOver={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.05)'} 
-                    onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
+                    disabled={q.status === 'satisfied'}
+                    style={{ background: 'transparent', border: q.status === 'satisfied' ? '1px solid rgba(255,255,255,0.05)' : '1px solid rgba(239, 68, 68, 0.2)', borderRadius: '16px', padding: '16px', color: q.status === 'satisfied' ? '#64748b' : '#ef4444', fontWeight: '600', fontSize: '14px', cursor: q.status === 'satisfied' ? 'not-allowed' : 'pointer', transition: 'background 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }} 
+                    onMouseOver={(e) => { if (q.status !== 'satisfied') e.currentTarget.style.background = 'rgba(239, 68, 68, 0.05)' }} 
+                    onMouseOut={(e) => { if (q.status !== 'satisfied') e.currentTarget.style.background = 'transparent' }}
                   >
-                    <span style={{ fontSize: '16px' }}>⚑</span> Flag as incomplete (24hr window)
+                    <span style={{ fontSize: '16px', opacity: q.status === 'satisfied' ? 0.5 : 1 }}>⚑</span> Flag as incomplete (24hr window)
                   </button>
                 </div>
-              )
             )}
 
             <button 
@@ -531,12 +528,7 @@ const FanHistory = () => {
               </div>
             )}
 
-            {!q.isFollowUp && (
-              q.status === 'satisfied' ? (
-                <div style={{ background: '#11131a', color: '#64748b', borderRadius: '16px', padding: '16px', fontWeight: '800', fontSize: '15px', textAlign: 'center', marginTop: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                  Satisfied with answer
-                </div>
-              ) : (
+            {!q.isFollowUp && !hasFollowUp && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '8px' }}>
                   <button 
                     disabled
@@ -552,7 +544,6 @@ const FanHistory = () => {
                     <span style={{ fontSize: '16px', opacity: 0.5 }}>⚑</span> Flag as incomplete (Expired)
                   </button>
                 </div>
-              )
             )}
 
             <button 
