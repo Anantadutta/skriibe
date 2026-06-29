@@ -1,30 +1,22 @@
 [
   {
-    "_id": "6a3e7da644d8ff3347420eaa",
-    "name": "Ana",
-    "price": 49,
-    "pricePerQuestion": 49,
-    "handle": "euhed"
-  },
-  {
-    "_id": "6a3ea21e90554854270575e5",
-    "name": "Ananta",
-    "price": 10,
-    "pricePerQuestion": 10,
-    "handle": "tukgyt6r"
-  },
-  {
-    "_id": "6a3ea84b90554854270575e7",
-    "name": "Tarundeep Singh",
+    "_id": "6a402bbd3ebc5db002f4a00e",
+    "name": "Ananta Dutta",
     "price": 99,
-    "pricePerQuestion": 99,
-    "handle": "tarun0501"
+    "pricePerQuestion": 99
   },
   {
-    "_id": "6a3eb2982fe38e4315915a99",
+    "_id": "6a40318a3ebc5db002f4a017",
+    "name": "Tarundeep Singh",
+    "price": 1,
+    "pricePerQuestion": 1,
+    "handle": "tarun"
+  },
+  {
+    "_id": "6a40cf2c548f71d588d335b0",
     "name": "Vasundhara Keshan",
-    "price": 10,
-    "pricePerQuestion": 10,
-    "handle": "vasundhara"
+    "price": 11,
+    "pricePerQuestion": 11,
+    "handle": "helloooo"
   }
 ]

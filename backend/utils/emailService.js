@@ -293,8 +293,9 @@ const sendPasswordResetEmail = async (email, name, resetLink) => {
   if (!resend) return;
 
   try {
+    const senderEmail = process.env.RESEND_SENDER_EMAIL || process.env.MAIL_USER || 'onboarding@resend.dev';
     const { data, error } = await resend.emails.send({
-      from: 'skriibe <founder@skriibe.com>',
+      from: `skriibe <${senderEmail}>`,
       to: [email],
       subject: 'Reset your password - skriibe',
       html: `

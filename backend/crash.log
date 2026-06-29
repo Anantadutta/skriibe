@@ -1,8 +1,8 @@
-Uncaught: C:\Users\dutta\Downloads\skriibe-main\skriibe-main\backend\routes\auth.js:487
-    const token = req.query.state || req.cookies?.creator_token;
-          ^
+Uncaught: C:\Users\dutta\Downloads\skriibe-main\skriibe-main\backend\utils\brevoService.js:40
 
-SyntaxError: Identifier 'token' has already been declared
+
+
+SyntaxError: Unexpected end of input
     at wrapSafe (node:internal/modules/cjs/loader:1762:18)
     at Module._compile (node:internal/modules/cjs/loader:1803:20)
     at Object..js (node:internal/modules/cjs/loader:1969:10)
@@ -11,5 +11,5 @@ SyntaxError: Identifier 'token' has already been declared
     at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
     at Module.require (node:internal/modules/cjs/loader:1575:12)
     at require (node:internal/modules/helpers:191:16)
-    at Object.<anonymous> (C:\Users\dutta\Downloads\skriibe-main\skriibe-main\backend\server.js:254:22)
+    at Object.<anonymous> (C:\Users\dutta\Downloads\skriibe-main\skriibe-main\backend\routes\emailVerification.js:6:26)
     at Module._compile (node:internal/modules/cjs/loader:1829:14)
