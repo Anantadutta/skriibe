@@ -178,12 +178,10 @@ router.get('/me', verifyFanToken, async (req, res) => {
     if (!fan) {
       return res.status(404).json({ success: false, message: 'Fan not found' });
     }
-    if (fan.roles && fan.roles.includes('creator')) {
-      const Creator = require('../models/Creator');
-      const creatorDoc = await Creator.findOne({ email: fan.email });
-      if (creatorDoc) {
-        fan.creatorHandle = creatorDoc.handle;
-      }
+    const Creator = require('../models/Creator');
+    const creatorDoc = await Creator.findOne({ email: fan.email });
+    if (creatorDoc) {
+      fan.creatorHandle = creatorDoc.handle;
     }
     res.json({ success: true, fan });
   } catch (err) {

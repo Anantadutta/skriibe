@@ -10,6 +10,7 @@ const CreatorProfile = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const isFollowUp = searchParams.get('isFollowUp') === 'true';
+  const autoAsk = searchParams.get('autoAsk') === 'true';
   const parentQuestionId = searchParams.get('parentQuestionId');
   const isPreview = searchParams.get('preview') === 'true';
   
@@ -17,12 +18,14 @@ const CreatorProfile = () => {
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState('');
 
-  const [step, setStep] = useState(isFollowUp ? 'ask' : 'overview'); // 'overview' | 'ask'
+  const [step, setStep] = useState((isFollowUp || autoAsk) ? 'ask' : 'overview'); // 'overview' | 'ask'
   const [question, setQuestion] = useState('');
   const [submitLoading, setSubmitLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [orderId, setOrderId] = useState('');
+
+  const [loggedInCreatorHandle, setLoggedInCreatorHandle] = useState(null);
 
   const [agreed, setAgreed] = useState(false);
   const [buyerName, setBuyerName] = useState('');
@@ -61,6 +64,9 @@ const CreatorProfile = () => {
         if (res.data?.fan) {
           setBuyerName(res.data.fan.name || '');
           setBuyerEmail(res.data.fan.email || '');
+          if (res.data.fan.creatorHandle) {
+            setLoggedInCreatorHandle(res.data.fan.creatorHandle);
+          }
           
           let fetchedPhone = res.data.fan.whatsappPhone || res.data.fan.phone || '';
           if (fetchedPhone.startsWith('+91')) {
@@ -83,6 +89,7 @@ const CreatorProfile = () => {
           if (cRes.data?.creator) {
             setBuyerName(cRes.data.creator.name || '');
             setBuyerEmail(cRes.data.creator.email || '');
+            setLoggedInCreatorHandle(cRes.data.creator.handle);
             
             let fetchedPhone = cRes.data.creator.phone || '';
             if (fetchedPhone.startsWith('+91')) {
@@ -148,6 +155,9 @@ const CreatorProfile = () => {
   const replyRate = creator.stats?.replyRate ?? 0;
   const avgReply = creator.stats?.avgReplyTime || 0;
   const answeredCount = creator.stats?.totalAnswered || creator.questionsAnswered || 0;
+  
+  const isOwner = loggedInCreatorHandle === creator.handle;
+  const effectiveIsPreview = isPreview || isOwner;
 
   // Format reply time (e.g. 3.2h)
   const formatTime = (time) => {
@@ -460,35 +470,59 @@ const CreatorProfile = () => {
 
               <button
                 onClick={() => {
-                  if (creator.isLive === false && !isPreview) {
+                  if (creator.isLive === false && !effectiveIsPreview) {
                     alert('Creator is offline. Ask when the creator is back live again.');
                     return;
                   }
-                  if (isBanned || isPreview) return;
-                  if (!isLoggedIn && !isPreview) {
-                    navigate(`/fan/login?redirect=/${handle}`);
+                  if (isBanned || effectiveIsPreview) return;
+                  if (!isLoggedIn && !effectiveIsPreview) {
+                    navigate(`/fan/login?redirect=/${handle}?autoAsk=true`);
                   } else {
                     setStep('ask');
                   }
                 }}
                 style={{
-                  background: (isBanned || isPreview || creator.isLive === false) ? '#333' : 'linear-gradient(90deg, #34d399, #10b981)',
-                  color: (isBanned || isPreview || creator.isLive === false) ? '#888' : '#000',
+                  background: (isBanned || effectiveIsPreview || creator.isLive === false) ? '#333' : 'linear-gradient(90deg, #34d399, #10b981)',
+                  color: (isBanned || effectiveIsPreview || creator.isLive === false) ? '#888' : '#000',
                   border: 'none',
                   borderRadius: '100px',
                   padding: '16px',
                   fontWeight: '700',
                   fontSize: '16px',
                   width: '100%',
-                  cursor: (isBanned || isPreview || creator.isLive === false) ? 'not-allowed' : 'pointer',
+                  cursor: (isBanned || effectiveIsPreview || creator.isLive === false) ? 'not-allowed' : 'pointer',
                   transition: 'transform 0.2s',
-                  boxShadow: (isBanned || isPreview || creator.isLive === false) ? 'none' : '0 4px 14px rgba(16, 185, 129, 0.3)',
+                  boxShadow: (isBanned || effectiveIsPreview || creator.isLive === false) ? 'none' : '0 4px 14px rgba(16, 185, 129, 0.3)',
                 }}
-                onMouseOver={(e) => { if (!isBanned && !isPreview && creator.isLive !== false) e.currentTarget.style.transform = 'scale(1.02)' }}
-                onMouseOut={(e) => { if (!isBanned && !isPreview && creator.isLive !== false) e.currentTarget.style.transform = 'scale(1)' }}
+                onMouseOver={(e) => { if (!isBanned && !effectiveIsPreview && creator.isLive !== false) e.currentTarget.style.transform = 'scale(1.02)' }}
+                onMouseOut={(e) => { if (!isBanned && !effectiveIsPreview && creator.isLive !== false) e.currentTarget.style.transform = 'scale(1)' }}
               >
-                {isPreview ? 'Preview Mode' : (isBanned ? 'Action Restricted' : (creator.isLive === false ? 'Creator Offline' : (isFollowUp ? 'Ask for free →' : 'Ask Now →')))}
+                {effectiveIsPreview ? 'Preview Mode' : (isBanned ? 'Action Restricted' : (creator.isLive === false ? 'Creator Offline' : (isFollowUp ? 'Ask for free →' : 'Ask Now →')))}
               </button>
+
+              {isOwner && (
+                <button
+                  onClick={() => navigate('/creator/dashboard')}
+                  style={{
+                    background: 'linear-gradient(90deg, #38bdf8, #0ea5e9)',
+                    color: '#000',
+                    border: 'none',
+                    borderRadius: '100px',
+                    padding: '16px',
+                    fontWeight: '700',
+                    fontSize: '16px',
+                    width: '100%',
+                    cursor: 'pointer',
+                    marginTop: '12px',
+                    transition: 'transform 0.2s',
+                    boxShadow: '0 4px 14px rgba(56, 189, 248, 0.3)'
+                  }}
+                  onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
+                  onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                >
+                  Go to Dashboard →
+                </button>
+              )}
             </div>
 
             <div style={{ color: '#64748b', fontSize: '12px', marginTop: '20px', display: 'flex', alignItems: 'center', gap: '6px' }}>

@@ -1,22 +1,9 @@
 [
   {
-    "_id": "6a402bbd3ebc5db002f4a00e",
-    "name": "Ananta Dutta",
-    "price": 99,
-    "pricePerQuestion": 99
-  },
-  {
-    "_id": "6a40318a3ebc5db002f4a017",
-    "name": "Tarundeep Singh",
-    "price": 1,
-    "pricePerQuestion": 1,
-    "handle": "tarun"
-  },
-  {
-    "_id": "6a40cf2c548f71d588d335b0",
-    "name": "Vasundhara Keshan",
-    "price": 11,
-    "pricePerQuestion": 11,
-    "handle": "helloooo"
+    "_id": "6a4239c28b84927ad0360122",
+    "name": "test A",
+    "price": 10,
+    "pricePerQuestion": 10,
+    "handle": "test"
   }
 ]

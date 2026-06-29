@@ -386,7 +386,7 @@ const FanLogin = () => {
               {/* LINK TO SIGNUP */}
               <div style={{ textAlign: 'center', marginTop: '16px', fontSize: '13px', paddingBottom: '0' }}>
                 <span style={{ color: '#94a3b8' }}>Don't have an account? </span>
-                <Link to="/fan/signup" style={{ color: '#06b6d4', textDecoration: 'none', fontWeight: '500' }}>Register here</Link>
+                <Link to={`/fan/signup${location.search || ''}`} style={{ color: '#06b6d4', textDecoration: 'none', fontWeight: '500' }}>Register here</Link>
               </div>
             </div>
 

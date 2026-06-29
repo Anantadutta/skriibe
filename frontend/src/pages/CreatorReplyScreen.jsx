@@ -73,7 +73,7 @@ const CreatorReplyScreen = () => {
   if (!question) return null;
 
   const charCount = replyText.trim().length;
-  const isMinMet = charCount >= 100 && charCount <= 1000;
+  const isMinMet = charCount >= 20 && charCount <= 1000;
 
   const handleSend = async () => {
     if (!isMinMet) return;
@@ -281,7 +281,7 @@ const CreatorReplyScreen = () => {
                 {/* Reply Editor */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                   <label style={{ fontSize: '0.95rem', color: '#ffffff', fontWeight: 800 }}>
-                    Your reply <span style={{ color: '#94a3b8', fontWeight: 500 }}>(Min 100 characters, Max 1000 characters)</span> <span style={{ color: '#38BDF8' }}>*</span>
+                    Your reply <span style={{ color: '#94a3b8', fontWeight: 500 }}>(Min 20 characters, Max 1000 characters)</span> <span style={{ color: '#38BDF8' }}>*</span>
                   </label>
                   
 
