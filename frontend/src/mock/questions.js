@@ -1,7 +1,7 @@
 export const mockCreator = {
-  username: 'anantadutta',  // ← must match exactly
-  displayName: 'Ananta Dutta',
-  avatarInitial: 'T',
+  username: '',
+  displayName: '',
+  avatarInitial: 'C',
   pricePerQuestion: 99,
   isLive: true,
   weeklyEarnings: 890,

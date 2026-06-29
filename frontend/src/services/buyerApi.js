@@ -4,13 +4,13 @@
  */
 
 export const getCreatorProfile = (handle) => {
-  const cleanHandle = handle?.replace('@', '') || 'anantadutta';
+  const cleanHandle = handle?.replace('@', '') || 'creator';
   return Promise.resolve({
     data: {
       success: true,
       creator: {
         handle: cleanHandle,
-        name: cleanHandle === 'anantadutta' ? 'Ananta Dutta' : cleanHandle,
+        name: cleanHandle,
         bio: 'Fintech creator helping you grow your wealth.',
         pricePerQuestion: 99,
         responseTime: '24 hours',
