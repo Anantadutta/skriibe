@@ -554,6 +554,7 @@ router.post('/switch-role', verifyFanToken, async (req, res) => {
       if (creatorProfile) {
         if (creatorProfile.name) fan.name = creatorProfile.name;
         if (creatorProfile.avatarUrl) fan.avatarUrl = creatorProfile.avatarUrl;
+        if (creatorProfile.phone) fan.phone = creatorProfile.phone;
       }
     }
 

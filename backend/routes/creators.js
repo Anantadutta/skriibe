@@ -436,6 +436,15 @@ router.post('/onboarding/profile', verifyCreatorToken, async (req, res) => {
     return res.status(401).json({ message: 'Session expired or user deleted. Please log in again.' });
   }
 
+  // Sync phone to fan profile if it exists
+  const Fan = require('../models/Fan');
+  if (phone) {
+    await Fan.findOneAndUpdate(
+      { email: updatedCreator.email },
+      { $set: { phone: phone } }
+    );
+  }
+
   // Send Welcome Emails asynchronously (don't block the response)
   res.json({ success: true, creator: updatedCreator });
 });

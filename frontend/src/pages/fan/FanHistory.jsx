@@ -299,8 +299,12 @@ const FanHistory = () => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#1e293b', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: '900', fontSize: '18px' }}>
-                  {creatorName.charAt(0).toUpperCase()}
+                <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#1e293b', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: '900', fontSize: '18px', overflow: 'hidden' }}>
+                  {q.creatorId?.avatarUrl ? (
+                    <img src={q.creatorId.avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  ) : (
+                    creatorName.charAt(0).toUpperCase()
+                  )}
                 </div>
                 <div>
                   <div style={{ fontWeight: '800', fontSize: '16px', color: '#fff' }}>{creatorName}</div>
@@ -375,7 +379,7 @@ const FanHistory = () => {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '8px' }}>
                   <button 
                     onClick={async () => {
-                      if (q.status === 'satisfied') return;
+                      if (q.status === 'satisfied' || q.status === 'flagged') return;
                       try {
                         await satisfyQuestion(q._id);
                         setQuestions(prev => prev.map(question => question._id === q._id ? { ...question, status: 'satisfied' } : question));
@@ -386,22 +390,26 @@ const FanHistory = () => {
                         console.error('Failed to satisfy', e);
                       }
                     }}
-                    disabled={q.status === 'satisfied'}
-                    style={{ background: q.status === 'satisfied' ? 'transparent' : 'rgba(16, 185, 129, 0.1)', border: q.status === 'satisfied' ? '1px solid rgba(255,255,255,0.05)' : '1px solid rgba(16, 185, 129, 0.2)', borderRadius: '16px', padding: '16px', color: q.status === 'satisfied' ? '#64748b' : '#10b981', fontWeight: '600', fontSize: '14px', cursor: q.status === 'satisfied' ? 'not-allowed' : 'pointer', transition: 'background 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }} 
-                    onMouseOver={(e) => { if (q.status !== 'satisfied') e.currentTarget.style.background = 'rgba(16, 185, 129, 0.15)' }} 
-                    onMouseOut={(e) => { if (q.status !== 'satisfied') e.currentTarget.style.background = 'rgba(16, 185, 129, 0.1)' }}
+                    disabled={q.status === 'satisfied' || q.status === 'flagged'}
+                    style={{ background: q.status === 'satisfied' ? 'rgba(16, 185, 129, 0.2)' : (q.status === 'flagged' ? 'transparent' : 'rgba(16, 185, 129, 0.1)'), border: q.status === 'flagged' ? '1px solid rgba(255,255,255,0.05)' : '1px solid rgba(16, 185, 129, 0.2)', borderRadius: '16px', padding: '16px', color: q.status === 'flagged' ? '#64748b' : '#10b981', fontWeight: '600', fontSize: '14px', cursor: (q.status === 'satisfied' || q.status === 'flagged') ? 'not-allowed' : 'pointer', transition: 'background 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }} 
+                    onMouseOver={(e) => { if (q.status !== 'satisfied' && q.status !== 'flagged') e.currentTarget.style.background = 'rgba(16, 185, 129, 0.15)' }} 
+                    onMouseOut={(e) => { if (q.status !== 'satisfied' && q.status !== 'flagged') e.currentTarget.style.background = 'rgba(16, 185, 129, 0.1)' }}
                   >
-                    <span style={{ fontSize: '18px', opacity: q.status === 'satisfied' ? 0.5 : 1 }}>🙂</span> Satisfied with answer
+                    {q.status === 'satisfied' ? (
+                      <><span style={{ fontSize: '18px' }}>✓</span> Satisfied</>
+                    ) : (
+                      <><span style={{ fontSize: '18px', opacity: q.status === 'flagged' ? 0.5 : 1 }}>🙂</span> Satisfied with answer</>
+                    )}
                   </button>
 
                   <button 
                     onClick={() => setIsFlagModalOpen(true)}
-                    disabled={q.status === 'satisfied'}
-                    style={{ background: 'transparent', border: q.status === 'satisfied' ? '1px solid rgba(255,255,255,0.05)' : '1px solid rgba(239, 68, 68, 0.2)', borderRadius: '16px', padding: '16px', color: q.status === 'satisfied' ? '#64748b' : '#ef4444', fontWeight: '600', fontSize: '14px', cursor: q.status === 'satisfied' ? 'not-allowed' : 'pointer', transition: 'background 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }} 
-                    onMouseOver={(e) => { if (q.status !== 'satisfied') e.currentTarget.style.background = 'rgba(239, 68, 68, 0.05)' }} 
-                    onMouseOut={(e) => { if (q.status !== 'satisfied') e.currentTarget.style.background = 'transparent' }}
+                    disabled={q.status === 'satisfied' || q.status === 'flagged'}
+                    style={{ background: q.status === 'flagged' ? 'rgba(239, 68, 68, 0.1)' : 'transparent', border: q.status === 'satisfied' ? '1px solid rgba(255,255,255,0.05)' : '1px solid rgba(239, 68, 68, 0.2)', borderRadius: '16px', padding: '16px', color: q.status === 'satisfied' ? '#64748b' : '#ef4444', fontWeight: '600', fontSize: '14px', cursor: (q.status === 'satisfied' || q.status === 'flagged') ? 'not-allowed' : 'pointer', transition: 'background 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }} 
+                    onMouseOver={(e) => { if (q.status !== 'satisfied' && q.status !== 'flagged') e.currentTarget.style.background = 'rgba(239, 68, 68, 0.05)' }} 
+                    onMouseOut={(e) => { if (q.status !== 'satisfied' && q.status !== 'flagged') e.currentTarget.style.background = 'transparent' }}
                   >
-                    <span style={{ fontSize: '16px', opacity: q.status === 'satisfied' ? 0.5 : 1 }}>⚑</span> Flag as incomplete (24hr window)
+                    <span style={{ fontSize: '16px', opacity: q.status === 'satisfied' ? 0.5 : 1 }}>⚑</span> {q.status === 'flagged' ? 'Flagged as incomplete' : 'Flag as incomplete (24hr window)'}
                   </button>
                 </div>
             )}
@@ -440,8 +448,12 @@ const FanHistory = () => {
             <div style={{ background: '#11131a', borderRadius: '16px', padding: '24px', border: '1px solid rgba(255,255,255,0.05)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <div style={{ width: '40px', height: '40px', borderRadius: '8px', background: '#1e293b', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: '900', fontSize: '18px' }}>
-                    {creatorName.charAt(0).toUpperCase()}
+                  <div style={{ width: '40px', height: '40px', borderRadius: '8px', background: '#1e293b', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: '900', fontSize: '18px', overflow: 'hidden' }}>
+                    {q.creatorId?.avatarUrl ? (
+                      <img src={q.creatorId.avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : (
+                      creatorName.charAt(0).toUpperCase()
+                    )}
                   </div>
                   <div>
                     <div style={{ fontWeight: '800', fontSize: '16px', color: '#fff' }}>{creatorName}</div>
@@ -450,7 +462,7 @@ const FanHistory = () => {
                 </div>
                 <div style={{ textAlign: 'right' }}>
                   <div style={{ color: '#fff', fontSize: '24px', fontWeight: '900', fontStyle: 'italic', lineHeight: '1', display: 'flex', alignItems: 'flex-start', justifyContent: 'flex-end' }}>
-                    <span style={{ fontSize: '14px', marginRight: '2px', marginTop: '2px' }}>Rs.</span>{q.price || '99'}
+                    <span style={{ fontSize: '14px', marginRight: '2px', marginTop: '2px' }}>Rs.</span>{q.isFollowUp ? 0 : (q.amountPaid || q.price)}
                   </div>
                   <div style={{ color: '#10b981', fontSize: '12px', fontWeight: '700', marginTop: '4px' }}>Paid</div>
                 </div>
@@ -567,7 +579,12 @@ const FanHistory = () => {
             >
                 ←
             </button>
-            <h2 style={{ flex: 1, textAlign: 'center', margin: 0, fontSize: '18px', fontWeight: '800' }}>Question Details</h2>
+            <h2 style={{ flex: 1, textAlign: 'center', margin: 0, fontSize: '18px', fontWeight: '800' }}>Order receipt</h2>
+            </div>
+            
+            <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+              <div style={{ color: '#64748b', fontSize: '10px', fontWeight: '800', letterSpacing: '2px', marginBottom: '4px' }}>SKRIIBE RECEIPT</div>
+              <div style={{ color: '#fff', fontSize: '28px', fontWeight: '900', fontStyle: 'italic', letterSpacing: '1px' }}>#{q.orderId || `SKR-${q._id.substring(0,8).toUpperCase()}`}</div>
             </div>
             
             <div style={{ background: '#1a1b23', borderRadius: '16px', padding: '20px', border: '1px solid rgba(255,255,255,0.05)', marginBottom: '16px' }}>
@@ -586,17 +603,34 @@ const FanHistory = () => {
               </div>
             )}
             
-            {q.status === 'rejected' ? (
+            {q.adminDecision && q.adminDecision !== 'pending' ? (
               <div style={{ textAlign: 'center', padding: '32px', color: '#94a3b8', background: 'rgba(255,255,255,0.02)', borderRadius: '16px' }}>
-                  Status: <strong style={{ color: '#ef4444', textTransform: 'uppercase' }}>REJECTED</strong>
+                  Status: <strong style={{ color: '#10b981', textTransform: 'uppercase' }}>
+                    {q.adminDecision === 'fan_wins' ? 'Issue full refund to buyer' : 
+                     q.adminDecision === 'creator_wins' ? 'Dismiss — payout to creator' : 
+                     q.adminDecision === 'partial_refund' ? 'Partial refund to the buyer/creator' : 
+                     (q.adminDecision === 'abusive' || q.adminDecision === 'banned') ? 'User banned' : 
+                     q.adminDecision}
+                  </strong>
+                  <p style={{ marginTop: '8px', fontSize: '14px', lineHeight: '1.5', color: '#fff' }}>
+                     {q.adminDecision === 'fan_wins' ? 'A full refund has been issued to you.' : 
+                      q.adminDecision === 'creator_wins' ? 'This dispute has been dismissed and payout released to the creator.' : 
+                      q.adminDecision === 'partial_refund' ? 'A partial refund has been issued to you.' : 
+                      (q.adminDecision === 'abusive' || q.adminDecision === 'banned') ? 'Your account has been flagged for violating guidelines. No refund will be issued.' : 
+                      'This dispute has been resolved by Skriibe admin.'}
+                  </p>
+              </div>
+            ) : q.status === 'rejected' ? (
+              <div style={{ textAlign: 'center', padding: '32px', color: '#94a3b8', background: 'rgba(255,255,255,0.02)', borderRadius: '16px' }}>
+                  Status: <strong style={{ color: '#fbbf24', textTransform: 'uppercase' }}>UNDER ADMIN REVIEW</strong>
                   <p style={{ marginTop: '8px', fontSize: '14px', lineHeight: '1.5', color: '#e2e8f0' }}>
-                    {q.rejectReason === 'inappropriate' ? (
-                      "Unfortunately, the creator has marked your message as inappropriate. This violates our guidelines and no refund will be issued."
-                    ) : q.rejectReason === 'abuse' ? (
-                      "Unfortunately, the creator has flagged your message for abuse. This violates our guidelines and no refund will be issued."
+                    {q.rejectReason === 'abusive' ? (
+                      "The creator has marked your message as abusive. It is currently under admin review."
+                    ) : (q.rejectReason === 'abuse' ? (
+                      "The creator has flagged your message for abuse. It is currently under admin review."
                     ) : (
-                      `Unfortunately, the creator has marked your message: "${q.rejectReason === 'vague' ? 'Question is too vague' : 'Outside the creator\'s expertise'}". We've already started your refund, and it should be credited within 5-7 working days.`
-                    )}
+                      `The creator has marked your message: "${q.rejectReason === 'vague' ? 'Question is too vague' : 'Outside the creator\'s expertise'}". It is currently under admin review for a refund.`
+                    ))}
                   </p>
               </div>
             ) : q.status === 'flagged' ? (
@@ -609,16 +643,6 @@ const FanHistory = () => {
             ) : q.status === 'resolved' ? (
               <div style={{ textAlign: 'center', padding: '32px', color: '#94a3b8', background: 'rgba(255,255,255,0.02)', borderRadius: '16px' }}>
                   Status: <strong style={{ color: '#10b981', textTransform: 'uppercase' }}>DISPUTE RESOLVED</strong>
-                  <p style={{ marginTop: '8px', fontSize: '14px', lineHeight: '1.5', color: '#fff' }}>
-                     {q.adminDecision === 'fan_wins' ? 'A full refund has been issued to you.' : 
-                      q.adminDecision === 'partial_refund' ? 'A partial refund has been issued to you.' : 
-                      'This dispute has been dismissed and payout released to the creator.'}
-                  </p>
-                  {q.adminNotes && (
-                    <div style={{ marginTop: '16px', padding: '12px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', fontSize: '13px', fontStyle: 'italic', color: '#cbd5e1' }}>
-                      " {q.adminNotes} "
-                    </div>
-                  )}
               </div>
             ) : (
               <div style={{ textAlign: 'center', padding: '32px', color: '#94a3b8', background: 'rgba(255,255,255,0.02)', borderRadius: '16px' }}>

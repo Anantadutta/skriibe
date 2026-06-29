@@ -88,14 +88,17 @@ const CreatorInbox = () => {
   const getThreadStatus = (root, children) => {
      const isResolvedAbusive = (q) => q.adminDecision === 'abusive';
      if (isResolvedAbusive(root) || children.some(isResolvedAbusive)) return 'resolved_abusive';
-     const isFlaggedOrRejected = (q) => q.status?.toLowerCase() === 'flagged' || q.status?.toLowerCase() === 'rejected';
-     if (isFlaggedOrRejected(root) || children.some(isFlaggedOrRejected)) return 'flagged';
+     
+     const isFlagged = (q) => q.status?.toLowerCase() === 'flagged';
+     if (isFlagged(root) || children.some(isFlagged)) return 'flagged';
+     
+     const isRejected = (q) => q.status?.toLowerCase() === 'rejected';
+     if (isRejected(root) || children.some(isRejected)) return 'rejected';
+
      if (children.length > 0) {
-       const lastChildStatus = children[children.length - 1].status?.toLowerCase();
-       return lastChildStatus === 'rejected' ? 'flagged' : lastChildStatus;
+       return children[children.length - 1].status?.toLowerCase();
      }
-     const rootStatus = root.status?.toLowerCase();
-     return rootStatus === 'rejected' ? 'flagged' : rootStatus;
+     return root.status?.toLowerCase();
   };
 
   const pendingRoots = roots.filter(r => getThreadStatus(r, childrenMap[r._id || r.id] || []) === 'submitted');
@@ -306,7 +309,7 @@ const CreatorInbox = () => {
                 let subtitle = '';
                 if (qIsPending) subtitle = 'New Question';
                 else if (qIsReplied) subtitle = 'Replied';
-                else if (qIsFlagged) subtitle = 'Reported by you';
+                else if (qIsFlagged) subtitle = 'Flagged by Fan';
                 else if (qIsRejected) subtitle = 'Rejected by you';
                 else if (qIsExpired) subtitle = 'Expired';
                 else subtitle = q.status || '';
@@ -346,7 +349,7 @@ const CreatorInbox = () => {
                             {isChild ? 'Follow-up Question' : subtitle}
                           </div>
                           <div style={{ fontSize: '1rem', fontWeight: 700, color: '#fff' }}>
-                            {q.buyerName || q.followerName} <span style={{ color: '#38BDF8' }}>· {isChild ? 'Free' : `₹${q.amountPaid || q.pricePaid || 99}`}</span>
+                            {q.buyerName || q.followerName} <span style={{ color: '#38BDF8' }}>· {isChild ? 'Free' : `₹${q.amountPaid || q.pricePaid}`}</span>
                           </div>
                         </div>
                       </div>
@@ -405,29 +408,23 @@ const CreatorInbox = () => {
                       </div>
                     )}
 
-                    {/* Flagged Section */}
-                    {(qIsFlagged || threadStatus === 'resolved_abusive') && (
+                    {/* Flagged/Rejected Section */}
+                    {(qIsFlagged || qIsRejected || threadStatus === 'resolved_abusive') && (
                       <div style={{ marginTop: '4px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                        {threadStatus === 'resolved_abusive' ? (
+                        {q.adminDecision && q.adminDecision !== 'pending' ? (
                           <div style={{ marginTop: '8px', background: 'rgba(56, 189, 248, 0.1)', border: '1px solid rgba(56, 189, 248, 0.3)', borderRadius: '12px', padding: '16px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#38BDF8', fontSize: '0.85rem', fontWeight: 800, textTransform: 'uppercase', marginBottom: '8px' }}>
                               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
                               New Message from Admin
                             </div>
                             <div style={{ color: '#e2e8f0', fontSize: '0.95rem', lineHeight: '1.5' }}>
-                              <strong>You get the payment, and the question stays closed.</strong><br/>
-                              The fan ({q.buyerName || q.followerName}) is banned.<br/><br/>
-                              Thank you for keeping Skriibe safe.
+                              <strong>Decision: {q.adminDecision === 'fan_wins' ? 'Issue full refund to buyer' : q.adminDecision === 'creator_wins' ? 'Dismiss — payout to creator' : q.adminDecision === 'partial_refund' ? 'Partial refund to the buyer/creator' : q.adminDecision === 'abusive' ? `You get the payment, and the question stays closed. The fan (${q.buyerName || q.followerName}) is banned.` : q.adminDecision}</strong><br/>
                             </div>
                           </div>
                         ) : (
                           <>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#EF4444', fontSize: '0.85rem', fontWeight: 600 }}>
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg>
-                              Flagged — hidden from your queue, under review
-                            </div>
-                            <button style={{ background: '#2a2a35', border: 'none', borderRadius: '12px', color: '#94a3b8', fontWeight: 600, fontSize: '0.95rem', padding: '14px', cursor: 'pointer' }}>
-                              under review by Skriibe admin team
+                            <button style={{ background: '#2a2a35', border: 'none', borderRadius: '12px', color: '#94a3b8', fontWeight: 600, fontSize: '0.95rem', padding: '14px', cursor: 'pointer', width: '100%' }}>
+                              Under Review by Skriibe admin team
                             </button>
                           </>
                         )}

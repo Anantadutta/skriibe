@@ -8,7 +8,7 @@ const QuestionModal = ({ creator, onClose }) => {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
 
-  const price = creator.pricePerQuestion || 99;
+  const price = creator.pricePerQuestion;
   const replyRate = creator.stats?.replyRate ?? 0;
   const avgReply = creator.stats?.avgReplyTime || 0;
   const answeredCount = creator.stats?.totalAnswered || creator.questionsAnswered || 0;

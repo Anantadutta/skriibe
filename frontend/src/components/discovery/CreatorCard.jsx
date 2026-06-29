@@ -22,7 +22,7 @@ const CreatorCard = ({ creator }) => {
   } = creator;
 
   const expertiseList = expertise && expertise.length > 0 ? expertise : [];
-  const displayPrice = price || pricePerQuestion || 99;
+  const displayPrice = price || pricePerQuestion;
   
   // Format reply time (e.g. 1.4h)
   const formatTime = (time) => {

@@ -63,7 +63,7 @@ const CreatorSettings = () => {
     fetchCreator();
   }, [location.state?.creator]);
 
-  const [questionPrice, setQuestionPrice] = useState(creator.price || creator.pricePerQuestion || 99);
+  const [questionPrice, setQuestionPrice] = useState(creator.price || creator.pricePerQuestion);
   const [dailyCap, setDailyCap] = useState(creator.dailyCap || 50);
 
   const [isPaused, setIsPaused] = useState(creator.isPaused || false);
@@ -455,11 +455,37 @@ const CreatorSettings = () => {
                 display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
                 color: '#0E0E0E', fontWeight: '900', fontSize: '24px'
               }}>
-                {creator.avatarUrl ? (
-                  <img src={creator.avatarUrl} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                ) : (
-                  avatar.toUpperCase()
-                )}
+                {(() => {
+                  const getFullAvatarUrl = (url) => {
+                    if (!url) return '';
+                    if (url.startsWith('blob:')) return url;
+                    const backendBase = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace('/api', '');
+                    if (url.startsWith('http://localhost:5000')) {
+                      return url.replace('http://localhost:5000', backendBase);
+                    }
+                    if (url.startsWith('/uploads')) {
+                      return `${backendBase}${url}`;
+                    }
+                    return url;
+                  };
+                  const finalAvatarUrl = creator.avatarUrl ? getFullAvatarUrl(creator.avatarUrl) : '';
+                  return finalAvatarUrl ? (
+                    <img 
+                      src={finalAvatarUrl} 
+                      alt="" 
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                        if (e.target.nextSibling) {
+                          e.target.nextSibling.style.display = 'block';
+                        }
+                      }}
+                    />
+                  ) : null;
+                })()}
+                <div style={{ display: creator.avatarUrl ? 'none' : 'block' }}>
+                  {avatar.substring(0, 1).toUpperCase()}
+                </div>
               </div>
               <div style={{
                 position: 'absolute', bottom: '0px', right: '0px', width: '24px', height: '24px', borderRadius: '50%',
@@ -495,10 +521,10 @@ const CreatorSettings = () => {
             {/* Info */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '1.4rem', fontWeight: 800, color: '#fff' }}>
-                {creator.name || creator.displayName || 'okayyy'}
+                {creator.name || creator.displayName || creator.handle || ''}
               </div>
               <div style={{ color: '#94A3B8', fontSize: '0.85rem' }}>
-                skriibe.com/{creator.handle || creator.username || 'ok_90'}
+                {creator.handle || creator.username ? `skriibe.com/${creator.handle || creator.username}` : ''}
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '4px' }}>
                 {expertiseList.map((exp, idx) => (

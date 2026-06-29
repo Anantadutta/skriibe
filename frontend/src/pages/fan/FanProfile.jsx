@@ -486,7 +486,7 @@ const FanProfile = () => {
                           {q.status === 'submitted' ? 'Open' : q.status.charAt(0).toUpperCase() + q.status.slice(1)}
                       </div>
                       <div style={{ fontSize: '14px', fontWeight: '800', color: '#cbd5e1' }}>
-                          Rs. {q.amountPaid || q.price || 99}
+                          Rs. {q.isFollowUp ? 0 : (q.amountPaid || q.price)}
                       </div>
                   </div>
                 </div>

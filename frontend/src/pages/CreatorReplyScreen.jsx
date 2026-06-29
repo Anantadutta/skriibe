@@ -12,6 +12,7 @@ const CreatorReplyScreen = () => {
     if (location.state?.question) return location.state.question;
     return mockQuestions.find(q => q.id === id) || null;
   });
+  const [loading, setLoading] = useState(!location.state?.question);
 
   const [rootQuestion, setRootQuestion] = useState(() => {
     return location.state?.rootQuestion || null;
@@ -35,10 +36,28 @@ const CreatorReplyScreen = () => {
   }, [question, rootQuestion]);
 
   useEffect(() => {
-    if (!question) {
-      navigate('/creator/dashboard');
+    if (!location.state?.question && id) {
+      const fetchQuestion = async () => {
+        try {
+          const res = await api.get(`/creator/questions?t=${Date.now()}`);
+          if (res.data.success) {
+            const foundQ = res.data.questions.find(q => (q._id || q.id) === id);
+            if (foundQ) {
+              setQuestion(foundQ);
+            } else {
+              navigate('/creator/dashboard');
+            }
+          }
+        } catch (e) {
+          console.error("Failed to fetch question on direct navigation", e);
+          navigate('/creator/dashboard');
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchQuestion();
     }
-  }, [question, navigate]);
+  }, [id, location.state, navigate]);
 
   const [replyText, setReplyText] = useState('');
   const [followUpAllowed, setFollowUpAllowed] = useState(false);
@@ -60,7 +79,6 @@ const CreatorReplyScreen = () => {
   const navItems = [
     { label: 'HOME', icon: '🏠', route: '/creator/dashboard' },
     { label: 'INBOX', icon: '💬', route: '/creator/dashboard/inbox' },
-    { label: 'ANALYTICS', icon: '📊', route: '/creator/analytics' },
     { label: 'PAYOUTS', icon: '💰', route: '/creator/payouts' },
     { label: 'SETTINGS', icon: '⚙️', route: '/creator/settings' },
   ];
@@ -69,6 +87,10 @@ const CreatorReplyScreen = () => {
   const cyanFilter = 'invert(69%) sepia(87%) saturate(2714%) hue-rotate(164deg) brightness(99%) contrast(98%)';
   // Gray filter
   const grayFilter = 'invert(31%) sepia(13%) saturate(760%) hue-rotate(181deg) brightness(96%) contrast(85%)';
+
+  if (loading) {
+    return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', color: '#fff' }}>Loading...</div>;
+  }
 
   if (!question) return null;
 
@@ -141,7 +163,7 @@ const CreatorReplyScreen = () => {
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
-      paddingBottom: '60px',
+      paddingBottom: '120px',
       boxSizing: 'border-box',
       fontFamily: 'system-ui, -apple-system, sans-serif'
     }}>
@@ -190,7 +212,7 @@ const CreatorReplyScreen = () => {
                   Reply to {(question.buyerName || question.followerName || 'Ayushi').split(' ')[0]}
                 </h2>
                 <div style={{ color: '#64748b', fontSize: '0.85rem', fontWeight: 500 }}>
-                  {question.isFollowUp ? 'Follow-up question · Free' : `Question · ₹${question.amountPaid || question.pricePaid || 99}`}
+                  {question.isFollowUp ? 'Follow-up question · Free' : `Question · ₹${question.amountPaid || question.pricePaid}`}
                 </div>
               </div>
             </div>
@@ -252,7 +274,7 @@ const CreatorReplyScreen = () => {
                     {(question.buyerName || question.followerName || 'A')[0].toUpperCase()}
                   </div>
                   <div style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase' }}>
-                    {question.buyerName || question.followerName || 'AYUSHI'} · <span style={{ color: '#38BDF8' }}>₹{question.amountPaid || question.pricePaid || 99} PAID</span>
+                    {question.buyerName || question.followerName || 'AYUSHI'} · <span style={{ color: '#38BDF8' }}>₹{question.amountPaid || question.pricePaid} PAID</span>
                   </div>
                 </div>
                 <p style={{ margin: 0, fontSize: '1.1rem', color: '#ffffff', lineHeight: '1.5', fontStyle: 'italic', fontWeight: 600, wordBreak: 'break-all', overflowWrap: 'anywhere' }}>
@@ -362,7 +384,7 @@ const CreatorReplyScreen = () => {
                 </button>
 
                 {/* Action Button Grid */}
-                <div style={{ display: 'grid', gridTemplateColumns: question.isFollowUp ? '1fr' : '1fr 1fr', gap: '12px', marginTop: '4px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: question.isFollowUp ? '1fr' : '1fr 1fr', gap: '12px', marginTop: '4px', marginBottom: '16px' }}>
                   {!question.isFollowUp && (
                     <button
                       onClick={handleRejectClick}
@@ -465,7 +487,7 @@ const CreatorReplyScreen = () => {
               {[
                 { id: 'expertise', title: 'Outside my expertise', subtitle: 'Cannot answer accurately' },
                 { id: 'vague', title: 'Question is too vague', subtitle: 'Not enough detail to help' },
-                { id: 'inappropriate', title: 'Inappropriate question', subtitle: 'Violates my content guidelines' }
+                { id: 'abusive', title: 'Abusive Language', subtitle: 'Contains insults, threats, hate speech, or harassment.' }
               ].map((reason) => {
                 const isActive = rejectReason === reason.id;
                 return (
@@ -505,7 +527,7 @@ const CreatorReplyScreen = () => {
 
 
             {/* Action Buttons */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '8px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '8px', marginBottom: '100px' }}>
               <button
                 onClick={handleConfirmReject}
                 style={{
@@ -647,7 +669,7 @@ complete.
 
 
             {/* Action Buttons */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '8px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '8px', marginBottom: '100px' }}>
               <button
                 onClick={handleConfirmFlag}
                 style={{
@@ -684,7 +706,7 @@ complete.
                 onMouseEnter={(e) => e.target.style.background = '#2A2A2A'}
                 onMouseLeave={(e) => e.target.style.background = '#1A1A1A'}
               >
-                Cancel & Return to Question
+                Cancel & Return to Message
               </button>
             </div>
           </>
@@ -852,7 +874,7 @@ complete.
                   {question.buyerName || question.followerName || 'Anonymous'}
                 </div>
               </div>
-              <div style={{ color: '#E2E8F0', fontSize: '0.95rem', lineHeight: '1.5', whiteSpace: 'pre-wrap' }}>
+              <div style={{ color: '#E2E8F0', fontSize: '0.95rem', lineHeight: '1.5', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
                 {question.questionText}
               </div>
             </div>
@@ -861,7 +883,7 @@ complete.
             {question.answerText && (
               <div style={{ background: 'rgba(34, 197, 94, 0.05)', borderRadius: '16px', padding: '16px', border: '1px solid rgba(34, 197, 94, 0.2)' }}>
                 <div style={{ color: '#22C55E', fontSize: '0.8rem', fontWeight: 'bold', marginBottom: '8px', letterSpacing: '0.5px' }}>YOUR ANSWER</div>
-                <div style={{ color: '#E2E8F0', fontSize: '0.95rem', lineHeight: '1.5', whiteSpace: 'pre-wrap' }}>
+                <div style={{ color: '#E2E8F0', fontSize: '0.95rem', lineHeight: '1.5', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
                   {question.answerText}
                 </div>
               </div>
@@ -870,12 +892,12 @@ complete.
             {/* Reason */}
             <div style={{ background: 'rgba(239, 68, 68, 0.05)', borderRadius: '16px', padding: '16px', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
               <div style={{ color: '#EF4444', fontSize: '0.8rem', fontWeight: 'bold', marginBottom: '8px', letterSpacing: '0.5px' }}>REASON</div>
-              <div style={{ color: '#E2E8F0', fontSize: '0.95rem', lineHeight: '1.5' }}>
+              <div style={{ color: '#E2E8F0', fontSize: '0.95rem', lineHeight: '1.5', wordBreak: 'break-word' }}>
                 {(() => {
                   const reason = question.flagReason || question.rejectReason;
                   if (reason === 'expertise') return 'Outside my expertise';
                   if (reason === 'vague') return 'Question is too vague';
-                  if (reason === 'inappropriate') return 'Inappropriate question';
+                  if (reason === 'abusive') return 'Abusive Language';
                   if (reason === 'abuse') return 'Flagged for abuse';
                   return reason || 'No reason provided';
                 })()}

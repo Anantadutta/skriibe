@@ -66,7 +66,7 @@ const Hero = ({ theme }) => {
   }, []);
 
   return (
-    <section className="relative min-h-screen flex flex-col items-center justify-center text-center px-6 pt-16 pb-8 overflow-hidden">
+    <section className="relative min-h-screen flex flex-col items-center justify-start text-center px-6 pt-12 md:pt-16 pb-8 overflow-hidden">
       {/* Background Effects */}
       <div className="absolute top-[-10%] left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-radial-gradient from-skriibe-blue/10 to-transparent pointer-events-none opacity-50 dark:opacity-100" />
       <div

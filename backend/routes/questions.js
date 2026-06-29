@@ -83,7 +83,7 @@ router.post('/', verifyFanToken, async (req, res) => {
       buyerEmail: buyerEmail || req.fan.email,
       buyerPhone: buyerPhone || '',
       questionText,
-      amountPaid: isFollowUp ? 0 : (creator.pricePerQuestion || creator.price || 99),
+      amountPaid: isFollowUp ? 0 : (creator.pricePerQuestion || creator.price || 0),
       paymentStatus: 'paid', // Dummy payment status for now
       status: 'submitted',
       expiresAt: new Date(Date.now() + (parseInt(creator.responseTime) || 48) * 60 * 60 * 1000),
@@ -112,7 +112,7 @@ router.post('/', verifyFanToken, async (req, res) => {
         sendFollowUpAskedEmail(creator.email, buyerName || req.fan.name || 'A Fan', creator.name || creator.handle, dashboardLink)
           .catch(e => console.error("Failed to send follow up asked email", e));
       } else {
-        const amount = creator.pricePerQuestion || creator.price || 99;
+        const amount = creator.pricePerQuestion || creator.price || 0;
         sendNewQuestionEmail(creator.email, buyerName || req.fan.name || 'A Fan', creator.name || creator.handle, dashboardLink, amount)
           .catch(e => console.error("Failed to send new question email", e));
       }

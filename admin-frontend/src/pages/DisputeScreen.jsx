@@ -85,7 +85,7 @@ const DisputeScreen = () => {
         <div style={{ color: '#EF4444', fontSize: '0.75rem', fontWeight: 900, letterSpacing: '1px', textTransform: 'uppercase' }}>
           BUYER FLAGGED REPLY
         </div>
-        <p style={{ margin: 0, fontSize: '0.95rem', color: '#e2e8f0', lineHeight: '1.4', fontStyle: 'italic' }}>
+        <p style={{ margin: 0, fontSize: '0.95rem', color: '#e2e8f0', lineHeight: '1.4', fontStyle: 'italic', wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
           "{dispute.flagReason || 'No specific reason provided.'}"
         </p>
       </div>
@@ -95,7 +95,7 @@ const DisputeScreen = () => {
         <div style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: 900, letterSpacing: '1px', textTransform: 'uppercase' }}>
           QUESTION
         </div>
-        <p style={{ margin: 0, fontSize: '0.95rem', color: '#cbd5e1', lineHeight: '1.4', fontStyle: 'italic' }}>
+        <p style={{ margin: 0, fontSize: '0.95rem', color: '#cbd5e1', lineHeight: '1.4', fontStyle: 'italic', wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
           "{dispute.questionText}"
         </p>
       </div>
@@ -105,7 +105,7 @@ const DisputeScreen = () => {
         <div style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: 900, letterSpacing: '1px', textTransform: 'uppercase' }}>
           CREATOR'S REPLY
         </div>
-        <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#ffffff' }}>
+        <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#ffffff', wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
           "{dispute.answerText || 'No answer provided.'}"
         </div>
         {dispute.answerText && dispute.answerText.length < 100 && (
@@ -134,7 +134,7 @@ const DisputeScreen = () => {
         <hr style={{ border: 'none', borderTop: '1px solid #1e1e2d', margin: 0 }} />
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span style={{ color: '#64748b', fontSize: '0.9rem' }}>Amount</span>
-          <span style={{ fontWeight: 'bold', fontSize: '0.9rem' }}>₹{dispute.creatorId?.price || 99}</span>
+          <span style={{ fontWeight: 'bold', fontSize: '0.9rem' }}>₹{dispute.amountPaid || dispute.pricePaid || dispute.creatorId?.price || 99}</span>
         </div>
       </div>
 

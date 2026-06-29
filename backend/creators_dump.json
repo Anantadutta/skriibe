@@ -1,9 +1,16 @@
 [
   {
-    "_id": "6a4239c28b84927ad0360122",
-    "name": "test A",
-    "price": 10,
-    "pricePerQuestion": 10,
-    "handle": "test"
+    "_id": "6a424233afb82411863d0758",
+    "name": "test",
+    "price": 81,
+    "pricePerQuestion": 81,
+    "handle": "testing"
+  },
+  {
+    "_id": "6a4251d69612c8b9d675f66e",
+    "name": "Tarundeep Singh",
+    "price": 1,
+    "pricePerQuestion": 1,
+    "handle": "tarun05"
   }
 ]

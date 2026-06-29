@@ -76,7 +76,7 @@ const CreatorSharePage = () => {
   }, [creator]);
 
   const handle = creator?.handle || 'creator';
-  const price = creator?.price || 99;
+  const price = creator?.price;
   const expertiseList = creator?.expertise
     ? (Array.isArray(creator.expertise) ? creator.expertise : creator.expertise.split(',').map(e => e.trim()))
     : [];

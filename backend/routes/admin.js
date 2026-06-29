@@ -70,20 +70,21 @@ router.get('/dashboard', async (req, res) => {
     const now = new Date();
 
     todayQuestions.forEach(q => {
-      const amount = q.amountPaid || 99;
+      const amount = q.isFollowUp ? 0 : (q.amountPaid || q.price || 0);
       gmvToday += amount;
 
       const creator = creatorMap[q.creatorId.toString()];
-      let creatorSharePercentage = 1.0; // default temporarily 100%
+      let creatorSharePercentage = 0.8; // default 80% creator, 20% skriibe
 
       if (creator && creator.commissionOverride && creator.commissionOverride.startDate) {
         const start = new Date(creator.commissionOverride.startDate);
         const end = creator.commissionOverride.endDate ? new Date(creator.commissionOverride.endDate) : null;
+        start.setHours(0,0,0,0);
+        if (end) end.setHours(23,59,59,999);
+        const qDate = new Date(q.createdAt);
         
-        if (now >= start && (!end || now <= end)) {
+        if (qDate >= start && (!end || qDate <= end)) {
           creatorSharePercentage = creator.commissionOverride.creatorShare / 100;
-        } else if (end && now > end) {
-          creatorSharePercentage = 0.8; // shifted to 80% if expired
         }
       }
 

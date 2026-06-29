@@ -129,7 +129,7 @@ router.post('/submit-question', async (req, res) => {
       buyerEmail: buyerEmail || '',
       isAnonymous: !!isAnonymous,
       questionText: questionText.trim(),
-      amountPaid: isFollowUp ? 0 : (creator.pricePerQuestion || creator.price || 99),
+      amountPaid: isFollowUp ? 0 : (creator.pricePerQuestion || creator.price || 0),
       paymentStatus: isFollowUp ? 'paid' : 'pending', // Updated to 'paid' after Razorpay in Phase 4
       paid: !!isFollowUp,
       status: 'submitted',

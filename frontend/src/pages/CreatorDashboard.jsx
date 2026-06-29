@@ -124,7 +124,7 @@ const CreatorDashboard = () => {
   };
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(`skriibe.com/${creator.handle || 'tanvi'}`);
+    navigator.clipboard.writeText(`skriibe.com/${creator.handle || ''}`);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -170,7 +170,7 @@ const CreatorDashboard = () => {
   // Gray filter
   const grayFilter = 'invert(31%) sepia(13%) saturate(760%) hue-rotate(181deg) brightness(96%) contrast(85%)';
 
-  const displayUserName = creator.name || creator.displayName || creator.handle || 'Tanvi';
+  const displayUserName = creator.name || creator.displayName || creator.handle || '';
   const avatarLetter = (displayUserName[0] || 'T').toUpperCase();
 
   const getGreeting = () => {
@@ -356,44 +356,7 @@ const CreatorDashboard = () => {
         }}>
           {/* Logo & Greeting */}
           <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '10px' }}>
-            <button
-              onClick={(e) => {
-                e.preventDefault();
-                localStorage.removeItem('skriibe_token');
-                localStorage.removeItem('creator_token');
-                localStorage.removeItem('auth_roles');
-                localStorage.removeItem('auth_activeRole');
-                window.location.href = '/creator/login';
-              }}
-              style={{
-                position: 'relative',
-                zIndex: 10,
-                background: 'rgba(255, 255, 255, 0.05)',
-                border: '1px solid rgba(255, 255, 255, 0.08)',
-                borderRadius: '50%',
-                color: '#ffffff',
-                width: '32px',
-                height: '32px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-                padding: 0,
-                marginBottom: '4px'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-                e.currentTarget.style.transform = 'translateX(-2px)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
-                e.currentTarget.style.transform = 'translateX(0)';
-              }}
-              title="Logout to Login Screen"
-            >
-              ←
-            </button>
+
             {/* Aesthetic Glow Shader */}
             <div style={{
               position: 'absolute',
@@ -846,7 +809,7 @@ const CreatorDashboard = () => {
 
             <div>
               <div style={{ fontWeight: 800, fontSize: '0.95rem', color: '#fff' }}>Share your link & get more questions</div>
-              <div style={{ color: '#38BDF8', fontSize: '0.85rem', marginTop: '4px' }}>skriibe.com/{creator.handle || 'tanvi'}</div>
+              <div style={{ color: '#38BDF8', fontSize: '0.85rem', marginTop: '4px' }}>skriibe.com/{creator.handle || ''}</div>
             </div>
           </div>
           <button 

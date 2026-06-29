@@ -151,7 +151,7 @@ const CreatorProfile = () => {
     );
   }
 
-  const price = creator.pricePerQuestion || 99;
+  const price = creator.pricePerQuestion;
   const replyRate = creator.stats?.replyRate ?? 0;
   const avgReply = creator.stats?.avgReplyTime || 0;
   const answeredCount = creator.stats?.totalAnswered || creator.questionsAnswered || 0;
