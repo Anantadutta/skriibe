@@ -274,7 +274,7 @@ const CreatorDashboard = () => {
     return rate;
   };
 
-  const dynamicWeeklyEarnings = payoutStats?.available || 0;
+  const dynamicWeeklyEarnings = payoutStats?.availableGross || 0;
   const handleAcknowledgeAbusive = () => {
     if (abusivePopupQuestion) {
       localStorage.setItem(`ack_abusive_${abusivePopupQuestion._id || abusivePopupQuestion.id}`, 'true');
@@ -485,7 +485,7 @@ const CreatorDashboard = () => {
             </div>
             <div style={{ display: 'flex', alignItems: 'baseline', marginTop: '4px' }}>
               <span style={{ fontSize: '2.2rem', color: '#29C5F6', marginRight: '4px' }}>{currencySymbol}</span>
-              <span style={{ fontSize: '3rem', fontWeight: 900, color: '#fff', letterSpacing: '-1.5px' }}>{Math.round(dynamicWeeklyEarnings || 0)}</span>
+              <span style={{ fontSize: '3rem', fontWeight: 900, color: '#fff', letterSpacing: '-1.5px' }}>{dynamicWeeklyEarnings || 0}</span>
             </div>
             
             <div style={{ color: '#94a3b8', fontSize: '0.85rem', fontWeight: 600, marginTop: '8px' }}>

@@ -13,10 +13,16 @@
     "handle": "tarun05"
   },
   {
-    "_id": "6a435cd7721c8226ec527dc3",
-    "name": "huh",
-    "price": 49,
-    "pricePerQuestion": 49,
-    "handle": "hehe"
+    "_id": "6a439f5f270f621b4b6d61b8",
+    "name": "Annie",
+    "price": 1,
+    "pricePerQuestion": 1,
+    "handle": "uwj"
+  },
+  {
+    "_id": "6a439fd7270f621b4b6d61ba",
+    "name": "Ananta",
+    "price": 99,
+    "pricePerQuestion": 99
   }
 ]
