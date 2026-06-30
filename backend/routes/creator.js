@@ -281,7 +281,7 @@ router.post('/questions/:id/reply', verifyCreatorToken, async (req, res) => {
     }
 
     // Default logic: Temporarily 100% (1.00), later will shift to 80% (0.80)
-    let creatorSharePercentage = 1.0; 
+    let creatorSharePercentage = 0.8; 
     
     // Check if there is an active override
     const creatorDocForCommission = await Creator.findById(req.creator.creatorId);
@@ -289,6 +289,9 @@ router.post('/questions/:id/reply', verifyCreatorToken, async (req, res) => {
       const now = new Date();
       const start = new Date(creatorDocForCommission.commissionOverride.startDate);
       const end = creatorDocForCommission.commissionOverride.endDate ? new Date(creatorDocForCommission.commissionOverride.endDate) : null;
+      
+      start.setHours(0, 0, 0, 0);
+      if (end) end.setHours(23, 59, 59, 999);
       
       if (now >= start && (!end || now <= end)) {
         // Within the valid period -> use override
