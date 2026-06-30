@@ -275,6 +275,7 @@ const CreatorDashboard = () => {
   };
 
   const dynamicWeeklyEarnings = payoutStats?.availableGross || 0;
+  const dynamicWeeklyGoalProgress = payoutStats?.available || 0;
   const handleAcknowledgeAbusive = () => {
     if (abusivePopupQuestion) {
       localStorage.setItem(`ack_abusive_${abusivePopupQuestion._id || abusivePopupQuestion.id}`, 'true');
@@ -497,10 +498,10 @@ const CreatorDashboard = () => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '4px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: '#94a3b8' }}>
               <span>Weekly goal</span>
-              <span><strong style={{ color: '#fff' }}>{currencySymbol}{dynamicWeeklyEarnings}</strong> / {currencySymbol}{creator.weeklyGoal || 1500}</span>
+              <span><strong style={{ color: '#fff' }}>{currencySymbol}{dynamicWeeklyGoalProgress}</strong> / {currencySymbol}{creator.weeklyGoal || 1500}</span>
             </div>
             <div style={{ width: '100%', height: '6px', background: '#1F2937', borderRadius: '4px', overflow: 'hidden' }}>
-              <div style={{ width: `${Math.min(100, (dynamicWeeklyEarnings / (creator.weeklyGoal || 1500)) * 100)}%`, height: '100%', background: 'linear-gradient(90deg, #29C5F6 0%, #38BDF8 100%)', borderRadius: '4px' }} />
+              <div style={{ width: `${Math.min(100, (dynamicWeeklyGoalProgress / (creator.weeklyGoal || 1500)) * 100)}%`, height: '100%', background: 'linear-gradient(90deg, #29C5F6 0%, #38BDF8 100%)', borderRadius: '4px' }} />
             </div>
           </div>
         </div>
