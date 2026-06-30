@@ -278,70 +278,32 @@ const CreatorPayouts = () => {
   const dynamicTotalRevenue = dynamicEligibleQuestionsList
     .reduce((sum, q) => sum + (q.amountPaid || q.pricePaid || creator?.pricePerQuestion || 0), 0);
 
-  const dynamicAvailable = dynamicEligibleQuestionsList
-    .reduce((sum, q) => {
-      const amount = q.amountPaid || q.pricePaid || creator?.pricePerQuestion || 0;
-      return sum + (amount * getCommissionRate(q.createdAt));
-    }, 0);
+  const dynamicAvailable = payoutStats.available || 0;
 
-  const dynamicEligibleCount = dynamicEligibleQuestionsList.length;
+  const dynamicEligibleCount = payoutStats.availableQuestions || 0;
   
   const dynamicLifetimeList = questions
     .filter(q => ['answered', 'satisfied', 'flagged', 'rejected'].includes(q.status?.toLowerCase()) && !q.isFollowUp && new Date(q.createdAt) < lastPayoutDate);
 
-  const dynamicLifetimePaid = dynamicLifetimeList
-    .reduce((sum, q) => {
-      const amount = q.amountPaid || q.pricePaid || creator?.pricePerQuestion || 0;
-      return sum + (amount * getCommissionRate(q.createdAt));
-    }, 0);
+  const dynamicLifetimePaid = payoutStats.lifetimePaid || 0;
 
   const dynamicProtectedList = questions
     .filter(q => ['submitted', 'pending'].includes(q.status?.toLowerCase()) && !q.isFollowUp);
 
-  const dynamicProtected = dynamicProtectedList
-    .reduce((sum, q) => {
-      const amount = q.amountPaid || q.pricePaid || creator?.pricePerQuestion || 0;
-      return sum + (amount * getCommissionRate(q.createdAt));
-    }, 0);
+  const dynamicProtected = payoutStats.inEscrow || 0;
 
-  const dynamicProtectedCount = dynamicProtectedList.length;
+  const dynamicProtectedCount = payoutStats.inEscrowQuestions || 0;
   
   const dynamicUnderReviewList = questions
     .filter(q => ['flagged', 'rejected'].includes(q.status?.toLowerCase()) && !q.isFollowUp);
 
-  const dynamicUnderReviewAmount = dynamicUnderReviewList
-    .reduce((sum, q) => {
-      const amount = q.amountPaid || q.pricePaid || creator?.pricePerQuestion || 0;
-      return sum + (amount * getCommissionRate(q.createdAt));
-    }, 0);
+  const dynamicUnderReviewAmount = payoutStats.underReviewAmount || 0;
 
-  const dynamicUnderReviewCount = dynamicUnderReviewList.length;
+  const dynamicUnderReviewCount = payoutStats.underReviewQuestionsCount || 0;
 
-  const formattedUnderReviewList = dynamicUnderReviewList.map(q => {
-    const d = new Date(q.createdAt);
-    const dateStr = d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
-    const rawAmount = q.amountPaid || q.pricePaid || creator?.pricePerQuestion || 0;
-    return {
-      id: q._id || q.id,
-      buyerName: q.buyerName || q.followerName || 'Anonymous',
-      date: dateStr,
-      amount: rawAmount * getCommissionRate(q.createdAt),
-      status: q.status === 'flagged' ? 'Support Investigation' : 'Fan Review',
-      adminMessage: q.adminMessage || ''
-    };
-  });
+  const formattedUnderReviewList = payoutStats.underReviewList || [];
 
-  const formattedPendingList = dynamicProtectedList.map(q => {
-    const d = new Date(q.createdAt);
-    const dateStr = d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
-    const rawAmount = q.amountPaid || q.pricePaid || creator?.pricePerQuestion || 0;
-    return {
-      id: q._id || q.id,
-      buyerName: q.buyerName || q.followerName || 'Anonymous',
-      date: dateStr,
-      amount: rawAmount * getCommissionRate(q.createdAt)
-    };
-  });
+  const formattedPendingList = payoutStats.pendingList || [];
 
   const getNextPayoutDate = () => {
     return nextPayoutDate.toLocaleDateString('en-IN', {

@@ -274,12 +274,7 @@ const CreatorDashboard = () => {
     return rate;
   };
 
-  const dynamicWeeklyEarnings = questions
-    .filter(q => ['answered', 'satisfied'].includes(q.status?.toLowerCase()) && !q.isFollowUp && new Date(q.createdAt) >= lastPayoutDate)
-    .reduce((sum, q) => {
-      const amount = q.amountPaid || q.pricePaid || creator?.pricePerQuestion || 0;
-      return sum + (amount * getCommissionRate(q.createdAt));
-    }, 0);
+  const dynamicWeeklyEarnings = payoutStats?.available || 0;
   const handleAcknowledgeAbusive = () => {
     if (abusivePopupQuestion) {
       localStorage.setItem(`ack_abusive_${abusivePopupQuestion._id || abusivePopupQuestion.id}`, 'true');

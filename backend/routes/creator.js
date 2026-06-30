@@ -721,8 +721,15 @@ router.get('/payouts', verifyCreatorToken, async (req, res) => {
     let availableGross = 0;
     let inEscrowQuestions = 0;
 
+    const Earning = require('../models/Earning');
+    const earnings = await Earning.find({ creatorId: req.creator.creatorId });
+    const earningMap = {};
+    for (const e of earnings) {
+      earningMap[e.questionId.toString()] = e;
+    }
+
     const getCreatorShare = (date) => {
-      let share = 1.0; 
+      let share = 0.8; 
       if (creatorDocForCommission && creatorDocForCommission.commissionOverride && creatorDocForCommission.commissionOverride.startDate) {
         const qDate = new Date(date);
         const start = new Date(creatorDocForCommission.commissionOverride.startDate);
@@ -740,9 +747,13 @@ router.get('/payouts', verifyCreatorToken, async (req, res) => {
     for (const q of answeredPaid) {
       const gross = q.amountPaid || 0;
       
-      const dynamicCreatorShare = getCreatorShare(q.answeredAt || q.createdAt);
-      
-      const creatorEarning = gross * dynamicCreatorShare;
+      let creatorEarning = 0;
+      if (earningMap[q._id.toString()]) {
+        creatorEarning = earningMap[q._id.toString()].amount;
+      } else {
+        const dynamicCreatorShare = getCreatorShare(q.answeredAt || q.createdAt);
+        creatorEarning = gross * dynamicCreatorShare;
+      }
       const answeredMonth  = new Date(q.answeredAt.getFullYear(), q.answeredAt.getMonth(), 1);
 
       // Weekly cycle logic: questions answered from lastBoundary to now
@@ -763,7 +774,12 @@ router.get('/payouts', verifyCreatorToken, async (req, res) => {
     const groupedHistory = {};
     for (const q of answeredPaid) {
       const gross = q.amountPaid || 0;
-      const earning = gross * getCreatorShare(q.answeredAt || q.createdAt);
+      let earning = 0;
+      if (earningMap[q._id.toString()]) {
+        earning = earningMap[q._id.toString()].amount;
+      } else {
+        earning = gross * getCreatorShare(q.answeredAt || q.createdAt);
+      }
       
       const monthKey = q.answeredAt.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase();
       if (!groupedHistory[monthKey]) {
@@ -799,7 +815,7 @@ router.get('/payouts', verifyCreatorToken, async (req, res) => {
     const pendingList = [];
     for (const q of pendingQuestions) {
       const gross = q.amountPaid || 0;
-      const earning = gross * getCreatorShare(q.createdAt);
+      const earning = gross * getCreatorShare(Date.now());
       inEscrow += earning;
       inEscrowQuestions++;
 
@@ -824,7 +840,12 @@ router.get('/payouts', verifyCreatorToken, async (req, res) => {
 
     for (const q of flaggedQuestions) {
       const gross = q.amountPaid || 0;
-      const earning = gross * getCreatorShare(q.createdAt);
+      let earning = 0;
+      if (earningMap[q._id.toString()]) {
+        earning = earningMap[q._id.toString()].amount;
+      } else {
+        earning = gross * getCreatorShare(q.createdAt);
+      }
       underReviewAmount += earning;
       underReviewQuestionsCount++;
 
@@ -855,7 +876,12 @@ router.get('/payouts', verifyCreatorToken, async (req, res) => {
 
     for (const q of refundedQuestions) {
       const gross = q.amountPaid || 0;
-      const earning = gross * getCreatorShare(q.createdAt);
+      let earning = 0;
+      if (earningMap[q._id.toString()]) {
+        earning = earningMap[q._id.toString()].amount;
+      } else {
+        earning = gross * getCreatorShare(q.createdAt);
+      }
       refundedQuestionsCount++;
 
       let type = 'Auto Refund';
