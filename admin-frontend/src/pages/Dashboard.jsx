@@ -180,8 +180,13 @@ const Dashboard = () => {
       {showSlaModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(4px)' }}>
           <div style={{ background: '#13131A', width: '90%', maxWidth: '600px', borderRadius: '16px', border: '1px solid #1E1E2D', padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px', maxHeight: '80vh', overflowY: 'auto' }}>
-            <h2 className="font-wide" style={{ margin: 0, fontSize: '1.5rem', color: '#fff' }}>SLA Breaches (>{24}h Pending)</h2>
-            <p style={{ color: '#94a3b8', fontSize: '0.9rem', margin: 0 }}>These questions have been paid for but not answered within 24 hours.</p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <button onClick={() => setShowSlaModal(false)} style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+              </button>
+              <h2 className="font-wide" style={{ margin: 0, fontSize: '1.5rem', color: '#fff' }}>SLA Breaches (>{24}h Pending)</h2>
+            </div>
+            <p style={{ color: '#94a3b8', fontSize: '0.9rem', margin: 0, paddingLeft: '40px' }}>These questions have been paid for but not answered within 24 hours.</p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '12px' }}>
               {data.breachedQuestions && data.breachedQuestions.length > 0 ? (
@@ -219,29 +224,44 @@ const Dashboard = () => {
       {showRefundsModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(4px)' }}>
           <div style={{ background: '#13131A', width: '90%', maxWidth: '600px', borderRadius: '16px', border: '1px solid #1E1E2D', padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px', maxHeight: '80vh', overflowY: 'auto' }}>
-            <h2 className="font-wide" style={{ margin: 0, fontSize: '1.5rem', color: '#fff' }}>Refunds Till Now</h2>
-            <p style={{ color: '#94a3b8', fontSize: '0.9rem', margin: 0 }}>These questions were resolved as refunds till now.</p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <button onClick={() => setShowRefundsModal(false)} style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+              </button>
+              <h2 className="font-wide" style={{ margin: 0, fontSize: '1.5rem', color: '#fff' }}>Refunds Till Now</h2>
+            </div>
+            <p style={{ color: '#94a3b8', fontSize: '0.9rem', margin: 0, paddingLeft: '40px' }}>These questions were resolved as refunds till now.</p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '12px' }}>
               {data.adminRefundsData && data.adminRefundsData.length > 0 ? (
                 data.adminRefundsData.map(rq => (
                   <div key={rq._id} style={{ background: '#0F0F13', padding: '16px', borderRadius: '8px', border: '1px solid #2A2A35' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                      <div style={{ color: '#fff', fontWeight: 'bold' }}>To Buyer: {rq.buyerName || 'Anonymous'}</div>
-                      <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                        <div style={{ color: '#10B981', fontWeight: 'bold' }}>₹{rq.amountPaid || 0}</div>
-                        <div style={{ color: '#EF4444', fontSize: '0.8rem', fontWeight: 'bold' }}>{rq.adminDecision === 'fan_wins' ? 'Full Refund' : 'Partial Refund'}</div>
-                      </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                      <div style={{ color: '#fff', fontWeight: 'bold' }}>Buyer: {rq.buyerName || rq.fanId?.name || 'Anonymous'}</div>
+                      <div style={{ color: '#10B981', fontWeight: 'bold' }}>₹{rq.amountPaid || 0}</div>
                     </div>
+                    
+                    <div style={{ color: '#94a3b8', fontSize: '0.85rem', marginBottom: '4px' }}>
+                      Creator: <span style={{ color: '#cbd5e1' }}>{rq.creatorId?.name || 'Unknown'} (@{rq.creatorId?.handle || 'unknown'})</span>
+                    </div>
+
+                    <div style={{ color: '#94a3b8', fontSize: '0.85rem', marginBottom: '12px' }}>
+                      Admin Decision: <span style={{ color: rq.adminDecision === 'fan_wins' ? '#EF4444' : '#38bdf8', fontWeight: 'bold' }}>
+                        {rq.adminDecision === 'fan_wins' ? 'Full Refund to Buyer' : (rq.adminDecision === 'creator_wins' ? 'No Refund (Creator Wins)' : rq.adminDecision || 'Unknown')}
+                      </span>
+                    </div>
+
                     <div style={{ color: '#e2e8f0', fontSize: '0.9rem', fontStyle: 'italic', background: '#1a1a24', padding: '8px', borderRadius: '4px', marginBottom: '8px' }}>
                       <span style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>QUESTION</span>
                       "{rq.questionText}"
                     </div>
-                    {rq.answerText && (
+                    {rq.answerText ? (
                       <div style={{ color: '#e2e8f0', fontSize: '0.9rem', background: '#1a1a24', padding: '8px', borderRadius: '4px' }}>
                         <span style={{ color: '#38bdf8', fontSize: '0.75rem', fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>ANSWER</span>
                         {rq.answerText}
                       </div>
+                    ) : (
+                      <div style={{ color: '#64748b', fontSize: '0.8rem', fontStyle: 'italic' }}>No answer provided.</div>
                     )}
                   </div>
                 ))

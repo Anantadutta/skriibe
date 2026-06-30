@@ -279,7 +279,7 @@ router.post('/question/:id/satisfied', async (req, res) => {
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ success: false, message: 'Invalid question ID' });
     }
-    const question = await Question.findById(id);
+    const question = await Question.findById(id).populate('fanId', 'name');
     if (!question) {
       return res.status(404).json({ success: false, message: 'Question not found' });
     }
@@ -287,10 +287,12 @@ router.post('/question/:id/satisfied', async (req, res) => {
     question.status = 'satisfied';
     await question.save();
     
+    const fanName = question.buyerName || (question.fanId && question.fanId.name) || 'A fan';
+
     await AdminAlert.create({
       type: 'buyer_satisfied',
       title: 'Fan satisfied with answer',
-      message: `Fan marked answered question #${question._id.toString().slice(-6)} as satisfied.`,
+      message: `${fanName} marked answered question #${question._id.toString().slice(-6)} as satisfied.`,
       referenceId: question._id
     });
 
