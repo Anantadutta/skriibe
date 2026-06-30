@@ -476,7 +476,7 @@ const CreatorPayouts = () => {
                     </div>
                     <div style={{ fontSize: '12px', color: '#A8A8A0', lineHeight: '1.55' }}>
                       <span style={{ color: '#fff', fontWeight: '600' }}>These earnings are ready to be paid out.</span>{' '}
-                      Accumulated earnings from answered questions since the start of your current weekly cycle. Payouts happen every Tuesday.
+                      Accumulated earnings from answered messages since the start of your current weekly cycle. Payouts happen every Tuesday.
                     </div>
                   </div>
                 </Card>
@@ -484,7 +484,7 @@ const CreatorPayouts = () => {
                 <Card style={{ padding: '18px' }}>
                   <div style={{ fontSize: '10px', fontWeight: '700', color: '#686860', letterSpacing: '1px', marginBottom: '14px' }}>OVERVIEW</div>
                   {[
-                    ['Eligible Questions', dynamicEligibleCount.toString()],
+                    ['Eligible Messages', dynamicEligibleCount.toString()],
                     ['Total Revenue', fmt(dynamicTotalRevenue)],
                     ['Your Earnings', fmt(dynamicAvailable)],
             
@@ -506,17 +506,17 @@ const CreatorPayouts = () => {
                     Protected Amount
                   </div>
                   <div style={{ fontSize: '34px', fontWeight: '800', letterSpacing: '-1px', marginBottom: '4px' }}>{fmt(dynamicProtected)}</div>
-                  <div style={{ color: '#686860', fontSize: '12px', marginBottom: '12px' }}>{dynamicProtectedCount} Questions</div>
+                  <div style={{ color: '#686860', fontSize: '12px', marginBottom: '12px' }}>{dynamicProtectedCount} Messagess</div>
                   <div style={{ backgroundColor: 'rgba(59,130,246,0.07)', border: '1px solid rgba(59,130,246,0.2)', borderRadius: '12px', padding: '14px', display: 'flex', gap: '10px', width: '100%', boxSizing: 'border-box' }}>
                     <div style={{ color: '#60A5FA', flexShrink: 0, marginTop: '2px' }}><InfoIcon color="#60A5FA" /></div>
                     <div style={{ fontSize: '12px', color: '#A8A8A0', lineHeight: '1.6' }}>
-                      These are potential earnings from questions you haven't answered yet.<br />
+                      These are potential earnings from messages you haven't answered yet.<br />
                       Answer them before they expire to move the funds to Available for Payout.
                     </div>
                   </div>
                 </Card>
 
-                <div style={{ fontSize: '10px', fontWeight: '700', color: '#686860', letterSpacing: '1px', marginBottom: '10px' }}>PENDING QUESTIONS</div>
+                <div style={{ fontSize: '10px', fontWeight: '700', color: '#686860', letterSpacing: '1px', marginBottom: '10px' }}>PENDING MESSAGES</div>
                 <Card style={{ overflow: 'hidden', marginBottom: '14px' }}>
                   {formattedPendingList && formattedPendingList.length > 0 ? formattedPendingList.map((item, i) => (
                     <div key={item.id} onClick={() => navigate('/creator/inbox')} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderBottom: i < formattedPendingList.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none', cursor: 'pointer' }}>
@@ -536,7 +536,7 @@ const CreatorPayouts = () => {
                       </div>
                     </div>
                   )) : (
-                    <div style={{ padding: '20px', textAlign: 'center', color: '#686860', fontSize: '12px' }}>No pending questions right now.</div>
+                    <div style={{ padding: '20px', textAlign: 'center', color: '#686860', fontSize: '12px' }}>No pending messages right now.</div>
                   )}
                 </Card>
 

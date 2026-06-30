@@ -434,7 +434,7 @@ const FanProfile = () => {
           {/* Questions History Section */}
           <div style={{ marginTop: '48px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-              <h2 style={{ fontSize: '24px', fontWeight: '700', margin: 0 }}>Your Questions</h2>
+              <h2 style={{ fontSize: '24px', fontWeight: '700', margin: 0 }}>Your Messages</h2>
               {!showAllQuestions && questions.length > 3 && (
                 <button 
                   onClick={() => setShowAllQuestions(true)}
@@ -494,7 +494,7 @@ const FanProfile = () => {
               
               {questions.length === 0 && (
                   <div style={{ padding: '40px', textAlign: 'center', color: '#64748b', fontSize: '15px' }}>
-                      You haven't asked any questions yet.
+                      You haven't asked any messages yet.
                   </div>
               )}
               

@@ -55,7 +55,7 @@ const OpenQuestions = () => {
           <div style={{ color: '#94a3b8', textAlign: 'center', padding: '24px' }}>Loading questions...</div>
         ) : questions.length === 0 ? (
           <div style={{ color: '#10B981', textAlign: 'center', padding: '24px', background: 'rgba(16, 185, 129, 0.1)', borderRadius: '12px', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
-            All caught up! There are no pending questions.
+            All caught up! There are no pending messages.
           </div>
         ) : (
           questions.map((q) => (

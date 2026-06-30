@@ -163,7 +163,7 @@ const CreatorInbox = () => {
             <span style={{ fontSize: '1.2rem', color: '#94a3b8' }}>‹</span>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <h2 style={{ fontSize: '1.4rem', fontWeight: 700, margin: 0 }}>Question inbox</h2>
+            <h2 style={{ fontSize: '1.4rem', fontWeight: 700, margin: 0 }}>Message inbox</h2>
             <div style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: '2px' }}>
               <span style={{ color: '#FBBF24', fontWeight: 600 }}>{pendingRoots.length}</span> awaiting your reply · ₹{pendingRoots.length * 99} protected
             </div>
@@ -177,7 +177,7 @@ const CreatorInbox = () => {
           </span>
           <input 
             type="text" 
-            placeholder="Search questions..." 
+            placeholder="Search messages..." 
             style={{
               width: '100%',
               background: '#1A1A1A',
@@ -218,7 +218,7 @@ const CreatorInbox = () => {
         </div>
 
         <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#94a3b8', letterSpacing: '1px', marginTop: '8px' }}>
-          {activeTab === 'All' ? 'ALL QUESTIONS' : activeTab.toUpperCase() + ' QUESTIONS'}
+          {activeTab === 'All' ? 'ALL MESSAGES' : activeTab.toUpperCase() + ' MESSAGES'}
         </div>
 
         {activeTab === 'Flagged' && (
@@ -260,7 +260,7 @@ const CreatorInbox = () => {
             });
 
             if (displayedQuestions.length === 0) {
-               return <div style={{ color: '#64748b', textAlign: 'center', marginTop: '20px' }}>No questions found.</div>
+               return <div style={{ color: '#64748b', textAlign: 'center', marginTop: '20px' }}>No messages found.</div>
             }
 
             return displayedQuestions.map((rootQuestion) => {

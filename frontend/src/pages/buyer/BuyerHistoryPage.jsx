@@ -80,7 +80,7 @@ const BuyerHistoryPage = () => {
           </div>
         ) : questions.length === 0 ? (
           <div style={{ textAlign: 'center', color: '#64748b', padding: '40px 0' }}>
-            You haven't asked any questions yet.
+            You haven't asked any messages yet.
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>

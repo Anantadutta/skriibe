@@ -175,7 +175,7 @@ const CreatorSettings = () => {
         </div>
         <h2 style={{ margin: '0 0 12px', fontSize: '1.5rem', fontWeight: 700 }}>Account deleted</h2>
         <p style={{ margin: 0, color: '#94a3b8', fontSize: '0.85rem', lineHeight: '1.5' }}>
-          Sorry to see you go. All your questions, earnings, and profile data have been permanently removed.
+          Sorry to see you go. All your messages, earnings, and profile data have been permanently removed.
         </p>
       </div>
     );

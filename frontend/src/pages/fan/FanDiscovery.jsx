@@ -228,7 +228,7 @@ const FanDiscovery = () => {
           padding: '24px'
         }}>
           <h2 style={{ fontSize: '20px', fontWeight: '700', marginBottom: '24px', color: '#fff', marginTop: 0 }}>
-            Tips for a great question
+            Tips for a great message
           </h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             {/* Item 1 */}
@@ -238,7 +238,7 @@ const FanDiscovery = () => {
               </div>
               <div>
                 <div style={{ fontSize: '16px', fontWeight: '700', marginBottom: '4px', color: '#fff' }}>Be clear and specific</div>
-                <div style={{ fontSize: '14px', color: '#94a3b8' }}>Specific questions get better answers.</div>
+                <div style={{ fontSize: '14px', color: '#94a3b8' }}>Specific messages get better answers.</div>
               </div>
             </div>
 
@@ -262,7 +262,7 @@ const FanDiscovery = () => {
                 </svg>
               </div>
               <div>
-                <div style={{ fontSize: '16px', fontWeight: '700', marginBottom: '4px', color: '#fff' }}>One question at a time</div>
+                <div style={{ fontSize: '16px', fontWeight: '700', marginBottom: '4px', color: '#fff' }}>One message at a time</div>
                 <div style={{ fontSize: '14px', color: '#94a3b8' }}>You can always ask another one!</div>
               </div>
             </div>
@@ -284,7 +284,7 @@ const FanDiscovery = () => {
               <span style={{ color: '#7c3aed', fontWeight: '700', fontSize: '15px' }}>Private & Safe</span>
             </div>
             <div style={{ color: '#94a3b8', fontSize: '14px', lineHeight: '1.5' }}>
-              Your question is sent privately to the creator.<br/>
+              Your message is sent privately to the creator.<br/>
               It won't be shared with others.
             </div>
           </div>

@@ -688,8 +688,8 @@ const FanHistory = () => {
             border: '1px dashed rgba(255,255,255,0.1)'
           }}>
             <div style={{ fontSize: '48px', marginBottom: '16px' }}>📝</div>
-            <h3 style={{ fontSize: '20px', margin: '0 0 8px' }}>No questions yet</h3>
-            <p style={{ color: '#94a3b8', margin: 0 }}>Go to the explore page to ask your first question!</p>
+            <h3 style={{ fontSize: '20px', margin: '0 0 8px' }}>No messages yet</h3>
+            <p style={{ color: '#94a3b8', margin: 0 }}>Go to the explore page to ask your first message !</p>
           </div>
         ) : (
           selectedQuestion ? renderDetail() : renderList()

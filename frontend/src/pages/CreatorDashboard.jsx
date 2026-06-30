@@ -494,7 +494,7 @@ const CreatorDashboard = () => {
             </div>
             
             <div style={{ color: '#94a3b8', fontSize: '0.85rem', fontWeight: 600, marginTop: '8px' }}>
-              Accepting questions. <span style={{ color: '#38bdf8' }}>{currencySymbol}{creator.pricePerQuestion || 0}</span>/question.
+              Accepting messages. <span style={{ color: '#38bdf8' }}>{currencySymbol}{creator.pricePerQuestion || 0}</span>/message.
             </div>
 
           </div>
@@ -580,7 +580,7 @@ const CreatorDashboard = () => {
             </div>
             <div style={{ color: '#94a3b8', fontSize: '0.85rem', marginTop: '6px' }}>
               {creator?.isPaused 
-                ? 'Not accepting questions temporarily' 
+                ? 'Not accepting messages temporarily' 
                 : (isSavingStatus ? 'Updating...' 
                 : (isLive ? 'Go offline on break, live again when back.' : 'Currently offline'))}
             </div>
@@ -725,7 +725,7 @@ const CreatorDashboard = () => {
           if (pendingQuestions.length === 0) {
             return (
               <div style={{ background: '#1A1A1A', border: '1px dashed #2A2A2A', borderRadius: '16px', padding: '24px', textAlign: 'center', color: '#94a3b8', fontSize: '0.9rem' }}>
-                No pending questions right now.
+                No pending messages right now.
               </div>
             );
           }
@@ -808,7 +808,7 @@ const CreatorDashboard = () => {
           <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
 
             <div>
-              <div style={{ fontWeight: 800, fontSize: '0.95rem', color: '#fff' }}>Share your link & get more questions</div>
+              <div style={{ fontWeight: 800, fontSize: '0.95rem', color: '#fff' }}>Share your link & get more messages</div>
               <div style={{ color: '#38BDF8', fontSize: '0.85rem', marginTop: '4px' }}>skriibe.com/{creator.handle || ''}</div>
             </div>
           </div>
