@@ -735,6 +735,9 @@ router.get('/payouts', verifyCreatorToken, async (req, res) => {
         const start = new Date(creatorDocForCommission.commissionOverride.startDate);
         const end = creatorDocForCommission.commissionOverride.endDate ? new Date(creatorDocForCommission.commissionOverride.endDate) : null;
         
+        start.setHours(0, 0, 0, 0);
+        if (end) end.setHours(23, 59, 59, 999);
+        
         if (qDate >= start && (!end || qDate <= end)) {
           share = creatorDocForCommission.commissionOverride.creatorShare / 100;
         } else if (end && qDate > end) {
