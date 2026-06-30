@@ -90,7 +90,7 @@ const FanNotifications = () => {
           </button>
           <h1 style={{ fontSize: '36px', fontWeight: '800', margin: 0 }}>Notifications</h1>
         </div>
-        <p style={{ color: '#94a3b8', marginBottom: '40px', marginLeft: '56px' }}>Stay updated on answers and creator activity.</p>
+        <p style={{ color: '#94a3b8', marginBottom: '40px', marginLeft: '56px' }}>Stay updated on replies and creator activity.</p>
         
         {loading ? (
           <div style={{ color: '#94a3b8', textAlign: 'center', padding: '40px' }}>Loading notifications...</div>

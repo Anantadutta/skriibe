@@ -10,6 +10,7 @@ const Dashboard = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showSlaModal, setShowSlaModal] = useState(false);
+  const [showRefundsModal, setShowRefundsModal] = useState(false);
 
   const getLocalDateString = () => {
     const d = new Date();
@@ -164,9 +165,12 @@ const Dashboard = () => {
           <div className="font-wide text-yellow" style={{ fontSize: '1.4rem' }}>{data.actionMetrics.openQuestions}</div>
           <div style={{ color: '#94a3b8', fontSize: '0.7rem', marginTop: '4px' }}>Open questions →</div>
         </div>
-        <div style={{ background: '#13131A', border: '1px solid #1E1E2D', borderRadius: '12px', padding: '16px 12px', textAlign: 'center' }}>
+        <div 
+          onClick={() => setShowRefundsModal(true)}
+          style={{ background: '#13131A', border: '1px solid #1E1E2D', borderRadius: '12px', padding: '16px 12px', textAlign: 'center', cursor: 'pointer' }}
+        >
           <div className="font-wide text-red" style={{ fontSize: '1.4rem' }}>{data.actionMetrics.refundsToday}</div>
-          <div style={{ color: '#94a3b8', fontSize: '0.7rem', marginTop: '4px' }}>Refunds today →</div>
+          <div style={{ color: '#94a3b8', fontSize: '0.7rem', marginTop: '4px' }}>Refunds till now →</div>
         </div>
       </div>
 
@@ -203,6 +207,51 @@ const Dashboard = () => {
 
             <button 
               onClick={() => setShowSlaModal(false)}
+              style={{ background: '#2A2A35', color: '#fff', border: 'none', padding: '12px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', marginTop: '8px' }}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Refunds Modal */}
+      {showRefundsModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(4px)' }}>
+          <div style={{ background: '#13131A', width: '90%', maxWidth: '600px', borderRadius: '16px', border: '1px solid #1E1E2D', padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px', maxHeight: '80vh', overflowY: 'auto' }}>
+            <h2 className="font-wide" style={{ margin: 0, fontSize: '1.5rem', color: '#fff' }}>Refunds Till Now</h2>
+            <p style={{ color: '#94a3b8', fontSize: '0.9rem', margin: 0 }}>These questions were resolved as refunds till now.</p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '12px' }}>
+              {data.adminRefundsData && data.adminRefundsData.length > 0 ? (
+                data.adminRefundsData.map(rq => (
+                  <div key={rq._id} style={{ background: '#0F0F13', padding: '16px', borderRadius: '8px', border: '1px solid #2A2A35' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <div style={{ color: '#fff', fontWeight: 'bold' }}>To Buyer: {rq.buyerName || 'Anonymous'}</div>
+                      <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                        <div style={{ color: '#10B981', fontWeight: 'bold' }}>₹{rq.amountPaid || 0}</div>
+                        <div style={{ color: '#EF4444', fontSize: '0.8rem', fontWeight: 'bold' }}>{rq.adminDecision === 'fan_wins' ? 'Full Refund' : 'Partial Refund'}</div>
+                      </div>
+                    </div>
+                    <div style={{ color: '#e2e8f0', fontSize: '0.9rem', fontStyle: 'italic', background: '#1a1a24', padding: '8px', borderRadius: '4px', marginBottom: '8px' }}>
+                      <span style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>QUESTION</span>
+                      "{rq.questionText}"
+                    </div>
+                    {rq.answerText && (
+                      <div style={{ color: '#e2e8f0', fontSize: '0.9rem', background: '#1a1a24', padding: '8px', borderRadius: '4px' }}>
+                        <span style={{ color: '#38bdf8', fontSize: '0.75rem', fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>ANSWER</span>
+                        {rq.answerText}
+                      </div>
+                    )}
+                  </div>
+                ))
+              ) : (
+                <div style={{ color: '#64748b', textAlign: 'center', padding: '24px' }}>No refunds issued till now.</div>
+              )}
+            </div>
+
+            <button 
+              onClick={() => setShowRefundsModal(false)}
               style={{ background: '#2A2A35', color: '#fff', border: 'none', padding: '12px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', marginTop: '8px' }}
             >
               Close

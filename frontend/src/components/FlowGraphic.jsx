@@ -16,7 +16,22 @@ const FlowGraphic = () => {
         <div className="text-center mb-16 md:mb-24">
           <div className="text-[14px] text-skriibe-blue font-bold tracking-[0.2em] uppercase mb-4">The Flow</div>
           <h2 className="font-libre text-[clamp(32px,5.5vw,64px)] leading-[1.1] tracking-tight text-white mb-6">
-            Instagram brings the audience.<br />
+            <style>
+              {`@import url('https://fonts.googleapis.com/css2?family=Grand+Hotel&display=swap');`}
+            </style>
+            <span 
+              className=""
+              style={{
+                fontFamily: "'Grand Hotel', cursive",
+                fontWeight: 'normal',
+                letterSpacing: '0.02em',
+                background: 'linear-gradient(to right, #fdf497 0%, #fd5949 25%, #d6249f 50%, #8a3ab9 75%, #4c68d7 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                padding: '0.1em 0.1em 0.2em 0.1em',
+                fontSize: '1.4em'
+              }}
+            >Instagram</span> brings the audience.<br />
             <span className="text-skriibe-blue">skriibe brings the money.</span>
           </h2>
         </div>
@@ -55,7 +70,26 @@ const FlowGraphic = () => {
 
                 {/* Labels - Positioned relative to circle */}
                 <div className="mt-4 md:absolute md:-bottom-24 text-center w-[180px]">
-                  <div className="text-white light:text-black font-bold text-sm mb-1 tracking-tight">{node.label}</div>
+                  <div className="text-white light:text-black font-bold text-sm mb-1 tracking-tight">
+                    {node.label === 'Instagram' ? (
+                      <span 
+                        className=""
+                        style={{
+                          fontFamily: "'Grand Hotel', cursive",
+                          fontWeight: 'normal',
+                          letterSpacing: '0.02em',
+                          background: 'linear-gradient(to right, #fdf497 0%, #fd5949 25%, #d6249f 50%, #8a3ab9 75%, #4c68d7 100%)',
+                          WebkitBackgroundClip: 'text',
+                          WebkitTextFillColor: 'transparent',
+                          padding: '0.1em',
+                          fontSize: '1.6em',
+                          lineHeight: '1'
+                        }}
+                      >Instagram</span>
+                    ) : (
+                      node.label
+                    )}
+                  </div>
                   <div className="text-[#71717A] light:text-gray-500 text-[10px] font-medium uppercase tracking-[0.15em]">{node.sub}</div>
                 </div>
               </motion.div>

@@ -17,16 +17,16 @@ const { verifyCreatorToken } = require('../middleware/auth');
 const { sendWelcomeEmail, sendProfileSubmittedEmail, sendPasswordResetEmail } = require('../utils/emailService');
 const crypto = require('crypto');
 
-// Multer setup for avatar uploads (in-memory for now or local uploads folder)
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'uploads/');
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, file.fieldname + '-' + uniqueSuffix + '.' + file.originalname.split('.').pop());
-  }
+const cloudinary = require('cloudinary').v2;
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
 });
+
+// Multer setup for avatar uploads (in-memory for Cloudinary stream)
+const storage = multer.memoryStorage();
 const upload = multer({ 
   storage: storage,
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
@@ -45,7 +45,17 @@ router.post('/avatar', verifyCreatorToken, upload.single('avatar'), async (req, 
     if (!req.file) {
       return res.status(400).json({ message: 'No file uploaded' });
     }
-    const avatarUrl = `${process.env.BACKEND_URL || 'http://localhost:5000'}/uploads/${req.file.filename}`;
+
+    const uploadPromise = new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream({ folder: 'avatars' }, (error, result) => {
+        if (error) reject(error);
+        else resolve(result);
+      });
+      stream.end(req.file.buffer);
+    });
+
+    const result = await uploadPromise;
+    const avatarUrl = result.secure_url;
     
     await connectDB();
     const updatedCreator = await Creator.findByIdAndUpdate(

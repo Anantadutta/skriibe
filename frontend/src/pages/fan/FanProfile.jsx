@@ -21,6 +21,7 @@ const FanProfile = () => {
   const [isEditingPhone, setIsEditingPhone] = useState(false);
   const [newPhone, setNewPhone] = useState('');
   const [savingPhone, setSavingPhone] = useState(false);
+  const [selectedQuestion, setSelectedQuestion] = useState(null);
 
   const [cropImageSrc, setCropImageSrc] = useState(null);
   const [showAvatarMenu, setShowAvatarMenu] = useState(false);
@@ -459,17 +460,23 @@ const FanProfile = () => {
                   alignItems: 'center',
                   justifyContent: 'space-between',
                   cursor: 'pointer'
-                }} onClick={() => navigate('/fan/history')}>
+                }} onClick={() => setSelectedQuestion(q)}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flex: 1, minWidth: 0, marginRight: '16px' }}>
                       <div style={{ minWidth: '40px', height: '40px', borderRadius: '50%', background: 'rgba(56, 189, 248, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#38bdf8' }}>
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 9a2 2 0 0 1-2 2H6l-4 4V4c0-1.1.9-2 2-2h8a2 2 0 0 1 2 2z"></path><path d="M18 9h2a2 2 0 0 1 2 2v11l-4-4h-6a2 2 0 0 1-2-2v-1"></path></svg>
                       </div>
                       <div style={{ overflow: 'hidden' }}>
                         <div style={{ fontWeight: '700', fontSize: '16px', color: '#fff', marginBottom: '4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                           {q.questionText}
                         </div>
                         <div style={{ fontSize: '14px', color: '#64748b' }}>
-                            {q.status === 'answered' ? '1 answer' : '0 answers'} · {getTimeAgo(q.createdAt)}
+                            {(() => {
+                              const isAnswered = q.status === 'answered' || q.status === 'satisfied';
+                              if (q.isFollowUp) {
+                                return isAnswered ? '2 replies' : '1 reply';
+                              }
+                              return isAnswered ? '1 reply' : '0 replies';
+                            })()} · {getTimeAgo(q.createdAt)}
                         </div>
                       </div>
                   </div>
@@ -480,8 +487,8 @@ const FanProfile = () => {
                           borderRadius: '20px', 
                           fontSize: '12px', 
                           fontWeight: '700',
-                          background: q.status === 'answered' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(56, 189, 248, 0.15)',
-                          color: q.status === 'answered' ? '#10b981' : '#38bdf8'
+                          background: (q.status === 'answered' || q.status === 'satisfied') ? 'rgba(16, 185, 129, 0.15)' : q.status === 'rejected' ? 'rgba(251, 191, 36, 0.15)' : q.status === 'flagged' ? 'rgba(239, 68, 68, 0.15)' : 'rgba(56, 189, 248, 0.15)',
+                          color: (q.status === 'answered' || q.status === 'satisfied') ? '#10b981' : q.status === 'rejected' ? '#fbbf24' : q.status === 'flagged' ? '#ef4444' : '#38bdf8'
                       }}>
                           {q.status === 'submitted' ? 'Open' : q.status.charAt(0).toUpperCase() + q.status.slice(1)}
                       </div>

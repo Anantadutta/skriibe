@@ -2,13 +2,13 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 export const fanFaqs = [
-  { question: "What is Skriibe?", answer: "Skriibe is a platform where fans can pay to ask questions directly to creators and receive personalized answers." },
+  { question: "What is Skriibe?", answer: "Skriibe is a platform where fans can pay to ask questions directly to creators and receive personalized replies." },
   { question: "How does Skriibe work?", answer: "Choose a creator, submit your message, make payment, and wait for their response." },
   { question: "How do I ask a message?", answer: "Simply select a creator, write your message, make the payment, and submit it. The creator will receive your message and can respond through Skriibe." },
-  { question: "What happens if a creator doesn't answer my question?", answer: "Creators are expected to respond within 24 hours. If they don't, you may be eligible for a refund according to Skriibe's refund policy." },
-  { question: "Can I ask follow-up questions?", answer: "Yes, each follow-up is treated as a new question unless otherwise specified by the creator." },
-  { question: "Can I ask any creator on Skriibe?", answer: "You can ask questions to creators who have an active Skriibe profile and are currently accepting questions." },
-  { question: "How much does it cost to ask a question?", answer: "Each creator sets their own price. The cost will be displayed before you submit your message." },
+  { question: "What happens if a creator doesn't answer my message?", answer: "Creators are expected to respond within 24 hours. If they don't, you may be eligible for a refund according to Skriibe's refund policy." },
+  { question: "Can I ask follow-up messages?", answer: "Yes, each follow-up is treated as a new message unless otherwise specified by the creator." },
+  { question: "Can I ask any creator on Skriibe?", answer: "You can ask messages to creators who have an active Skriibe profile and are currently accepting messages." },
+  { question: "How much does it cost to ask a message?", answer: "Each creator sets their own price. The cost will be displayed before you submit your message." },
   { question: "Is my payment secure?", answer: "Yes, all payments are processed through secure payment providers." },
   { question: "Can I edit or cancel my message after submitting it?", answer: "Once a message is submitted, it cannot be edited. Cancellation depends on whether the creator has already viewed or started responding to it." },
   { question: "Can other users see my message or answer?", answer: "No. Messages and answers on Skriibe are only visible to the fan who asked the message and the creator who received it. They are not displayed publicly on the platform." },
@@ -29,27 +29,27 @@ export const creatorFaqs = [
   { question: "Can I change my pricing anytime?", answer: "Yes. Pricing can be updated whenever you choose." },
   { question: "Can I report abusive users?", answer: "Yes, creators can report users who violate community standards." },
   { question: "Do I need a subscription to use Skriibe?", answer: "No. Fans pay per question, while creators can join and start receiving questions without requiring fans to purchase a subscription." },
-  { question: "What if my payment succeeds but my question isn't submitted?", answer: "Our support team can help resolve payment-related issues at support@skriibe.com" },
+  { question: "What if my payment succeeds but my message isn't submitted?", answer: "Our support team can help resolve payment-related issues at support@skriibe.com" },
   { question: "How do refunds work?", answer: "If a creator doesn't respond within 24 hours, you may be eligible for a refund according to Skriibe's refund policy. If a response is submitted but is abusive, inappropriate, or clearly incomplete, you can raise a dispute for review by the Skriibe team." }
 ];
 
 export const generalFaqs = [
   { question: "Are the answers AI-generated?", answer: "Nope. Real creators. Real opinions. Real replies." },
   { question: "Can I edit my message after sending it?", answer: "No. Once it's sent, it's on its way." },
-  { question: "Can I ask follow-up questions?", answer: "Absolutely. One free follow up question is available within 24 hrs of your message." },
+  { question: "Can I ask follow-up messages?", answer: "Absolutely. One free follow up question is available within 24 hrs of your message." },
   { question: "Why was my message declined?", answer: "Usually because it was outside the creator's expertise, too vague, or didn't follow guidelines." },
   { question: "What if someone sends an abusive message?", answer: "Report it. We'll review it so creators can focus on answering, not moderating." },
   { question: "Can creators choose their own pricing?", answer: "Yes. Every creator decides what their time is worth." },
   { question: "Can I report a creator's reply?", answer: "Yes. If a reply is abusive, inappropriate, or clearly low-quality, you can report it." },
   { question: "Can I ask anything?", answer: "Almost. Just keep it respectful, relevant, and legal." },
   { question: "What if the creator doesn't reply?", answer: "No reply, no problem. You'll get a refund." },
-  { question: "Is there a limit to how many questions I can ask?", answer: "Only your curiosity and your wallet." }
+  { question: "Is there a limit to how many messages I can ask?", answer: "Only your curiosity and your wallet." }
 ];
 
 export const faqData = [
   {
     question: "What is Skriibe?",
-    answer: "Skriibe is a platform where fans can pay to ask questions directly to creators and receive personalized answers."
+    answer: "Skriibe is a platform where fans can pay to ask questions directly to creators and receive personalized replies."
   },
   {
     question: "How does Skriibe work?",
@@ -108,12 +108,12 @@ export const faqData = [
     answer: "You can ask for advice, opinions, guidance, feedback, recommendations, and creator insights."
   },
   {
-    question: "Is there a limit to how many questions I can ask?",
-    answer: "No. Fans can ask as many questions as they like, provided they complete the payment for each question."
+    question: "Is there a limit to how many messages I can ask?",
+    answer: "No. Fans can ask as many messages as they like, provided they complete the payment for each message."
   },
   {
     question: "How do I start earning on Skriibe?",
-    answer: "Create your profile, set your pricing, and start accepting questions."
+    answer: "Create your profile, set your pricing, and start accepting messages."
   },
   {
     question: "How much do creators earn from each question?",

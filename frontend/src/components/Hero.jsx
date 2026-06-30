@@ -85,8 +85,24 @@ const Hero = ({ theme }) => {
 
 
       <h1 className="animate-fade-up [animation-delay:100ms] z-10 relative font-libre text-[clamp(40px,7vw,84px)] font-bold leading-[1.15] mb-8 text-white">
-        Stop answering DMs<br />
-        for <span className="red-strike italic text-skriibe-blue">free.</span><br />
+        <style>
+          {`@import url('https://fonts.googleapis.com/css2?family=Grand+Hotel&display=swap');`}
+        </style>
+        Stop answering<br />
+        <span 
+          className=""
+          style={{
+            fontFamily: "'Grand Hotel', cursive",
+            fontWeight: 'normal',
+            letterSpacing: '0.02em',
+            background: 'linear-gradient(to right, #fdf497 0%, #fd5949 25%, #d6249f 50%, #8a3ab9 75%, #4c68d7 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            padding: '0.1em 0.1em 0.2em 0.1em',
+            margin: '0 10px 0 0',
+            fontSize: '1.4em'
+          }}
+        >Instagram</span> DMs for <span className="red-strike italic text-skriibe-blue">free.</span><br />
         Start <span className="italic text-skriibe-blue">earning.</span>
       </h1>
 

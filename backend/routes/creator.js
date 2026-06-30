@@ -721,22 +721,26 @@ router.get('/payouts', verifyCreatorToken, async (req, res) => {
     let availableGross = 0;
     let inEscrowQuestions = 0;
 
-    for (const q of answeredPaid) {
-      const gross = q.amountPaid || 0;
-      
-      // Calculate dynamic creator share based on when it was answered
-      let dynamicCreatorShare = 1.0; 
+    const getCreatorShare = (date) => {
+      let share = 1.0; 
       if (creatorDocForCommission && creatorDocForCommission.commissionOverride && creatorDocForCommission.commissionOverride.startDate) {
-        const qAnsweredAt = new Date(q.answeredAt);
+        const qDate = new Date(date);
         const start = new Date(creatorDocForCommission.commissionOverride.startDate);
         const end = creatorDocForCommission.commissionOverride.endDate ? new Date(creatorDocForCommission.commissionOverride.endDate) : null;
         
-        if (qAnsweredAt >= start && (!end || qAnsweredAt <= end)) {
-          dynamicCreatorShare = creatorDocForCommission.commissionOverride.creatorShare / 100;
-        } else if (end && qAnsweredAt > end) {
-          dynamicCreatorShare = 0.8;
+        if (qDate >= start && (!end || qDate <= end)) {
+          share = creatorDocForCommission.commissionOverride.creatorShare / 100;
+        } else if (end && qDate > end) {
+          share = 0.8;
         }
       }
+      return share;
+    };
+
+    for (const q of answeredPaid) {
+      const gross = q.amountPaid || 0;
+      
+      const dynamicCreatorShare = getCreatorShare(q.answeredAt || q.createdAt);
       
       const creatorEarning = gross * dynamicCreatorShare;
       const answeredMonth  = new Date(q.answeredAt.getFullYear(), q.answeredAt.getMonth(), 1);
@@ -759,7 +763,7 @@ router.get('/payouts', verifyCreatorToken, async (req, res) => {
     const groupedHistory = {};
     for (const q of answeredPaid) {
       const gross = q.amountPaid || 0;
-      const earning = gross * CREATOR_SHARE;
+      const earning = gross * getCreatorShare(q.answeredAt || q.createdAt);
       
       const monthKey = q.answeredAt.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase();
       if (!groupedHistory[monthKey]) {
@@ -795,7 +799,7 @@ router.get('/payouts', verifyCreatorToken, async (req, res) => {
     const pendingList = [];
     for (const q of pendingQuestions) {
       const gross = q.amountPaid || 0;
-      const earning = gross * CREATOR_SHARE;
+      const earning = gross * getCreatorShare(q.createdAt);
       inEscrow += earning;
       inEscrowQuestions++;
 
@@ -820,7 +824,7 @@ router.get('/payouts', verifyCreatorToken, async (req, res) => {
 
     for (const q of flaggedQuestions) {
       const gross = q.amountPaid || 0;
-      const earning = gross * CREATOR_SHARE;
+      const earning = gross * getCreatorShare(q.createdAt);
       underReviewAmount += earning;
       underReviewQuestionsCount++;
 
@@ -851,7 +855,7 @@ router.get('/payouts', verifyCreatorToken, async (req, res) => {
 
     for (const q of refundedQuestions) {
       const gross = q.amountPaid || 0;
-      const earning = gross * CREATOR_SHARE;
+      const earning = gross * getCreatorShare(q.createdAt);
       refundedQuestionsCount++;
 
       let type = 'Auto Refund';
@@ -898,7 +902,7 @@ router.get('/payouts', verifyCreatorToken, async (req, res) => {
       nextPayoutDate: nextPayoutDate.toISOString(),
       availableQuestions,
       availableGross: Math.round(availableGross * 100) / 100,
-      availableFee:   Math.round((availableGross - availableGross * CREATOR_SHARE) * 100) / 100,
+      availableFee:   Math.round((availableGross - available) * 100) / 100,
       inEscrowQuestions,
       pendingList,
       underReviewAmount: Math.round(underReviewAmount * 100) / 100,

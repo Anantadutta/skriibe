@@ -589,7 +589,7 @@ const CreatorProfile = () => {
                     <span>⚠️</span> READ BEFORE CONTINUING
                   </div>
                   <ol style={{ color: '#d1d5db', fontSize: '13px', lineHeight: '1.6', margin: 0, paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '12px', listStyleType: 'decimal' }}>
-                    <li style={{ paddingLeft: '4px' }}>Ask one clear question, per payment for the best response.</li>
+                    <li style={{ paddingLeft: '4px' }}>Ask one clear message, per payment for the best response.</li>
                     <li style={{ paddingLeft: '4px' }}>Full refund if there's no reply within 24 hours.</li>
                     <li style={{ paddingLeft: '4px' }}>Be respectful. Abusive, hateful, or vulgar content is not allowed.</li>
                     <li style={{ paddingLeft: '4px' }}>Share only what's needed for a helpful answer</li>

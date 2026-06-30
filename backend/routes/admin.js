@@ -95,16 +95,21 @@ router.get('/dashboard', async (req, res) => {
     gmvToday = Math.round(gmvToday);
     revenue = Math.round(revenue);
 
-    const dashboardData = {
-      gmvToday: gmvToday,
-      revenue: revenue,
-      activeCreators: activeCreatorsCount || await Creator.countDocuments(), // Fallback to all if none live
-      slaBreaches: slaBreachesCount,
-      breachedQuestions: breachedQuestions,
-      actionMetrics: {
-        openQuestions: openQuestionsCount,
-        refundsToday: 0 // Placeholder or calculate if there is refund logic
-      },
+      const adminRefundsList = await Question.find({
+        adminDecision: { $in: ['fan_wins', 'partial_refund'] }
+      }).select('questionText answerText adminDecision status buyerName amountPaid');
+
+      const dashboardData = {
+        gmvToday: gmvToday,
+        revenue: revenue,
+        activeCreators: activeCreatorsCount || await Creator.countDocuments(),
+        slaBreaches: slaBreachesCount,
+        breachedQuestions: breachedQuestions,
+        actionMetrics: {
+          openQuestions: openQuestionsCount,
+          refundsToday: adminRefundsList.length
+        },
+        adminRefundsData: adminRefundsList,
       recentActivity: [
         { id: 1, text: 'Auto-refund triggered · Q#1234 · SLA breach · 2 min ago' },
         { id: 2, text: '@priya_fit verified and activated · 5 min ago' },
@@ -617,15 +622,19 @@ router.post('/creators/:id/commission', async (req, res) => {
     const creator = await Creator.findById(id);
     if (!creator) return res.status(404).json({ error: 'Creator not found' });
 
-    creator.commissionOverride = {
-      creatorShare: parseFloat(creatorShare),
-      startDate: new Date(startDate),
-      endDate: new Date(endDate)
-    };
+    await Creator.updateOne(
+      { _id: id },
+      { $set: { 
+          'commissionOverride.creatorShare': parseFloat(creatorShare),
+          'commissionOverride.startDate': new Date(startDate),
+          'commissionOverride.endDate': new Date(endDate)
+        } 
+      }
+    );
+
+    const updatedCreator = await Creator.findById(id);
     
-    await creator.save();
-    
-    res.json({ success: true, message: 'Commission override saved successfully', creator });
+    res.json({ success: true, message: 'Commission override saved successfully', creator: updatedCreator });
   } catch (err) {
     console.error('Commission override error:', err.message, err.stack);
     res.status(500).json({ error: 'Server error: ' + err.message });

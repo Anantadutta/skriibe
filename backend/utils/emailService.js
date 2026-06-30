@@ -692,7 +692,7 @@ const sendStrikePermanentBanEmail = async (email, name) => {
             <li><strong>Pending Earnings Review</strong><br/>
             Your pending earnings will be held for 30 days to allow for resolution of any outstanding buyer disputes or refund claims. Following the review, 50% of your eligible earnings (minus any disputed amounts) will be released to your registered payout account. You will receive a separate notification once this is completed.</li>
             <li><strong>Your Content</strong><br/>
-            Answers you delivered to buyers remain accessible to those buyers for their own records. Your public profile and creator page are deactivated and no longer visible on the platform.</li>
+            Repliess you delivered to buyers remain accessible to those buyers for their own records. Your public profile and creator page are deactivated and no longer visible on the platform.</li>
             <li><strong>Account Re-registration</strong><br/>
             The phone number and email address associated with this account have been flagged and cannot be used to create a new Skriibe account.</li>
           </ol>

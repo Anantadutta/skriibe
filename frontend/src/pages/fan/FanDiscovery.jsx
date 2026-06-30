@@ -190,7 +190,7 @@ const FanDiscovery = () => {
               overflow: 'hidden'
             }}>
               {fanAvatar ? (
-                <img src={fanAvatar} alt={fanName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <img src={fanAvatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               ) : (
                 fanName.charAt(0).toUpperCase()
               )}

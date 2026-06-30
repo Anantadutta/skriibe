@@ -418,7 +418,7 @@ const CreatorInbox = () => {
                               New Message from Admin
                             </div>
                             <div style={{ color: '#e2e8f0', fontSize: '0.95rem', lineHeight: '1.5' }}>
-                              <strong>Decision: {q.adminDecision === 'fan_wins' ? 'Issue full refund to buyer' : q.adminDecision === 'creator_wins' ? 'Dismiss — payout to creator' : q.adminDecision === 'partial_refund' ? 'Partial refund to the buyer/creator' : q.adminDecision === 'abusive' ? `You get the payment, and the question stays closed. The fan (${q.buyerName || q.followerName}) is banned.` : q.adminDecision}</strong><br/>
+                              <strong>Decision: {q.adminDecision === 'fan_wins' ? 'Issued full refund to buyer' : q.adminDecision === 'creator_wins' ? 'Dismiss — payout to creator' : q.adminDecision === 'partial_refund' ? 'Partial refund to the buyer/creator' : q.adminDecision === 'abusive' ? `You get the payment, and the question stays closed. The fan (${q.buyerName || q.followerName}) is banned.` : q.adminDecision}</strong><br/>
                             </div>
                           </div>
                         ) : (

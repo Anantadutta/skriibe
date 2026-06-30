@@ -137,7 +137,7 @@ const BuyerDisputes = () => {
                 <div style={{ color: '#cbd5e1', fontStyle: 'italic', fontSize: '0.95rem', overflowWrap: 'anywhere' }}>"{d.questionText}"</div>
               </div>
 
-              <div style={{ background: '#0a1922', padding: '16px', borderRadius: '12px', marginBottom: d.adminDecision ? '16px' : '0', border: '1px solid rgba(56, 189, 248, 0.2)' }}>
+              <div style={{ background: '#0a1922', padding: '16px', borderRadius: '12px', marginBottom: (d.adminDecision && d.adminDecision !== 'pending') ? '16px' : '0', border: '1px solid rgba(56, 189, 248, 0.2)' }}>
                 <div style={{ color: '#38bdf8', fontSize: '0.75rem', fontWeight: 'bold', letterSpacing: '1px', marginBottom: '8px', textTransform: 'uppercase' }}>ANSWER PROVIDED</div>
                 <div style={{ color: '#fff', fontSize: '0.95rem', lineHeight: '1.5' }}>{d.answerText}</div>
               </div>
@@ -159,7 +159,7 @@ const BuyerDisputes = () => {
                       DECISION
                     </div>
                     <div style={{ color: '#e2e8f0', fontSize: '0.95rem', fontWeight: '500' }}>
-                      {d.adminDecision === 'fan_wins' ? 'Issue full refund to buyer' : 
+                      {d.adminDecision === 'fan_wins' ? 'Issued full refund to buyer' : 
                        d.adminDecision === 'creator_wins' ? 'Dismiss — payout to creator' : 
                        d.adminDecision === 'partial_refund' ? 'Partial refund to the buyer/ creator' : d.adminDecision}
                     </div>

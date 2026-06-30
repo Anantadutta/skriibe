@@ -24,9 +24,9 @@ const CreatorDisputes = () => {
     fetchDisputes();
   }, []);
 
-  const openCount = disputes.filter(d => !d.adminDecision).length;
-  const resolvedCount = disputes.filter(d => !!d.adminDecision).length;
-  const filteredDisputes = disputes.filter(d => filter === 'open' ? !d.adminDecision : !!d.adminDecision);
+  const openCount = disputes.filter(d => !d.adminDecision || d.adminDecision === 'pending').length;
+  const resolvedCount = disputes.filter(d => d.adminDecision && d.adminDecision !== 'pending').length;
+  const filteredDisputes = disputes.filter(d => filter === 'open' ? (!d.adminDecision || d.adminDecision === 'pending') : (d.adminDecision && d.adminDecision !== 'pending'));
 
   return (
     <div style={{ padding: '32px 24px', maxWidth: '1200px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '24px' }}>
@@ -132,12 +132,12 @@ const CreatorDisputes = () => {
                   </div>
                 </div>
 
-                <div style={{ background: '#1A1A24', padding: '16px', borderRadius: '12px', marginBottom: d.adminDecision ? '16px' : '0', border: '1px solid #2A2A35' }}>
+                <div style={{ background: '#1A1A24', padding: '16px', borderRadius: '12px', marginBottom: (d.adminDecision && d.adminDecision !== 'pending') ? '16px' : '0', border: '1px solid #2A2A35' }}>
                   <div style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: 'bold', letterSpacing: '1px', marginBottom: '8px', textTransform: 'uppercase' }}>QUESTION</div>
                   <div style={{ color: '#cbd5e1', fontStyle: 'italic', fontSize: '0.95rem', overflowWrap: 'anywhere' }}>"{d.questionText}"</div>
                 </div>
 
-                {d.adminDecision && (
+                {(d.adminDecision && d.adminDecision !== 'pending') && (
                   <div style={{ background: 'rgba(56, 189, 248, 0.05)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(56, 189, 248, 0.2)' }}>
                     {d.adminNotes && (
                       <div style={{ marginBottom: '16px' }}>

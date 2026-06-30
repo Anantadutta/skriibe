@@ -606,7 +606,7 @@ const FanHistory = () => {
             {q.adminDecision && q.adminDecision !== 'pending' ? (
               <div style={{ textAlign: 'center', padding: '32px', color: '#94a3b8', background: 'rgba(255,255,255,0.02)', borderRadius: '16px' }}>
                   Status: <strong style={{ color: '#10b981', textTransform: 'uppercase' }}>
-                    {q.adminDecision === 'fan_wins' ? 'Issue full refund to buyer' : 
+                    {q.adminDecision === 'fan_wins' ? 'Issued full refund to buyer' : 
                      q.adminDecision === 'creator_wins' ? 'Dismiss — payout to creator' : 
                      q.adminDecision === 'partial_refund' ? 'Partial refund to the buyer/creator' : 
                      (q.adminDecision === 'abusive' || q.adminDecision === 'banned') ? 'User banned' : 

@@ -78,7 +78,7 @@ const CreatorReplyScreen = () => {
 
   const navItems = [
     { label: 'HOME', icon: '🏠', route: '/creator/dashboard' },
-    { label: 'INBOX', icon: '💬', route: '/creator/dashboard/inbox' },
+    { label: 'INBOX', icon: '💬', route: '/creator/inbox' },
     { label: 'PAYOUTS', icon: '💰', route: '/creator/payouts' },
     { label: 'SETTINGS', icon: '⚙️', route: '/creator/settings' },
   ];
@@ -212,7 +212,7 @@ const CreatorReplyScreen = () => {
                   Reply to {(question.buyerName || question.followerName || 'Ayushi').split(' ')[0]}
                 </h2>
                 <div style={{ color: '#64748b', fontSize: '0.85rem', fontWeight: 500 }}>
-                  {question.isFollowUp ? 'Follow-up question · Free' : `Question · ₹${question.amountPaid || question.pricePaid}`}
+                  {question.isFollowUp ? 'Follow-up message · Free' : `Message · ₹${question.amountPaid || question.pricePaid}`}
                 </div>
               </div>
             </div>
@@ -357,7 +357,7 @@ const CreatorReplyScreen = () => {
                       style={{ cursor: 'pointer', width: '20px', height: '20px', accentColor: '#38BDF8' }}
                     />
                     <label htmlFor="followUpAllowed" style={{ color: followUpAllowed ? '#38BDF8' : '#e2e8f0', fontSize: '1rem', fontWeight: '600', cursor: 'pointer', flex: 1 }}>
-                      Allow Fan to ask 1 Free Follow-up Question
+                      Allow Fan to ask 1 Free Follow-up Messages
                     </label>
                   </div>
                 )}
@@ -486,8 +486,7 @@ const CreatorReplyScreen = () => {
               </h3>
               {[
                 { id: 'expertise', title: 'Outside my expertise', subtitle: 'Cannot answer accurately' },
-                { id: 'vague', title: 'Question is too vague', subtitle: 'Not enough detail to help' },
-                { id: 'abusive', title: 'Abusive Language', subtitle: 'Contains insults, threats, hate speech, or harassment.' }
+                { id: 'vague', title: 'Question is too vague', subtitle: 'Not enough detail to help' }
               ].map((reason) => {
                 const isActive = rejectReason === reason.id;
                 return (

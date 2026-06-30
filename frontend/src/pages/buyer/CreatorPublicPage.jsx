@@ -444,7 +444,7 @@ const CreatorPublicPage = () => {
               READ BEFORE CONTINUING
             </div>
             <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '8px', color: '#94a3b8', fontSize: '0.85rem', lineHeight: '1.5' }}>
-              <li style={{ display: 'flex', gap: '8px' }}><span style={{ color: '#f97316', fontWeight: 'bold' }}>1.</span> Ask one clear question per payment for the best response.</li>
+              <li style={{ display: 'flex', gap: '8px' }}><span style={{ color: '#f97316', fontWeight: 'bold' }}>1.</span> Ask one clear message per payment for the best response.</li>
               <li style={{ display: 'flex', gap: '8px' }}><span style={{ color: '#f97316', fontWeight: 'bold' }}>2.</span> Full refund if there's no reply within 24 hours.</li>
               <li style={{ display: 'flex', gap: '8px' }}><span style={{ color: '#f97316', fontWeight: 'bold' }}>3.</span> Be respectful. Abusive, hateful, or vulgar content is not allowed.</li>
               <li style={{ display: 'flex', gap: '8px' }}><span style={{ color: '#f97316', fontWeight: 'bold' }}>4.</span> Share only what's needed for a helpful answer</li>
