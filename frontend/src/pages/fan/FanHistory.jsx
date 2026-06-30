@@ -319,14 +319,14 @@ const FanHistory = () => {
             <div style={{ height: '1px', background: 'rgba(255,255,255,0.05)', margin: '4px 0' }} />
 
             <div style={{ background: '#1a1b23', borderRadius: '16px', padding: '20px', border: '1px solid rgba(255,255,255,0.05)' }}>
-              <div style={{ color: '#64748b', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '12px', textTransform: 'uppercase' }}>{q.isFollowUp ? 'YOUR FOLLOW-UP' : 'YOUR QUESTION'}</div>
+              <div style={{ color: '#64748b', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '12px', textTransform: 'uppercase' }}>{q.isFollowUp ? 'YOUR FOLLOW-UP' : 'YOUR MESSAGE'}</div>
               <div style={{ color: '#94a3b8', fontSize: '15px', fontStyle: 'italic', lineHeight: '1.5', wordBreak: 'break-all', overflowWrap: 'anywhere' }}>
                 "{q.questionText}"
               </div>
             </div>
 
             <div style={{ background: '#0a1922', borderRadius: '16px', padding: '20px', border: '1px solid rgba(56, 189, 248, 0.2)' }}>
-              <div style={{ color: '#38bdf8', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '12px', textTransform: 'uppercase' }}>{creatorName.split(' ')[0]}'S {q.isFollowUp ? 'ANSWER' : 'FULL ANSWER'}</div>
+              <div style={{ color: '#38bdf8', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '12px', textTransform: 'uppercase' }}>{creatorName.split(' ')[0]}'S {q.isFollowUp ? 'REPLY' : 'FULL REPLY'}</div>
               <div style={{ color: '#fff', fontSize: '16px', lineHeight: '1.6', wordBreak: 'break-all', overflowWrap: 'anywhere' }}>
                 {q.answerText}
               </div>
@@ -487,14 +487,14 @@ const FanHistory = () => {
             </div>
 
             <div style={{ background: '#1a1b23', borderRadius: '16px', padding: '20px', border: '1px solid rgba(255,255,255,0.05)' }}>
-              <div style={{ color: '#64748b', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '12px', textTransform: 'uppercase' }}>YOUR QUESTION</div>
+              <div style={{ color: '#64748b', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '12px', textTransform: 'uppercase' }}>YOUR MESSAGE</div>
               <div style={{ color: '#94a3b8', fontSize: '15px', fontStyle: 'italic', lineHeight: '1.5', wordBreak: 'break-all', overflowWrap: 'anywhere' }}>
                 "{q.questionText}"
               </div>
             </div>
 
             <div style={{ background: '#0a1922', borderRadius: '16px', padding: '20px', border: '1px solid rgba(56, 189, 248, 0.2)' }}>
-              <div style={{ color: '#38bdf8', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '12px', textTransform: 'uppercase' }}>{creatorName.split(' ')[0]}'S FULL ANSWER</div>
+              <div style={{ color: '#38bdf8', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '12px', textTransform: 'uppercase' }}>{creatorName.split(' ')[0]}'S FULL REPLY</div>
               <div style={{ color: '#fff', fontSize: '16px', lineHeight: '1.6', wordBreak: 'break-all', overflowWrap: 'anywhere' }}>
                 {q.answerText}
               </div>
@@ -588,7 +588,7 @@ const FanHistory = () => {
             </div>
             
             <div style={{ background: '#1a1b23', borderRadius: '16px', padding: '20px', border: '1px solid rgba(255,255,255,0.05)', marginBottom: '16px' }}>
-                <div style={{ color: '#64748b', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '12px', textTransform: 'uppercase' }}>YOUR QUESTION</div>
+                <div style={{ color: '#64748b', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '12px', textTransform: 'uppercase' }}>YOUR MESSAGE</div>
                 <div style={{ color: '#94a3b8', fontSize: '15px', fontStyle: 'italic', lineHeight: '1.5', wordBreak: 'break-all', overflowWrap: 'anywhere' }}>
                 "{q.questionText}"
                 </div>
@@ -596,7 +596,7 @@ const FanHistory = () => {
 
             {q.answerText && (
               <div style={{ background: '#0a1922', borderRadius: '16px', padding: '20px', border: '1px solid rgba(56, 189, 248, 0.2)', marginBottom: '16px' }}>
-                <div style={{ color: '#38bdf8', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '12px', textTransform: 'uppercase' }}>{creatorName.split(' ')[0]}'S FULL ANSWER</div>
+                <div style={{ color: '#38bdf8', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '12px', textTransform: 'uppercase' }}>{creatorName.split(' ')[0]}'S FULL REPLY</div>
                 <div style={{ color: '#fff', fontSize: '16px', lineHeight: '1.6', wordBreak: 'break-all', overflowWrap: 'anywhere' }}>
                   {q.answerText}
                 </div>
@@ -669,7 +669,7 @@ const FanHistory = () => {
         {!selectedQuestion && (
           <>
             <h1 style={{ fontSize: '36px', fontWeight: '800', marginBottom: '8px' }}>Your History</h1>
-            <p style={{ color: '#94a3b8', marginBottom: '40px' }}>Track the questions you've asked and view creator replies.</p>
+            <p style={{ color: '#94a3b8', marginBottom: '40px' }}>Track the messages you've asked and view creator replies.</p>
           </>
         )}
         

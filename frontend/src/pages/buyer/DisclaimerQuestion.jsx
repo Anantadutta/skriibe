@@ -232,7 +232,7 @@ const DisclaimerQuestion = () => {
                   display: 'block', 
                   marginBottom: '8px' 
                 }}>
-                  YOUR QUESTION * (MIN 20 CHARS)
+                  YOUR MESSAGE * (MIN 20 CHARS)
                 </label>
                 <textarea 
                   maxLength={500}

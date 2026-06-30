@@ -37,7 +37,7 @@ const Footer = ({ theme }) => {
               <div>
                 <h4 className={`${theme === 'light' ? 'text-black' : 'text-white'} font-semibold mb-2 text-lg`}>For Fans</h4>
                 <p className={`${theme === 'light' ? 'text-gray-600' : 'text-[#94a3b8]'} leading-relaxed text-sm`}>
-                  Choose a creator, submit your question, make payment, and wait for their response.
+                  Choose a creator, submit your message, make payment, and wait for their response.
                 </p>
               </div>
 

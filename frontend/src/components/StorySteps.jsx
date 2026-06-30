@@ -206,7 +206,7 @@ const StepTwo = ({ theme }) => {
                                     <button type="button" onClick={() => setIsFormOpen(false)} className="text-gray-500 hover:text-white">✕</button>
                                 </div>
                                 <textarea
-                                    required placeholder="Type your question..."
+                                    required placeholder="Type your message..."
                                     className="w-full bg-black/50 border border-skriibe-d5 rounded-lg p-3 text-[12px] text-white focus:border-skriibe-blue outline-none resize-none h-24"
                                     value={formData.questionText} onChange={e => setFormData({ ...formData, questionText: e.target.value })}
                                 />
@@ -297,7 +297,7 @@ const StepThree = ({ theme = 'dark' }) => {
                     They pay Rs.99.<br /><span className="italic text-skriibe-blue">You get an Email ping.</span>
                 </h3>
                 <p className="font-roboto text-gray-400 text-base leading-relaxed mb-6">
-                    Your follower lands on your skriibe page, types their question, and pays via UPI in 3 taps. No account needed. No friction. You get an email notification the moment payment clears.
+                    Your follower lands on your skriibe page, types their message, and pays via UPI in 3 taps. No account needed. No friction. You get an email notification the moment payment clears.
                 </p>
                 <div className="font-roboto p-4 bg-skriibe-d3 rounded-xl border-l-[3px] border-skriibe-blue text-sm text-gray-400 leading-relaxed">
                     Only serious people pay. No more 100 DMs where 90 are "hey bro please help." Every paid message is from someone who genuinely wants your advice.
@@ -447,7 +447,7 @@ const StepFour = ({ theme }) => {
                     Answer in your dashboard.<br /><span className="italic text-skriibe-blue">Earn <span className="text-white">Rs.99</span> per reply.</span>
                 </h3>
                 <p className="font-roboto text-gray-400 text-lg leading-relaxed mb-8">
-                    Open your skriibe dashboard. See the message. Type your reply — minimum 100 characters, so every answer is real. Hit send. The follower gets your answer instantly via email and skriibe inbox.
+                    Open your skriibe dashboard. See the message. Type your reply — minimum 100 characters, so every reply is real. Hit send. The follower gets your reply instantly via email and skriibe inbox.
                 </p>
                 <div className="font-roboto p-6 bg-skriibe-d3 rounded-2xl border-l-[4px] border-skriibe-blue text-sm md:text-base text-gray-400 leading-relaxed">
                     Rs.99 per message, batched and transferred to your bank account every Tuesday. No chasing. No invoicing. Automatic.
@@ -485,7 +485,7 @@ const StepFour = ({ theme }) => {
                                     Start with the 50-30-20 rule. Build 3-month emergency fund in liquid fund first, then SIP Rs.2,000 in Nifty 50...
                                 </motion.div>
                             ) : (
-                                <span className="opacity-50">Type your answer...</span>
+                                <span className="opacity-50">Type your reply...</span>
                             )}
                         </div>
 

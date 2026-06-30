@@ -652,7 +652,7 @@ const CreatorSettings = () => {
                   {currencySymbol}
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                  <div style={{ color: '#ffffff', fontSize: '0.85rem', fontWeight: 700 }}>Question price</div>
+                  <div style={{ color: '#ffffff', fontSize: '0.85rem', fontWeight: 700 }}>Message price</div>
                   <div style={{ color: '#64748b', fontSize: '0.75rem' }}>What fans pay per message.</div>
                 </div>
               </div>

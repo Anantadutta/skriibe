@@ -14,7 +14,7 @@ const CreatorOnboardPricing = () => {
   const location = useLocation();
   const [creatorData, setCreatorData] = useState(location.state?.creator || null);
 
-  const [price, setPrice] = useState(99);
+  const [price, setPrice] = useState(49);
   const [dailyCap, setDailyCap] = useState(50);
   const [weeklyGoal, setWeeklyGoal] = useState(1500);
   const [loading, setLoading] = useState(false);

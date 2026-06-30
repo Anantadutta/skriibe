@@ -128,7 +128,7 @@ const CreatorNotifications = () => {
                     </div>
                   </div>
                   <div style={{ fontSize: '1rem', fontWeight: 700, color: '#fff' }}>
-                    {isSatisfied ? `${q.buyerName || q.handle || 'A fan'} is satisfied with your answer` : `From ${q.buyerName || q.followerName || 'A fan'}`}
+                    {isSatisfied ? `${q.buyerName || q.handle || 'A fan'} is satisfied with your reply` : `From ${q.buyerName || q.followerName || 'A fan'}`}
                   </div>
                   <div style={{ color: '#94a3b8', fontSize: '0.9rem', lineHeight: '1.4' }}>
                     Click to view {isSatisfied ? 'the thread' : 'and reply'} in your inbox.

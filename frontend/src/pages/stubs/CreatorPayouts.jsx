@@ -69,6 +69,7 @@ const CreatorPayouts = () => {
   const [phone, setPhone] = useState(creator.phone || '');
 
   useEffect(() => {
+    window.scrollTo(0, 0);
     const fetchCreator = async () => {
       try {
         const res = await getMe();

@@ -204,8 +204,8 @@ const Refunds = () => {
             <h2 className={`text-2xl font-bold mt-8 mb-4 ${theme === 'light' ? 'text-black' : 'text-white'}`}>5. How to Raise a Dispute</h2>
             <p>To raise a dispute, follow these steps within 7 days of receiving the Creator's response:</p>
             <ul className="list-disc pl-6 space-y-2">
-              <li>Log in to skriibe.com and go to your Question History.</li>
-              <li>Find the relevant question and tap "Flag this answer."</li>
+              <li>Log in to skriibe.com and go to your Message History.</li>
+              <li>Find the relevant message and tap "Flag this answer."</li>
               <li>Select a reason: “Irrelevant Answer” or “Abusive / Vulgar” (see Section 5.1 below for definitions).</li>
               <li>Add a brief explanation (minimum 50 characters).</li>
               <li>Submit. You will receive a confirmation on your account</li>

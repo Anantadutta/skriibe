@@ -250,7 +250,7 @@ const CreatorReplyScreen = () => {
                 {/* Follow-up Question Card */}
                 <div style={{ background: '#1C212A', borderRadius: '16px', padding: '20px', border: '1px solid rgba(52, 211, 153, 0.2)', position: 'relative' }}>
                   <div style={{ color: '#34d399', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '16px', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    FOLLOW-UP QUESTION
+                    FOLLOW-UP MESSAGE
                     <div style={{ background: 'rgba(52, 211, 153, 0.1)', color: '#34d399', padding: '2px 8px', borderRadius: '12px', fontSize: '9px' }}>FREE</div>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
@@ -286,14 +286,14 @@ const CreatorReplyScreen = () => {
             {question.status === 'satisfied' ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 <div style={{ background: '#0a1922', borderRadius: '16px', padding: '20px', border: '1px solid rgba(56, 189, 248, 0.2)' }}>
-                  <div style={{ color: '#38bdf8', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '12px', textTransform: 'uppercase' }}>YOUR ANSWER</div>
+                  <div style={{ color: '#38bdf8', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '12px', textTransform: 'uppercase' }}>YOUR REPLY</div>
                   <div style={{ color: '#fff', fontSize: '16px', lineHeight: '1.6', wordBreak: 'break-all', overflowWrap: 'anywhere' }}>
                     {question.answerText}
                   </div>
                 </div>
                 <div style={{ background: '#0a2e1c', color: '#10b981', borderRadius: '16px', padding: '16px', fontWeight: '800', fontSize: '15px', textAlign: 'center', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
                   <span style={{ fontSize: '18px', marginRight: '8px' }}>🙂</span>
-                  {question.buyerName || question.followerName || 'The fan'} is satisfied with your answer!
+                  {question.buyerName || question.followerName || 'The fan'} is satisfied with your reply!
                 </div>
               </div>
             ) : (
@@ -616,7 +616,7 @@ const CreatorReplyScreen = () => {
 
             {/* Info Banner */}
             <div style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: '12px', padding: '16px', color: '#EF4444', fontSize: '0.9rem', lineHeight: '1.5' }}>
-               Flagging this question will send it for review by the Skriibe team and 
+               Flagging this message will send it for review by the Skriibe team and 
 appropriate action may be taken. You'll be notified once the review is 
 complete.
             </div>
@@ -830,10 +830,10 @@ complete.
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               <h2 style={{ fontSize: '1.5rem', fontWeight: '700', margin: 0, color: '#ffffff' }}>
-                Question Rejected
+                Message Rejected
               </h2>
               <p style={{ margin: 0, fontSize: '0.95rem', color: '#94a3b8', lineHeight: '1.5' }}>
-                You have rejected the question.
+                You have rejected the message.
               </p>
             </div>
 
@@ -882,7 +882,7 @@ complete.
             {/* Answer (if any) */}
             {question.answerText && (
               <div style={{ background: 'rgba(34, 197, 94, 0.05)', borderRadius: '16px', padding: '16px', border: '1px solid rgba(34, 197, 94, 0.2)' }}>
-                <div style={{ color: '#22C55E', fontSize: '0.8rem', fontWeight: 'bold', marginBottom: '8px', letterSpacing: '0.5px' }}>YOUR ANSWER</div>
+                <div style={{ color: '#22C55E', fontSize: '0.8rem', fontWeight: 'bold', marginBottom: '8px', letterSpacing: '0.5px' }}>YOUR REPLY</div>
                 <div style={{ color: '#E2E8F0', fontSize: '0.95rem', lineHeight: '1.5', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
                   {question.answerText}
                 </div>

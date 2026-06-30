@@ -326,7 +326,7 @@ const sendQuestionAnsweredEmail = async (email, name, creatorName, answerLink) =
     const { data, error } = await resend.emails.send({
       from: 'skriibe <founder@skriibe.com>',
       to: [email],
-      subject: `🎉 ${creatorName} just answered your question!`,
+      subject: `🎉 ${creatorName} just answered your message!`,
       html: `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 30px; background-color: #ffffff; color: #1A1A1A; border-radius: 12px; border: 1px solid #eaeaea;">
           <h2 style="color: #0F172A; margin-bottom: 20px;">Hi ${name || 'there'}! 👋</h2>
@@ -337,10 +337,10 @@ const sendQuestionAnsweredEmail = async (email, name, creatorName, answerLink) =
             Dive in and see what they had to say. You might even have the option to ask a follow-up if you need more details!
           </p>
           <div style="margin: 40px 0; text-align: center;">
-            <a href="${answerLink}" style="background-color: #7C3AED; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; font-size: 16px; box-shadow: 0 4px 6px -1px rgba(124, 58, 237, 0.2);">Read Your Answer</a>
+            <a href="${answerLink}" style="background-color: #7C3AED; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; font-size: 16px; box-shadow: 0 4px 6px -1px rgba(124, 58, 237, 0.2);">Read Your Message</a>
           </div>
           <p style="font-size: 14px; color: #64748B; margin-top: 30px; border-top: 1px solid #f1f5f9; padding-top: 20px;">
-            Enjoying the insights? Keep the conversation going on Skriibe.<br><br>
+            Enjoying the conversation? Keep it going on Skriibe.<br><br>
             Cheers,<br>
             <strong>The Skriibe Team</strong>
           </p>
@@ -610,8 +610,8 @@ const sendStrikeSuspension48hEmail = async (email, name, restoreDate) => {
           &rarr; Strike 3 &ndash; 7-day account pause, payouts frozen<br/>
           &rarr; Strike 4 &ndash; Permanent removal from Skriibe
           </p>
-          <p>We'd genuinely like to help you avoid this. If you're dealing with a high volume of questions, a scheduling issue, or anything making the 24-hour window difficult - please reach out.<br/>
-          We can look at options like temporarily limiting your question intake.</p>
+          <p>We'd genuinely like to help you avoid this. If you're dealing with a high volume of messages, a scheduling issue, or anything making the 24-hour window difficult - please reach out.<br/>
+          We can look at options like temporarily limiting your message intake.</p>
           <p>Your account will be automatically restored on ${restoreDate || '48 hours from now'}.</p>
           <p>Regards,<br/>Team Skriibe</p>
         </div>

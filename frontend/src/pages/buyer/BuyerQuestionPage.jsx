@@ -102,7 +102,7 @@ const BuyerQuestionPage = () => {
           marginBottom: '24px'
         }}>
           <div style={{ color: '#29C5F6', fontSize: '0.75rem', fontWeight: '800', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '12px' }}>
-            Your Question
+            Your Message
           </div>
           <div style={{ fontSize: '1.1rem', lineHeight: '1.6', color: '#f8fafc' }}>
             {question.questionText}

@@ -254,7 +254,7 @@ const QuestionModal = ({ creator, onClose }) => {
             <textarea
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
-              placeholder="Type your question..."
+              placeholder="Type your message..."
               maxLength={500}
               autoFocus
               style={{

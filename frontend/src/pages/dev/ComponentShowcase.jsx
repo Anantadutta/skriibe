@@ -71,7 +71,7 @@ export default function ComponentShowcase() {
           <h3 style={{ fontFamily: 'var(--font-mono)' }}>Field</h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginTop: '20px', maxWidth: '400px' }}>
             <Field label="Email address" value="amit@gmail.com" />
-            <Field label="Your question" value="Ask anything..." placeholder />
+            <Field label="Your message" value="Ask anything..." placeholder />
           </div>
         </section>
 

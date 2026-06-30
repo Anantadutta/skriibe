@@ -99,7 +99,7 @@ const DemoAnswerPage = () => {
             padding: '24px'
           }}>
             <div style={{ fontSize: '0.75rem', color: '#475569', fontWeight: '800', letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '12px' }}>
-              Your Question
+              Your Message
             </div>
             <div style={{ fontSize: '1.05rem', color: '#94a3b8', fontStyle: 'italic', lineHeight: '1.5' }}>
               "I earn Rs.30K/month. How do I build an emergency fund and start SIP?"
