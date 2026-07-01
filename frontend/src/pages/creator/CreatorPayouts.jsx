@@ -587,7 +587,7 @@ const CreatorPayouts = () => {
                       This month
                     </div>
                     <div style={{ color: '#38BDF8', fontSize: '20px', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '2px' }}>
-                      <span style={{ fontSize: '16px' }}>{currencySymbol}</span>{(payoutStats.thisMonthPaid || 0)}
+                      <span style={{ fontSize: '16px' }}>{currencySymbol}</span>{(payoutStats.thisMonth || 0)}
                     </div>
                   </div>
                 </Card>

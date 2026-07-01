@@ -748,6 +748,8 @@ router.get('/payouts', verifyCreatorToken, async (req, res) => {
       return share;
     };
 
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
     for (const q of answeredPaid) {
       if (q.adminDecision === 'fan_wins' || q.adminDecision === 'banned') continue;
 
