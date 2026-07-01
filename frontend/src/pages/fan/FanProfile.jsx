@@ -151,10 +151,12 @@ const FanProfile = () => {
 
   const getTimeAgo = (date) => {
     if (!date) return '';
-    const diff = (new Date() - new Date(date)) / (1000 * 60 * 60 * 24);
-    if (diff < 1) return `Today`;
-    if (diff < 2) return `1 day ago`;
-    return `${Math.floor(diff)} days ago`;
+    const d = new Date(date);
+    const today = new Date();
+    if (d.getDate() === today.getDate() && d.getMonth() === today.getMonth() && d.getFullYear() === today.getFullYear()) {
+      return 'Today';
+    }
+    return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
   };
 
   return (
@@ -476,7 +478,7 @@ const FanProfile = () => {
                                 return isAnswered ? '2 replies' : '1 reply';
                               }
                               return isAnswered ? '1 reply' : '0 replies';
-                            })()} · {getTimeAgo(q.createdAt)}
+                            })()} · {getTimeAgo(q.answeredAt || q.createdAt)}
                         </div>
                       </div>
                   </div>
