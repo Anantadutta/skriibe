@@ -6,13 +6,6 @@
     "pricePerQuestion": 99
   },
   {
-    "_id": "6a4333248760b09817e22579",
-    "name": "Tarundeep Singh",
-    "price": 1,
-    "pricePerQuestion": 1,
-    "handle": "tarun05"
-  },
-  {
     "_id": "6a439f5f270f621b4b6d61b8",
     "name": "Annie",
     "price": 1,
@@ -24,5 +17,12 @@
     "name": "Ananta",
     "price": 99,
     "pricePerQuestion": 99
+  },
+  {
+    "_id": "6a43ba233f1db566e5a1f841",
+    "name": "Tarundeep Singh",
+    "price": 1,
+    "pricePerQuestion": 1,
+    "handle": "tarun555"
   }
 ]

@@ -10,6 +10,18 @@ const SmartLoginRedirect = ({ children }) => {
     const checkSession = async () => {
       const token = localStorage.getItem('skriibe_token');
       
+      if (!token) {
+        setLoading(false);
+        return;
+      }
+
+      // Optimistic redirect for returning creators
+      const isReturningCreator = localStorage.getItem('isReturningCreator');
+      if (isReturningCreator === 'true') {
+        navigate('/creator/dashboard', { replace: true });
+        return;
+      }
+
       try {
         const res = await api.get('/auth/status');
         const data = res.data;
