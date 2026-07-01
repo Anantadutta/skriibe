@@ -35,8 +35,7 @@ router.get('/creator/:handle', async (req, res) => {
     if (!creator) {
       return res.status(404).json({ success: false, message: 'Creator not found' });
     }
-    // Count answered questions for social proof
-    const answeredCount = await Question.countDocuments({ creatorId: creator._id, status: 'answered' });
+    const answeredCount = await Question.countDocuments({ creatorId: creator._id, status: { $in: ['answered', 'satisfied', 'rejected'] } });
     return res.json({
       success: true,
       creator: {
