@@ -682,7 +682,9 @@ const CreatorPayouts = () => {
                             <StatusIcon status={item.status} />
                             <div style={{ flex: 1, minWidth: 0 }}>
                               <div style={{ fontSize: '14px', fontWeight: '700', marginBottom: '3px' }}>{item.date}</div>
-                              <div style={{ fontSize: '11px', color: '#686860' }}>{item.bank}</div>
+                              <div style={{ fontSize: '11px', color: '#686860' }}>
+                                {item.bank} • {item.date === new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) ? 'Answered today' : `Answered on ${item.date}`}
+                              </div>
                             </div>
                             <div style={{ textAlign: 'right', flexShrink: 0 }}>
                               <div style={{ fontSize: '15px', fontWeight: '700', marginBottom: '5px' }}>{fmt(item.amount)}</div>

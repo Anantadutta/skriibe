@@ -19,6 +19,7 @@ const FanHistory = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [selectedQuestion, setSelectedQuestion] = useState(null);
+  const [selectedMessageForModal, setSelectedMessageForModal] = useState(null);
   const [isFlagModalOpen, setIsFlagModalOpen] = useState(false);
   const [isFlagging, setIsFlagging] = useState(false);
   const [selectedFlagOption, setSelectedFlagOption] = useState('');
@@ -318,7 +319,10 @@ const FanHistory = () => {
 
             <div style={{ height: '1px', background: 'rgba(255,255,255,0.05)', margin: '4px 0' }} />
 
-            <div style={{ background: '#1a1b23', borderRadius: '16px', padding: '20px', border: '1px solid rgba(255,255,255,0.05)' }}>
+            <div 
+              style={{ background: '#1a1b23', borderRadius: '16px', padding: '20px', border: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer' }}
+              onClick={() => setSelectedMessageForModal({ messageTitle: q.isFollowUp ? 'YOUR FOLLOW-UP' : 'YOUR MESSAGE', questionText: q.questionText, answerText: q.answerText, creatorName })}
+            >
               <div style={{ color: '#64748b', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '12px', textTransform: 'uppercase' }}>{q.isFollowUp ? 'YOUR FOLLOW-UP' : 'YOUR MESSAGE'}</div>
               <div style={{ color: '#94a3b8', fontSize: '15px', fontStyle: 'italic', lineHeight: '1.5', wordBreak: 'break-all', overflowWrap: 'anywhere' }}>
                 "{q.questionText}"
@@ -336,7 +340,10 @@ const FanHistory = () => {
               <React.Fragment key={child._id}>
                   <>
                     <div style={{ height: '1px', background: 'rgba(255,255,255,0.05)', margin: '8px 0' }} />
-                    <div style={{ background: '#1a1b23', borderRadius: '16px', padding: '20px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    <div 
+                      style={{ background: '#1a1b23', borderRadius: '16px', padding: '20px', border: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer' }}
+                      onClick={() => setSelectedMessageForModal({ messageTitle: 'YOUR FOLLOW-UP', questionText: child.questionText, answerText: child.answerText, creatorName })}
+                    >
                       <div style={{ color: '#64748b', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '12px', textTransform: 'uppercase' }}>YOUR FOLLOW-UP</div>
                       <div style={{ color: '#94a3b8', fontSize: '15px', fontStyle: 'italic', lineHeight: '1.5', wordBreak: 'break-all', overflowWrap: 'anywhere' }}>
                         "{child.questionText}"
@@ -486,7 +493,10 @@ const FanHistory = () => {
               </div>
             </div>
 
-            <div style={{ background: '#1a1b23', borderRadius: '16px', padding: '20px', border: '1px solid rgba(255,255,255,0.05)' }}>
+            <div 
+              style={{ background: '#1a1b23', borderRadius: '16px', padding: '20px', border: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer' }}
+              onClick={() => setSelectedMessageForModal({ messageTitle: 'YOUR MESSAGE', questionText: q.questionText, answerText: q.answerText, creatorName })}
+            >
               <div style={{ color: '#64748b', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '12px', textTransform: 'uppercase' }}>YOUR MESSAGE</div>
               <div style={{ color: '#94a3b8', fontSize: '15px', fontStyle: 'italic', lineHeight: '1.5', wordBreak: 'break-all', overflowWrap: 'anywhere' }}>
                 "{q.questionText}"
@@ -587,7 +597,10 @@ const FanHistory = () => {
               <div style={{ color: '#fff', fontSize: '28px', fontWeight: '900', fontStyle: 'italic', letterSpacing: '1px' }}>#{q.orderId || `SKR-${q._id.substring(0,8).toUpperCase()}`}</div>
             </div>
             
-            <div style={{ background: '#1a1b23', borderRadius: '16px', padding: '20px', border: '1px solid rgba(255,255,255,0.05)', marginBottom: '16px' }}>
+            <div 
+              style={{ background: '#1a1b23', borderRadius: '16px', padding: '20px', border: '1px solid rgba(255,255,255,0.05)', marginBottom: '16px', cursor: 'pointer' }}
+              onClick={() => setSelectedMessageForModal({ messageTitle: 'YOUR MESSAGE', questionText: q.questionText, answerText: q.answerText, creatorName })}
+            >
                 <div style={{ color: '#64748b', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '12px', textTransform: 'uppercase' }}>YOUR MESSAGE</div>
                 <div style={{ color: '#94a3b8', fontSize: '15px', fontStyle: 'italic', lineHeight: '1.5', wordBreak: 'break-all', overflowWrap: 'anywhere' }}>
                 "{q.questionText}"
@@ -839,6 +852,38 @@ const FanHistory = () => {
           </div>
         </div>
       )}
+
+      {selectedMessageForModal && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }} onClick={() => setSelectedMessageForModal(null)}>
+          <div style={{ background: '#131313', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '24px', padding: '24px', width: '100%', maxWidth: '500px', maxHeight: '90vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '800', color: '#fff' }}>Message Details</h3>
+              <button onClick={() => setSelectedMessageForModal(null)} style={{ background: 'rgba(255,255,255,0.1)', border: 'none', width: '32px', height: '32px', borderRadius: '50%', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+            </div>
+            
+            <div style={{ background: '#1a1b23', borderRadius: '16px', padding: '20px', border: '1px solid rgba(255,255,255,0.05)', marginBottom: '16px' }}>
+              <div style={{ color: '#64748b', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '12px', textTransform: 'uppercase' }}>{selectedMessageForModal.messageTitle}</div>
+              <div style={{ color: '#94a3b8', fontSize: '15px', fontStyle: 'italic', lineHeight: '1.5', wordBreak: 'break-all', overflowWrap: 'anywhere' }}>
+                "{selectedMessageForModal.questionText}"
+              </div>
+            </div>
+
+            {selectedMessageForModal.answerText && (
+              <div style={{ background: '#0a1922', borderRadius: '16px', padding: '20px', border: '1px solid rgba(56, 189, 248, 0.2)' }}>
+                <div style={{ color: '#38bdf8', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '12px', textTransform: 'uppercase' }}>{selectedMessageForModal.creatorName?.split(' ')[0]}'S REPLY</div>
+                <div style={{ color: '#fff', fontSize: '16px', lineHeight: '1.6', wordBreak: 'break-all', overflowWrap: 'anywhere' }}>
+                  {selectedMessageForModal.answerText}
+                </div>
+              </div>
+            )}
+            
+            <button onClick={() => setSelectedMessageForModal(null)} style={{ width: '100%', padding: '14px', marginTop: '16px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', color: '#fff', fontWeight: '700', cursor: 'pointer' }}>
+              Back
+            </button>
+          </div>
+        </div>
+      )}
+
       <FanBottomNav />
     </div>
   );
