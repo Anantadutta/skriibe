@@ -156,7 +156,7 @@ const CreatorProfile = () => {
   const avgReply = creator.stats?.avgReplyTime || 0;
   const answeredCount = creator.stats?.totalAnswered || creator.questionsAnswered || 0;
   
-  const isOwner = loggedInCreatorHandle === creator.handle;
+  const isOwner = Boolean(loggedInCreatorHandle && creator?.handle && loggedInCreatorHandle.toLowerCase() === creator.handle.toLowerCase());
   const effectiveIsPreview = isPreview || isOwner;
 
   // Format reply time (e.g. 3.2h)

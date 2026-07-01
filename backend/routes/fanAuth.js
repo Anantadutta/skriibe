@@ -188,7 +188,17 @@ router.get('/me', verifyFanToken, async (req, res) => {
       return res.status(404).json({ success: false, message: 'Fan not found' });
     }
     const Creator = require('../models/Creator');
-    const creatorDoc = await Creator.findOne({ email: fan.email });
+    let creatorDoc;
+    if (fan.email) {
+      creatorDoc = await Creator.findOne({ 
+        $or: [
+          { email: new RegExp(`^${fan.email}$`, 'i') },
+          { fanId: fan._id }
+        ]
+      });
+    } else {
+      creatorDoc = await Creator.findOne({ fanId: fan._id });
+    }
     if (creatorDoc) {
       fan.creatorHandle = creatorDoc.handle;
     }

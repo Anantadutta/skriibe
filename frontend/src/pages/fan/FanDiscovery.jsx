@@ -26,8 +26,8 @@ const categories = [
 const FanDiscovery = () => {
   const [creators, setCreators] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [fanName, setFanName] = useState('Fan');
-  const [fanAvatar, setFanAvatar] = useState(null);
+  const [fanName, setFanName] = useState(() => localStorage.getItem('skriibe_fan_name') || '');
+  const [fanAvatar, setFanAvatar] = useState(() => localStorage.getItem('skriibe_fan_avatar') || null);
   const [fanCreatorHandle, setFanCreatorHandle] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
@@ -95,16 +95,39 @@ const FanDiscovery = () => {
       try {
         const res = await getFanMe();
         if (res.success && res.fan && res.fan.name) {
-          setFanName(res.fan.name.split(' ')[0]);
+          const firstName = res.fan.name.split(' ')[0];
+          setFanName(firstName);
+          localStorage.setItem('skriibe_fan_name', firstName);
           if (res.fan.avatarUrl) {
             setFanAvatar(res.fan.avatarUrl);
+            localStorage.setItem('skriibe_fan_avatar', res.fan.avatarUrl);
           }
           if (res.fan.creatorHandle) {
             setFanCreatorHandle(res.fan.creatorHandle);
           }
+        } else {
+          throw new Error('Fan profile not found or no creator handle');
         }
       } catch (err) {
-        console.error('Failed to fetch fan profile', err);
+        // Fallback: if logged in as creator, try /creators/me
+        try {
+          const { default: api } = await import('../../services/api');
+          const cRes = await api.get('/creators/me');
+          if (cRes.data?.success && cRes.data?.creator) {
+            const firstName = cRes.data.creator.name.split(' ')[0];
+            setFanName(firstName);
+            localStorage.setItem('skriibe_fan_name', firstName);
+            if (cRes.data.creator.avatarUrl) {
+              setFanAvatar(cRes.data.creator.avatarUrl);
+              localStorage.setItem('skriibe_fan_avatar', cRes.data.creator.avatarUrl);
+            }
+            if (cRes.data.creator.handle) {
+              setFanCreatorHandle(cRes.data.creator.handle);
+            }
+          }
+        } catch (fallbackErr) {
+          console.error('Failed to fetch user profile', fallbackErr);
+        }
       }
     };
     fetchFanProfile();
@@ -122,7 +145,11 @@ const FanDiscovery = () => {
     };
   }, []);
 
-  const filteredCreators = creators.filter(c => !c.isPaused && c.handle !== fanCreatorHandle);
+  const filteredCreators = creators.filter(c => {
+    if (c.isPaused) return false;
+    if (fanCreatorHandle && c.handle && c.handle.toLowerCase() === fanCreatorHandle.toLowerCase()) return false;
+    return true;
+  });
   const isSearching = searchQuery !== '' || activeCategory !== 'All';
   const displayCreators = isSearching ? filteredCreators : filteredCreators.slice(0, 4);
 
@@ -198,7 +225,7 @@ const FanDiscovery = () => {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', zIndex: 1 }}>
               <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#fff', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                Hey <span style={{ color: '#2DD4BF' }}>{fanName}</span> <span style={{ fontSize: '1.1rem' }}>👋</span>
+                Hey {fanName && <span style={{ color: '#2DD4BF' }}>{fanName}</span>} <span style={{ fontSize: '1.1rem' }}>👋</span>
               </div>
               <div style={{ fontSize: '0.85rem' }}>
                 <span style={{ color: '#64748b' }}>{getThoughtOfTheDay()}</span>

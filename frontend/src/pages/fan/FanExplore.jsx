@@ -86,9 +86,20 @@ const FanExplore = () => {
         const res = await getFanMe();
         if (res.success && res.fan && res.fan.creatorHandle) {
           setFanCreatorHandle(res.fan.creatorHandle);
+        } else {
+          throw new Error('Fan profile not found or no creator handle');
         }
       } catch (err) {
-        console.error('Failed to fetch fan profile', err);
+        // Fallback: if logged in as creator, try /creators/me
+        try {
+          const { default: api } = await import('../../services/api');
+          const cRes = await api.get('/creators/me');
+          if (cRes.data?.success && cRes.data?.creator?.handle) {
+            setFanCreatorHandle(cRes.data.creator.handle);
+          }
+        } catch (fallbackErr) {
+          console.error('Failed to fetch user profile', fallbackErr);
+        }
       }
     };
     fetchFanProfile();
@@ -125,7 +136,7 @@ const FanExplore = () => {
 
   const filteredCreators = creators.filter(c => {
     if (c.isPaused) return false;
-    if (c.handle === fanCreatorHandle) return false;
+    if (fanCreatorHandle && c.handle && c.handle.toLowerCase() === fanCreatorHandle.toLowerCase()) return false;
     if (activeCategory === 'Others' && selectedCustomCategory) {
       return (c.expertise || []).includes(selectedCustomCategory);
     }
