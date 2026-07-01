@@ -24,6 +24,16 @@ const FanHistory = () => {
   const [isFlagging, setIsFlagging] = useState(false);
   const [selectedFlagOption, setSelectedFlagOption] = useState('');
   const [flagReason, setFlagReason] = useState('');
+  const [isGlowing, setIsGlowing] = useState(true);
+
+  useEffect(() => {
+    if (!loading) {
+      const timer = setTimeout(() => {
+        setIsGlowing(false);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [loading]);
 
   useEffect(() => {
     const fetchHistory = async () => {
@@ -168,6 +178,10 @@ const FanHistory = () => {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       {roots.map((q) => {
         const threadChildren = childrenMap[q._id] || [];
+        const highlightQId = new URLSearchParams(location.search).get('qId');
+        const isRootOrChildHighlighted = q._id === highlightQId || threadChildren.some(c => c._id === highlightQId);
+        const itemGlowStyle = (isGlowing && isRootOrChildHighlighted) ? { boxShadow: '0 0 20px 4px rgba(255, 255, 255, 0.25)', borderColor: 'rgba(255, 255, 255, 0.8)' } : {};
+
         return (
         <div key={q._id} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           <div 
@@ -200,7 +214,8 @@ const FanHistory = () => {
             flexDirection: 'column',
             gap: '16px',
             cursor: 'pointer',
-            transition: 'all 0.2s'
+            transition: 'all 0.5s ease-out',
+            ...itemGlowStyle
           }}
           onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
           onMouseOut={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.03)'}
@@ -273,6 +288,8 @@ const FanHistory = () => {
 
   const renderDetail = () => {
     const q = selectedQuestion;
+    const highlightQId = new URLSearchParams(location.search).get('qId');
+    const glowStyle = (id) => (isGlowing && id === highlightQId) ? { boxShadow: '0 0 20px 4px rgba(255, 255, 255, 0.25)', borderColor: 'rgba(255, 255, 255, 0.8)', transition: 'all 0.5s ease-in-out' } : { transition: 'all 1s ease-out' };
     const isAnswered = ['answered', 'satisfied'].includes(q.status) && q.answeredAt;
     let diffHours = 0;
     
@@ -320,7 +337,7 @@ const FanHistory = () => {
             <div style={{ height: '1px', background: 'rgba(255,255,255,0.05)', margin: '4px 0' }} />
 
             <div 
-              style={{ background: '#1a1b23', borderRadius: '16px', padding: '20px', border: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer' }}
+              style={{ background: '#1a1b23', borderRadius: '16px', padding: '20px', border: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer', ...glowStyle(q._id) }}
               onClick={() => setSelectedMessageForModal({ messageTitle: q.isFollowUp ? 'YOUR FOLLOW-UP' : 'YOUR MESSAGE', questionText: q.questionText, answerText: q.answerText, creatorName })}
             >
               <div style={{ color: '#64748b', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '12px', textTransform: 'uppercase' }}>{q.isFollowUp ? 'YOUR FOLLOW-UP' : 'YOUR MESSAGE'}</div>
@@ -329,7 +346,7 @@ const FanHistory = () => {
               </div>
             </div>
 
-            <div style={{ background: '#0a1922', borderRadius: '16px', padding: '20px', border: '1px solid rgba(56, 189, 248, 0.2)' }}>
+            <div style={{ background: '#0a1922', borderRadius: '16px', padding: '20px', border: '1px solid rgba(56, 189, 248, 0.2)', ...glowStyle(q._id) }}>
               <div style={{ color: '#38bdf8', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '12px', textTransform: 'uppercase' }}>{creatorName.split(' ')[0]}'S {q.isFollowUp ? 'REPLY' : 'FULL REPLY'}</div>
               <div style={{ color: '#fff', fontSize: '16px', lineHeight: '1.6', wordBreak: 'break-all', overflowWrap: 'anywhere' }}>
                 {q.answerText}
@@ -341,7 +358,7 @@ const FanHistory = () => {
                   <>
                     <div style={{ height: '1px', background: 'rgba(255,255,255,0.05)', margin: '8px 0' }} />
                     <div 
-                      style={{ background: '#1a1b23', borderRadius: '16px', padding: '20px', border: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer' }}
+                      style={{ background: '#1a1b23', borderRadius: '16px', padding: '20px', border: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer', ...glowStyle(child._id) }}
                       onClick={() => setSelectedMessageForModal({ messageTitle: 'YOUR FOLLOW-UP', questionText: child.questionText, answerText: child.answerText, creatorName })}
                     >
                       <div style={{ color: '#64748b', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '12px', textTransform: 'uppercase' }}>YOUR FOLLOW-UP</div>
@@ -353,7 +370,7 @@ const FanHistory = () => {
                 {child.answerText && (
                   <>
                     <div style={{ height: '1px', background: 'rgba(255,255,255,0.05)', margin: '8px 0' }} />
-                    <div style={{ background: '#0a1922', borderRadius: '16px', padding: '20px', border: '1px solid rgba(56, 189, 248, 0.2)' }}>
+                    <div style={{ background: '#0a1922', borderRadius: '16px', padding: '20px', border: '1px solid rgba(56, 189, 248, 0.2)', ...glowStyle(child._id) }}>
                       <div style={{ color: '#38bdf8', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '12px', textTransform: 'uppercase' }}>{creatorName.split(' ')[0]}'S ANSWER</div>
                       <div style={{ color: '#fff', fontSize: '16px', lineHeight: '1.6', wordBreak: 'break-all', overflowWrap: 'anywhere' }}>
                         {child.answerText}
@@ -448,7 +465,7 @@ const FanHistory = () => {
 
           <div style={{ textAlign: 'center', marginBottom: '24px' }}>
             <div style={{ color: '#64748b', fontSize: '10px', fontWeight: '800', letterSpacing: '2px', marginBottom: '4px' }}>SKRIIBE RECEIPT</div>
-            <div style={{ color: '#fff', fontSize: '28px', fontWeight: '900', fontStyle: 'italic', letterSpacing: '1px' }}>#{q.orderId || `SKR-${q._id.substring(0,8).toUpperCase()}`}</div>
+            <div style={{ color: '#fff', fontSize: '28px', fontWeight: '900', fontStyle: 'italic', letterSpacing: '1px' }}>#{q.orderNumber || `SKR-${q._id.substring(0,8).toUpperCase()}`}</div>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -494,7 +511,7 @@ const FanHistory = () => {
             </div>
 
             <div 
-              style={{ background: '#1a1b23', borderRadius: '16px', padding: '20px', border: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer' }}
+              style={{ background: '#1a1b23', borderRadius: '16px', padding: '20px', border: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer', ...glowStyle(q._id) }}
               onClick={() => setSelectedMessageForModal({ messageTitle: 'YOUR MESSAGE', questionText: q.questionText, answerText: q.answerText, creatorName })}
             >
               <div style={{ color: '#64748b', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '12px', textTransform: 'uppercase' }}>YOUR MESSAGE</div>
@@ -503,7 +520,7 @@ const FanHistory = () => {
               </div>
             </div>
 
-            <div style={{ background: '#0a1922', borderRadius: '16px', padding: '20px', border: '1px solid rgba(56, 189, 248, 0.2)' }}>
+            <div style={{ background: '#0a1922', borderRadius: '16px', padding: '20px', border: '1px solid rgba(56, 189, 248, 0.2)', ...glowStyle(q._id) }}>
               <div style={{ color: '#38bdf8', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '12px', textTransform: 'uppercase' }}>{creatorName.split(' ')[0]}'S FULL REPLY</div>
               <div style={{ color: '#fff', fontSize: '16px', lineHeight: '1.6', wordBreak: 'break-all', overflowWrap: 'anywhere' }}>
                 {q.answerText}
@@ -514,7 +531,7 @@ const FanHistory = () => {
               <React.Fragment key={child._id}>
                 <>
                   <div style={{ height: '1px', background: 'rgba(255,255,255,0.05)', margin: '8px 0' }} />
-                  <div style={{ background: '#1a1b23', borderRadius: '16px', padding: '20px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                  <div style={{ background: '#1a1b23', borderRadius: '16px', padding: '20px', border: '1px solid rgba(255,255,255,0.05)', ...glowStyle(child._id) }}>
                     <div style={{ color: '#64748b', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '12px', textTransform: 'uppercase' }}>YOUR FOLLOW-UP</div>
                     <div style={{ color: '#94a3b8', fontSize: '15px', fontStyle: 'italic', lineHeight: '1.5', wordBreak: 'break-all', overflowWrap: 'anywhere' }}>
                       "{child.questionText}"
@@ -524,7 +541,7 @@ const FanHistory = () => {
                 {child.answerText && (
                   <>
                     <div style={{ height: '1px', background: 'rgba(255,255,255,0.05)', margin: '8px 0' }} />
-                    <div style={{ background: '#0a1922', borderRadius: '16px', padding: '20px', border: '1px solid rgba(56, 189, 248, 0.2)' }}>
+                    <div style={{ background: '#0a1922', borderRadius: '16px', padding: '20px', border: '1px solid rgba(56, 189, 248, 0.2)', ...glowStyle(child._id) }}>
                       <div style={{ color: '#38bdf8', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '12px', textTransform: 'uppercase' }}>{creatorName.split(' ')[0]}'S ANSWER</div>
                       <div style={{ color: '#fff', fontSize: '16px', lineHeight: '1.6', wordBreak: 'break-all', overflowWrap: 'anywhere' }}>
                         {child.answerText}
@@ -594,11 +611,11 @@ const FanHistory = () => {
             
             <div style={{ textAlign: 'center', marginBottom: '24px' }}>
               <div style={{ color: '#64748b', fontSize: '10px', fontWeight: '800', letterSpacing: '2px', marginBottom: '4px' }}>SKRIIBE RECEIPT</div>
-              <div style={{ color: '#fff', fontSize: '28px', fontWeight: '900', fontStyle: 'italic', letterSpacing: '1px' }}>#{q.orderId || `SKR-${q._id.substring(0,8).toUpperCase()}`}</div>
+              <div style={{ color: '#fff', fontSize: '28px', fontWeight: '900', fontStyle: 'italic', letterSpacing: '1px' }}>#{q.orderNumber || `SKR-${q._id.substring(0,8).toUpperCase()}`}</div>
             </div>
             
             <div 
-              style={{ background: '#1a1b23', borderRadius: '16px', padding: '20px', border: '1px solid rgba(255,255,255,0.05)', marginBottom: '16px', cursor: 'pointer' }}
+              style={{ background: '#1a1b23', borderRadius: '16px', padding: '20px', border: '1px solid rgba(255,255,255,0.05)', marginBottom: '16px', cursor: 'pointer', ...glowStyle(q._id) }}
               onClick={() => setSelectedMessageForModal({ messageTitle: 'YOUR MESSAGE', questionText: q.questionText, answerText: q.answerText, creatorName })}
             >
                 <div style={{ color: '#64748b', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '12px', textTransform: 'uppercase' }}>YOUR MESSAGE</div>
@@ -608,7 +625,7 @@ const FanHistory = () => {
             </div>
 
             {q.answerText && (
-              <div style={{ background: '#0a1922', borderRadius: '16px', padding: '20px', border: '1px solid rgba(56, 189, 248, 0.2)', marginBottom: '16px' }}>
+              <div style={{ background: '#0a1922', borderRadius: '16px', padding: '20px', border: '1px solid rgba(56, 189, 248, 0.2)', marginBottom: '16px', ...glowStyle(q._id) }}>
                 <div style={{ color: '#38bdf8', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '12px', textTransform: 'uppercase' }}>{creatorName.split(' ')[0]}'S FULL REPLY</div>
                 <div style={{ color: '#fff', fontSize: '16px', lineHeight: '1.6', wordBreak: 'break-all', overflowWrap: 'anywhere' }}>
                   {q.answerText}

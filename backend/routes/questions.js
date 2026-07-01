@@ -73,7 +73,7 @@ router.post('/', verifyFanToken, async (req, res) => {
       { $inc: { seq: 1 } },
       { new: true, upsert: true }
     );
-    const orderNumber = 'SKR-' + (10000 + counter.seq);
+    const orderNumber = 'SKR-' + (10000000 + counter.seq);
 
     const newQuestion = new Question({
       creatorId: creator._id,

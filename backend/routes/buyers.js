@@ -118,7 +118,7 @@ router.post('/submit-question', async (req, res) => {
       { $inc: { seq: 1 } },
       { new: true, upsert: true }
     );
-    const orderNumber = 'SKR-' + (10000 + counter.seq);
+    const orderNumber = 'SKR-' + (10000000 + counter.seq);
 
     // Create question (payment pending — Razorpay in Phase 4)
     const question = await Question.create({

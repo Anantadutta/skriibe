@@ -35,8 +35,9 @@ const FanNotifications = () => {
         await api.patch(`/questions/notifications/${notif._id}/read`);
         // If the notification relates to a question, mark the question as read too
         // so the global unread count badge disappears immediately.
-        if (notif.referenceId) {
-          await api.post(`/questions/${notif.referenceId}/read`);
+        const qId = notif.questionId || notif.referenceId;
+        if (qId) {
+          await api.post(`/questions/${qId}/read`);
         }
       } catch (err) {
         console.error('Failed to mark as read', err);
@@ -45,7 +46,12 @@ const FanNotifications = () => {
       }
     }
     // Navigate to history to see the answer
-    navigate('/fan/history');
+    const targetQId = notif.questionId || notif.referenceId;
+    if (targetQId) {
+      navigate(`/fan/history?qId=${targetQId}`);
+    } else {
+      navigate('/fan/history');
+    }
   };
   return (
     <div style={{

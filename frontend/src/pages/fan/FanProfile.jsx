@@ -27,6 +27,7 @@ const FanProfile = () => {
   const [showAvatarMenu, setShowAvatarMenu] = useState(false);
   const avatarInputRef = useRef(null);
   const menuRef = useRef(null);
+  const menuContainerRef = useRef(null);
   const emailContainerRef = useRef(null);
   const phoneContainerRef = useRef(null);
 
@@ -74,7 +75,9 @@ const FanProfile = () => {
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (menuRef.current && !menuRef.current.contains(event.target)) {
+      const isOutsideAvatar = menuRef.current && !menuRef.current.contains(event.target);
+      const isOutsideMenu = menuContainerRef.current && !menuContainerRef.current.contains(event.target);
+      if (isOutsideAvatar && isOutsideMenu) {
         setShowAvatarMenu(false);
       }
     };
@@ -241,43 +244,7 @@ const FanProfile = () => {
                   </div>
                   <input type="file" hidden accept="image/*" ref={avatarInputRef} onChange={handleAvatarChange} />
 
-                  {/* Dropdown Menu */}
-                  {showAvatarMenu && (
-                    <div style={{
-                      position: 'absolute',
-                      top: '100%',
-                      left: '50%',
-                      transform: 'translateX(-50%)',
-                      marginTop: '8px',
-                      background: '#1a1a24',
-                      border: '1px solid #2A2A2A',
-                      borderRadius: '12px',
-                      padding: '8px',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '4px',
-                      zIndex: 100,
-                      minWidth: '140px',
-                      boxShadow: '0 4px 20px rgba(0,0,0,0.5)'
-                    }}>
-                      <button 
-                        onClick={() => avatarInputRef.current?.click()}
-                        style={{ background: 'transparent', border: 'none', color: '#ffffff', padding: '8px 12px', textAlign: 'left', cursor: 'pointer', borderRadius: '8px', fontSize: '0.85rem' }}
-                        onMouseEnter={(e) => e.target.style.background = 'rgba(255,255,255,0.05)'}
-                        onMouseLeave={(e) => e.target.style.background = 'transparent'}
-                      >
-                        Upload new photo
-                      </button>
-                      <button 
-                        onClick={openCropCurrent}
-                        style={{ background: 'transparent', border: 'none', color: '#ffffff', padding: '8px 12px', textAlign: 'left', cursor: 'pointer', borderRadius: '8px', fontSize: '0.85rem' }}
-                        onMouseEnter={(e) => e.target.style.background = 'rgba(255,255,255,0.05)'}
-                        onMouseLeave={(e) => e.target.style.background = 'transparent'}
-                      >
-                        Crop current photo
-                      </button>
-                    </div>
-                  )}
+
                 </div>
                 <div style={{ overflow: 'hidden' }}>
                   <h2 style={{ margin: '0 0 8px 0', fontSize: '24px', fontWeight: '700' }}>{fanProfile.name || 'Fan'}</h2>
@@ -432,6 +399,43 @@ const FanProfile = () => {
                 </div>
               </div>
             </div>
+            
+            {/* Inline Avatar Actions Menu (moved here to avoid overlap) */}
+            {showAvatarMenu && (
+              <div 
+                ref={menuContainerRef}
+                style={{
+                background: '#1a1a24',
+                border: '1px solid #2A2A2A',
+                borderRadius: '12px',
+                padding: '8px',
+                display: 'flex',
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                width: '100%',
+                flexWrap: 'wrap'
+              }}>
+                <button 
+                  onClick={() => avatarInputRef.current?.click()}
+                  style={{ background: 'transparent', border: 'none', color: '#ffffff', padding: '8px 12px', textAlign: 'center', cursor: 'pointer', borderRadius: '8px', fontSize: '0.9rem', whiteSpace: 'nowrap', fontWeight: '500' }}
+                  onMouseEnter={(e) => e.target.style.background = 'rgba(255,255,255,0.05)'}
+                  onMouseLeave={(e) => e.target.style.background = 'transparent'}
+                >
+                  Upload new photo
+                </button>
+                <div style={{ width: '1px', height: '24px', background: '#2A2A2A' }} />
+                <button 
+                  onClick={openCropCurrent}
+                  style={{ background: 'transparent', border: 'none', color: '#ffffff', padding: '8px 12px', textAlign: 'center', cursor: 'pointer', borderRadius: '8px', fontSize: '0.9rem', whiteSpace: 'nowrap', fontWeight: '500' }}
+                  onMouseEnter={(e) => e.target.style.background = 'rgba(255,255,255,0.05)'}
+                  onMouseLeave={(e) => e.target.style.background = 'transparent'}
+                >
+                  Crop current photo
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Questions History Section */}

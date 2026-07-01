@@ -62,7 +62,7 @@ const CreatorCard = ({ creator }) => {
     }}>
       
       {/* Top Section: Avatar and Info */}
-      <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+      <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start', height: '112px' }}>
         {/* Avatar & Live Badge */}
         <div style={{ position: 'relative', width: '76px', height: '76px', flexShrink: 0 }}>
           <div style={{
@@ -122,7 +122,7 @@ const CreatorCard = ({ creator }) => {
             )}
           </h3>
           <div style={{ color: '#64748b', fontSize: '13px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={`@${handle}`}>@{handle}</div>
-          <div style={{ marginTop: '2px', display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+          <div style={{ marginTop: '2px', display: 'flex', flexWrap: 'wrap', gap: '4px', overflow: 'hidden', maxHeight: '58px' }}>
             {expertiseList.map((exp, idx) => (
               <span key={idx} style={{
                 display: 'inline-flex',

@@ -592,7 +592,7 @@ const CreatorProfile = () => {
                     <li style={{ paddingLeft: '4px' }}>Ask one clear message, per payment for the best response.</li>
                     <li style={{ paddingLeft: '4px' }}>Full refund if there's no reply within 24 hours.</li>
                     <li style={{ paddingLeft: '4px' }}>Be respectful. Abusive, hateful, or vulgar content is not allowed.</li>
-                    <li style={{ paddingLeft: '4px' }}>Share only what's needed for a helpful answer</li>
+                    <li style={{ paddingLeft: '4px' }}>Share only what's needed for a helpful answer.</li>
                   </ol>
                 </div>
 
