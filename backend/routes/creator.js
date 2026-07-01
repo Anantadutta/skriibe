@@ -709,11 +709,9 @@ router.get('/payouts', verifyCreatorToken, async (req, res) => {
     // Include questions from both routes:
     const answeredPaid = await Question.find({
       creatorId:    req.creator.creatorId,
-      status:       { $in: ['answered', 'flagged'] },
-      amountPaid:   { $gt: 0 },
+      status:       { $in: ['answered', 'flagged', 'satisfied'] },
       answeredAt:   { $exists: true, $ne: null },
-      adminDecision: { $nin: ['fan_wins', 'banned'] },
-    }).select('amountPaid answeredAt buyerName isAnonymous').sort({ answeredAt: -1 });
+    }).select('amountPaid answeredAt buyerName isAnonymous adminDecision status').sort({ answeredAt: -1 });
 
     let lifetimePaid = 0;
     let thisMonth    = 0;
@@ -751,8 +749,11 @@ router.get('/payouts', verifyCreatorToken, async (req, res) => {
     };
 
     for (const q of answeredPaid) {
+      if (q.adminDecision === 'fan_wins' || q.adminDecision === 'banned') continue;
+
       const gross = q.amountPaid || 0;
-      
+      if (gross === 0) continue; // Free questions don't contribute to earnings
+
       let creatorEarning = 0;
       if (earningMap[q._id.toString()]) {
         creatorEarning = earningMap[q._id.toString()].amount;
@@ -781,7 +782,10 @@ router.get('/payouts', verifyCreatorToken, async (req, res) => {
     for (const q of answeredPaid) {
       const gross = q.amountPaid || 0;
       let earning = 0;
-      if (earningMap[q._id.toString()]) {
+      
+      if (q.adminDecision === 'fan_wins' || q.adminDecision === 'banned') {
+        earning = 0;
+      } else if (earningMap[q._id.toString()]) {
         earning = earningMap[q._id.toString()].amount;
       } else {
         earning = gross * getCreatorShare(q.answeredAt || q.createdAt);
@@ -793,7 +797,11 @@ router.get('/payouts', verifyCreatorToken, async (req, res) => {
       }
       
       let statusLabel = 'Paid';
-      if (q.answeredAt >= lastBoundary) {
+      if (q.adminDecision === 'fan_wins' || q.adminDecision === 'banned') {
+        statusLabel = 'Refunded';
+      } else if (gross === 0) {
+        statusLabel = 'Free';
+      } else if (q.answeredAt >= lastBoundary) {
         statusLabel = 'Available';
       }
       

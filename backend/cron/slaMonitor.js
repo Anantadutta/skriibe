@@ -122,7 +122,7 @@ const runSlaMonitor = async () => {
       // Find all questions answered by this creator that are eligible for payout
       const validQuestions = await Question.find({
         creatorId: creator._id,
-        status: { $in: ['answered', 'flagged'] },
+        status: { $in: ['answered', 'flagged', 'satisfied'] },
         amountPaid: { $gt: 0 },
         answeredAt: { $ne: null },
         adminDecision: { $nin: ['fan_wins', 'banned'] }
