@@ -125,6 +125,34 @@ router.post('/', verifyFanToken, async (req, res) => {
       avgReplyTime: creator.responseTime || '48 hours'
     });
 
+    // Update Creator Stats asynchronously
+    (async () => {
+      try {
+        const stats = await Question.aggregate([
+          { $match: { creatorId: new mongoose.Types.ObjectId(creatorId) } },
+          { $group: {
+              _id: null,
+              totalReceived: { $sum: 1 },
+              totalPending: { $sum: { $cond: [{ $eq: ['$status', 'pending'] }, 1, 0] } },
+              totalFlagged: { $sum: { $cond: [{ $eq: ['$status', 'flagged'] }, 1, 0] } },
+              totalAnswered: { $sum: { $cond: [{ $in: ['$status', ['answered', 'satisfied', 'rejected']] }, 1, 0] } }
+          }}
+        ]);
+        if (stats.length > 0) {
+          const { totalReceived, totalPending, totalFlagged, totalAnswered } = stats[0];
+          const denominator = totalReceived - totalPending - totalFlagged;
+          const replyRate = denominator > 0 ? Math.round((totalAnswered / denominator) * 100) : 0;
+          await Creator.findByIdAndUpdate(creatorId, {
+            'stats.totalAnswered': totalAnswered,
+            'stats.replyRate': replyRate,
+            questionsAnswered: totalAnswered
+          });
+        }
+      } catch (e) {
+        console.error("Failed to update creator stats on new question:", e);
+      }
+    })();
+
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });

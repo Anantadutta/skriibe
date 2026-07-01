@@ -285,7 +285,7 @@ const CreatorPublicPage = () => {
             <div style={{ fontSize: '0.65rem', color: '#64748b', marginTop: '4px', fontWeight: '700', letterSpacing: '1px' }}>REPLY</div>
           </div>
           <div style={{ background: '#1A1A1A', borderRadius: '14px', padding: '16px 8px', textAlign: 'center' }}>
-            <div style={{ fontSize: '1.4rem', fontWeight: '900', color: '#29C5F6' }}>{creator.stats?.avgReplyTime ?? 0}h</div>
+            <div style={{ fontSize: '1.4rem', fontWeight: '900', color: '#29C5F6' }}>{formatTime(creator.stats?.avgReplyTime ?? '2h')}</div>
             <div style={{ fontSize: '0.65rem', color: '#64748b', marginTop: '4px', fontWeight: '700', letterSpacing: '1px' }}>AVG</div>
           </div>
           <div style={{ background: '#1A1A1A', borderRadius: '14px', padding: '16px 8px', textAlign: 'center' }}>

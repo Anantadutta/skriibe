@@ -203,7 +203,7 @@ const CreatorCard = ({ creator }) => {
               <polyline points="12 6 12 12 16 14"></polyline>
             </svg>
           </div>
-          <span style={{ fontSize: '18px', fontWeight: '800', color: '#fbbf24' }}>{formatTime(stats?.avgReplyTime || '2h')}</span>
+          <span style={{ fontSize: '18px', fontWeight: '800', color: '#fbbf24' }}>{formatTime(stats?.avgReplyTime ?? '2h')}</span>
           <span style={{ fontSize: '10px', color: '#64748b', marginTop: '2px', whiteSpace: 'nowrap', textAlign: 'center' }}>Avg Response</span>
         </div>
       </div>
