@@ -940,6 +940,7 @@ router.get('/payouts', verifyCreatorToken, async (req, res) => {
       inEscrow:       Math.round(inEscrow     * 100) / 100,
       available:      Math.round(available    * 100) / 100,
       nextPayoutDate: nextPayoutDate.toISOString(),
+      lastBoundary: lastBoundary.toISOString(),
       availableQuestions,
       availableGross: Math.round(availableGross * 100) / 100,
       availableFee:   Math.round((availableGross - available) * 100) / 100,

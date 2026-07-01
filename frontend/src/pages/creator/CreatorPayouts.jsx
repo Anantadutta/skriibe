@@ -199,61 +199,7 @@ const CreatorPayouts = () => {
     return [{ month: 'All Time', items: allItems }];
   };
 
-  const getPayoutInfo = (createdAtStr) => {
-    const now = new Date();
-    
-    const getNextTuesdayAfter = (date) => {
-      const d = new Date(date);
-      d.setHours(0, 0, 0, 0);
-      const day = d.getDay();
-      let diff = (7 - day + 2) % 7;
-      if (diff === 0) diff = 7;
-      d.setDate(d.getDate() + diff);
-      
-      const originalDate = new Date(date);
-      originalDate.setHours(0,0,0,0);
-      const msDiff = d.getTime() - originalDate.getTime();
-      const daysDiff = Math.round(msDiff / (1000 * 3600 * 24));
-      
-      if (daysDiff < 7) {
-        d.setDate(d.getDate() + 7);
-      }
-      return d;
-    };
-
-    if (!createdAtStr) {
-      return { 
-        nextPayoutDate: getNextTuesdayAfter(now), 
-        lastPayoutDate: new Date(0) 
-      };
-    }
-
-    const createdAt = new Date(createdAtStr);
-    const firstPayout = getNextTuesdayAfter(createdAt);
-    
-    if (now < firstPayout) {
-      return {
-        nextPayoutDate: firstPayout,
-        lastPayoutDate: new Date(0)
-      };
-    } else {
-      const lastPayout = new Date(now);
-      lastPayout.setHours(0,0,0,0);
-      const day = lastPayout.getDay();
-      const diff = (day + 7 - 2) % 7;
-      lastPayout.setDate(lastPayout.getDate() - diff);
-      
-      const nextPayout = new Date(lastPayout);
-      nextPayout.setDate(nextPayout.getDate() + 7);
-      
-      return {
-        nextPayoutDate: nextPayout,
-        lastPayoutDate: lastPayout
-      };
-    }
-  };
-
-  const { nextPayoutDate, lastPayoutDate } = getPayoutInfo(creatorCreatedAt);
+  const lastPayoutDate = payoutStats.lastBoundary ? new Date(payoutStats.lastBoundary) : new Date(0);
 
   const getCommissionRate = (questionDate) => {
     let rate = 0.8;
@@ -306,11 +252,12 @@ const CreatorPayouts = () => {
   const formattedPendingList = payoutStats.pendingList || [];
 
   const getNextPayoutDate = () => {
-    return nextPayoutDate.toLocaleDateString('en-IN', {
+    if (!payoutStats.nextPayoutDate) return '';
+    return new Date(payoutStats.nextPayoutDate).toLocaleDateString('en-IN', {
       weekday: 'long',
       day: 'numeric',
       month: 'short',
-      year: 'numeric',
+      year: 'numeric'
     });
   };
 
