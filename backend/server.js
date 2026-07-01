@@ -275,6 +275,32 @@ server.listen(PORT, async () => {
   try {
     const creators = await mongoose.model('Creator').find({}).select('handle name price pricePerQuestion').lean();
     fs.writeFileSync('creators_dump.json', JSON.stringify(creators, null, 2));
+
+    // One-time sync to fix stats for all creators
+    const allCreators = await mongoose.model('Creator').find();
+    for (const c of allCreators) {
+      const stats = await mongoose.model('Question').aggregate([
+        { $match: { creatorId: c._id } },
+        { $group: {
+            _id: null,
+            totalReceived: { $sum: 1 },
+            totalPending: { $sum: { $cond: [{ $eq: ['$status', 'pending'] }, 1, 0] } },
+            totalFlagged: { $sum: { $cond: [{ $eq: ['$status', 'flagged'] }, 1, 0] } },
+            totalAnswered: { $sum: { $cond: [{ $in: ['$status', ['answered', 'satisfied', 'rejected']] }, 1, 0] } }
+        }}
+      ]);
+      if (stats.length > 0) {
+        const { totalReceived, totalPending, totalFlagged, totalAnswered } = stats[0];
+        const denominator = totalReceived - totalPending - totalFlagged;
+        const replyRate = denominator > 0 ? Math.round((totalAnswered / denominator) * 100) : 0;
+        await mongoose.model('Creator').findByIdAndUpdate(c._id, {
+          'stats.totalAnswered': totalAnswered,
+          'stats.replyRate': replyRate,
+          questionsAnswered: totalAnswered
+        });
+      }
+    }
+    console.log("Successfully synchronized all creator stats!");
   } catch (err) {
     fs.writeFileSync('creators_dump.json', JSON.stringify({ error: err.message }));
   }
