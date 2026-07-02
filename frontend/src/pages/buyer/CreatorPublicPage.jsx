@@ -221,14 +221,25 @@ const CreatorPublicPage = () => {
         <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
           {/* Large Avatar */}
           <div style={{ position: 'relative' }}>
-            <div style={{
-              width: '80px', height: '80px', borderRadius: '50%',
-              background: '#1A1A1A', border: '2px solid #29C5F6',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontWeight: '900', fontSize: '32px', color: '#ffffff'
-            }}>
-              {creator.name ? creator.name[0].toUpperCase() : 'R'}
-            </div>
+            {creator.avatarUrl ? (
+              <img 
+                src={creator.avatarUrl} 
+                alt={creator.name} 
+                style={{
+                  width: '80px', height: '80px', borderRadius: '50%',
+                  border: '2px solid #29C5F6', objectFit: 'cover'
+                }} 
+              />
+            ) : (
+              <div style={{
+                width: '80px', height: '80px', borderRadius: '50%',
+                background: '#1A1A1A', border: '2px solid #29C5F6',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontWeight: '900', fontSize: '32px', color: '#ffffff'
+              }}>
+                {creator.name ? creator.name[0].toUpperCase() : 'R'}
+              </div>
+            )}
             {/* Live Dot / Badge */}
             {creator.isLive && (
               <div style={{

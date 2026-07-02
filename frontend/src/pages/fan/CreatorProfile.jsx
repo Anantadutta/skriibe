@@ -343,15 +343,42 @@ const CreatorProfile = () => {
           // STEP 1: Profile Overview
           <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             
-            {/* Header / Name */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-              <h2 style={{ margin: 0, color: '#ffffff', fontSize: '28px', fontWeight: '800', letterSpacing: '-0.5px' }}>
-                {creator.name}
-              </h2>
-            </div>
-            
-            <div style={{ color: '#94a3b8', fontSize: '14px', marginBottom: '16px' }}>
-              {creator.handle}
+            {/* Header: Avatar + Info */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px', width: '100%', justifyContent: 'center' }}>
+              
+              {/* Avatar */}
+              <div style={{ position: 'relative' }}>
+                {creator.avatarUrl ? (
+                  <img 
+                    src={creator.avatarUrl} 
+                    alt={creator.name} 
+                    style={{
+                      width: '80px', height: '80px', borderRadius: '50%',
+                      border: '2px solid #38bdf8', objectFit: 'cover'
+                    }} 
+                  />
+                ) : (
+                  <div style={{
+                    width: '80px', height: '80px', borderRadius: '50%',
+                    background: '#131313', border: '2px solid #38bdf8',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontWeight: '900', fontSize: '32px', color: '#ffffff'
+                  }}>
+                    {creator.name ? creator.name[0].toUpperCase() : 'C'}
+                  </div>
+                )}
+              </div>
+
+              {/* Name & Handle */}
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                <h2 style={{ margin: 0, color: '#ffffff', fontSize: '28px', fontWeight: '800', letterSpacing: '-0.5px' }}>
+                  {creator.name}
+                </h2>
+                <div style={{ color: '#94a3b8', fontSize: '14px', marginTop: '4px' }}>
+                  {creator.handle}
+                </div>
+              </div>
+              
             </div>
 
             {/* Instagram Linked Pill */}
