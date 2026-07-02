@@ -254,7 +254,26 @@ const CreatorReplyScreen = () => {
                     <div style={{ background: 'rgba(52, 211, 153, 0.1)', color: '#34d399', padding: '2px 8px', borderRadius: '12px', fontSize: '9px' }}>FREE</div>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
-                    <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(56, 189, 248, 0.1)', color: '#38BDF8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '1rem' }}>
+                    {(() => {
+                      const url = question.fanId?.avatarUrl;
+                      let finalAvatarUrl = url;
+                      if (url && !url.startsWith('http') && !url.startsWith('blob:')) {
+                        const backendBase = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace('/api', '');
+                        finalAvatarUrl = url.startsWith('/uploads') ? `${backendBase}${url}` : url;
+                      }
+                      return finalAvatarUrl ? (
+                        <img 
+                          src={finalAvatarUrl} 
+                          alt="" 
+                          style={{ width: '32px', height: '32px', borderRadius: '8px', objectFit: 'cover', flexShrink: 0 }} 
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                            if (e.target.nextSibling) e.target.nextSibling.style.display = 'flex';
+                          }}
+                        />
+                      ) : null;
+                    })()}
+                    <div style={{ display: question.fanId?.avatarUrl ? 'none' : 'flex', width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(56, 189, 248, 0.1)', color: '#38BDF8', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '1rem', flexShrink: 0 }}>
                       {(question.buyerName || question.followerName || 'A')[0].toUpperCase()}
                     </div>
                     <div style={{ fontSize: '0.85rem', color: '#94a3b8', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase' }}>
@@ -270,7 +289,26 @@ const CreatorReplyScreen = () => {
               // Original single question card
               <div style={{ background: '#16161E', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(56, 189, 248, 0.1)', color: '#38BDF8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '1rem' }}>
+                  {(() => {
+                    const url = question.fanId?.avatarUrl;
+                    let finalAvatarUrl = url;
+                    if (url && !url.startsWith('http') && !url.startsWith('blob:')) {
+                      const backendBase = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace('/api', '');
+                      finalAvatarUrl = url.startsWith('/uploads') ? `${backendBase}${url}` : url;
+                    }
+                    return finalAvatarUrl ? (
+                      <img 
+                        src={finalAvatarUrl} 
+                        alt="" 
+                        style={{ width: '32px', height: '32px', borderRadius: '8px', objectFit: 'cover', flexShrink: 0 }} 
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                          if (e.target.nextSibling) e.target.nextSibling.style.display = 'flex';
+                        }}
+                      />
+                    ) : null;
+                  })()}
+                  <div style={{ display: question.fanId?.avatarUrl ? 'none' : 'flex', width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(56, 189, 248, 0.1)', color: '#38BDF8', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '1rem', flexShrink: 0 }}>
                     {(question.buyerName || question.followerName || 'A')[0].toUpperCase()}
                   </div>
                   <div style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase' }}>

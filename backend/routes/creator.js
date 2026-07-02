@@ -190,7 +190,7 @@ router.get('/questions', verifyCreatorToken, async (req, res) => {
     console.log('Constructed DB Filter:', filter);
 
     const Question = require('../models/Question');
-    const questions = await Question.find(filter).sort(sortOrder);
+    const questions = await Question.find(filter).populate('fanId', 'avatarUrl name').sort(sortOrder);
 
     res.json({ success: true, questions });
   } catch (err) {

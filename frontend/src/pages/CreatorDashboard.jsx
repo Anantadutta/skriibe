@@ -752,7 +752,26 @@ const CreatorDashboard = () => {
               <div key={q._id || idx} style={{ background: '#13161C', border: '1px solid #1F2937', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div style={{ display: 'flex', gap: '12px' }}>
-                    <div style={{ width: '40px', height: '40px', borderRadius: '8px', background: '#1E293B', color: '#38BDF8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '1.2rem' }}>
+                    {(() => {
+                      const url = q.fanId?.avatarUrl;
+                      let finalAvatarUrl = url;
+                      if (url && !url.startsWith('http') && !url.startsWith('blob:')) {
+                        const backendBase = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace('/api', '');
+                        finalAvatarUrl = url.startsWith('/uploads') ? `${backendBase}${url}` : url;
+                      }
+                      return finalAvatarUrl ? (
+                        <img 
+                          src={finalAvatarUrl} 
+                          alt="" 
+                          style={{ width: '40px', height: '40px', borderRadius: '8px', objectFit: 'cover', flexShrink: 0 }} 
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                            if (e.target.nextSibling) e.target.nextSibling.style.display = 'flex';
+                          }}
+                        />
+                      ) : null;
+                    })()}
+                    <div style={{ display: q.fanId?.avatarUrl ? 'none' : 'flex', width: '40px', height: '40px', borderRadius: '8px', background: '#1E293B', color: '#38BDF8', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '1.2rem', flexShrink: 0 }}>
                       {(q.buyerName || q.followerName || 'A')[0].toUpperCase()}
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column' }}>

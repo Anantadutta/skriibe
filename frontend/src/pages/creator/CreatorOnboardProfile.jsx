@@ -48,10 +48,10 @@ const CreatorOnboardProfile = () => {
     'Health & Fitness',
     'Tech & Skills',
     'Fashion & Lifestyle',
-    'Daily Vlogs & Entertainment',
+    'Entertainment',
     'Education',
-    'Business & Entrepreneurship',
-    'Relationships & Life',
+    'Entrepreneurship',
+    'Relationships',
     'Spirituality',
     'Others'
   ];

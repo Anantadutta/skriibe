@@ -2,8 +2,8 @@
   {
     "_id": "6a439f5f270f621b4b6d61b8",
     "name": "Annie",
-    "price": 1,
-    "pricePerQuestion": 1,
+    "price": 10,
+    "pricePerQuestion": 10,
     "handle": "uwj"
   },
   {
@@ -36,6 +36,12 @@
   {
     "_id": "6a4629b2324a155fd084e739",
     "name": "ananta ananta",
+    "price": 99,
+    "pricePerQuestion": 99
+  },
+  {
+    "_id": "6a462cd9bc841531355e744a",
+    "name": "",
     "price": 99,
     "pricePerQuestion": 99
   }

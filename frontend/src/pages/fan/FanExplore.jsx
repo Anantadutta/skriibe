@@ -8,8 +8,8 @@ import { io } from 'socket.io-client';
 
 const PREDEFINED_CATEGORIES = [
   'Career & Finance', 'Health & Fitness', 'Tech & Skills', 
-  'Fashion & Lifestyle', 'Daily Vlogs & Entertainment', 
-  'Education', 'Business & Entrepreneurship', 'Relationships & Life', 
+  'Fashion & Lifestyle', 'Entertainment', 
+  'Education', 'Entrepreneurship', 'Relationships', 
   'Spirituality'
 ];
 
@@ -19,10 +19,10 @@ const categories = [
   { id: 'Health', label: 'Health & Fitness', query: 'Health & Fitness' },
   { id: 'Tech', label: 'Tech & Skills', query: 'Tech & Skills' },
   { id: 'Fashion', label: 'Fashion & Lifestyle', query: 'Fashion & Lifestyle' },
-  { id: 'Vlogs', label: 'Daily Vlogs & Entertainment', query: 'Daily Vlogs & Entertainment' },
+  { id: 'Entertainment', label: 'Entertainment', query: 'Entertainment' },
   { id: 'Education', label: 'Education', query: 'Education' },
-  { id: 'Business', label: 'Business & Entrepreneurship', query: 'Business & Entrepreneurship' },
-  { id: 'Relationships', label: 'Relationships & Life', query: 'Relationships & Life' },
+  { id: 'Entrepreneurship', label: 'Entrepreneurship', query: 'Entrepreneurship' },
+  { id: 'Relationships', label: 'Relationships', query: 'Relationships' },
   { id: 'Spirituality', label: 'Spirituality', query: 'Spirituality' },
   { id: 'Others', label: 'Others', query: 'Others' }
 ];

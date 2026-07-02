@@ -180,11 +180,11 @@ const CreatorAccountHealth = () => {
             <div style={{ flex: 1, height: '8px', background: activeStrikesCount >= 4 ? '#dc2626' : '#2a2a36', borderRadius: '4px' }}></div>
           </div>
           
-          <div style={{ display: 'flex', justifyContent: 'space-between', color: '#475569', fontSize: '0.7rem', fontWeight: 600 }}>
-            <div style={{ flex: 1, textAlign: 'center' }}>1-Email Warning</div>
-            <div style={{ flex: 1, textAlign: 'center' }}>2-Suspend 48 hours</div>
-            <div style={{ flex: 1, textAlign: 'center' }}>3-Suspend 7 days</div>
-            <div style={{ flex: 1, textAlign: 'center' }}>4-Ban</div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px', color: '#475569', fontSize: '0.6rem', fontWeight: 600 }}>
+            <div style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>1 Email Warning</div>
+            <div style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>2 Suspend 48h</div>
+            <div style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>3 Suspend 7d</div>
+            <div style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>4 Ban</div>
           </div>
         </div>
 

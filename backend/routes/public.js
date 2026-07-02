@@ -83,8 +83,8 @@ router.get('/creators', async (req, res) => {
     };
     const PREDEFINED_CATEGORIES = [
       'Career & Finance', 'Health & Fitness', 'Tech & Skills', 
-      'Fashion & Lifestyle', 'Daily Vlogs & Entertainment', 
-      'Education', 'Business & Entrepreneurship', 'Relationships & Life', 
+      'Fashion & Lifestyle', 'Entertainment', 
+      'Education', 'Entrepreneurship', 'Relationships', 
       'Spirituality'
     ];
     

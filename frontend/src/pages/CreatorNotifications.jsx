@@ -36,15 +36,31 @@ const CreatorNotifications = () => {
     fetchQuestions();
   }, []);
 
+  const readIds = JSON.parse(localStorage.getItem('creatorReadNotifications') || '[]');
+
   const pendingQuestions = questions.filter(q => q.status?.toLowerCase() === 'submitted');
-  const satisfiedQuestions = questions.filter(q => q.status?.toLowerCase() === 'satisfied' && !q.creatorReadSatisfied);
+  
+  const now = new Date();
+  const satisfiedQuestions = questions.filter(q => {
+    if (q.status?.toLowerCase() !== 'satisfied') return false;
+    if (!q.creatorReadSatisfied) return true;
+    const updated = new Date(q.updatedAt || q.createdAt);
+    return (now - updated) < 24 * 60 * 60 * 1000; // Keep read satisfied questions for 24h
+  });
+
   const allNotifications = [...pendingQuestions, ...satisfiedQuestions].sort((a, b) => new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt));
 
   const handleNotificationClick = async (q) => {
+    const qId = q._id || q.id;
+    if (!readIds.includes(qId)) {
+      const newReadIds = [...readIds, qId];
+      localStorage.setItem('creatorReadNotifications', JSON.stringify(newReadIds));
+    }
+
     let updatedQ = q;
     if (q.status?.toLowerCase() === 'satisfied' && !q.creatorReadSatisfied) {
       try {
-        const res = await api.patch(`/creator/questions/${q._id || q.id}/read-satisfied`);
+        const res = await api.patch(`/creator/questions/${qId}/read-satisfied`);
         if (res.data?.question) {
           updatedQ = res.data.question;
         }
@@ -53,7 +69,7 @@ const CreatorNotifications = () => {
       }
     }
     const rootQuestion = q.isFollowUp ? questions.find(r => (r._id || r.id) === q.parentQuestionId) : null;
-    navigate(`/creator/dashboard/reply/${q._id || q.id}`, { state: { question: updatedQ, rootQuestion } });
+    navigate(`/creator/dashboard/reply/${qId}`, { state: { question: updatedQ, rootQuestion } });
   };
 
   return (
@@ -103,6 +119,7 @@ const CreatorNotifications = () => {
           ) : (
             allNotifications.map((q) => {
               const isSatisfied = q.status?.toLowerCase() === 'satisfied';
+              const isRead = q.creatorReadSatisfied || readIds.includes(q._id || q.id);
               return (
                 <div 
                   key={q._id || q.id}
@@ -110,24 +127,32 @@ const CreatorNotifications = () => {
                   style={{
                     background: '#16161e',
                     border: '1px solid #2A2A2A',
-                    borderLeft: `4px solid ${isSatisfied ? '#10b981' : '#FBBF24'}`,
+                    borderLeft: `4px solid ${isRead ? '#475569' : (isSatisfied ? '#10b981' : '#FBBF24')}`,
                     borderRadius: '16px',
                     padding: '16px',
                     display: 'flex',
                     flexDirection: 'column',
                     gap: '8px',
-                    cursor: 'pointer'
+                    cursor: 'pointer',
+                    opacity: isRead ? 0.7 : 1
                   }}
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <div style={{ color: isSatisfied ? '#10b981' : '#FBBF24', fontSize: '0.8rem', fontWeight: 600 }}>
+                    <div style={{ color: isRead ? '#94a3b8' : (isSatisfied ? '#10b981' : '#FBBF24'), fontSize: '0.8rem', fontWeight: 600 }}>
                       {isSatisfied ? 'Fan Satisfied' : (q.isFollowUp ? 'New Follow-up Question' : 'New Question')}
                     </div>
-                    <div style={{ background: isSatisfied ? 'rgba(16, 185, 129, 0.15)' : 'rgba(251, 191, 36, 0.15)', color: isSatisfied ? '#10b981' : '#FBBF24', padding: '4px 8px', borderRadius: '8px', fontSize: '0.7rem', fontWeight: 700 }}>
-                      Unread
+                    <div style={{ 
+                      background: isRead ? 'rgba(148, 163, 184, 0.15)' : (isSatisfied ? 'rgba(16, 185, 129, 0.15)' : 'rgba(251, 191, 36, 0.15)'), 
+                      color: isRead ? '#94a3b8' : (isSatisfied ? '#10b981' : '#FBBF24'), 
+                      padding: '4px 8px', 
+                      borderRadius: '8px', 
+                      fontSize: '0.7rem', 
+                      fontWeight: 700 
+                    }}>
+                      {isRead ? 'Read' : 'Unread'}
                     </div>
                   </div>
-                  <div style={{ fontSize: '1rem', fontWeight: 700, color: '#fff' }}>
+                  <div style={{ fontSize: '1rem', fontWeight: 700, color: isRead ? '#cbd5e1' : '#fff' }}>
                     {isSatisfied ? `${q.buyerName || q.handle || 'A fan'} is satisfied with your reply` : `From ${q.buyerName || q.followerName || 'A fan'}`}
                   </div>
                   <div style={{ color: '#94a3b8', fontSize: '0.9rem', lineHeight: '1.4' }}>

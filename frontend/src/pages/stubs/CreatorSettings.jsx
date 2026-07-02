@@ -276,6 +276,10 @@ const CreatorSettings = () => {
   };
 
   const handleSavePrice = async () => {
+    if (Number(questionPrice) < 10) {
+      setCustomAlert("Minimum Rs 10 is required for the message price.");
+      return;
+    }
     try {
       await api.post('/creators/settings', { pricePerQuestion: Number(questionPrice) });
       setIsEditingPrice(false);
@@ -752,7 +756,7 @@ const CreatorSettings = () => {
                   </>
                 ) : (
                   <>
-                    <span style={{ color: '#ffffff', fontWeight: 700, fontSize: '0.9rem' }}>{dailyCap} / day</span>
+                    <span style={{ color: '#ffffff', fontWeight: 700, fontSize: '0.9rem', whiteSpace: 'nowrap' }}>{dailyCap} / day</span>
                     <button 
                       onClick={() => setIsEditingCap(true)}
                       style={{
@@ -857,9 +861,9 @@ const CreatorSettings = () => {
                       }}>
                           {Array.from(new Set([
                           'Career & Finance', 'Health & Fitness', 'Tech & Skills',
-                          'Fashion & Lifestyle', 'Daily Vlogs & Entertainment',
-                          'Education', 'Business & Entrepreneurship',
-                          'Relationships & Life', 'Spirituality', 'Others',
+                          'Fashion & Lifestyle', 'Entertainment',
+                          'Education', 'Entrepreneurship',
+                          'Relationships', 'Spirituality', 'Others',
                           ...expertiseList
                         ])).filter(cat => cat !== 'General').map(cat => (
                           <label key={cat} style={{ 

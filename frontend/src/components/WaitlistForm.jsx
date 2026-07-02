@@ -100,10 +100,10 @@ const WaitlistForm = () => {
                         <option>Health & Fitness</option>
                         <option>Tech & Skills</option>
                         <option>Fashion & Lifestyle</option>
-                        <option>Daily Vlogs & Entertainment</option>
+                        <option>Entertainment</option>
                         <option>Education</option>
-                        <option>Business & Entrepreneurship</option>
-                        <option>Relationships & Life</option>
+                        <option>Entrepreneurship</option>
+                        <option>Relationships</option>
                         <option>Spirituality</option>
                         <option>Others</option>
                     </select>
