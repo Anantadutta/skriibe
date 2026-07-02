@@ -173,6 +173,15 @@ router.post('/avatar', verifyFanToken, upload.single('avatar'), async (req, res)
       { new: true }
     );
 
+    // Sync avatar to associated Creator profile
+    if (updatedFan && updatedFan.email) {
+      const Creator = require('../models/Creator');
+      await Creator.findOneAndUpdate(
+        { email: updatedFan.email.toLowerCase() },
+        { avatarUrl: updatedFan.avatarUrl }
+      );
+    }
+
     res.json({ success: true, avatarUrl: updatedFan.avatarUrl });
   } catch (err) {
     console.error('Avatar upload error:', err);
