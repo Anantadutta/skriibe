@@ -23,6 +23,10 @@ api.interceptors.response.use(
   },
   (error) => {
     if (error.response && error.response.status === 401) {
+      // Clear expired/broken tokens to prevent infinite redirect loops in SmartLoginRedirect
+      localStorage.removeItem('skriibe_token');
+      localStorage.removeItem('isReturningCreator');
+      
       // Only redirect if we're not already on a login page to avoid loops
       const path = window.location.pathname;
       if (!path.includes('/login') && !path.includes('/signup')) {

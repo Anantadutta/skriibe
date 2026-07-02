@@ -18,14 +18,18 @@ const runSlaMonitor = async () => {
     });
 
     for (const q of breachedQuestions) {
+      const creator = await Creator.findById(q.creatorId);
+      if (!creator) continue;
+
       // Mark as expired and refund
       q.status = 'expired';
       q.paymentStatus = 'refunded';
       q.adminDecision = 'fan_wins';
+      
+      // Fix legacy questions missing handle
+      if (!q.handle) q.handle = creator.handle;
+      
       await q.save();
-
-      const creator = await Creator.findById(q.creatorId);
-      if (!creator) continue;
 
       // 2. Evaluate Strikes & Decay
       const now = new Date();

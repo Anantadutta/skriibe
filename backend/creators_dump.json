@@ -9,8 +9,8 @@
   {
     "_id": "6a451c838cf66d5022e8c403",
     "name": "Vasundhara Keshan",
-    "price": 10,
-    "pricePerQuestion": 10,
+    "price": 11,
+    "pricePerQuestion": 11,
     "handle": "vasundhara"
   },
   {
@@ -23,6 +23,19 @@
   {
     "_id": "6a461d063334b22b756be44d",
     "name": "Atul Dutta",
+    "price": 99,
+    "pricePerQuestion": 99
+  },
+  {
+    "_id": "6a4626a2324a155fd084e736",
+    "name": "shrijee bhartia",
+    "price": 11,
+    "pricePerQuestion": 11,
+    "handle": "bhartiya_shrijee"
+  },
+  {
+    "_id": "6a4629b2324a155fd084e739",
+    "name": "ananta ananta",
     "price": 99,
     "pricePerQuestion": 99
   }
