@@ -79,8 +79,8 @@ const CreatorSettings = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [customExpertise, setCustomExpertise] = useState('');
 
-  const displayUserName = creator.name || creator.displayName || creator.handle || 'C';
-  const [avatar, setAvatar] = useState(creator.avatarUrl || displayUserName[0].toUpperCase());
+  const displayUserName = creator.name || creator.displayName || creator.handle || '';
+  const [avatar, setAvatar] = useState(creator.avatarUrl || (displayUserName ? displayUserName[0].toUpperCase() : ''));
   
   const [isEditingBio, setIsEditingBio] = useState(false);
   const [isEditingPrice, setIsEditingPrice] = useState(false);
@@ -113,8 +113,8 @@ const CreatorSettings = () => {
       if (creator.avatarUrl) {
         setAvatar(creator.avatarUrl);
       } else {
-        const dName = creator.name || creator.displayName || creator.handle || 'C';
-        setAvatar(dName[0].toUpperCase());
+        const dName = creator.name || creator.displayName || creator.handle || '';
+        setAvatar(dName ? dName[0].toUpperCase() : '');
       }
       if (creator.isPaused !== undefined) setIsPaused(creator.isPaused);
       if (!isEditingExpertise && creator.expertise) setExpertiseList(creator.expertise);
@@ -484,7 +484,7 @@ const CreatorSettings = () => {
                   ) : null;
                 })()}
                 <div style={{ display: creator.avatarUrl ? 'none' : 'block' }}>
-                  {avatar.substring(0, 1).toUpperCase()}
+                  {avatar ? avatar.substring(0, 1).toUpperCase() : ''}
                 </div>
               </div>
               <div style={{

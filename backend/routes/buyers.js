@@ -108,8 +108,8 @@ router.post('/submit-question', async (req, res) => {
       return res.status(404).json({ success: false, message: 'Creator not found' });
     }
 
-    // Calculate SLA deadline
-    const responseHours = parseInt(creator.responseTime) || 48; // e.g. "48 hours" → 48
+    // Calculate SLA deadline (Strict 24 hours for all creators)
+    const responseHours = 24;
     const expiresAt = new Date(Date.now() + responseHours * 60 * 60 * 1000);
 
     // Get sequential order number

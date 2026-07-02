@@ -7,29 +7,22 @@
     "handle": "uwj"
   },
   {
-    "_id": "6a439fd7270f621b4b6d61ba",
-    "name": "Ananta",
-    "price": 99,
-    "pricePerQuestion": 99
-  },
-  {
-    "_id": "6a43ba233f1db566e5a1f841",
-    "name": "Tarundeep Singh",
-    "price": 1,
-    "pricePerQuestion": 1,
-    "handle": "tarun555"
-  },
-  {
-    "_id": "6a44ec00b7a459fc193077f8",
+    "_id": "6a451c838cf66d5022e8c403",
     "name": "Vasundhara Keshan",
     "price": 10,
     "pricePerQuestion": 10,
-    "handle": "heyyyyyyy"
+    "handle": "vasundhara"
   },
   {
-    "_id": "6a44f887b7a459fc193077fd",
-    "name": "Vasundhara Keshan",
-    "handle": "vasundharakeshan",
+    "_id": "6a452ea6fd15a8a9e110d582",
+    "name": "Tarundeep Singh",
+    "price": 49,
+    "pricePerQuestion": 49,
+    "handle": "tarun05"
+  },
+  {
+    "_id": "6a461d063334b22b756be44d",
+    "name": "Atul Dutta",
     "price": 99,
     "pricePerQuestion": 99
   }

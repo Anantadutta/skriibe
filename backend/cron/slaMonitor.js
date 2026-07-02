@@ -130,7 +130,7 @@ const runSlaMonitor = async () => {
 
       let balanceToRelease = 0;
       for (const q of validQuestions) {
-        balanceToRelease += (q.amountPaid * 0.80); // 80% creator share
+        balanceToRelease += (q.amountPaid * 0.50); // 50% creator share (Strike 4 Ban penalty)
       }
 
       creator.payoutAlertSent = true;
