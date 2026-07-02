@@ -6,7 +6,12 @@
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://skriibe.com/privacy-policy</loc>
+    <loc>https://www.skriibe.com/privacy</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://www.skriibe.com/terms</loc>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
