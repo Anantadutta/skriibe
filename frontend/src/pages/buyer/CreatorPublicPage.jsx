@@ -226,16 +226,16 @@ const CreatorPublicPage = () => {
                 src={creator.avatarUrl} 
                 alt={creator.name} 
                 style={{
-                  width: '80px', height: '80px', borderRadius: '50%',
+                  width: '64px', height: '64px', borderRadius: '50%',
                   border: '2px solid #29C5F6', objectFit: 'cover'
                 }} 
               />
             ) : (
               <div style={{
-                width: '80px', height: '80px', borderRadius: '50%',
+                width: '64px', height: '64px', borderRadius: '50%',
                 background: '#1A1A1A', border: '2px solid #29C5F6',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontWeight: '900', fontSize: '32px', color: '#ffffff'
+                fontWeight: '900', fontSize: '24px', color: '#ffffff'
               }}>
                 {creator.name ? creator.name[0].toUpperCase() : 'R'}
               </div>
