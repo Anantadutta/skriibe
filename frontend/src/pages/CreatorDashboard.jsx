@@ -43,8 +43,12 @@ const CreatorDashboard = () => {
       try {
         const res = await getMe();
         if (res.success) {
-          if (!res.creator.handle && !res.creator.onboardingComplete && !res.creator.ama_enabled) {
-            navigate('/onboard/profile', { replace: true });
+          if (!res.creator.ama_enabled) {
+            if (res.creator.expertise && res.creator.expertise.length > 0) {
+              navigate('/onboard/pricing', { replace: true });
+            } else {
+              navigate('/onboard/profile', { replace: true });
+            }
             return;
           }
           setCreator(res.creator);
