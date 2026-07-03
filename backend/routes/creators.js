@@ -383,9 +383,21 @@ router.get('/me', verifyCreatorToken, async (req, res) => {
       return res.status(401).json({ message: 'Session expired or user deleted' });
     }
     if (creator.isBanned) return res.status(403).json({ message: 'Account permanently removed' });
+    let activeStrikesCount = 0;
+    if (creator.strikes && creator.strikes.length > 0) {
+      const activeStrikes = creator.strikes.filter(s => !s.isExpired);
+      if (activeStrikes.length > 0) {
+        const sortedActive = [...activeStrikes].sort((a, b) => new Date(b.date) - new Date(a.date));
+        const mostRecentStrike = sortedActive[0];
+        const daysSinceLastStrike = (new Date() - new Date(mostRecentStrike.date)) / (1000 * 60 * 60 * 24);
+        if (daysSinceLastStrike <= 90) {
+          activeStrikesCount = activeStrikes.length;
+        }
+      }
+    }
     
     // Removed mock data auto-seeding here so new users can enter their own details
-    res.json({ success: true, creator });
+    res.json({ success: true, creator: { ...creator.toObject(), activeStrikesCount } });
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
   }

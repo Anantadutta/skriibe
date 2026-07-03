@@ -688,11 +688,19 @@ const CreatorDashboard = () => {
           <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontWeight: 800, fontSize: '1.1rem', color: '#fff' }}>Looking strong</span>
-                <span style={{ background: 'rgba(16, 185, 129, 0.15)', color: '#10B981', padding: '4px 8px', borderRadius: '8px', fontSize: '0.7rem', fontWeight: 800 }}>Good</span>
+                <span style={{ fontWeight: 800, fontSize: '1.1rem', color: '#fff' }}>
+                  {creator?.activeStrikesCount > 0 ? `Strike ${creator.activeStrikesCount}` : 'Looking strong'}
+                </span>
+                <span style={{ 
+                  background: creator?.activeStrikesCount > 0 ? 'rgba(239, 68, 68, 0.15)' : 'rgba(16, 185, 129, 0.15)', 
+                  color: creator?.activeStrikesCount > 0 ? '#ef4444' : '#10B981', 
+                  padding: '4px 8px', borderRadius: '8px', fontSize: '0.7rem', fontWeight: 800 
+                }}>
+                  {creator?.activeStrikesCount > 0 ? 'Warning' : 'Good'}
+                </span>
               </div>
               <div style={{ color: '#94a3b8', fontSize: '0.8rem', marginTop: '6px', lineHeight: '1.4' }}>
-                {creator?.stats?.replyRate || 0}% reply rate · {creator?.sla?.breaches || 0} SLA breaches · {creator?.sla?.strikes || 0} strikes
+                {creator?.stats?.replyRate || 100}% reply rate · {creator?.activeStrikesCount || 0} SLA breaches · {creator?.activeStrikesCount || 0} strikes
               </div>
             </div>
           </div>

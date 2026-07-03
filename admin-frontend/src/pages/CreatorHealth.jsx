@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import NotificationBell from '../components/NotificationBell';
 
 const CreatorHealth = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [creators, setCreators] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('All'); // All, Healthy, Critical
@@ -23,9 +24,28 @@ const CreatorHealth = () => {
     fetchCreators();
   }, []);
 
+  useEffect(() => {
+    if (!loading && location.state?.highlightCreatorId && creators.length > 0) {
+      const el = document.getElementById(`creator-${location.state.highlightCreatorId}`);
+      if (el) {
+        setTimeout(() => {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          // Temporarily highlight the border
+          const originalBorder = el.style.border;
+          el.style.border = '2px solid #F59E0B';
+          el.style.boxShadow = '0 0 15px rgba(245, 158, 11, 0.3)';
+          setTimeout(() => {
+            el.style.border = originalBorder;
+            el.style.boxShadow = 'none';
+          }, 3000);
+        }, 100);
+      }
+    }
+  }, [loading, creators, location.state]);
+
   const allCreators = creators;
-  const healthy = creators.filter(c => c.calculatedStats?.healthStatus === 'Healthy');
-  const critical = creators.filter(c => c.calculatedStats?.healthStatus === 'Critical');
+  const healthy = creators.filter(c => c.calculatedStats?.healthStatus === 'Account Healthy');
+  const critical = creators.filter(c => c.calculatedStats?.healthStatus !== 'Account Healthy');
 
   let currentList = [];
   if (activeTab === 'All') currentList = allCreators;
@@ -128,7 +148,7 @@ const CreatorHealth = () => {
             const breachColor = stats.slaBreaches === 0 ? '#10B981' : stats.slaBreaches <= 2 ? '#F59E0B' : '#EF4444';
 
             return (
-              <div key={creator._id} style={{ background: '#1C1510', border: '1px solid #332616', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              <div id={`creator-${creator._id}`} key={creator._id} style={{ background: '#1C1510', border: '1px solid #332616', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '20px', transition: 'all 0.5s ease' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: '#1A4D3E', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', fontWeight: '900', border: '2px solid #236B56' }}>
@@ -137,7 +157,7 @@ const CreatorHealth = () => {
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
                       <div style={{ color: '#fff', fontSize: '1.1rem', fontWeight: 'bold' }}>{creator.name || 'No Name Provided'}</div>
                       <div style={{ color: '#94a3b8', fontSize: '0.85rem' }}>
-                        @{creator.handle || 'unknown'} {creator.email && <span style={{ color: '#cbd5e1' }}>• {creator.email}</span>}
+                        @{creator.handle || 'unknown'} {creator.email && <span style={{ color: '#cbd5e1' }}>• {creator.email}</span>}{creator.phone && <span style={{ color: '#cbd5e1' }}> • {creator.phone}</span>}
                       </div>
                       <div style={{ color: '#64748b', fontSize: '0.75rem', marginTop: '4px' }}>
                         Joined: {new Date(creator.createdAt || Date.now()).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}

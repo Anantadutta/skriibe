@@ -184,7 +184,7 @@ const Dashboard = () => {
               <button onClick={() => setShowSlaModal(false)} style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
               </button>
-              <h2 className="font-wide" style={{ margin: 0, fontSize: '1.5rem', color: '#fff' }}>SLA Breaches (>{24}h Pending)</h2>
+              <h2 className="font-wide" style={{ margin: 0, fontSize: '1.5rem', color: '#fff' }}>SLA Breaches (&gt;24h Pending)</h2>
             </div>
             <p style={{ color: '#94a3b8', fontSize: '0.9rem', margin: 0, paddingLeft: '40px' }}>These questions have been paid for but not answered within 24 hours.</p>
 
@@ -242,14 +242,24 @@ const Dashboard = () => {
                     </div>
                     
                     <div style={{ color: '#94a3b8', fontSize: '0.85rem', marginBottom: '4px' }}>
-                      Creator: <span style={{ color: '#cbd5e1' }}>{rq.creatorId?.name || 'Unknown'} (@{rq.creatorId?.handle || 'unknown'})</span>
+                      Creator: <span style={{ color: '#cbd5e1' }}>{rq.creatorId?.name || 'Unknown'} (@{rq.creatorId?.handle || 'unknown'}) {rq.creatorId?.email ? `• ${rq.creatorId.email}` : ''}</span>
                     </div>
 
-                    <div style={{ color: '#94a3b8', fontSize: '0.85rem', marginBottom: '12px' }}>
-                      Admin Decision: <span style={{ color: rq.adminDecision === 'fan_wins' ? '#EF4444' : '#38bdf8', fontWeight: 'bold' }}>
-                        {rq.adminDecision === 'fan_wins' ? 'Full Refund to Buyer' : (rq.adminDecision === 'creator_wins' ? 'No Refund (Creator Wins)' : rq.adminDecision || 'Unknown')}
-                      </span>
+                    <div style={{ color: '#94a3b8', fontSize: '0.85rem', marginBottom: '4px' }}>
+                      Sent on: <span style={{ color: '#cbd5e1' }}>{rq.createdAt ? new Date(rq.createdAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) : 'Unknown'}</span>
                     </div>
+
+                    {rq.status === 'expired' ? (
+                      <div style={{ color: '#94a3b8', fontSize: '0.85rem', marginBottom: '12px' }}>
+                        Reason: <span style={{ color: '#F59E0B', fontWeight: 'bold' }}>SLA Breach (Auto Refund)</span>
+                      </div>
+                    ) : (
+                      <div style={{ color: '#94a3b8', fontSize: '0.85rem', marginBottom: '12px' }}>
+                        Admin Decision: <span style={{ color: rq.adminDecision === 'fan_wins' ? '#EF4444' : '#38bdf8', fontWeight: 'bold' }}>
+                          {rq.adminDecision === 'fan_wins' ? 'Full Refund to Buyer' : (rq.adminDecision === 'creator_wins' ? 'No Refund (Creator Wins)' : rq.adminDecision || 'Unknown')}
+                        </span>
+                      </div>
+                    )}
 
                     <div style={{ color: '#e2e8f0', fontSize: '0.9rem', fontStyle: 'italic', background: '#1a1a24', padding: '8px', borderRadius: '4px', marginBottom: '8px' }}>
                       <span style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>QUESTION</span>

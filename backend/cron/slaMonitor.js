@@ -87,7 +87,7 @@ const runSlaMonitor = async () => {
       await AdminAlert.create({
         type: 'sla_breach',
         title: `SLA Breach - Strike ${newLevel}`,
-        message: `Creator @${creator.handle} missed reply window for Q#${q._id.toString().slice(-6)}. Strike ${newLevel} issued.`,
+        message: `Creator @${creator.handle} missed reply window for Q#${q.orderNumber || q._id.toString().slice(-6)}. Strike ${newLevel} issued.`,
         referenceId: creator._id
       });
       

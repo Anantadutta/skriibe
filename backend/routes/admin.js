@@ -97,7 +97,9 @@ router.get('/dashboard', async (req, res) => {
 
       const adminRefundsList = await Question.find({
         adminDecision: { $in: ['fan_wins', 'partial_refund'] }
-      }).select('questionText answerText adminDecision status buyerName amountPaid');
+      })
+      .populate('creatorId', 'name handle email')
+      .select('questionText answerText adminDecision status buyerName amountPaid createdAt creatorId');
 
       const dashboardData = {
         gmvToday: gmvToday,
@@ -267,10 +269,14 @@ router.get('/creators', async (req, res) => {
       let healthStatus = 'Account Healthy';
       if (creator.isBanned) {
          healthStatus = 'Permanently Removed';
+      } else if (activeStrikesCount >= 4) {
+         healthStatus = '4 — Permanently Banned';
       } else if (activeStrikesCount === 3) {
          healthStatus = '3 — Suspended (7 Days)';
       } else if (activeStrikesCount === 2) {
          healthStatus = '2 — Warning & Review';
+      } else if (activeStrikesCount === 1) {
+         healthStatus = '1 — Strike 1';
       }
 
       return {

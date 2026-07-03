@@ -5,11 +5,31 @@ const SweepLog = require('../models/SweepLog');
 const runWeeklySweep = async () => {
     console.log('Starting weekly sweep of available balances...');
     try {
+        // First Payout Rule: Account must be at least 6 days old to qualify for the sweep.
+        // This forces non-Tuesday signups to wait for the "next to next" Tuesday.
+        const sixDaysAgo = new Date(Date.now() - (6 * 24 * 60 * 60 * 1000));
+        
         // Find all creators who have an availableBalance > 0
         const creatorsWithBalance = await Creator.find({ 
             availableBalance: { $gt: 0 },
             bankLinked: true,
-            panVerificationStatus: 'verified'
+            panVerificationStatus: 'verified',
+            isBanned: { $ne: true }, // Ensure they are not permanently banned
+            $and: [
+                {
+                    $or: [
+                        { payoutsFrozenUntil: { $exists: false } },
+                        { payoutsFrozenUntil: null },
+                        { payoutsFrozenUntil: { $lte: new Date() } } // Ensure payouts are not currently frozen
+                    ]
+                },
+                {
+                    $or: [
+                        { lifetimePaid: { $gt: 0 } }, // If they already had a payout before, pay them immediately
+                        { createdAt: { $lte: sixDaysAgo } } // Otherwise, must be at least 6 days old
+                    ]
+                }
+            ]
         }).select('_id');
         
         let sweptCount = 0;
