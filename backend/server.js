@@ -196,6 +196,32 @@ app.get('/health', async (req, res) => {
   res.json({ status: 'ok', dbConnected: isConnected });
 });
 
+// Endpoint for Uptime Robot to trigger SLA monitor
+app.get('/api/cron/sla-monitor', async (req, res) => {
+  try {
+    await connectDB();
+    const { runSlaMonitor } = require('./cron/slaMonitor');
+    await runSlaMonitor();
+    res.json({ success: true, message: 'SLA Monitor executed successfully' });
+  } catch (error) {
+    console.error('Manual SLA Monitor trigger failed:', error);
+    res.status(500).json({ success: false, error: 'Internal Server Error' });
+  }
+});
+
+// Endpoint for Uptime Robot to trigger Weekly Sweep
+app.get('/api/cron/weekly-sweep', async (req, res) => {
+  try {
+    await connectDB();
+    const { runWeeklySweep } = require('./cron/weeklySweep');
+    await runWeeklySweep();
+    res.json({ success: true, message: 'Weekly Sweep executed successfully' });
+  } catch (error) {
+    console.error('Manual Weekly Sweep trigger failed:', error);
+    res.status(500).json({ success: false, error: 'Internal Server Error' });
+  }
+});
+
 // --- Razorpay Routes ---
 app.post('/api/create-order', async (req, res) => {
   try {
