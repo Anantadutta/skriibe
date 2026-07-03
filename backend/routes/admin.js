@@ -45,10 +45,15 @@ router.get('/dashboard', async (req, res) => {
     // Calculate actual SLA breaches: pending for > 24 hours
     const last24Hours = new Date(Date.now() - 24 * 60 * 60 * 1000);
     const breachedQuestions = await Question.find({
-      status: 'submitted',
-      paymentStatus: 'paid',
-      createdAt: { $lt: last24Hours }
-    }).populate('creatorId', 'name handle').populate('fanId', 'name email');
+      $or: [
+        {
+          status: 'submitted',
+          paymentStatus: 'paid',
+          createdAt: { $lt: last24Hours }
+        },
+        { status: 'expired' }
+      ]
+    }).populate('creatorId', 'name handle email').populate('fanId', 'name email');
     const slaBreachesCount = breachedQuestions.length;
 
     // Active creators

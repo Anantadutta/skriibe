@@ -21,12 +21,6 @@
     "handle": "tarun05"
   },
   {
-    "_id": "6a461d063334b22b756be44d",
-    "name": "Atul Dutta",
-    "price": 99,
-    "pricePerQuestion": 99
-  },
-  {
     "_id": "6a4626a2324a155fd084e736",
     "name": "shrijee bhartia",
     "price": 11,
@@ -34,28 +28,17 @@
     "handle": "bhartiya_shrijee"
   },
   {
-    "_id": "6a4629b2324a155fd084e739",
-    "name": "ananta ananta",
-    "price": 99,
-    "pricePerQuestion": 99
-  },
-  {
-    "_id": "6a462cd9bc841531355e744a",
-    "name": "",
-    "price": 99,
-    "pricePerQuestion": 99
-  },
-  {
-    "_id": "6a464baa02cea239d1abb0e7",
-    "name": "Ananta",
-    "price": 99,
-    "pricePerQuestion": 99
-  },
-  {
     "_id": "6a473a3fd7576154a5bbf3b3",
     "name": "Amrita Raj",
     "price": 49,
     "pricePerQuestion": 49,
     "handle": "amritaraj"
+  },
+  {
+    "_id": "6a47a847df2c0aec69e20b0d",
+    "name": "",
+    "handle": "anantaananta",
+    "price": 99,
+    "pricePerQuestion": 99
   }
 ]

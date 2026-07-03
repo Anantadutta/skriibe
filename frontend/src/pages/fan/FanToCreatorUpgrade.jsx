@@ -11,10 +11,10 @@ const FanToCreatorUpgrade = () => {
   useEffect(() => {
     const doUpgrade = async () => {
       try {
-        const res = await upgradeToCreator('', ' ', 'Others');
+        const res = await upgradeToCreator('', '', '');
         if (res.success) {
           setAuthData(['fan', 'creator'], 'creator', res.token);
-          navigate('/creator/dashboard', { replace: true });
+          navigate('/onboard/profile', { replace: true });
         }
       } catch (err) {
         setError(err.response?.data?.message || 'Upgrade failed. Please try again.');

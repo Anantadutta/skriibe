@@ -475,9 +475,10 @@ router.post('/me/upgrade-to-creator', verifyFanToken, async (req, res) => {
     const fan = await Fan.findById(req.fan.fanId);
     if (!fan) return res.status(404).json({ success: false, message: 'Fan not found' });
 
-    if (!creator_name) {
-      creator_name = fan.name || fan.email.split('@')[0];
-    }
+    // Do not auto-populate creator_name so they appear as 'Unknown' if they drop off
+    // if (!creator_name) {
+    //   creator_name = fan.name || fan.email.split('@')[0];
+    // }
 
     if (!fan.roles.includes('creator')) {
       fan.roles.push('creator');
@@ -485,22 +486,7 @@ router.post('/me/upgrade-to-creator', verifyFanToken, async (req, res) => {
       await fan.save();
     }
 
-    const CreatorProfile = require('../models/CreatorProfile');
-    let profile = await CreatorProfile.findOne({ user: fan._id });
-    if (!profile) {
-      profile = new CreatorProfile({
-        user: fan._id,
-        creator_name,
-        bio: bio || '',
-        category: category || ''
-      });
-      await profile.save();
-    } else {
-      profile.creator_name = creator_name;
-      if (bio) profile.bio = bio;
-      if (category) profile.category = category;
-      await profile.save();
-    }
+    // DO NOT create CreatorProfile here, wait until they actually complete onboarding or remove entirely since it's mostly unused.
 
     let creator = await Creator.findOne({ email: fan.email.toLowerCase() });
     if (!creator) {

@@ -105,29 +105,9 @@ const FanDiscovery = () => {
           if (res.fan.creatorHandle) {
             setFanCreatorHandle(res.fan.creatorHandle);
           }
-        } else {
-          throw new Error('Fan profile not found or no creator handle');
         }
       } catch (err) {
-        // Fallback: if logged in as creator, try /creators/me
-        try {
-          const { default: api } = await import('../../services/api');
-          const cRes = await api.get('/creators/me');
-          if (cRes.data?.success && cRes.data?.creator) {
-            const firstName = cRes.data.creator.name.split(' ')[0];
-            setFanName(firstName);
-            localStorage.setItem('skriibe_fan_name', firstName);
-            if (cRes.data.creator.avatarUrl) {
-              setFanAvatar(cRes.data.creator.avatarUrl);
-              localStorage.setItem('skriibe_fan_avatar', cRes.data.creator.avatarUrl);
-            }
-            if (cRes.data.creator.handle) {
-              setFanCreatorHandle(cRes.data.creator.handle);
-            }
-          }
-        } catch (fallbackErr) {
-          console.error('Failed to fetch user profile', fallbackErr);
-        }
+        console.error('Failed to fetch user profile', err);
       }
     };
     fetchFanProfile();

@@ -192,14 +192,24 @@ const Dashboard = () => {
               {data.breachedQuestions && data.breachedQuestions.length > 0 ? (
                 data.breachedQuestions.map(bq => (
                   <div key={bq._id} style={{ background: '#0F0F13', padding: '16px', borderRadius: '8px', border: '1px solid #2A2A35' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                      <div style={{ color: '#fff', fontWeight: 'bold' }}>To: {bq.creatorId?.name || 'Unknown'} (@{bq.creatorId?.handle || 'unknown'})</div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                      <div style={{ color: '#fff', fontWeight: 'bold' }}>Buyer: {bq.buyerName || bq.fanId?.name || 'Anonymous Buyer'}</div>
                       <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                         <div style={{ color: '#10B981', fontWeight: 'bold' }}>₹{bq.amountPaid || 0}</div>
-                        <div style={{ color: '#EF4444', fontSize: '0.8rem', fontWeight: 'bold' }}>{Math.floor((new Date() - new Date(bq.createdAt)) / (1000 * 60 * 60))}h Overdue</div>
+                        <div style={{ color: '#EF4444', fontSize: '0.8rem', fontWeight: 'bold' }}>
+                          {bq.status === 'expired' ? 'Strike Initiated (Expired)' : `${Math.floor((new Date() - new Date(bq.createdAt)) / (1000 * 60 * 60))}h Overdue`}
+                        </div>
                       </div>
                     </div>
-                    <div style={{ color: '#94a3b8', fontSize: '0.85rem', marginBottom: '8px' }}>From: {bq.fanId?.name || bq.buyerName || 'Anonymous Buyer'}</div>
+                    
+                    <div style={{ color: '#94a3b8', fontSize: '0.85rem', marginBottom: '4px' }}>
+                      Creator: <span style={{ color: '#cbd5e1' }}>{bq.creatorId?.name || 'Unknown'} (@{bq.creatorId?.handle || 'unknown'}) {bq.creatorId?.email ? `• ${bq.creatorId.email}` : ''}</span>
+                    </div>
+
+                    <div style={{ color: '#94a3b8', fontSize: '0.85rem', marginBottom: '8px' }}>
+                      Sent on: <span style={{ color: '#cbd5e1' }}>{bq.createdAt ? new Date(bq.createdAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) : 'Unknown'}</span>
+                    </div>
+
                     <div style={{ color: '#e2e8f0', fontSize: '0.9rem', fontStyle: 'italic', background: '#1a1a24', padding: '8px', borderRadius: '4px' }}>
                       "{bq.questionText}"
                     </div>
