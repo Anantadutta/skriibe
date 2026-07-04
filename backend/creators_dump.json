@@ -35,10 +35,23 @@
     "handle": "amritaraj"
   },
   {
-    "_id": "6a47a847df2c0aec69e20b0d",
-    "name": "",
-    "handle": "anantaananta",
+    "_id": "6a47ada6d3ddc1b1f731dc0d",
+    "name": "ananta ananta",
     "price": 99,
     "pricePerQuestion": 99
+  },
+  {
+    "_id": "6a47b458d3ddc1b1f731dc31",
+    "name": "",
+    "handle": "creator",
+    "price": 99,
+    "pricePerQuestion": 99
+  },
+  {
+    "_id": "6a47ca41d3ddc1b1f731dc63",
+    "name": "Priyaa",
+    "price": 20,
+    "pricePerQuestion": 20,
+    "handle": "justpriya"
   }
 ]

@@ -36,3 +36,4 @@ export const uploadAvatar = (formData) => api.post('/creators/avatar', formData,
 });
 
 export default {};
+

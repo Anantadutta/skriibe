@@ -7,7 +7,7 @@ This plan outlines the steps to build Phase 1 of the skriibe AMA platform direct
 > [!IMPORTANT]  
 > Please review this plan to ensure it aligns with your expectations before I begin execution. Notably, because the absolute rules forbid modifying `Hero.jsx`, I will place the "I'm a creator" CTA button inside the `/` route wrapper in `App.jsx` (which contains the `Hero` component) or use a minimal DOM injection if it absolutely must sit *inside* the Hero component's button group. Currently, the plan is to render it in `App.jsx` directly below the `<Hero />` section or use a dedicated `LandingPage` layout.
 
-## Open Questions
+## Open gits
 
 - Placing the new CTA button *below the existing primary CTA button* is requested, but I cannot modify `Hero.jsx` or `WaitlistForm.jsx` where the existing CTAs live. I will place the new button in `App.jsx` directly below the `<Hero />` component, centered, so it appears below the hero section's content. Is this acceptable, or should I attempt a DOM insertion effect from `App.jsx`? (I will proceed with the safe `App.jsx` placement).
 

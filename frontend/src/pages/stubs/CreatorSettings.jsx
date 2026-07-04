@@ -71,8 +71,8 @@ const CreatorSettings = () => {
   const formattedFollowers = creator.instagramFollowers 
     ? (creator.instagramFollowers >= 1000 ? (creator.instagramFollowers/1000).toFixed(1).replace('.0', '') + 'K' : creator.instagramFollowers) 
     : '12K';
-  const defaultBio = `${creator.expertise && creator.expertise.length > 0 ? creator.expertise[0] : 'Finance'} · ${formattedFollowers} followers`;
-  const [bio, setBio] = useState(creator.bio || defaultBio);
+  const defaultBio = 'Welcome to my Skriibe! Ask me anything.';
+  const [bio, setBio] = useState(creator.bio || '');
   
   const [expertiseList, setExpertiseList] = useState(creator.expertise || []);
   const [isEditingExpertise, setIsEditingExpertise] = useState(false);
@@ -929,6 +929,73 @@ const CreatorSettings = () => {
                   </>
                 )}
               </div>
+            </div>
+
+            {/* Bio Row */}
+            <div style={{ display: 'flex', flexDirection: 'column', padding: '16px', gap: '10px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                  <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(167, 139, 250, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#a78bfa', fontSize: '1rem' }}>
+                    ✏️
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                    <div style={{ color: '#ffffff', fontSize: '0.85rem', fontWeight: 700 }}>Bio</div>
+                    <div style={{ color: '#64748b', fontSize: '0.75rem' }}>Your profile description</div>
+                  </div>
+                </div>
+                {!isEditingBio ? (
+                  <button
+                    onClick={() => setIsEditingBio(true)}
+                    style={{ background: '#252530', border: 'none', color: '#ffffff', borderRadius: '12px', padding: '8px 14px', fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer' }}
+                  >Edit</button>
+                ) : (
+                  <button
+                    onClick={() => { setIsEditingBio(false); if (creator.bio) setBio(creator.bio); }}
+                    style={{ background: 'transparent', border: '1px solid #475569', color: '#94a3b8', borderRadius: '12px', padding: '8px 14px', fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer' }}
+                  >Cancel</button>
+                )}
+              </div>
+
+              {!isEditingBio ? (
+                <div style={{ color: bio ? '#94a3b8' : '#4b5563', fontSize: '0.8rem', lineHeight: '1.5', fontStyle: bio ? 'normal' : 'italic', paddingLeft: '56px' }}>
+                  {bio || defaultBio}
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <textarea
+                    autoFocus
+                    value={bio}
+                    onChange={(e) => { if (e.target.value.length <= 200) setBio(e.target.value); }}
+                    placeholder="Tell fans what you're about..."
+                    rows={3}
+                    style={{
+                      background: '#0d0d1a',
+                      border: '1px solid rgba(124, 58, 237, 0.5)',
+                      borderRadius: '12px',
+                      color: '#e2e8f0',
+                      fontSize: '0.8rem',
+                      lineHeight: '1.6',
+                      padding: '10px 12px',
+                      resize: 'none',
+                      outline: 'none',
+                      fontFamily: 'inherit',
+                      width: '100%',
+                      boxSizing: 'border-box',
+                    }}
+                    onFocus={e => e.target.style.borderColor = '#a78bfa'}
+                    onBlur={e => e.target.style.borderColor = 'rgba(124, 58, 237, 0.5)'}
+                  />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '0.7rem', color: (200 - bio.length) < 20 ? '#f87171' : '#64748b' }}>
+                      {200 - bio.length} characters left
+                    </span>
+                    <button
+                      onClick={handleSaveBio}
+                      style={{ background: '#38BDF8', border: 'none', color: '#0E0E0E', borderRadius: '12px', padding: '8px 20px', fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer' }}
+                    >Save</button>
+                  </div>
+                </div>
+              )}
             </div>
 
           </div>
