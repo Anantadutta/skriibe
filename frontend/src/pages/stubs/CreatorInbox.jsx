@@ -33,8 +33,8 @@ const CreatorInbox = () => {
   ];
 
   useEffect(() => {
-    const fetchQuestions = async () => {
-      setLoading(true);
+    const fetchQuestions = async (isBackground = false) => {
+      if (!isBackground) setLoading(true);
       try {
         const res = await api.get(`/creator/questions?t=${Date.now()}`);
         if (res.data.success) {
@@ -43,10 +43,14 @@ const CreatorInbox = () => {
       } catch (err) {
         console.error('Error fetching questions:', err);
       } finally {
-        setLoading(false);
+        if (!isBackground) setLoading(false);
       }
     };
     fetchQuestions();
+    const interval = setInterval(() => {
+      fetchQuestions(true);
+    }, 15000);
+    return () => clearInterval(interval);
   }, []);
 
   const buildThreads = (qs) => {

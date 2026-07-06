@@ -87,6 +87,12 @@ const CreatorDashboard = () => {
 
     fetchQuestions();
     fetchPayouts();
+
+    const interval = setInterval(() => {
+      fetchQuestions();
+      fetchPayouts();
+    }, 15000);
+    return () => clearInterval(interval);
   }, [location.state?.creator]);
 
   useEffect(() => {

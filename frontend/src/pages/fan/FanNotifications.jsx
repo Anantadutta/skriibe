@@ -9,7 +9,8 @@ const FanNotifications = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchNotifications = async () => {
+    const fetchNotifications = async (isBackground = false) => {
+      if (!isBackground) setLoading(true);
       try {
         const res = await api.get('/questions/notifications');
         if (res.data.success) {
@@ -18,10 +19,14 @@ const FanNotifications = () => {
       } catch (err) {
         console.error('Failed to fetch notifications', err);
       } finally {
-        setLoading(false);
+        if (!isBackground) setLoading(false);
       }
     };
     fetchNotifications();
+    const interval = setInterval(() => {
+      fetchNotifications(true);
+    }, 15000);
+    return () => clearInterval(interval);
   }, []);
 
   const handleNotificationClick = async (notif) => {

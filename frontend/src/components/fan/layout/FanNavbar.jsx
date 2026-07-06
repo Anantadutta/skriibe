@@ -47,9 +47,14 @@ const FanNavbar = () => {
     fetchFanProfile();
     fetchNotifications();
 
+    const interval = setInterval(() => {
+      fetchNotifications();
+    }, 15000);
+
     window.addEventListener('notificationRead', handleNotificationRead);
     return () => {
       window.removeEventListener('notificationRead', handleNotificationRead);
+      clearInterval(interval);
     };
   }, []);
 
