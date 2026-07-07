@@ -276,8 +276,8 @@ const CreatorSettings = () => {
   };
 
   const handleSavePrice = async () => {
-    if (Number(questionPrice) < 1) {
-      setCustomAlert("Minimum Rs 1 is required for the message price.");
+    if (Number(questionPrice) < 10) {
+      setCustomAlert("Minimum Rs 10 is required for the message price.");
       return;
     }
     try {

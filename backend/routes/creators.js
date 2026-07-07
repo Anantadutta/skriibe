@@ -606,6 +606,7 @@ router.post('/settings', verifyCreatorToken, async (req, res) => {
   const updateData = {};
   if (typeof weeklyGoal === 'number') updateData.weeklyGoal = weeklyGoal;
   if (typeof pricePerQuestion === 'number') {
+    if (pricePerQuestion < 10) return res.status(400).json({ message: 'Invalid price. Must be at least 10.' });
     updateData.pricePerQuestion = pricePerQuestion;
     updateData.price = pricePerQuestion;
   }
