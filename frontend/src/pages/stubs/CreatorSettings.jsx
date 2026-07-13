@@ -276,8 +276,8 @@ const CreatorSettings = () => {
   };
 
   const handleSavePrice = async () => {
-    if (Number(questionPrice) < 10) {
-      setCustomAlert("Minimum Rs 10 is required for the message price.");
+    if (Number(questionPrice) < 1) {
+      setCustomAlert("Minimum Rs 1 is required for the message price.");
       return;
     }
     try {
@@ -634,6 +634,83 @@ const CreatorSettings = () => {
           </svg>
           <span style={{ fontSize: '1.1rem', fontWeight: '700' }}>Share profile</span>
         </button>
+
+        {/* AFFILIATE REFERRAL SECTION */}
+        {creator?.referralCode && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.75rem', fontWeight: 800, color: '#94a3b8', letterSpacing: '1px', textTransform: 'uppercase' }}>
+              <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#2DD4BF' }} />
+              AFFILIATE PROGRAM
+            </div>
+
+            <div style={{
+              background: '#16161e',
+              borderRadius: '20px',
+              border: '1px solid #2DD4BF',
+              padding: '16px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '12px'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(45, 212, 191, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#2DD4BF', fontSize: '1.2rem' }}>
+                    🤝
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                    <div style={{ color: '#ffffff', fontSize: '0.85rem', fontWeight: 700 }}>Your Referral Link</div>
+                    <div style={{ color: '#64748b', fontSize: '0.75rem' }}>Earn 25% of Skriibe's cut!</div>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <div style={{ 
+                  flex: 1, 
+                  background: '#0E0E0E', 
+                  border: '1px solid #1F2937', 
+                  borderRadius: '8px', 
+                  padding: '10px 12px', 
+                  fontSize: '0.85rem', 
+                  color: '#cbd5e1',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis'
+                }}>
+                  {window.location.origin.replace(/^https?:\/\//, '')}/creator/signup?ref={creator.referralCode}
+                </div>
+                <button 
+                  onClick={() => {
+                    navigator.clipboard.writeText(`${window.location.origin}/creator/signup?ref=${creator.referralCode}`);
+                    const btn = document.getElementById('settings-copy-btn');
+                    if (btn) {
+                      btn.innerText = 'Copied!';
+                      btn.style.background = '#22C55E';
+                      setTimeout(() => {
+                        btn.innerText = 'Copy';
+                        btn.style.background = '#2DD4BF';
+                      }, 2000);
+                    }
+                  }}
+                  id="settings-copy-btn"
+                  style={{
+                    background: '#2DD4BF',
+                    color: '#0E0E0E',
+                    border: 'none',
+                    borderRadius: '8px',
+                    padding: '0 16px',
+                    fontWeight: 800,
+                    fontSize: '0.85rem',
+                    cursor: 'pointer',
+                    transition: 'background 0.3s'
+                  }}
+                >
+                  Copy
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* AMA SETTINGS SECTION */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>

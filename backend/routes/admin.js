@@ -94,11 +94,18 @@ router.get('/dashboard', async (req, res) => {
       }
 
       const skriibeSharePercentage = Math.max(0, 1.0 - creatorSharePercentage);
-      revenue += (amount * skriibeSharePercentage);
+      let skriibeActualCut = skriibeSharePercentage;
+      
+      if (creator && creator.referredBy) {
+        // Affiliate takes 25% of Skriibe's cut
+        skriibeActualCut = skriibeSharePercentage * 0.75;
+      }
+      
+      revenue += (amount * skriibeActualCut);
     });
 
-    gmvToday = Math.round(gmvToday);
-    revenue = Math.round(revenue);
+    gmvToday = Number(gmvToday.toFixed(2));
+    revenue = Number(revenue.toFixed(2));
 
       const adminRefundsList = await Question.find({
         adminDecision: { $in: ['fan_wins', 'partial_refund'] }
@@ -854,6 +861,57 @@ router.get('/earnings', async (req, res) => {
   } catch (err) {
     console.error('Error fetching earnings:', err);
     res.status(500).json({ error: 'Server error fetching earnings' });
+  }
+});
+/**
+ * @route GET /api/admin/affiliators
+ * @desc Get all affiliators and their successfully referred creators
+ */
+router.get('/affiliators', async (req, res) => {
+  try {
+    await connectDB();
+    
+    // Find all creators who have a referredBy field and have completed onboarding (handle exists)
+    const referredCreators = await Creator.find({
+      referredBy: { $exists: true, $ne: null },
+      handle: { $exists: true, $ne: null }
+    }).select('name handle profilePic referredBy createdAt');
+
+    // Group them by their referredBy ID
+    const affiliatorMap = {};
+    for (const creator of referredCreators) {
+      const affiliatorId = creator.referredBy.toString();
+      if (!affiliatorMap[affiliatorId]) {
+        affiliatorMap[affiliatorId] = [];
+      }
+      affiliatorMap[affiliatorId].push(creator);
+    }
+
+    // Fetch the affiliator profiles
+    const affiliatorIds = Object.keys(affiliatorMap);
+    const affiliatorProfiles = await Creator.find({
+      _id: { $in: affiliatorIds }
+    }).select('name handle profilePic email createdAt');
+
+    // Build the final response array
+    const affiliatorsData = affiliatorProfiles.map(profile => ({
+      _id: profile._id,
+      name: profile.name,
+      handle: profile.handle,
+      profilePic: profile.profilePic,
+      email: profile.email,
+      createdAt: profile.createdAt,
+      referralsCount: affiliatorMap[profile._id.toString()].length,
+      referrals: affiliatorMap[profile._id.toString()].sort((a, b) => b.createdAt - a.createdAt)
+    }));
+
+    // Sort by most referrals
+    affiliatorsData.sort((a, b) => b.referralsCount - a.referralsCount);
+
+    res.json({ success: true, affiliators: affiliatorsData });
+  } catch (err) {
+    console.error('Error fetching affiliators:', err);
+    res.status(500).json({ error: 'Server error fetching affiliators' });
   }
 });
 

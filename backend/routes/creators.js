@@ -135,7 +135,7 @@ router.post('/send-otp', otpLimiter, async (req, res) => {
  * @desc Verify OTP and issue JWT
  */
 router.post('/verify-otp', async (req, res) => {
-  const { phone, otp } = req.body;
+  const { phone, otp, ref } = req.body;
 
   if (!phone || !otp) {
     return res.status(400).json({ message: 'Phone and OTP are required.' });
@@ -173,7 +173,16 @@ router.post('/verify-otp', async (req, res) => {
   let creator = await Creator.findOne({ phone });
   let isNew = false;
   if (!creator) {
-    creator = await Creator.create({ phone });
+    let referredBy = null;
+    let referredByName = null;
+    if (ref) {
+      const referrer = await Creator.findOne({ referralCode: ref });
+      if (referrer) {
+        referredBy = referrer._id;
+        referredByName = referrer.name || referrer.email || referrer.phone || 'Anonymous';
+      }
+    }
+    creator = await Creator.create({ phone, referredBy, referredByName });
     isNew = true;
     
     // Create Admin Alert for Signup
@@ -219,7 +228,7 @@ router.post('/verify-otp', async (req, res) => {
  * @desc Signup via email and password
  */
 router.post('/email-signup', async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password, ref } = req.body;
 
   if (!email || !password) {
     return res.status(400).json({ message: 'Email and password are required.' });
@@ -233,7 +242,17 @@ router.post('/email-signup', async (req, res) => {
     return res.status(400).json({ message: 'Email is already registered. Please login.' });
   }
 
-  creator = await Creator.create({ email, password });
+  let referredBy = null;
+  let referredByName = null;
+  if (ref) {
+    const referrer = await Creator.findOne({ referralCode: ref });
+    if (referrer) {
+      referredBy = referrer._id;
+      referredByName = referrer.name || referrer.email || 'Anonymous';
+    }
+  }
+
+  creator = await Creator.create({ email, password, referredBy, referredByName });
 
   // Create Admin Alert
   await AdminAlert.create({
@@ -395,7 +414,19 @@ router.get('/me', verifyCreatorToken, async (req, res) => {
         }
       }
     }
-    
+    // Generate referral code if not exists
+    if (!creator.referralCode) {
+      let unique = false;
+      let newCode = '';
+      while (!unique) {
+        newCode = 'SKR-' + crypto.randomBytes(4).toString('hex').toUpperCase();
+        const exists = await Creator.findOne({ referralCode: newCode });
+        if (!exists) unique = true;
+      }
+      creator.referralCode = newCode;
+      await creator.save();
+    }
+
     // Removed mock data auto-seeding here so new users can enter their own details
     res.json({ success: true, creator: { ...creator.toObject(), activeStrikesCount } });
   } catch (error) {
@@ -416,6 +447,25 @@ router.post('/check-handle', async (req, res) => {
   await connectDB();
   const exists = await Creator.findOne({ handle });
   res.json({ available: !exists });
+});
+
+/**
+ * @route GET /api/creators/my-referrals
+ * @desc Get referred creators who completed onboarding
+ */
+router.get('/my-referrals', verifyCreatorToken, async (req, res) => {
+  try {
+    await connectDB();
+    const referrals = await Creator.find({
+      referredBy: req.creator.creatorId,
+      handle: { $exists: true, $ne: null }
+    }).select('name handle profilePic email createdAt').sort({ createdAt: -1 });
+
+    res.json({ success: true, referrals });
+  } catch (error) {
+    console.error('Failed to fetch referrals:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
 });
 
 /**
@@ -606,7 +656,7 @@ router.post('/settings', verifyCreatorToken, async (req, res) => {
   const updateData = {};
   if (typeof weeklyGoal === 'number') updateData.weeklyGoal = weeklyGoal;
   if (typeof pricePerQuestion === 'number') {
-    if (pricePerQuestion < 10) return res.status(400).json({ message: 'Invalid price. Must be at least 10.' });
+    if (pricePerQuestion < 1) return res.status(400).json({ message: 'Invalid price. Must be at least 1.' });
     updateData.pricePerQuestion = pricePerQuestion;
     updateData.price = pricePerQuestion;
   }

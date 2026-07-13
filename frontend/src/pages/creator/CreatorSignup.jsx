@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import TransparentLogo from '../../components/TransparentLogo';
 import { useAuth } from '../../context/AuthContext';
 import { emailSignup } from '../../services/creatorApi';
@@ -22,13 +22,19 @@ const CreatorSignup = () => {
   const [focusedPassword, setFocusedPassword] = useState(false);
   const [focusedConfirm, setFocusedConfirm] = useState(false);
   const navigate = useNavigate();
-  const { setAuthData } = useAuth();
+  const location = useLocation();
+  const { roles, setAuthData } = useAuth();
 
   useEffect(() => {
+    if (roles?.includes('creator')) {
+      navigate('/creator/dashboard', { replace: true });
+      return;
+    }
+    
     if (localStorage.getItem('isReturningCreator') === 'true') {
       navigate('/creator/login', { replace: true });
     }
-  }, [navigate]);
+  }, [navigate, roles]);
 
   const checkPasswordStrength = (pwd) => {
     return pwd.length >= 8 && /[0-9\W]/.test(pwd);
@@ -53,7 +59,9 @@ const CreatorSignup = () => {
     setLoading(true);
     setError('');
     try {
-      const res = await emailSignup(email, password);
+      const urlParams = new URLSearchParams(location.search);
+      const ref = urlParams.get('ref');
+      const res = await emailSignup(email, password, ref);
       if (res.data.success) {
         localStorage.setItem('isReturningCreator', 'true');
         localStorage.removeItem('bankLinked');

@@ -14,7 +14,7 @@ This plan outlines the steps to build Phase 1 of the skriibe AMA platform direct
 
 ## Proposed Changes
 
-### Task 1: Verify `skriibe-app` Deletion
+### Task 1: Verify `skriibe-app` Deletion 
 - Verify that `skriibe-app/` has been fully removed. (User has already completed this).
 
 ### Task 2: Update CSS and HTML

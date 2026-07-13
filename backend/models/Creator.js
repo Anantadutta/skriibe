@@ -71,6 +71,9 @@ const CreatorSchema = new mongoose.Schema({
   authProvider: { type: String, default: 'local' },
   resetPasswordToken: { type: String },
   resetPasswordExpires: { type: Date },
+  referralCode: { type: String, unique: true, sparse: true },
+  referredBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Creator' },
+  referredByName: { type: String },
   createdAt: { type: Date, default: Date.now },
   // SLA Strikes System
   strikes: [{

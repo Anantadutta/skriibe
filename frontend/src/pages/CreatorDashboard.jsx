@@ -7,7 +7,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import TransparentLogo from '../components/TransparentLogo';
 import { mockCreator, mockQuestions } from '../mock/questions';
-import { getMe, toggleLive } from '../services/creatorApi';
+import { getMe, toggleLive, getMyReferrals } from '../services/creatorApi';
 import api from '../services/api';
 import { switchRole } from '../services/fanApi';
 import { useAuth } from '../context/AuthContext';
@@ -29,6 +29,11 @@ const CreatorDashboard = () => {
   const [now, setNow] = useState(Date.now());
   const [isSavingStatus, setIsSavingStatus] = useState(false);
   const [abusivePopupQuestion, setAbusivePopupQuestion] = useState(null);
+  
+  // Referrals Modal State
+  const [showReferralsModal, setShowReferralsModal] = useState(false);
+  const [referralsList, setReferralsList] = useState([]);
+  const [loadingReferrals, setLoadingReferrals] = useState(false);
 
   const currencySymbol = getCurrencySymbol(creator?.phone);
 
@@ -201,6 +206,21 @@ const CreatorDashboard = () => {
     }
   };
 
+  const handleOpenReferrals = async () => {
+    setShowReferralsModal(true);
+    setLoadingReferrals(true);
+    try {
+      const res = await getMyReferrals();
+      if (res.success) {
+        setReferralsList(res.referrals || []);
+      }
+    } catch (err) {
+      console.error('Failed to load referrals:', err);
+    } finally {
+      setLoadingReferrals(false);
+    }
+  };
+
   const totalReceived = questions.length;
   const pendingCount = questions.filter(q => q.status?.toLowerCase() === 'pending').length;
   const disputeCount = questions.filter(q => q.status?.toLowerCase() === 'flagged').length;
@@ -294,6 +314,7 @@ const CreatorDashboard = () => {
   };
 
   return (
+    <>
     <div style={{
       minHeight: '100vh',
       background: '#0E0E0E',
@@ -624,6 +645,156 @@ const CreatorDashboard = () => {
             }} />
           </div>
         </div>
+
+        {/* 4.5 AFFILIATE REFERRAL */}
+        {creator?.referralCode && (
+          <div style={{
+            background: 'linear-gradient(145deg, #1A1C23 0%, #13161C 100%)',
+            border: '1px solid #29C5F6',
+            borderRadius: '16px',
+            padding: '16px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '12px',
+            position: 'relative',
+            overflow: 'hidden'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 1 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '1.2rem' }}>🤝</span>
+                <span style={{ fontWeight: 800, fontSize: '1rem', color: '#fff' }}>Refer & Earn</span>
+              </div>
+              <div style={{ background: 'rgba(41, 197, 246, 0.1)', color: '#29C5F6', padding: '4px 8px', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 800 }}>
+                25% Rev Share
+              </div>
+            </div>
+            
+            <div style={{ color: '#94a3b8', fontSize: '0.85rem', lineHeight: '1.4', zIndex: 1 }}>
+              Invite creators to Skriibe using your unique link. You'll get <strong style={{ color: '#fff' }}>25% of Skriibe's cut</strong> for every earning they make!
+            </div>
+
+            <div style={{ display: 'flex', gap: '8px', marginTop: '4px', zIndex: 1 }}>
+              <div style={{ 
+                flex: 1, 
+                background: '#0E0E0E', 
+                border: '1px solid #1F2937', 
+                borderRadius: '8px', 
+                padding: '10px 12px', 
+                fontSize: '0.85rem', 
+                color: '#cbd5e1',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis'
+              }}>
+                skriibe.com/creator/signup?ref={creator.referralCode}
+              </div>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button 
+                  onClick={() => {
+                    navigator.clipboard.writeText(`https://skriibe.com/creator/signup?ref=${creator.referralCode}`);
+                    const btn = document.getElementById('dash-copy-btn');
+                    if (btn) {
+                      btn.innerText = 'Copied!';
+                      btn.style.background = '#22C55E';
+                      setTimeout(() => {
+                        btn.innerText = 'Copy';
+                        btn.style.background = '#29C5F6';
+                      }, 2000);
+                    }
+                  }}
+                  id="dash-copy-btn"
+                  style={{
+                    background: '#29C5F6',
+                    color: '#0E0E0E',
+                    border: 'none',
+                    borderRadius: '8px',
+                    padding: '8px 12px',
+                    fontWeight: 800,
+                    fontSize: '0.85rem',
+                    cursor: 'pointer',
+                    transition: 'background 0.3s'
+                  }}
+                >
+                  Copy
+                </button>
+                {navigator.share && (
+                  <button 
+                    onClick={() => {
+                      navigator.share({
+                        title: 'Join Skriibe',
+                        text: 'Join Skriibe using my referral link and start earning!',
+                        url: `https://skriibe.com/creator/signup?ref=${creator.referralCode}`
+                      }).catch(console.error);
+                    }}
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.1)',
+                      color: '#fff',
+                      border: '1px solid rgba(255, 255, 255, 0.2)',
+                      borderRadius: '8px',
+                      padding: '8px 12px',
+                      fontWeight: 800,
+                      fontSize: '0.85rem',
+                      cursor: 'pointer',
+                      transition: 'background 0.3s'
+                    }}
+                    onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)'}
+                    onMouseOut={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'}
+                  >
+                    Share
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <button
+              onClick={handleOpenReferrals}
+              style={{
+                marginTop: '12px',
+                width: '100%',
+                background: 'rgba(255, 255, 255, 0.05)',
+                color: '#fff',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                borderRadius: '8px',
+                padding: '10px',
+                fontWeight: 600,
+                fontSize: '0.85rem',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                gap: '8px'
+              }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+              </svg>
+              Referred till now
+            </button>
+
+            {/* Aesthetic glow */}
+            <div style={{
+              position: 'absolute',
+              bottom: '-20px',
+              right: '-20px',
+              width: '100px',
+              height: '100px',
+              background: 'radial-gradient(circle, rgba(41, 197, 246, 0.15) 0%, rgba(41, 197, 246, 0) 70%)',
+              filter: 'blur(20px)',
+              pointerEvents: 'none',
+              zIndex: 0
+            }} />
+          </div>
+        )}
 
         {/* SETUP PAYOUTS */}
         {!creator.bankLinked ? (
@@ -960,6 +1131,68 @@ const CreatorDashboard = () => {
       </div>
 
     </div>
+
+      {showReferralsModal && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px'
+        }}>
+          <div style={{
+            background: '#0E0E0E', border: '1px solid #1F2937', borderRadius: '16px',
+            padding: '24px', width: '100%', maxWidth: '380px', position: 'relative'
+          }}>
+            <button 
+              onClick={() => setShowReferralsModal(false)}
+              style={{
+                position: 'absolute', top: '16px', right: '16px', background: 'transparent',
+                border: 'none', color: '#64748b', cursor: 'pointer'
+              }}
+            >
+              ✕
+            </button>
+            <h3 style={{ margin: '0 0 16px 0', fontSize: '1.2rem', color: '#fff', fontWeight: 800 }}>Referred Creators</h3>
+            
+            {loadingReferrals ? (
+              <div style={{ textAlign: 'center', color: '#94a3b8', padding: '20px' }}>Loading...</div>
+            ) : referralsList.length === 0 ? (
+              <div style={{ textAlign: 'center', color: '#94a3b8', padding: '20px' }}>
+                You haven't referred anyone yet!
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '60vh', overflowY: 'auto' }}>
+                {referralsList.map((ref) => (
+                  <div key={ref._id} style={{
+                    display: 'flex', alignItems: 'center', gap: '12px', padding: '12px',
+                    background: '#16161E', borderRadius: '12px', border: '1px solid #1F2937'
+                  }}>
+                    <div style={{
+                      width: '40px', height: '40px', borderRadius: '50%', background: '#29C5F6',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0E0E0E',
+                      fontWeight: 800, fontSize: '1.1rem', overflow: 'hidden'
+                    }}>
+                      {ref.profilePic ? (
+                        <img src={ref.profilePic} alt={ref.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      ) : (
+                        (ref.name || 'C')[0].toUpperCase()
+                      )}
+                    </div>
+                    <div style={{ flex: 1, overflow: 'hidden' }}>
+                      <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.95rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {ref.name || 'Unnamed Creator'}
+                      </div>
+                      <div style={{ color: '#29C5F6', fontSize: '0.8rem' }}>
+                        @{ref.handle}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 

@@ -1,24 +1,10 @@
 [
   {
-    "_id": "6a439f5f270f621b4b6d61b8",
-    "name": "Annie",
-    "price": 10,
-    "pricePerQuestion": 10,
-    "handle": "uwj"
-  },
-  {
     "_id": "6a451c838cf66d5022e8c403",
     "name": "Vasundhara Keshan",
     "price": 11,
     "pricePerQuestion": 11,
     "handle": "vasundhara"
-  },
-  {
-    "_id": "6a452ea6fd15a8a9e110d582",
-    "name": "Tarundeep Singh",
-    "price": 11,
-    "pricePerQuestion": 11,
-    "handle": "tarun05"
   },
   {
     "_id": "6a4626a2324a155fd084e736",
@@ -35,23 +21,55 @@
     "handle": "amritaraj"
   },
   {
-    "_id": "6a47ada6d3ddc1b1f731dc0d",
-    "name": "ananta ananta",
-    "price": 99,
-    "pricePerQuestion": 99
-  },
-  {
-    "_id": "6a47b458d3ddc1b1f731dc31",
-    "name": "",
-    "handle": "creator",
-    "price": 99,
-    "pricePerQuestion": 99
-  },
-  {
     "_id": "6a47ca41d3ddc1b1f731dc63",
     "name": "Priyaa",
     "price": 20,
     "pricePerQuestion": 20,
     "handle": "justpriya"
+  },
+  {
+    "_id": "6a4b699024dd4c11a06caad4",
+    "name": "Ananta Dutta",
+    "price": 1,
+    "pricePerQuestion": 1,
+    "handle": "ananta_01"
+  },
+  {
+    "_id": "6a4b9a4f24dd4c11a06caad7",
+    "name": "Riya Manku",
+    "price": 99,
+    "pricePerQuestion": 99
+  },
+  {
+    "_id": "6a4ba42624dd4c11a06caadd",
+    "name": "Gourav Drish",
+    "price": 99,
+    "pricePerQuestion": 99
+  },
+  {
+    "_id": "6a4e1c862f89c2b93235c16e",
+    "name": "Mayank Kakkar",
+    "price": 49,
+    "pricePerQuestion": 49,
+    "handle": "mayank"
+  },
+  {
+    "_id": "6a4e89352f89c2b93235c171",
+    "name": "",
+    "price": 99,
+    "pricePerQuestion": 99
+  },
+  {
+    "_id": "6a4fc2702f89c2b93235c173",
+    "name": "Saad Gani",
+    "price": 99,
+    "pricePerQuestion": 99
+  },
+  {
+    "_id": "6a5482cf4347d69715639f8b",
+    "name": "Ananta refto",
+    "price": 1,
+    "pricePerQuestion": 1,
+    "handle": "referto"
   }
 ]

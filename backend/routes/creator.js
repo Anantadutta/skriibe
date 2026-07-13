@@ -316,15 +316,48 @@ router.post('/questions/:id/reply', verifyCreatorToken, async (req, res) => {
         // Track daily earning in ledger
         try {
             const Earning = require('../models/Earning');
-            const creatorDoc = await Creator.findById(req.creator.creatorId).select('name');
+            const creatorDoc = await Creator.findById(req.creator.creatorId).select('name referredBy referredByName');
             await Earning.create({
                 creatorId: req.creator.creatorId,
                 creatorName: creatorDoc ? creatorDoc.name : 'Unknown Creator',
                 questionId: question._id,
                 orderNumber: question.orderNumber || 'N/A',
                 amount: creatorShareRs,
-                status: 'accumulating'
+                status: 'accumulating',
+                earningType: 'question_reply'
             });
+
+            // ----------------------------------------------------
+            // Affiliate Referral Payout Logic (Phase 3)
+            // ----------------------------------------------------
+            if (creatorDoc && creatorDoc.referredBy) {
+                const skriibeCutPaise = grossPaise - creatorSharePaise;
+                
+                if (skriibeCutPaise > 0) {
+                    // Affiliate gets 25% of Skriibe's cut
+                    const affiliateSharePaise = Math.round(skriibeCutPaise * 0.25);
+                    const affiliateShareRs = affiliateSharePaise / 100;
+                    
+                    if (affiliateShareRs > 0) {
+                        // 1. Update Affiliate's Balance
+                        await Creator.findByIdAndUpdate(creatorDoc.referredBy, {
+                            $inc: { availableBalance: affiliateShareRs }
+                        });
+                        
+                        // 2. Create Earning Record for Affiliate
+                        await Earning.create({
+                            creatorId: creatorDoc.referredBy,
+                            creatorName: creatorDoc.referredByName || 'Affiliate Creator',
+                            questionId: question._id, // Links to the same transaction
+                            orderNumber: question.orderNumber ? question.orderNumber + '-REF' : 'N/A-REF',
+                            amount: affiliateShareRs,
+                            status: 'accumulating',
+                            earningType: 'affiliate_referral'
+                        });
+                    }
+                }
+            }
+            // ----------------------------------------------------
         } catch (earningErr) {
             console.error('Failed to create earning record:', earningErr);
         }
@@ -779,6 +812,28 @@ router.get('/payouts', verifyCreatorToken, async (req, res) => {
       }
     }
 
+    // Include affiliate earnings in the totals
+    const affiliateEarnings = await Earning.find({
+      creatorId: req.creator.creatorId,
+      earningType: 'affiliate_referral'
+    }).sort({ createdAt: -1 });
+
+    for (const e of affiliateEarnings) {
+      const eDate = e.date || e.createdAt || now;
+      const earningAmount = e.amount || 0;
+      const answeredMonth = new Date(eDate.getFullYear(), eDate.getMonth(), 1);
+
+      if (eDate >= lastBoundary) {
+        available += earningAmount;
+        availableGross += earningAmount; 
+      } else {
+        lifetimePaid += earningAmount;
+        if (answeredMonth >= monthStart) {
+          thisMonth += earningAmount;
+        }
+      }
+    }
+
     // Group history by month
     const groupedHistory = {};
     for (const q of answeredPaid) {
@@ -812,6 +867,28 @@ router.get('/payouts', verifyCreatorToken, async (req, res) => {
         date: q.answeredAt.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
         bank: q.isAnonymous ? 'Anonymous' : (q.buyerName || 'Fan'),
         amount: Math.round(earning * 100) / 100,
+        status: statusLabel
+      });
+    }
+
+    // Add affiliate earnings to history
+    for (const e of affiliateEarnings) {
+      const eDate = e.date || e.createdAt || now;
+      const monthKey = eDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase();
+      if (!groupedHistory[monthKey]) {
+        groupedHistory[monthKey] = [];
+      }
+      
+      let statusLabel = 'Paid';
+      if (eDate >= lastBoundary) {
+        statusLabel = 'Available';
+      }
+      
+      groupedHistory[monthKey].push({
+        id: e._id.toString(),
+        date: eDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+        bank: 'Affiliate Referral',
+        amount: Math.round(e.amount * 100) / 100,
         status: statusLabel
       });
     }

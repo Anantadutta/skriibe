@@ -22,6 +22,7 @@ import Transactions from './pages/Transactions';
 import DeletionPauseReasons from './pages/DeletionPauseReasons';
 import CommissionSettings from './pages/CommissionSettings';
 import CreatorBankDetails from './pages/CreatorBankDetails';
+import Affiliators from './pages/Affiliators';
 import AdminLayout from './components/AdminLayout';
 
 // Authentication guard
@@ -64,6 +65,7 @@ function App() {
             <Route path="account-actions" element={<DeletionPauseReasons />} />
             <Route path="commission" element={<CommissionSettings />} />
             <Route path="bank-details" element={<CreatorBankDetails />} />
+            <Route path="affiliators" element={<Affiliators />} />
             <Route path="" element={<Navigate to="/admin/dashboard" replace />} />
           </Route>
         </Route>

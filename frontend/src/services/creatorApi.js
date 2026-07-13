@@ -6,16 +6,21 @@
 // Auth Routes
 import api from './api';
 
-export const emailSignup = (email, password) => api.post('/creators/email-signup', { email, password });
+export const emailSignup = (email, password, ref) => api.post('/creators/email-signup', { email, password, ref });
 export const emailLogin = (email, password) => api.post('/creators/email-login', { email, password });
 export const sendOTP = (phone) => api.post('/creators/send-otp', { phone });
-export const verifyOTP = (phone, code) => api.post('/creators/verify-otp', { phone, code });
+export const verifyOTP = (phone, code, ref) => api.post('/creators/verify-otp', { phone, code, ref });
 
 export const checkHandle = (handle) => api.post('/creators/check-handle', { handle });
 
 // Creator Routes
 export const getMe = async () => {
   const res = await api.get('/creators/me');
+  return res.data;
+};
+
+export const getMyReferrals = async () => {
+  const res = await api.get('/creators/my-referrals');
   return res.data;
 };
 

@@ -7,7 +7,8 @@ const EarningSchema = new mongoose.Schema({
   orderNumber: { type: String, required: true },
   amount: { type: Number, required: true },
   date: { type: Date, default: Date.now },
-  status: { type: String, enum: ['accumulating', 'swept'], default: 'accumulating' }
+  status: { type: String, enum: ['accumulating', 'swept'], default: 'accumulating' },
+  earningType: { type: String, enum: ['question_reply', 'affiliate_referral'], default: 'question_reply' }
 }, { timestamps: true });
 
 module.exports = mongoose.models.Earning || mongoose.model('Earning', EarningSchema);
