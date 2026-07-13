@@ -24,17 +24,24 @@ const CreatorSignup = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { roles, setAuthData } = useAuth();
+  const [showAlreadyCreatorModal, setShowAlreadyCreatorModal] = useState(false);
 
   useEffect(() => {
     if (roles?.includes('creator')) {
-      navigate('/creator/dashboard', { replace: true });
-      return;
+      const urlParams = new URLSearchParams(location.search);
+      if (urlParams.get('ref')) {
+        setShowAlreadyCreatorModal(true);
+        return;
+      } else {
+        navigate('/creator/dashboard', { replace: true });
+        return;
+      }
     }
     
     if (localStorage.getItem('isReturningCreator') === 'true') {
       navigate('/creator/login', { replace: true });
     }
-  }, [navigate, roles]);
+  }, [navigate, roles, location.search]);
 
   const checkPasswordStrength = (pwd) => {
     return pwd.length >= 8 && /[0-9\W]/.test(pwd);
@@ -152,6 +159,44 @@ const CreatorSignup = () => {
           box-shadow: 0 0 6px #06b6d4, 0 0 10px #7c3aed;
           animation: sparkle-pulse 4s infinite ease-in-out;
         }
+      `}} />
+
+      {/* Already Creator Modal */}
+      {showAlreadyCreatorModal && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 1000,
+          background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px'
+        }}>
+          <div style={{
+            background: '#0E0E0E', border: '1px solid #1F2937', borderRadius: '16px',
+            padding: '32px', width: '100%', maxWidth: '400px', textAlign: 'center',
+            boxShadow: '0 20px 40px rgba(0,0,0,0.5)'
+          }}>
+            <div style={{ fontSize: '3rem', marginBottom: '16px' }}>👋</div>
+            <h3 style={{ margin: '0 0 12px 0', fontSize: '1.4rem', color: '#fff', fontWeight: 800 }}>
+              You're already a Creator!
+            </h3>
+            <p style={{ color: '#94a3b8', fontSize: '0.95rem', marginBottom: '24px', lineHeight: 1.5 }}>
+              You are currently logged into your Skriibe account. You cannot refer yourself or create a new account while logged in.
+            </p>
+            <button
+              onClick={() => navigate('/creator/dashboard')}
+              style={{
+                width: '100%', padding: '12px', background: '#38BDF8', color: '#0E0E0E',
+                border: 'none', borderRadius: '12px', fontWeight: 800, fontSize: '1rem',
+                cursor: 'pointer', transition: 'all 0.2s'
+              }}
+              onMouseOver={(e) => e.target.style.background = '#0EA5E9'}
+              onMouseOut={(e) => e.target.style.background = '#38BDF8'}
+            >
+              Go to Dashboard
+            </button>
+          </div>
+        </div>
+      )}
+      
+      <style dangerouslySetInnerHTML={{ __html: `
         .gradient-action-btn:hover:not(:disabled) {
           transform: translateY(-2px);
           box-shadow: 0 0 20px rgba(124, 58, 237, 0.6), 0 0 30px rgba(6, 182, 212, 0.4) !important;
