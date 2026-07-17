@@ -54,6 +54,7 @@ import BuyerHistoryPage from './pages/buyer/BuyerHistoryPage';
 import BuyerQuestionPage from './pages/buyer/BuyerQuestionPage';
 import DemoAnswerPage from './pages/buyer/DemoAnswerPage';
 import FlagSubmittedPage from './pages/buyer/FlagSubmittedPage';
+import AffiliateProgram from './pages/AffiliateProgram';
 // Fan Flow
 import FanSignup from './pages/fan/FanSignup';
 import FanLogin from './pages/fan/FanLogin';
@@ -186,6 +187,7 @@ function App() {
             <Route path="/agreement" element={<Agreement />} />
             <Route path="/guidelines" element={<Guidelines />} />
             <Route path="/verify-email" element={<EmailVerificationFlow />} />
+            <Route path="/affiliate" element={<AffiliateProgram theme={theme} />} />
             
             {/* Creator Onboarding */}
             <Route path="/creator/signup" element={<CreatorSignup />} />
