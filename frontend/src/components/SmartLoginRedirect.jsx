@@ -15,22 +15,17 @@ const SmartLoginRedirect = ({ children }) => {
         return;
       }
 
-      // Optimistic redirect for returning creators
-      const isReturningCreator = localStorage.getItem('isReturningCreator');
-      if (isReturningCreator === 'true') {
-        navigate('/creator/dashboard', { replace: true });
-        return;
-      }
-
       try {
         const res = await api.get('/auth/status');
         const data = res.data;
 
         if (data.authenticated && data.isCreator) {
-          const { isLive, handle } = data.creator;
+          const { ama_enabled, expertise } = data.creator;
 
-          if (handle) {
+          if (ama_enabled) {
             navigate('/creator/dashboard', { replace: true });
+          } else if (expertise && expertise.length > 0) {
+            navigate('/onboard/pricing', { replace: true });
           } else {
             navigate('/onboard/profile', { replace: true });
           }

@@ -583,7 +583,9 @@ router.get('/status', async (req, res) => {
             isCreator: true,
             creator: {
               isLive: creator.isLive,
-              handle: creator.handle
+              handle: creator.handle,
+              ama_enabled: creator.ama_enabled,
+              expertise: creator.expertise || []
             }
           });
         }
@@ -610,7 +612,9 @@ router.get('/status', async (req, res) => {
           isCreator: true,
           creator: {
             isLive: creator.isLive,
-            handle: creator.handle
+            handle: creator.handle,
+            ama_enabled: creator.ama_enabled,
+            expertise: creator.expertise || []
           }
         });
       }

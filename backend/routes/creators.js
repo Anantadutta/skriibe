@@ -217,6 +217,8 @@ router.post('/verify-otp', async (req, res) => {
       phone: creator.phone,
       name: creator.name,
       handle: creator.handle,
+      ama_enabled: creator.ama_enabled,
+      expertise: creator.expertise || [],
       onboardingComplete
     },
     token
@@ -275,6 +277,8 @@ router.post('/email-signup', async (req, res) => {
       email: creator.email,
       name: creator.name,
       handle: creator.handle,
+      ama_enabled: creator.ama_enabled,
+      expertise: creator.expertise || [],
       onboardingComplete: false
     },
     token
@@ -297,7 +301,32 @@ router.post('/email-login', async (req, res) => {
   let creator = await Creator.findOne({ email });
 
   if (!creator) {
-    return res.status(400).json({ message: 'No account found with this email.' });
+    const Fan = require('../models/Fan');
+    const fan = await Fan.findOne({ email });
+    if (!fan) {
+      return res.status(400).json({ message: 'No account found with this email.' });
+    }
+    
+    if (fan.password !== password) {
+      return res.status(400).json({ message: 'Invalid credentials.' });
+    }
+    
+    // Auto-upgrade fan to creator
+    if (!fan.roles.includes('creator')) {
+      fan.roles.push('creator');
+      fan.activeRole = 'creator';
+      await fan.save();
+    }
+    
+    // Create new creator record since they are logging in on the creator portal
+    creator = new Creator({
+      email: fan.email,
+      password: fan.password,
+      name: fan.name || fan.email.split('@')[0],
+      avatarUrl: fan.avatarUrl || '',
+      fanId: fan._id
+    });
+    await creator.save();
   }
 
 
@@ -321,6 +350,8 @@ router.post('/email-login', async (req, res) => {
       email: creator.email,
       name: creator.name,
       handle: creator.handle,
+      ama_enabled: creator.ama_enabled,
+      expertise: creator.expertise || [],
       onboardingComplete
     },
     token
@@ -337,15 +368,29 @@ router.post('/forgot-password', async (req, res) => {
     const { email } = req.body;
     if (!email) return res.status(400).json({ message: 'Email required' });
 
-    const creator = await Creator.findOne({ email: email.toLowerCase() });
-    if (creator) {
+    let creator = await Creator.findOne({ email: email.toLowerCase() });
+    const Fan = require('../models/Fan');
+    let fan = await Fan.findOne({ email: email.toLowerCase() });
+
+    if (creator || fan) {
       const resetToken = crypto.randomBytes(32).toString('hex');
-      creator.resetPasswordToken = resetToken;
-      creator.resetPasswordExpires = new Date(Date.now() + 30 * 60 * 1000); // 30 mins
-      await creator.save();
+      const resetExpires = new Date(Date.now() + 30 * 60 * 1000); // 30 mins
       
+      if (creator) {
+        creator.resetPasswordToken = resetToken;
+        creator.resetPasswordExpires = resetExpires;
+        await creator.save();
+      }
+      
+      if (fan) {
+        fan.resetPasswordToken = resetToken;
+        fan.resetPasswordExpires = resetExpires;
+        await fan.save();
+      }
+      
+      const targetUser = creator || fan;
       const resetLink = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/creator/reset-password/${resetToken}`;
-      await sendPasswordResetEmail(creator.email, creator.name, resetLink);
+      await sendPasswordResetEmail(targetUser.email, targetUser.name, resetLink);
     }
 
     res.json({ success: true, message: "If this email exists, you'll receive a link" });
@@ -374,14 +419,29 @@ router.post('/reset-password', async (req, res) => {
       resetPasswordExpires: { $gt: new Date() }
     });
 
-    if (!creator) {
+    const Fan = require('../models/Fan');
+    const fan = await Fan.findOne({
+      resetPasswordToken: token,
+      resetPasswordExpires: { $gt: new Date() }
+    });
+
+    if (!creator && !fan) {
       return res.status(400).json({ message: 'Password reset token is invalid or has expired.' });
     }
 
-    creator.password = password; // Creator's currently save raw passwords
-    creator.resetPasswordToken = undefined;
-    creator.resetPasswordExpires = undefined;
-    await creator.save();
+    if (creator) {
+      creator.password = password; // Creator's currently save raw passwords
+      creator.resetPasswordToken = undefined;
+      creator.resetPasswordExpires = undefined;
+      await creator.save();
+    }
+
+    if (fan) {
+      fan.password = password;
+      fan.resetPasswordToken = undefined;
+      fan.resetPasswordExpires = undefined;
+      await fan.save();
+    }
 
     res.json({ success: true, message: 'Password has been reset successfully.' });
   } catch (err) {

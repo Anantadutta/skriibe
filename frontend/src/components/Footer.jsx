@@ -168,6 +168,7 @@ const Footer = ({ theme }) => {
           <h4 className={`${theme === 'light' ? 'text-black' : 'text-white'} font-bold tracking-widest text-xs uppercase mb-2`}>Product</h4>
           <a href="#" onClick={(e) => { e.preventDefault(); setShowHowItWorks(true); }} className={`${theme === 'light' ? 'text-gray-600 hover:text-black' : 'text-[#a3a3a3] hover:text-white'} transition-colors text-sm`}>How it Works</a>
           <a href="/faqs" className={`${theme === 'light' ? 'text-gray-600 hover:text-black' : 'text-[#a3a3a3] hover:text-white'} transition-colors text-sm`}>FAQs</a>
+          <a href="/creator/login" className={`${theme === 'light' ? 'text-gray-600 hover:text-black' : 'text-[#a3a3a3] hover:text-white'} transition-colors text-sm`}>Refer & Earn Affiliate</a>
         </div>
 
         <div className="col-span-1 flex flex-col gap-5">

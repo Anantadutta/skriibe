@@ -29,7 +29,7 @@
   },
   {
     "_id": "6a4b699024dd4c11a06caad4",
-    "name": "Ananta Dutta",
+    "name": "",
     "price": 1,
     "pricePerQuestion": 1,
     "handle": "ananta_01"
@@ -71,5 +71,19 @@
     "price": 1,
     "pricePerQuestion": 1,
     "handle": "referto"
+  },
+  {
+    "_id": "6a57288a76f88faa5cd14ef7",
+    "name": "Tarundeep Singh",
+    "price": 49,
+    "pricePerQuestion": 49,
+    "handle": "tarun.gujral"
+  },
+  {
+    "_id": "6a59c755476d043e2a4dae98",
+    "name": "Atul hhahaha",
+    "price": 49,
+    "pricePerQuestion": 49,
+    "handle": "fefjenwfl"
   }
 ]
