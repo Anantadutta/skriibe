@@ -29,9 +29,9 @@
   },
   {
     "_id": "6a4b699024dd4c11a06caad4",
-    "name": "",
-    "price": 1,
-    "pricePerQuestion": 1,
+    "name": "Ananta Dutta",
+    "price": 10,
+    "pricePerQuestion": 10,
     "handle": "ananta_01"
   },
   {
@@ -66,13 +66,6 @@
     "pricePerQuestion": 99
   },
   {
-    "_id": "6a5482cf4347d69715639f8b",
-    "name": "Ananta refto",
-    "price": 1,
-    "pricePerQuestion": 1,
-    "handle": "referto"
-  },
-  {
     "_id": "6a57288a76f88faa5cd14ef7",
     "name": "Tarundeep Singh",
     "price": 49,
@@ -81,8 +74,9 @@
   },
   {
     "_id": "6a59db9f8d567710ab746fe6",
-    "name": "Atul Dutta",
+    "name": "",
     "price": 99,
-    "pricePerQuestion": 99
+    "pricePerQuestion": 99,
+    "handle": "creator"
   }
 ]
