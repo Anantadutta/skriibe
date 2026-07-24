@@ -547,86 +547,7 @@ const CreatorOnboardProfile = () => {
               marginBottom: '24px'
             }}>
               
-              {/* INSTAGRAM CONNECT CARD */}
-              <div className="ig-connect-card" style={{ display: 'block' }}>
-                {form.instagramConnected ? (
-                  <div style={{ padding: '8px 0' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '8px' }}>
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="url(#ig-gradient)" stroke="none">
-                        <path d="M7.75 2h8.5A5.75 5.75 0 0 1 22 7.75v8.5A5.75 5.75 0 0 1 16.25 22h-8.5A5.75 5.75 0 0 1 2 16.25v-8.5A5.75 5.75 0 0 1 7.75 2z" opacity="0.1"/>
-                        <path d="M16.25 2h-8.5A5.75 5.75 0 0 0 2 7.75v8.5A5.75 5.75 0 0 0 7.75 22h8.5A5.75 5.75 0 0 0 22 16.25v-8.5A5.75 5.75 0 0 0 16.25 2zm3.75 14.25A3.75 3.75 0 0 1 16.25 20h-8.5A3.75 3.75 0 0 1 4 16.25v-8.5A3.75 3.75 0 0 1 7.75 4h8.5A3.75 3.75 0 0 1 20 7.75v8.5z" fill="url(#ig-gradient)"/>
-                        <path d="M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10zm0 8a3 3 0 1 1 0-6 3 3 0 0 1 0 6z" fill="url(#ig-gradient)"/>
-                        <circle cx="17" cy="7" r="1.2" fill="url(#ig-gradient)"/>
-                      </svg>
-                      <h3 style={{ fontSize: '16px', fontWeight: 700, margin: '0', color: '#fff' }}>@{form.instagramHandle}</h3>
-                    </div>
-                    <p style={{ fontSize: '13px', color: '#06b6d4', margin: '0 0 16px', fontWeight: 600 }}>
-                      {Number(form.instagramFollowers).toLocaleString()} Followers
-                    </p>
-                    <button 
-                      onClick={handleInstagramConnect}
-                      style={{
-                        background: 'transparent',
-                        border: '1px solid rgba(255,255,255,0.2)',
-                        color: '#94a3b8',
-                        padding: '6px 16px',
-                        borderRadius: '999px',
-                        fontSize: '11px',
-                        cursor: 'pointer'
-                      }}
-                    >
-                      Reconnect Instagram
-                    </button>
-                  </div>
-                ) : (
-                  <>
-                    <div style={{ marginBottom: '16px' }}>
-                      <svg width="40" height="40" viewBox="0 0 24 24" fill="url(#ig-gradient)" stroke="none">
-                        <defs>
-                          <linearGradient id="ig-gradient" x1="0%" y1="100%" x2="100%" y2="0%">
-                            <stop offset="0%" stopColor="#f09433"/>
-                            <stop offset="25%" stopColor="#e6683c"/>
-                            <stop offset="50%" stopColor="#dc2743"/>
-                            <stop offset="75%" stopColor="#cc2366"/>
-                            <stop offset="100%" stopColor="#bc1888"/>
-                          </linearGradient>
-                        </defs>
-                        <path d="M7.75 2h8.5A5.75 5.75 0 0 1 22 7.75v8.5A5.75 5.75 0 0 1 16.25 22h-8.5A5.75 5.75 0 0 1 2 16.25v-8.5A5.75 5.75 0 0 1 7.75 2z" opacity="0.1"/>
-                        <path d="M16.25 2h-8.5A5.75 5.75 0 0 0 2 7.75v8.5A5.75 5.75 0 0 0 7.75 22h8.5A5.75 5.75 0 0 0 22 16.25v-8.5A5.75 5.75 0 0 0 16.25 2zm3.75 14.25A3.75 3.75 0 0 1 16.25 20h-8.5A3.75 3.75 0 0 1 4 16.25v-8.5A3.75 3.75 0 0 1 7.75 4h8.5A3.75 3.75 0 0 1 20 7.75v8.5z" fill="url(#ig-gradient)"/>
-                        <path d="M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10zm0 8a3 3 0 1 1 0-6 3 3 0 0 1 0 6z" fill="url(#ig-gradient)"/>
-                        <circle cx="17" cy="7" r="1.2" fill="url(#ig-gradient)"/>
-                      </svg>
-                    </div>
-                    <h3 style={{ fontSize: '15px', fontWeight: 700, margin: '0 0 8px', color: '#fff' }}>Connect Instagram</h3>
-                    <p style={{ fontSize: '11px', color: '#94a3b8', margin: '0 0 16px', lineHeight: 1.4 }}>
-                      Link your Instagram account to quickly set up your profile! We'll automatically fetch your profile photo, username, and follower count from Instagram.
-                    </p>
-                    <div title="Click here to authenticate with Meta and auto-fill your profile!">
-                      <button 
-                        onClick={handleInstagramConnect}
-                        style={{
-                          width: '100%',
-                          padding: '12px',
-                          background: 'linear-gradient(45deg, #f09433, #dc2743, #bc1888)',
-                          border: 'none',
-                          borderRadius: '999px',
-                          color: '#fff',
-                          fontWeight: 700,
-                          fontSize: '14px',
-                          cursor: 'pointer',
-                          boxShadow: '0 4px 15px rgba(220, 39, 67, 0.4)',
-                          marginBottom: '12px'
-                        }}
-                      >
-                        Connect @Instagram
-                      </button>
-                    </div>
-                    <div style={{ fontSize: '9px', color: '#64748b' }}>
-                      Read-only access. We never post on your behalf.
-                    </div>
-                  </>
-                )}
-              </div>
+
 
 
 
@@ -680,43 +601,7 @@ const CreatorOnboardProfile = () => {
                   />
                 </div>
 
-                {/* CONNECTED INSTAGRAM MEDIA GRID */}
-                {form.instagramConnected && (
-                  <div style={{ marginTop: '12px', marginBottom: '12px' }}>
-                    <h3 style={{ fontSize: '14px', fontWeight: 600, color: '#fff', marginBottom: '12px' }}>
-                      Connected Media from @{form.instagramHandle || form.handle}
-                    </h3>
-                    
-                    {(!instagramMedia || instagramMedia.length === 0) ? (
-                      <div style={{ padding: '24px', textAlign: 'center', background: 'rgba(255,255,255,0.03)', borderRadius: '12px', color: '#94a3b8', fontSize: '12px' }}>
-                        No recent posts found.
-                      </div>
-                    ) : (
-                      <div style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))',
-                        gap: '8px'
-                      }}>
-                        {instagramMedia.map((media) => (
-                          <a key={media.id} href={media.permalink} target="_blank" rel="noopener noreferrer" style={{ display: 'block', aspectRatio: '1', borderRadius: '8px', overflow: 'hidden', backgroundColor: '#1e293b', position: 'relative' }}>
-                            <img 
-                              src={media.media_type === 'VIDEO' || media.media_type === 'REEL' ? (media.thumbnail_url || media.media_url) : media.media_url} 
-                              alt={media.caption || 'Instagram Post'} 
-                              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                            />
-                            {(media.media_type === 'VIDEO' || media.media_type === 'REEL') && (
-                              <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.2)' }}>
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="white" opacity="0.8">
-                                  <path d="M8 5v14l11-7z" />
-                                </svg>
-                              </div>
-                            )}
-                          </a>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
+
                 {/* FIELD OF EXPERTISE TAG SELECTOR */}
                 <div style={{ textAlign: 'left' }}>
                   <label style={{

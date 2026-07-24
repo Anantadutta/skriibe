@@ -258,50 +258,53 @@ const CreatorSettings = () => {
   };
 
   const handleSaveGoal = async () => {
-    if (Number(weeklyGoal) < 100) {
+    const goalVal = Number(weeklyGoal);
+    if (isNaN(goalVal) || goalVal < 100) {
       setCustomAlert("Weekly Earnings Goal cannot be less than 100.");
       return;
     }
-    if (Number(weeklyGoal) > 20000) {
+    if (goalVal > 20000) {
       setCustomAlert("Weekly Earnings Goal cannot be more than 20,000.");
       return;
     }
     try {
-      await api.post('/creators/settings', { weeklyGoal: Number(weeklyGoal) });
+      await api.post('/creators/settings', { weeklyGoal: goalVal });
       setIsEditingGoal(false);
-      setCreator(prev => ({ ...prev, weeklyGoal: Number(weeklyGoal) }));
+      setCreator(prev => ({ ...prev, weeklyGoal: goalVal }));
     } catch (err) {
       console.error('Failed to save goal', err);
     }
   };
 
   const handleSavePrice = async () => {
-    if (Number(questionPrice) < 1) {
-      setCustomAlert("Minimum Rs 1 is required for the message price.");
+    const priceVal = Number(questionPrice);
+    if (isNaN(priceVal) || priceVal < 10) {
+      setCustomAlert(`Minimum ${currencySymbol}10 is required for the message price.`);
       return;
     }
     try {
-      await api.post('/creators/settings', { pricePerQuestion: Number(questionPrice) });
+      await api.post('/creators/settings', { pricePerQuestion: priceVal });
       setIsEditingPrice(false);
-      setCreator(prev => ({ ...prev, price: Number(questionPrice), pricePerQuestion: Number(questionPrice) }));
+      setCreator(prev => ({ ...prev, price: priceVal, pricePerQuestion: priceVal }));
     } catch (err) {
       console.error('Failed to save price', err);
     }
   };
 
   const handleSaveCap = async () => {
-    if (Number(dailyCap) < 10) {
+    const capVal = Number(dailyCap);
+    if (isNaN(capVal) || capVal < 10) {
       setCustomAlert("Daily Message Cap cannot be less than 10.");
       return;
     }
-    if (Number(dailyCap) > 100) {
+    if (capVal > 100) {
       setCustomAlert("Daily Message Cap cannot be more than 100.");
       return;
     }
     try {
-      await api.post('/creators/settings', { dailyCap: Number(dailyCap) });
+      await api.post('/creators/settings', { dailyCap: capVal });
       setIsEditingCap(false);
-      setCreator(prev => ({ ...prev, dailyCap: Number(dailyCap) }));
+      setCreator(prev => ({ ...prev, dailyCap: capVal }));
     } catch (err) {
       console.error('Failed to save cap', err);
     }

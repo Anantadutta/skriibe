@@ -548,7 +548,7 @@ const CreatorSignup = () => {
                 or sign up with
               </div>
               
-              <a href={`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/auth/google`}
+              <a href={`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/auth/google${new URLSearchParams(location.search).get('ref') ? `?ref=${new URLSearchParams(location.search).get('ref')}` : ''}`}
                  className="social-btn"
                  style={{
                    display: 'flex',
@@ -578,7 +578,7 @@ const CreatorSignup = () => {
                 Continue with Google
               </a>
 
-              <a href={`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/auth/facebook`}
+              <a href={`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/auth/facebook${new URLSearchParams(location.search).get('ref') ? `?ref=${new URLSearchParams(location.search).get('ref')}` : ''}`}
                  className="social-btn"
                  style={{
                    display: 'flex',

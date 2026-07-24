@@ -282,6 +282,11 @@ const FanProfile = () => {
                             setIsEditingEmail(false);
                             return;
                           }
+                          const lowerEmail = newEmail.toLowerCase();
+                          if (!lowerEmail.includes('@') || !lowerEmail.includes('.')) {
+                            alert('Please enter a valid email address.');
+                            return;
+                          }
                           setSavingEmail(true);
                           try {
                             const res = await updateFanProfile({ email: newEmail });
@@ -355,6 +360,11 @@ const FanProfile = () => {
                         if (isEditingPhone) {
                           if (!newPhone || newPhone === fanProfile.phone) {
                             setIsEditingPhone(false);
+                            return;
+                          }
+                          const digitsOnly = newPhone.replace(/\D/g, '');
+                          if (digitsOnly.length < 10) {
+                            alert("Phone number must have at least 10 digits.");
                             return;
                           }
                           setSavingPhone(true);
@@ -549,7 +559,7 @@ const FanProfile = () => {
                         const res = await upgradeToCreator();
                         if (res.success) {
                           setAuthData(['fan', 'creator'], 'creator', res.token);
-                          window.location.href = '/creator/dashboard';
+                          navigate('/creator/dashboard');
                         }
                       } catch (err) {
                         alert('Failed to upgrade to Creator');
@@ -590,7 +600,7 @@ const FanProfile = () => {
                         const res = await switchRole('creator');
                         if (res.success) {
                           setAuthData(roles, 'creator', res.token);
-                          window.location.href = '/creator/dashboard';
+                          navigate('/creator/dashboard');
                         }
                       } catch (err) {
                         alert('Failed to switch role');

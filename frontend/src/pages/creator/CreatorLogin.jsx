@@ -24,7 +24,7 @@ const CreatorLogin = () => {
   const [focusedEmail, setFocusedEmail] = useState(false);
   const [focusedPassword, setFocusedPassword] = useState(false);
   const navigate = useNavigate();
-  const { setAuthData } = useAuth();
+  const { setAuthData, clearAuthData } = useAuth();
   const successMessage = location.state?.message;
 
   const handleLogin = async () => {
@@ -417,7 +417,7 @@ const CreatorLogin = () => {
               {/* LINK TO SIGNUP */}
               <div style={{ textAlign: 'center', marginTop: '12px', fontSize: '13px' }}>
                 <span style={{ color: '#94a3b8' }}>Don't have an account? </span>
-                <Link to="/creator/signup" onClick={() => localStorage.removeItem('isReturningCreator')} style={{ color: '#06b6d4', textDecoration: 'none', fontWeight: '600' }}>Register here</Link>
+                <Link to="/creator/signup" onClick={() => { localStorage.removeItem('isReturningCreator'); if (clearAuthData) clearAuthData(); }} style={{ color: '#06b6d4', textDecoration: 'none', fontWeight: '600' }}>Register here</Link>
               </div>
             </div>
 

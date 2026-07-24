@@ -28,13 +28,6 @@
     "handle": "justpriya"
   },
   {
-    "_id": "6a4b699024dd4c11a06caad4",
-    "name": "Ananta Dutta",
-    "price": 10,
-    "pricePerQuestion": 10,
-    "handle": "ananta_01"
-  },
-  {
     "_id": "6a4b9a4f24dd4c11a06caad7",
     "name": "Riya Manku",
     "price": 99,
@@ -78,5 +71,31 @@
     "price": 99,
     "pricePerQuestion": 99,
     "handle": "creator"
+  },
+  {
+    "_id": "6a60a37e43c74fd8b6b895cc",
+    "name": "Raghav Sidhu",
+    "price": 99,
+    "pricePerQuestion": 99
+  },
+  {
+    "_id": "6a61bb5f43c74fd8b6b895ce",
+    "name": "ALUU CHAT",
+    "price": 99,
+    "pricePerQuestion": 99
+  },
+  {
+    "_id": "6a635b4d43c74fd8b6b895d0",
+    "name": "",
+    "price": 99,
+    "pricePerQuestion": 99,
+    "handle": "creator1"
+  },
+  {
+    "_id": "6a635ba743c74fd8b6b895d3",
+    "name": "",
+    "price": 99,
+    "pricePerQuestion": 99,
+    "handle": "creator2"
   }
 ]

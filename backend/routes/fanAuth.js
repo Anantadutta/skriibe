@@ -475,10 +475,10 @@ router.post('/me/upgrade-to-creator', verifyFanToken, async (req, res) => {
     const fan = await Fan.findById(req.fan.fanId);
     if (!fan) return res.status(404).json({ success: false, message: 'Fan not found' });
 
-    // Do not auto-populate creator_name so they appear as 'Unknown' if they drop off
-    // if (!creator_name) {
-    //   creator_name = fan.name || fan.email.split('@')[0];
-    // }
+    // Do not auto-populate creator_name with fan.name so they appear as 'Unknown' if they drop off
+    if (!creator_name) {
+      creator_name = 'Unknown';
+    }
 
     if (!fan.roles.includes('creator')) {
       fan.roles.push('creator');
