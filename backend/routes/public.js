@@ -46,7 +46,7 @@ router.get('/creator/:handle', async (req, res) => {
         bio: creator.bio || '',
         expertise: creator.expertise || [],
         stats: {
-          ...(creator.stats || { replyRate: 0, avgReplyTime: 0 }),
+          ...(creator.stats || { replyRate: 100, avgReplyTime: 0 }),
           totalAnswered: answeredCount
         },
         instagramHandle: creator.instagramHandle || '',
@@ -130,12 +130,13 @@ router.get('/creators', async (req, res) => {
       responseTime: c.responseTime || '48 hours',
       stats: {
         totalAnswered: c.stats?.totalAnswered || 0,
-        replyRate: c.stats?.replyRate ?? 0,
+        replyRate: c.stats?.replyRate ?? 100,
         avgReplyTime: c.stats?.avgReplyTime || 0
       },
       verified: c.verified || false,
       isLive: c.isLive || false,
-      isPaused: c.isPaused || false
+      isPaused: c.isPaused || false,
+      instagramFollowers: c.instagramFollowers
     }));
 
     return res.json({
@@ -145,6 +146,19 @@ router.get('/creators', async (req, res) => {
   } catch (err) {
     console.error('Fetch live creators error:', err);
     return res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// Temp route to fix legacy 0 reply rate
+router.get('/fix-stats', async (req, res) => {
+  try {
+    const result = await Creator.updateMany(
+      { 'stats.replyRate': 0 },
+      { $set: { 'stats.replyRate': 100 } }
+    );
+    res.json({ success: true, modifiedCount: result.modifiedCount });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 

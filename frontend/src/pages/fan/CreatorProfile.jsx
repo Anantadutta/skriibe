@@ -152,7 +152,7 @@ const CreatorProfile = () => {
   }
 
   const price = creator.pricePerQuestion;
-  const replyRate = creator.stats?.replyRate ?? 0;
+  const replyRate = creator.stats?.replyRate || 100;
   const avgReply = creator.stats?.avgReplyTime || 0;
   const answeredCount = creator.stats?.totalAnswered || creator.questionsAnswered || 0;
   
@@ -162,7 +162,8 @@ const CreatorProfile = () => {
   // Format reply time (e.g. 3.2h)
   const formatTime = (time) => {
     if (typeof time === 'string') return time;
-    if (time < 1) return `${Math.round(time * 60)}m`;
+    if (time === 0) return '<24h';
+    if (time < 1) return `${Math.max(1, Math.round(time * 60))}m`;
     return `${time.toFixed(1)}h`;
   };
 

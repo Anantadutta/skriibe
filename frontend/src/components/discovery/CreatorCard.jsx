@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { getImageUrl } from '../../utils/imageUtils';
 
 const CreatorCard = ({ creator }) => {
   const navigate = useNavigate();
+  const [imgError, setImgError] = useState(false);
 
   // Use exact dummy data fields if provided, else use the raw backend object
   const {
@@ -18,7 +19,8 @@ const CreatorCard = ({ creator }) => {
     verified,
     isLive,
     bgColor = '#1a1a1a', // fallback background for avatar if no image
-    initials
+    initials,
+    instagramFollowers
   } = creator;
 
   const expertiseList = expertise && expertise.length > 0 ? expertise : [];
@@ -27,7 +29,8 @@ const CreatorCard = ({ creator }) => {
   // Format reply time (e.g. 1.4h)
   const formatTime = (time) => {
     if (typeof time === 'string') return time;
-    if (time < 1) return `${Math.round(time * 60)}m`;
+    if (time === 0) return '<24h';
+    if (time < 1) return `${Math.max(1, Math.round(time * 60))}m`;
     return `${time.toFixed(1)}h`;
   };
 
@@ -80,10 +83,15 @@ const CreatorCard = ({ creator }) => {
             border: isLive ? '2px solid #00FFA3' : '2px solid transparent',
             boxShadow: isLive ? '0 0 14px rgba(0, 255, 163, 0.3)' : 'none'
           }}>
-            {avatarUrl ? (
-              <img src={getImageUrl(avatarUrl)} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            {avatarUrl && !imgError ? (
+              <img 
+                src={getImageUrl(avatarUrl)} 
+                alt={name} 
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                onError={() => setImgError(true)}
+              />
             ) : (
-              initials || name.substring(0, 2).toUpperCase()
+              initials || (name ? name.substring(0, 2).toUpperCase() : '')
             )}
           </div>
           {isLive && (
@@ -122,7 +130,18 @@ const CreatorCard = ({ creator }) => {
             )}
           </h3>
           <div style={{ color: '#64748b', fontSize: '13px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={`@${handle}`}>@{handle}</div>
-          <div style={{ marginTop: '2px', display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+          {instagramFollowers && (
+            <div style={{ color: '#94a3b8', fontSize: '12px', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+              </svg>
+              {instagramFollowers} Followers
+            </div>
+          )}
+          <div style={{ marginTop: '6px', display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
             {expertiseList.map((exp, idx) => (
               <span key={idx} style={{
                 display: 'inline-flex',
@@ -189,7 +208,7 @@ const CreatorCard = ({ creator }) => {
               <polyline points="16 7 22 7 22 13"></polyline>
             </svg>
           </div>
-          <span style={{ fontSize: '18px', fontWeight: '800', color: '#00FFA3' }}>{stats?.replyRate ?? 0}%</span>
+          <span style={{ fontSize: '18px', fontWeight: '800', color: '#00FFA3' }}>{stats?.replyRate || 100}%</span>
           <span style={{ fontSize: '10px', color: '#64748b', marginTop: '2px', whiteSpace: 'nowrap', textAlign: 'center' }}>Reply Rate</span>
         </div>
 

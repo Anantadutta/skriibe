@@ -261,7 +261,7 @@ router.get('/creators', async (req, res) => {
       });
 
       const denominator = totalQuestions - pendingCount - disputeCount;
-      const replyRate = denominator > 0 ? Math.round((answered / denominator) * 100) : 0;
+      const replyRate = denominator > 0 ? Math.round((answered / denominator) * 100) : 100;
       const refundRate = totalQuestions > 0 ? Math.round((refunds / totalQuestions) * 100) : 0;
       const avgResponseTimeMins = answeredForTime > 0 ? Math.round((totalResponseTimeMs / answeredForTime) / 60000) : 0;
 

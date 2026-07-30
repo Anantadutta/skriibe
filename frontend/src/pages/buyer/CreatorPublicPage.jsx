@@ -37,6 +37,13 @@ const CreatorPublicPage = () => {
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
+  const formatTime = (time) => {
+    if (typeof time === 'string') return time;
+    if (time === 0) return '<24h';
+    if (time < 1) return `${Math.max(1, Math.round(time * 60))}m`;
+    return `${time.toFixed(1)}h`;
+  };
+
   useEffect(() => {
     const fetchProfile = async () => {
       try {
@@ -292,7 +299,7 @@ const CreatorPublicPage = () => {
         {/* STATS ROW (3 boxes) */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
           <div style={{ background: '#1A1A1A', borderRadius: '14px', padding: '16px 8px', textAlign: 'center' }}>
-            <div style={{ fontSize: '1.4rem', fontWeight: '900', color: '#29C5F6' }}>{creator.stats?.replyRate ?? 0}%</div>
+            <div style={{ fontSize: '1.4rem', fontWeight: '900', color: '#29C5F6' }}>{creator.stats?.replyRate || 100}%</div>
             <div style={{ fontSize: '0.65rem', color: '#64748b', marginTop: '4px', fontWeight: '700', letterSpacing: '1px' }}>REPLY</div>
           </div>
           <div style={{ background: '#1A1A1A', borderRadius: '14px', padding: '16px 8px', textAlign: 'center' }}>

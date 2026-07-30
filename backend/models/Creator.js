@@ -58,7 +58,7 @@ const CreatorSchema = new mongoose.Schema({
 
   stats: {
     totalAnswered: { type: Number, default: 0 },
-    replyRate: { type: Number, default: 0 },
+    replyRate: { type: Number, default: 100 },
     avgReplyTime: { type: Number, default: 0 }
   },
   commissionOverride: {

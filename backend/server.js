@@ -318,7 +318,7 @@ server.listen(PORT, async () => {
       if (stats.length > 0) {
         const { totalReceived, totalPending, totalFlagged, totalAnswered } = stats[0];
         const denominator = totalReceived - totalPending - totalFlagged;
-        const replyRate = denominator > 0 ? Math.round((totalAnswered / denominator) * 100) : 0;
+        const replyRate = denominator > 0 ? Math.round((totalAnswered / denominator) * 100) : 100;
         await mongoose.model('Creator').findByIdAndUpdate(c._id, {
           'stats.totalAnswered': totalAnswered,
           'stats.replyRate': replyRate,

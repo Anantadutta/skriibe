@@ -228,7 +228,7 @@ const updateCreatorStats = async (creatorId) => {
     if (stats.length > 0) {
       const { totalReceived, totalPending, totalFlagged, totalAnswered, totalAnsweredForTime, totalTimeDiff } = stats[0];
       const denominator = totalReceived - totalPending - totalFlagged;
-      const replyRate = denominator > 0 ? Math.round((totalAnswered / denominator) * 100) : 0;
+      const replyRate = denominator > 0 ? Math.round((totalAnswered / denominator) * 100) : 100;
       
       const avgReplyTimeMs = totalAnsweredForTime > 0 ? (totalTimeDiff / totalAnsweredForTime) : 0;
       const avgReplyTime = parseFloat((avgReplyTimeMs / (1000 * 60 * 60)).toFixed(1));

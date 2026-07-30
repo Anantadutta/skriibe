@@ -551,36 +551,228 @@ const CreatorOnboardProfile = () => {
 
 
 
-              {/* AVATAR UPLOAD CIRCLE — violet dashed glowing circle */}
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-                <label style={{ cursor: 'pointer', textAlign: 'center' }}>
-                  <div className="avatar-upload-circle">
-                    {avatarPreview ? (
-                      typeof avatarPreview === 'string' && avatarPreview.length === 1 ? (
-                        <span style={{ fontSize: '26px', fontWeight: 'extrabold', color: '#ffffff' }}>{avatarPreview}</span>
-                      ) : (
-                        <img src={avatarPreview} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                      )
-                    ) : (
-                      <span style={{ fontSize: '24px', color: '#7c3aed', fontWeight: 800 }}>+</span>
-                    )}
-                    <input type="file" hidden accept="image/*" onChange={handleFileChange} />
-                  </div>
-                  <span style={{
-                    display: 'block',
-                    fontSize: '10px',
-                    color: '#06b6d4',
-                    fontFamily: 'monospace, var(--font-mono)',
-                    fontWeight: 700,
-                    marginTop: '8px'
-                  }}>
-                    UPLOAD PHOTO
-                  </span>
-                </label>
-              </div>
-
               {/* INPUTS CONTAINER */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                
+                {/* INSTAGRAM CONNECT & PROFILE SECTION */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', padding: '24px', background: 'rgba(255, 255, 255, 0.02)', borderRadius: '16px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                  
+                  {/* LINK INSTAGRAM CTA & SECURE TEXT */}
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+                    <button
+                      type="button"
+                      onClick={handleInstagramConnect}
+                      disabled={true}
+                      style={{
+                        background: 'transparent',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        borderRadius: '16px',
+                        padding: '12px',
+                        width: '100%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '16px',
+                        cursor: 'default',
+                        transition: 'all 0.2s',
+                      }}
+                    >
+                      <div style={{
+                        width: '40px',
+                        height: '40px',
+                        borderRadius: '10px',
+                        background: 'linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: 'white'
+                      }}>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                          <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                          <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+                        </svg>
+                      </div>
+                      <span style={{ color: '#ffffff', fontWeight: 'bold', fontSize: '16px' }}>
+                        {form.instagramConnected ? 'Instagram Connected' : 'Link Your Instagram '}
+                      </span>
+                    </button>
+                  </div>
+
+                  {/* PROFILE PICTURE */}
+                  <div>
+                    <label style={{
+                      fontFamily: 'monospace, var(--font-mono)',
+                      fontSize: '10px',
+                      color: '#06b6d4',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.08em',
+                      fontWeight: 700,
+                      display: 'block',
+                      marginBottom: '16px'
+                    }}>
+                      PROFILE PICTURE
+                    </label>
+                    <div style={{ display: 'flex', justifyContent: 'center' }}>
+                      <label style={{ cursor: 'pointer', textAlign: 'center' }}>
+                        <div style={{
+                          width: '84px',
+                          height: '84px',
+                          borderRadius: '50%',
+                          background: 'linear-gradient(45deg, #f09433, #dc2743, #bc1888, #7c3aed)',
+                          padding: '3px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          transition: 'transform 0.2s',
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+                        onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                        >
+                          <div style={{
+                            width: '100%',
+                            height: '100%',
+                            borderRadius: '50%',
+                            background: '#13131a',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            overflow: 'hidden'
+                          }}>
+                            {avatarPreview ? (
+                              typeof avatarPreview === 'string' && avatarPreview.length === 1 ? (
+                                <span style={{ fontSize: '26px', fontWeight: 'extrabold', color: '#ffffff' }}>{avatarPreview}</span>
+                              ) : (
+                                <img src={avatarPreview} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                              )
+                            ) : (
+                              <span style={{ fontSize: '24px', color: '#7c3aed', fontWeight: 800 }}>+</span>
+                            )}
+                            <input type="file" hidden accept="image/*" onChange={handleFileChange} />
+                          </div>
+                        </div>
+                        <span style={{
+                          display: 'block',
+                          fontSize: '11px',
+                          color: '#64748b',
+                          marginTop: '8px',
+                          fontWeight: 500
+                        }}>
+                          Upload photo
+                        </span>
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* USERNAME FIELD CUSTOM */}
+                  <div>
+                    <label style={{
+                      fontFamily: 'monospace, var(--font-mono)',
+                      fontSize: '10px',
+                      color: '#06b6d4',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.08em',
+                      fontWeight: 700,
+                      display: 'block',
+                      marginBottom: '10px'
+                    }}>
+                      USERNAME <span style={{ color: '#ef4444' }}>*</span>
+                    </label>
+                    <div style={{
+                      background: 'rgba(255, 255, 255, 0.03)',
+                      border: '1px solid rgba(255, 255, 255, 0.05)',
+                      borderRadius: '12px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      padding: '0 16px',
+                      height: '48px',
+                      transition: 'all 0.2s'
+                    }}>
+                      <input
+                        type="text"
+                        value={form.handle}
+                        onChange={(e) => handleInputChange('handle', e.target.value.replace(/[^a-zA-Z0-9_.]/g, ''))}
+                        placeholder="@yourhandle"
+                        required
+                        style={{
+                          background: 'transparent',
+                          border: 'none',
+                          color: '#ffffff',
+                          fontSize: '14px',
+                          outline: 'none',
+                          width: '100%'
+                        }}
+                      />
+                    </div>
+                    <div style={{ marginTop: '8px', fontSize: '12px', color: '#64748b' }}>
+                      Your public profile link:<br />
+                      <span style={{ color: '#06b6d4' }}>https://skriibe.com/{form.handle || 'username'}</span>
+                    </div>
+                  </div>
+
+                  {/* FOLLOWERS FIELD CUSTOM */}
+                  <div>
+                    <label style={{
+                      fontFamily: 'monospace, var(--font-mono)',
+                      fontSize: '10px',
+                      color: '#06b6d4',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.08em',
+                      fontWeight: 700,
+                      display: 'block',
+                      marginBottom: '10px'
+                    }}>
+                      FOLLOWERS <span style={{ color: '#ef4444' }}>*</span>
+                    </label>
+                    <div style={{
+                      background: 'rgba(255, 255, 255, 0.03)',
+                      border: '1px solid rgba(255, 255, 255, 0.05)',
+                      borderRadius: '12px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      padding: '12px 16px',
+                      gap: '16px'
+                    }}>
+                      <div style={{
+                        width: '32px',
+                        height: '32px',
+                        borderRadius: '50%',
+                        background: 'rgba(6, 182, 212, 0.1)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: '#06b6d4'
+                      }}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                          <circle cx="9" cy="7" r="4"></circle>
+                          <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                          <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                        </svg>
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        <input
+                          type="text"
+                          value={form.instagramFollowers || ''}
+                          onChange={(e) => handleInputChange('instagramFollowers', e.target.value)}
+                          placeholder="e.g. 10k"
+                          required
+                          style={{
+                            background: 'transparent',
+                            border: 'none',
+                            color: '#ffffff',
+                            fontSize: '16px',
+                            fontWeight: '600',
+                            outline: 'none',
+                            width: '100%',
+                            padding: 0
+                          }}
+                        />
+                        <span style={{ fontSize: '11px', color: '#64748b' }}>followers on Instagram</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 <div title={form.instagramConnected ? "Auto-filled from your connected Instagram account!" : "Enter your full name"}>
                   <Field
                     label="FULL NAME *"
@@ -590,16 +782,6 @@ const CreatorOnboardProfile = () => {
                   />
                 </div>
 
-                <div title={form.instagramConnected ? "Auto-filled from your connected Instagram account!" : "Choose your unique Skriibe username"}>
-                  <Field
-                    label="USERNAME *"
-                    subtitle={<>This will be your profile link that will be generated as: <br /> <span style={{ color: '#29C5F6' }}>https://skriibe.com/{form.handle || 'username'}</span></>}
-                    value={form.handle}
-                    onChange={(e) => handleInputChange('handle', e.target.value.replace(/[^a-zA-Z0-9_.]/g, ''))}
-                    placeholder=""
-                    required
-                  />
-                </div>
 
 
                 {/* FIELD OF EXPERTISE TAG SELECTOR */}
@@ -765,15 +947,6 @@ const CreatorOnboardProfile = () => {
                   value={form.phone}
                   onChange={(e) => handleInputChange('phone', e.target.value)}
                   placeholder="Local mobile number"
-                  required
-                />
-
-                <Field
-                  label="INSTAGRAM FOLLOWERS *"
-                  type="text"
-                  value={form.instagramFollowers || ''}
-                  onChange={(e) => handleInputChange('instagramFollowers', e.target.value)}
-                  placeholder="e.g. 10k"
                   required
                 />
 

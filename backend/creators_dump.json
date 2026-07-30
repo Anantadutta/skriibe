@@ -59,20 +59,6 @@
     "pricePerQuestion": 99
   },
   {
-    "_id": "6a57288a76f88faa5cd14ef7",
-    "name": "Tarundeep Singh",
-    "price": 49,
-    "pricePerQuestion": 49,
-    "handle": "tarun.gujral"
-  },
-  {
-    "_id": "6a59db9f8d567710ab746fe6",
-    "name": "",
-    "price": 99,
-    "pricePerQuestion": 99,
-    "handle": "creator"
-  },
-  {
     "_id": "6a60a37e43c74fd8b6b895cc",
     "name": "Raghav Sidhu",
     "price": 99,
@@ -86,16 +72,28 @@
   },
   {
     "_id": "6a635b4d43c74fd8b6b895d0",
-    "name": "",
-    "price": 99,
-    "pricePerQuestion": 99,
-    "handle": "creator1"
+    "name": "Ananta CS",
+    "price": 10,
+    "pricePerQuestion": 10,
+    "handle": "ananta_dutta_01"
   },
   {
-    "_id": "6a635ba743c74fd8b6b895d3",
+    "_id": "6a63b40d72cb41a71039f3eb",
+    "name": "Tarundeep Singh",
+    "price": 49,
+    "pricePerQuestion": 49,
+    "handle": "tarun.gujral"
+  },
+  {
+    "_id": "6a6ae5a3f2a4f9cd74e0e175",
     "name": "",
     "price": 99,
-    "pricePerQuestion": 99,
-    "handle": "creator2"
+    "pricePerQuestion": 99
+  },
+  {
+    "_id": "6a6aee0b72cb41a71039f3ee",
+    "name": "Atul Dutta",
+    "price": 99,
+    "pricePerQuestion": 99
   }
 ]
