@@ -78,13 +78,6 @@
     "handle": "ananta_dutta_01"
   },
   {
-    "_id": "6a63b40d72cb41a71039f3eb",
-    "name": "Tarundeep Singh",
-    "price": 49,
-    "pricePerQuestion": 49,
-    "handle": "tarun.gujral"
-  },
-  {
     "_id": "6a6ae5a3f2a4f9cd74e0e175",
     "name": "",
     "price": 99,
@@ -95,5 +88,18 @@
     "name": "Atul Dutta",
     "price": 99,
     "pricePerQuestion": 99
+  },
+  {
+    "_id": "6a6b109354e61e3cd696f3f2",
+    "name": "placement drive",
+    "price": 99,
+    "pricePerQuestion": 99
+  },
+  {
+    "_id": "6a6b129f54e61e3cd696f3f6",
+    "name": "Tarundeep",
+    "price": 49,
+    "pricePerQuestion": 49,
+    "handle": "tarun.gujral"
   }
 ]

@@ -511,7 +511,9 @@ router.post('/me/upgrade-to-creator', verifyFanToken, async (req, res) => {
       await creator.save();
     } else {
       creator.fanId = fan._id;
-      creator.name = creator_name;
+      if (!creator.name || creator_name !== 'Unknown') {
+        creator.name = creator_name;
+      }
       if (bio) creator.bio = bio;
       if (category) creator.expertise = [category];
       if (!creator.avatarUrl && fan.avatarUrl) {
