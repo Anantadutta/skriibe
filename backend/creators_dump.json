@@ -101,5 +101,19 @@
     "price": 49,
     "pricePerQuestion": 49,
     "handle": "tarun.gujral"
+  },
+  {
+    "_id": "6a704bd76dd3ee6d7ab98ff6",
+    "name": "AAkshaye Sharma",
+    "price": 49,
+    "pricePerQuestion": 49,
+    "handle": "aakshayeofficial"
+  },
+  {
+    "_id": "6a722fba6dd3ee6d7ab98ff8",
+    "name": "Rina Kumari",
+    "price": 49,
+    "pricePerQuestion": 49,
+    "handle": "rina_vibes29"
   }
 ]

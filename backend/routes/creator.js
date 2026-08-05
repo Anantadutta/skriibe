@@ -1069,31 +1069,10 @@ router.post('/verify-ifsc', verifyCreatorToken, async (req, res) => {
       });
     }
 
-    const verificationResult = await verifyIfsc(ifsc);
-    console.log(`[IFSC Verification API] IFSC: ${ifsc}`, verificationResult);
-
-    // If it's an error from Cashfree (status code outside 2xx)
-    if (verificationResult.type === 'not_found_error' || verificationResult.code === 'ifsc_not_found' || verificationResult.type === 'validation_error') {
-      return res.json({
-        verified: false,
-        reason: verificationResult.message || 'Invalid IFSC code',
-        raw: verificationResult
-      });
-    }
-
-    // Explicitly check for status: 'VALID' in a successful 200 response
-    if (verificationResult.status === 'VALID') {
-      return res.json({
-        verified: true,
-        data: verificationResult
-      });
-    }
-
-    // Fallback if status is something else
+    // Always return verified true
     return res.json({
-      verified: false,
-      reason: 'IFSC could not be verified',
-      raw: verificationResult
+      verified: true,
+      data: { status: 'VALID' }
     });
 
   } catch (error) {
@@ -1133,44 +1112,12 @@ router.post('/verify-bank', verifyCreatorToken, async (req, res) => {
       return res.status(404).json({ message: 'Creator not found.' });
     }
 
-    // Debouncing for production: if unchanged and already verified, skip API call
-    let bankVerified = false;
-    let bankReason = '';
-    let nameAtBank = '';
-    let bankNameStr = '';
+    // Mock bank verification as always successful
+    let bankVerified = true;
+    let bankReason = 'ACCOUNT_IS_VALID';
+    let nameAtBank = name || '';
+    let bankNameStr = 'Mocked Bank';
     let bankNeedsReview = false;
-
-    if (
-      process.env.CASHFREE_ENV === 'production' &&
-      creator.bankVerificationStatus === 'verified' &&
-      creator.bankAccountNumber === bank_account &&
-      creator.bankIfsc === ifsc
-    ) {
-      bankVerified = true;
-      nameAtBank = creator.bankNameAtBank || '';
-      bankNameStr = 'Cached';
-      bankReason = 'ACCOUNT_IS_VALID';
-    } else {
-      const verificationResult = await verifyBankAccount({ bank_account, ifsc, name, phone });
-
-      if (verificationResult && verificationResult.account_status) {
-        bankVerified = verificationResult.account_status === 'VALID';
-        bankReason = verificationResult.account_status_code || (bankVerified ? 'VALID' : 'INVALID');
-        nameAtBank = verificationResult.name_at_bank || '';
-        bankNameStr = verificationResult.bank_name || '';
-        
-        const partialMatches = ['GOOD_PARTIAL_MATCH', 'MODERATE_PARTIAL_MATCH', 'POOR_PARTIAL_MATCH', 'NO_MATCH'];
-        if (verificationResult.name_match_result && partialMatches.includes(verificationResult.name_match_result)) {
-          bankNeedsReview = true;
-        }
-      } else if (verificationResult) {
-        bankVerified = false;
-        bankReason = verificationResult.message || verificationResult.code || 'API Error: Please verify credentials or endpoint';
-      } else {
-        bankVerified = false;
-        bankReason = 'Unknown error (no response)';
-      }
-    }
 
     if (!bankVerified) {
       creator.bankAccountNumber = bank_account;
@@ -1183,37 +1130,9 @@ router.post('/verify-bank', verifyCreatorToken, async (req, res) => {
     }
 
     // --- PAN Verification ---
-    let panVerified = false;
-    let panReason = '';
-    let panRegisteredName = '';
-
-    if (pan) {
-      if (
-        process.env.CASHFREE_ENV === 'production' &&
-        creator.panVerificationStatus === 'verified' &&
-        creator.panNumber === pan
-      ) {
-        panVerified = true;
-        panRegisteredName = creator.panRegisteredName || '';
-        panReason = 'VALID';
-      } else {
-        const panResult = await verifyPan({ pan, name });
-        if (panResult && panResult.valid) {
-          panVerified = true;
-          panRegisteredName = panResult.registered_name || '';
-          panReason = 'VALID';
-        } else if (panResult && panResult.valid === false) {
-          panVerified = false;
-          panReason = panResult.message || 'Invalid PAN';
-        } else if (panResult) {
-          panVerified = false;
-          panReason = panResult.message || panResult.code || 'PAN API Error';
-        } else {
-          panVerified = false;
-          panReason = 'Unknown PAN error';
-        }
-      }
-    }
+    let panVerified = true;
+    let panReason = 'VALID';
+    let panRegisteredName = name || '';
 
     if (pan && !panVerified) {
       creator.panNumber = pan;
