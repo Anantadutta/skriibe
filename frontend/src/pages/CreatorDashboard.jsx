@@ -843,7 +843,7 @@ const CreatorDashboard = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
               <div style={{ fontWeight: 800, fontSize: '1.05rem', color: '#fff' }}>HDFC Bank - Savings</div>
               <div style={{ color: '#10B981', fontSize: '0.8rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
-                ✓ Verified via penny drop
+                ✓ Linked
               </div>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>

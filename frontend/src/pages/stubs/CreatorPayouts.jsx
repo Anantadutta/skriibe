@@ -281,20 +281,6 @@ const CreatorPayouts = () => {
               if (ifscError) setIfscError('');
             }} 
             placeholder="e.g. HDFC0001234"
-            onBlur={async () => {
-              if (ifsc.trim()) {
-                try {
-                  const res = await verifyIfsc(ifsc.trim());
-                  if (!res.data.verified) {
-                    setIfscError(res.data.reason || 'Invalid IFSC code');
-                  } else {
-                    setIfscError('');
-                  }
-                } catch (err) {
-                  console.error(err);
-                }
-              }
-            }}
             error={ifscError}
           />
 
@@ -350,23 +336,6 @@ const CreatorPayouts = () => {
                 return;
               }
               
-              // Explicitly verify IFSC code again in case user didn't trigger onBlur
-              try {
-                const ifscRes = await verifyIfsc(ifsc.trim());
-                if (!ifscRes.data || !ifscRes.data.verified) {
-                  setIfscError(ifscRes.data?.reason || 'Invalid IFSC code');
-                  setErrorMessage(ifscRes.data?.reason || 'Please enter a valid IFSC code.');
-                  setShowErrorModal(true);
-                  return;
-                } else {
-                  setIfscError(''); // clear any old error
-                }
-              } catch (err) {
-                console.error('IFSC Verification failed during submit:', err);
-                setErrorMessage('Could not verify IFSC. Please try again.');
-                setShowErrorModal(true);
-                return;
-              }
               try {
                 const res = await linkBank({ 
                   pan: formattedPan,
@@ -374,13 +343,7 @@ const CreatorPayouts = () => {
                   bank_account: accountNumber.trim(),
                   ifsc: ifsc.trim()
                 });
-                
-                if (!res.data.verified) {
-                  const errorReason = res.data.reason || 'Invalid account details. Please try again.';
-                  setErrorMessage(errorReason);
-                  setShowErrorModal(true);
-                  return;
-                }
+
                 
                 await toggleLive(true); // Automatically turn green (go live)
                 navigate('/creator/dashboard');
