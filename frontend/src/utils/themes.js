@@ -1,5 +1,5 @@
-import studioBg from 'C:/Users/dutta/.gemini/antigravity/brain/18820653-50d7-4b1e-9c85-9c1fabb537c2/clean_studio_background_1786009754186.jpg';
-import techBg from 'C:/Users/dutta/.gemini/antigravity/brain/18820653-50d7-4b1e-9c85-9c1fabb537c2/.user_uploaded/media_1786010285710.png';
+import studioBg from '../assets/images/studio-bg.jpg';
+import techBg from '../assets/images/tech-bg.png';
 
 export const CHAT_THEMES = {
   default: {
