@@ -638,7 +638,7 @@ const CreatorSharePage = () => {
           </div>
 
           <div style={{ fontSize: '13px', color: '#94a3b8', lineHeight: '1.5', marginTop: '4px', marginBottom: '4px' }}>
-            Anyone with this link can ask you a <span style={{ color: '#a855f7', fontWeight: 600 }}>paid question.</span>
+            Anyone with this link can <span style={{ color: '#a855f7', fontWeight: 600 }}>start a chat with you.</span>
           </div>
 
           <button onClick={copyLinkToClipboard} className="copy-link-btn" style={{ background: 'linear-gradient(90deg, #7c3aed, #3b82f6)', color: 'white', padding: '12px', borderRadius: '16px', border: 'none', fontWeight: 600, width: '100%', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}>
@@ -849,10 +849,6 @@ const CreatorSharePage = () => {
               )}
             </div>
 
-            {/* Bottom Text */}
-            <div style={{ marginTop: '32px', color: '#ffffff', fontSize: '18px', fontWeight: 800, letterSpacing: '0.5px' }}>
-              Ask me anything
-            </div>
           </div>
         </div>
       )}

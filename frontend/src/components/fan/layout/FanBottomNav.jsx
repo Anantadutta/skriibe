@@ -43,6 +43,7 @@ const FanBottomNav = () => {
     { label: 'Home', path: '/discovery', icon: (active) => <HomeIcon active={active} /> },
     { label: 'Explore', path: '/explore', icon: (active) => <ExploreIcon active={active} /> },
     { label: 'Inbox', path: '/fan/history', icon: (active) => <InboxIcon active={active} />, hasBadge: true },
+    { label: 'Wallet', path: '/fan/wallet', icon: (active) => <WalletIcon active={active} /> },
     { label: 'Profile', path: '/fan/profile', icon: (active) => <ProfileIcon active={active} /> }
   ];
 
@@ -207,6 +208,14 @@ const UploadIcon = () => (
     <circle cx="20" cy="20" r="18" fill="linear-gradient(90deg, #7c3aed 0%, #06b6d4 100%)" stroke="none" />
     <circle cx="20" cy="20" r="18" fill="#7c3aed" />
     <path d="M20 12v16m-8-8h16" stroke="white" strokeWidth="3" strokeLinecap="round" />
+  </svg>
+);
+
+const WalletIcon = ({ active }) => (
+  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" style={{ filter: active ? 'brightness(1.1)' : 'brightness(0.8) grayscale(0.2)', transition: 'all 0.2s' }}>
+    <rect x="2" y="6" width="18" height="13" rx="2" fill="#8B5CF6" />
+    <path d="M16 10H20C21.1046 10 22 10.8954 22 12C22 13.1046 21.1046 14 20 14H16V10Z" fill="#C084FC" />
+    <circle cx="19" cy="12" r="1.5" fill="#FBBF24" />
   </svg>
 );
 

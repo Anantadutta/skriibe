@@ -49,10 +49,8 @@ const CreatorLogin = () => {
         setAuthData(['creator'], 'creator', token);
       }
       
-      if (creator.ama_enabled) {
+      if (creator.handle) {
         navigate('/creator/dashboard', { state: { creator }, replace: true });
-      } else if (creator.expertise && creator.expertise.length > 0) {
-        navigate('/onboard/pricing', { state: { creator }, replace: true });
       } else {
         navigate('/onboard/profile', { state: { creator }, replace: true });
       }

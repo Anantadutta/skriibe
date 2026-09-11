@@ -15,6 +15,7 @@ const FanNotifications = () => {
         const res = await api.get('/questions/notifications');
         if (res.data.success) {
           setNotifications(res.data.notifications);
+          window.dispatchEvent(new Event('notificationRead'));
         }
       } catch (err) {
         console.error('Failed to fetch notifications', err);
@@ -50,12 +51,16 @@ const FanNotifications = () => {
         setNotifications(prev => prev.map(n => n._id === notif._id ? { ...n, isRead: false } : n));
       }
     }
-    // Navigate to history to see the answer
-    const targetQId = notif.questionId || notif.referenceId;
-    if (targetQId) {
-      navigate(`/fan/history?qId=${targetQId}`);
+    // Navigate to history to see the answer, or to the provided actionUrl
+    if (notif.actionUrl) {
+      navigate(notif.actionUrl);
     } else {
-      navigate('/fan/history');
+      const targetQId = notif.questionId || notif.referenceId;
+      if (targetQId) {
+        navigate(`/fan/history?qId=${targetQId}`);
+      } else {
+        navigate('/fan/history');
+      }
     }
   };
   return (

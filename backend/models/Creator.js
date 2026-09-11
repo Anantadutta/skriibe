@@ -13,11 +13,11 @@ const CreatorSchema = new mongoose.Schema({
   name: { type: String, default: '' },
   handle: { type: String, unique: true, sparse: true, lowercase: true },
   profileUrl: { type: String, default: '' },
-  bio: { type: String, default: '' },
+  bio: { type: String, default: "Heyyy! Got something on your mind? Let’s chat!" },
   avatarUrl: { type: String, default: '' },
   expertise: [{ type: String }],
-  price: { type: Number, default: 99 },
-  pricePerQuestion: { type: Number, default: 99 }, // From Phase 3 prompt
+  price: { type: Number, default: 10 },
+  pricePerQuestion: { type: Number, default: 10 }, // From Phase 3 prompt
   responseTime: { type: String, default: '48 hours' }, // From Phase 3 prompt
   questionsAnswered: { type: Number, default: 0 }, // From Phase 3 prompt
   dailyCap: { type: Number, default: 50 },
@@ -26,6 +26,10 @@ const CreatorSchema = new mongoose.Schema({
   isLive: { type: Boolean, default: false },
   isPaused: { type: Boolean, default: false },
   ama_enabled: { type: Boolean, default: false },
+  liveChatEnabled: { type: Boolean, default: true }, // New field for Live Chat feature
+  liveChatPrice: { type: Number, default: 5 }, // Price per minute for Live Chat
+  liveChatDevotedHours: { type: Number, default: 2 }, // How many hours the creator can devote in a day
+  liveChatTimeSlots: [{ type: String }], // Specific time slots they will be live
   verified: { type: Boolean, default: false },
   bankLinked: { type: Boolean, default: false },
   bankAccountName: { type: String },
@@ -43,6 +47,11 @@ const CreatorSchema = new mongoose.Schema({
   panRegisteredName: { type: String },
   panVerifiedAt: { type: Date },
   panNeedsReview: { type: Boolean, default: false },
+  aadharLast4: { type: String, default: '' },
+  payoutMethod: { type: String, enum: ['upi', 'bank'], default: 'upi' },
+  upiId: { type: String, default: '' },
+  payoutSetupCompleted: { type: Boolean, default: false },
+  payoutDetailsConfirmed: { type: Boolean, default: false },
   instagramLinked: { type: Boolean, default: false },
   instagramHandle: { type: String },
   instagramFollowers: { type: mongoose.Schema.Types.Mixed },
@@ -74,6 +83,7 @@ const CreatorSchema = new mongoose.Schema({
   referralCode: { type: String, unique: true, sparse: true },
   referredBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Creator' },
   referredByName: { type: String },
+  totalReferrals: { type: Number, default: 0 },
   createdAt: { type: Date, default: Date.now },
   // SLA Strikes System
   strikes: [{
@@ -92,4 +102,20 @@ const CreatorSchema = new mongoose.Schema({
   payoutAlertSent: { type: Boolean, default: false }
 });
 
+const { normalizeExpertiseList } = require('../utils/expertiseConstants');
+
+CreatorSchema.post('init', function(doc) {
+  if (doc && doc.expertise && Array.isArray(doc.expertise)) {
+    doc.expertise = normalizeExpertiseList(doc.expertise);
+  }
+});
+
+CreatorSchema.pre('save', function(next) {
+  if (this.expertise && Array.isArray(this.expertise)) {
+    this.expertise = normalizeExpertiseList(this.expertise);
+  }
+  if (typeof next === 'function') next();
+});
+
 module.exports = mongoose.models.Creator || mongoose.model('Creator', CreatorSchema);
+

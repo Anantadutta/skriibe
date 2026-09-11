@@ -48,9 +48,10 @@ const Privacy = () => {
           </h1>
           
           <div className={`text-base md:text-lg leading-relaxed space-y-6 ${theme === 'light' ? 'text-gray-700' : 'text-gray-300'} font-sans`}>
-            <p className="font-semibold">Last Updated: June 17, 2026</p>
+            <p className="font-semibold">Last Updated: September 7, 2026</p>
             
-            <p>Skriibe ("Skriibe", "we", "our", or "us") is operated by Edlern Innovations Private Limited. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit or use our website and services.</p>
+            <p>Skriibe ("Skriibe", "we", "our", or "us") is operated by Edlern Innovations Private Limited and provides a creator monetization platform offering three interaction models: Live Chat (real-time, pay-per-minute conversations), AMA (paid asynchronous question/messages to offline creators), and Tips (voluntary post-chat gratuities). This Privacy Policy explains how we collect, use, store, and protect your personal information across all interaction types.</p>
+            <p><strong>Grievance Officer:</strong> Tarundeep Singh, Founder — <a href="mailto:Founder@skriibe.com" className="text-[#3BA8D8] hover:underline font-medium">Founder@skriibe.com</a></p>
             <p>By using Skriibe, you agree to the collection and use of information in accordance with this Privacy Policy.</p>
 
             <h2 className={`text-2xl font-bold mt-8 mb-4 ${theme === 'light' ? 'text-black' : 'text-white'}`}>1. Information We Collect</h2>
@@ -75,6 +76,8 @@ const Privacy = () => {
               <li>Website usage data</li>
               <li>Cookies and similar technologies</li>
             </ul>
+            <p className="font-semibold mt-4">Interaction Data</p>
+            <p>For Live Chat sessions, we collect: session start and end time, session duration (for per-minute billing), in-session message content (held temporarily for dispute resolution), and connection quality logs. For AMA, we collect: the submitted question/message text, the creator's response, and submission and response timestamps. For Tips, we collect: the tip amount, timestamp, and associated transaction ID. All interaction data is processed for service delivery, billing accuracy, dispute resolution, and platform integrity purposes.</p>
 
             <h2 className={`text-2xl font-bold mt-8 mb-4 ${theme === 'light' ? 'text-black' : 'text-white'}`}>2. How We Use Your Information</h2>
             <p>We use your information to:</p>
@@ -88,6 +91,7 @@ const Privacy = () => {
               <li>Detect fraud, abuse, and security issues</li>
               <li>Comply with legal obligations</li>
             </ul>
+            <p className="mt-4">We process your personal data on the following legal bases under the Digital Personal Data Protection Act, 2023: (a) Contractual necessity — payment processing, service delivery, account management; (b) Consent — marketing communications and non-essential cookies (withdrawable at any time); (c) Legitimate use — fraud detection, platform security, and abuse prevention; (d) Legal obligation — tax compliance, regulatory reporting, and responding to lawful government requests.</p>
 
             <h2 className={`text-2xl font-bold mt-8 mb-4 ${theme === 'light' ? 'text-black' : 'text-white'}`}>3. Future Platform Integrations</h2>
             <p>Skriibe may introduce integrations with third-party services, including social media and messaging platforms, in future versions of the Service.</p>
@@ -109,8 +113,7 @@ const Privacy = () => {
             </ul>
             <p>All third-party service providers are required to protect your information and use it only for authorized purposes.</p>
             <p>By submitting message content, users acknowledge and consent to the processing and temporary storage of such content solely for platform operation, moderation, dispute resolution, fraud prevention, and legal compliance.</p>
-            <p>Skriibe discloses user information only pursuant to valid legal requests, court orders, statutory obligations, emergency harm prevention requirements, or lawful governmental directives.</p>
-            <p>Some of our service providers (for example, cloud hosting or analytics providers) may process or store personal information outside India. Where this occurs, Skriibe takes reasonable contractual and technical measures designed to protect that information, and does not transfer personal information to any country that the Central Government has restricted under the Digital Personal Data Protection Act, 2023.</p>
+            <p>Skriibe discloses user information only pursuant to valid legal requests, court orders, statutory obligations, emergency harm prevention requirements, or lawful governmental directives. Some of our service providers may process or store personal information outside India. Where this occurs, Skriibe takes reasonable contractual and technical measures to protect that information, and does not transfer personal data to any country restricted by the Central Government under the Digital Personal Data Protection Act, 2023.</p>
 
             <h2 className={`text-2xl font-bold mt-8 mb-4 ${theme === 'light' ? 'text-black' : 'text-white'}`}>5. Data Retention</h2>
             <p>We retain personal information only for as long as necessary to:</p>
@@ -120,7 +123,7 @@ const Privacy = () => {
               <li>Resolve disputes</li>
               <li>Enforce agreements</li>
             </ul>
-            <p>You may request deletion of your account and personal information by contacting us. Retention periods are determined based on legal necessity, fraud prevention, dispute resolution requirements, and operational necessity.</p>
+            <p className="mt-4">You may request deletion of your account and personal information by contacting us. Specific retention periods: transaction and payment records are retained for 7 years (Income Tax Act compliance); Live Chat session content is retained for 30 days post-session for dispute resolution, then deleted unless subject to a legal hold; AMA question and response content is retained for 1 year post-interaction; account data is retained until account deletion plus 90 days; fraud and compliance records may be retained for longer as required by law.</p>
 
             <h2 className={`text-2xl font-bold mt-8 mb-4 ${theme === 'light' ? 'text-black' : 'text-white'}`}>6. Your Rights</h2>
             <p>Subject to applicable laws, you may have the right to:</p>
@@ -131,17 +134,17 @@ const Privacy = () => {
               <li>Withdraw consent where applicable</li>
               <li>Request information about how your data is processed</li>
             </ul>
-            <p>To exercise these rights, contact us using the details below. We will acknowledge grievances within 24 hours and aim to resolve them within 15 days, consistent with the Information Technology (Intermediary Guidelines and Digital Media Ethics Code) Rules, 2021, and you may also approach the Data Protection Board of India in accordance with the Digital Personal Data Protection Act, 2023.</p>
+            <p className="mt-4">To exercise these rights, contact us at <a href="mailto:Support@skriibe.com" className="text-[#3BA8D8] hover:underline font-medium">Support@skriibe.com</a>. We will acknowledge grievances within 24 hours and aim to resolve them within 15 days per IT (Intermediary Guidelines) Rules, 2021. You may also approach the Data Protection Board of India under the DPDPA, 2023.</p>
 
             <h2 className={`text-2xl font-bold mt-8 mb-4 ${theme === 'light' ? 'text-black' : 'text-white'}`}>7. Cookies and Tracking Technologies</h2>
             <p>Skriibe may use cookies and similar tracking technologies to maintain your session and improve your experience. You can disable cookies in your browser settings, though some features of Skriibe may not function properly without them.</p>
 
             <h2 className={`text-2xl font-bold mt-8 mb-4 ${theme === 'light' ? 'text-black' : 'text-white'}`}>8. Security</h2>
             <p>We implement reasonable technical, administrative, and organizational measures to protect your information from unauthorized access, disclosure, alteration, or destruction.</p>
-            <p>However, no method of transmission over the internet or electronic storage is completely secure, and we cannot guarantee absolute security. Skriibe implements reasonable security safeguards consistent with Rule 8 of the SPDI Rules, 2011 and the reasonable security safeguards required under the Digital Personal Data Protection Act, 2023 and the Digital Personal Data Protection Rules, 2025, including access controls, encryption where appropriate, and logging of personal data processing activity. In the event of a personal data breach, Skriibe will notify the Data Protection Board of India and affected users as required under applicable law.</p>
+            <p>However, no method of transmission over the internet or electronic storage is completely secure, and we cannot guarantee absolute security. Skriibe implements reasonable security safeguards consistent with the Digital Personal Data Protection Act, 2023 and DPDP Rules, 2025, including access controls and encryption where appropriate. In the event of a personal data breach, Skriibe will notify the Data Protection Board of India and affected users as required under applicable law.</p>
 
             <h2 className={`text-2xl font-bold mt-8 mb-4 ${theme === 'light' ? 'text-black' : 'text-white'}`}>9. Children's Privacy</h2>
-            <p>Skriibe is not intended for users under the age of 18, consistent with the eligibility requirement in our Terms of Service. Under the Digital Personal Data Protection Act, 2023, a "child" means anyone under 18, and we do not knowingly collect personal information from anyone under 18. If we become aware that a child has created an account or provided personal information to us, we will take steps to delete the account and associated information, or to verify consent from a parent or lawful guardian where applicable. If you believe we have inadvertently collected such information, please contact us immediately.</p>
+            <p>Skriibe is not intended for users under the age of 18, consistent with our Terms of Service. Under the Digital Personal Data Protection Act, 2023, a "child" is anyone under 18. We do not knowingly collect personal information from anyone under 18. If we become aware a minor has registered, we will delete that account and associated data promptly. If you believe we have inadvertently collected such information, contact us at <a href="mailto:Support@skriibe.com" className="text-[#3BA8D8] hover:underline font-medium">Support@skriibe.com</a> immediately.</p>
 
             <h2 className={`text-2xl font-bold mt-8 mb-4 ${theme === 'light' ? 'text-black' : 'text-white'}`}>10. Changes to This Privacy Policy</h2>
             <p>We may update this Privacy Policy from time to time.</p>
@@ -149,11 +152,10 @@ const Privacy = () => {
 
             <h2 className={`text-2xl font-bold mt-8 mb-4 ${theme === 'light' ? 'text-black' : 'text-white'}`}>11. Contact Us</h2>
             <p>If you have any questions or concerns about this Privacy Policy, please contact us at:</p>
-            <p><strong>Edlern Innovations Private Limited</strong></p>
-            <p>Grievance Officer: Tarundeep Singh, Founder</p>
+            <p className="font-semibold">Edlern Innovations Private Limited</p>
             <p>Sector 27 D, Chandigarh – 160019, India</p>
-            <p>Email: <a href="mailto:founder@skriibe.com" className="text-[#3BA8D8] hover:underline">founder@skriibe.com</a></p>
-            <p>Website: <a href="https://skriibe.com" className="text-[#3BA8D8] hover:underline">https://skriibe.com</a></p>
+            <p>Email: <a href="mailto:Support@skriibe.com" className="text-[#3BA8D8] hover:underline font-medium">Support@skriibe.com</a></p>
+            <p>Website: <a href="https://skriibe.com" className="text-[#3BA8D8] hover:underline font-medium" target="_blank" rel="noopener noreferrer">https://skriibe.com</a></p>
           </div>
         </div>
       </main>

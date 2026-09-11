@@ -16,6 +16,7 @@ const FanNavbar = () => {
     return localStorage.getItem('cachedFanName') || 'Fan';
   });
   const [unreadCount, setUnreadCount] = useState(0);
+  const [walletBalance, setWalletBalance] = useState(0);
 
   useEffect(() => {
     const fetchFanProfile = async () => {
@@ -44,11 +45,22 @@ const FanNavbar = () => {
       fetchNotifications();
     };
 
+    const fetchWallet = async () => {
+      try {
+        const res = await api.get('/wallet/balance');
+        if (res.data.success) {
+          setWalletBalance(res.data.balance || 0);
+        }
+      } catch (err) {}
+    };
+
     fetchFanProfile();
     fetchNotifications();
+    fetchWallet();
 
     const interval = setInterval(() => {
       fetchNotifications();
+      fetchWallet();
     }, 15000);
 
     window.addEventListener('notificationRead', handleNotificationRead);
@@ -56,7 +68,7 @@ const FanNavbar = () => {
       window.removeEventListener('notificationRead', handleNotificationRead);
       clearInterval(interval);
     };
-  }, []);
+  }, [location.pathname]);
 
   return (
     <>
@@ -138,6 +150,40 @@ const FanNavbar = () => {
         
         {/* Right side: Navigation Links & Profile */}
         <div className="fan-nav-right">
+          <Link to="/fan/wallet" style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '8px',
+            background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.15) 0%, rgba(56, 189, 248, 0.05) 100%)',
+            border: '1px solid rgba(56, 189, 248, 0.3)',
+            borderRadius: '20px',
+            padding: '6px 12px',
+            textDecoration: 'none',
+            color: '#fff',
+            fontWeight: '700',
+            fontSize: '14px',
+            transition: 'transform 0.2s',
+          }}
+          onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+          onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+          >
+            <span style={{ color: '#38BDF8', fontSize: '13px' }}>₹</span>
+            {Math.round(walletBalance * 100) / 100}
+            <div style={{
+              background: '#38BDF8',
+              color: '#000',
+              width: '18px',
+              height: '18px',
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '14px',
+              fontWeight: '900',
+              marginLeft: '4px'
+            }}>+</div>
+          </Link>
+          
           <nav className="fan-nav-links">
           {navItems.map(item => {
             const isActive = currentPath === item.path;

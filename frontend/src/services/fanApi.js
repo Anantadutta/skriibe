@@ -22,6 +22,20 @@ export const getFanHistory = async () => {
   const response = await api.get('/questions/fan-history');
   return response.data;
 };
+export const getFanChatHistory = async () => {
+  const response = await api.get('/chat/fan-history');
+  return response.data;
+};
+
+export const deleteFanQuestionHistory = async (id) => {
+  const response = await api.delete(`/questions/${id}/history`);
+  return response.data;
+};
+
+export const deleteFanChatHistory = async (sessionId) => {
+  const response = await api.delete(`/chat/${sessionId}/history`);
+  return response.data;
+};
 
 export const flagQuestion = async (id, reason) => {
   const response = await api.post(`/buyers/question/${id}/flag`, { reason });

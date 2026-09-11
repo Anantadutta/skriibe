@@ -5,7 +5,7 @@ import api from '../services/api';
 const CreatorNotifications = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [questions, setQuestions] = useState([]);
+  const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Cyan filter for active bottom nav icons
@@ -14,66 +14,47 @@ const CreatorNotifications = () => {
 
   const navItems = [
     { label: 'HOME', icon: '🏠', route: '/creator/dashboard' },
-    { label: 'INBOX', icon: '💬', route: '/creator/inbox' },
-    { label: 'PAYOUTS', icon: '💰', route: '/creator/payouts' },
+    { label: 'CHATS', icon: '💬', route: '/creator/inbox' },
+    { label: 'TRANSACTIONS', icon: '💰', route: '/creator/payouts' },
+    { label: 'ANALYTICS', icon: '📊', route: '/creator/analytics' },
     { label: 'SETTINGS', icon: '⚙️', route: '/creator/settings' },
   ];
 
   useEffect(() => {
-    const fetchQuestions = async (isBackground = false) => {
+    const fetchNotifications = async (isBackground = false) => {
       if (!isBackground) setLoading(true);
       try {
-        const res = await api.get(`/creator/questions?t=${Date.now()}`);
+        const res = await api.get(`/creator/notifications?t=${Date.now()}`);
         if (res.data.success) {
-          setQuestions(res.data.questions);
+          setNotifications(res.data.notifications);
         }
       } catch (err) {
-        console.error('Error fetching questions:', err);
+        console.error('Error fetching notifications:', err);
       } finally {
         if (!isBackground) setLoading(false);
       }
     };
-    fetchQuestions();
+    fetchNotifications();
     const interval = setInterval(() => {
-      fetchQuestions(true);
+      fetchNotifications(true);
     }, 15000);
     return () => clearInterval(interval);
   }, []);
 
-  const readIds = JSON.parse(localStorage.getItem('creatorReadNotifications') || '[]');
+  const [readIds, setReadIds] = useState(() => JSON.parse(localStorage.getItem('creatorReadNotifications') || '[]'));
 
-  const pendingQuestions = questions.filter(q => q.status?.toLowerCase() === 'submitted');
-  
-  const now = new Date();
-  const satisfiedQuestions = questions.filter(q => {
-    if (q.status?.toLowerCase() !== 'satisfied') return false;
-    if (!q.creatorReadSatisfied) return true;
-    const updated = new Date(q.updatedAt || q.createdAt);
-    return (now - updated) < 24 * 60 * 60 * 1000; // Keep read satisfied questions for 24h
-  });
-
-  const allNotifications = [...pendingQuestions, ...satisfiedQuestions].sort((a, b) => new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt));
-
-  const handleNotificationClick = async (q) => {
-    const qId = q._id || q.id;
-    if (!readIds.includes(qId)) {
-      const newReadIds = [...readIds, qId];
+  const handleNotificationClick = async (notif) => {
+    if (!readIds.includes(notif.id)) {
+      const newReadIds = [...readIds, notif.id];
       localStorage.setItem('creatorReadNotifications', JSON.stringify(newReadIds));
+      setReadIds(newReadIds);
     }
 
-    let updatedQ = q;
-    if (q.status?.toLowerCase() === 'satisfied' && !q.creatorReadSatisfied) {
-      try {
-        const res = await api.patch(`/creator/questions/${qId}/read-satisfied`);
-        if (res.data?.question) {
-          updatedQ = res.data.question;
-        }
-      } catch (err) {
-        console.error('Failed to mark satisfied as read', err);
-      }
+    if (notif.type === 'ama') {
+      navigate(`/creator/dashboard/reply/${notif.id}`);
+    } else if (notif.type === 'live_chat') {
+      navigate(`/creator/dashboard`);
     }
-    const rootQuestion = q.isFollowUp ? questions.find(r => (r._id || r.id) === q.parentQuestionId) : null;
-    navigate(`/creator/dashboard/reply/${qId}`, { state: { question: updatedQ, rootQuestion } });
   };
 
   return (
@@ -111,27 +92,32 @@ const CreatorNotifications = () => {
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             <h2 style={{ fontSize: '1.4rem', fontWeight: 700, margin: 0 }}>Notifications</h2>
             <div style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: '2px' }}>
-              You have {allNotifications.length} new notification(s)
+              You have {notifications.length} notification(s)
             </div>
           </div>
         </div>
 
         {/* Notifications List */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', paddingBottom: '100px' }}>
-          {allNotifications.length === 0 ? (
+          {notifications.length === 0 ? (
             <div style={{ color: '#64748b', textAlign: 'center', marginTop: '20px' }}>No new notifications.</div>
           ) : (
-            allNotifications.map((q) => {
-              const isSatisfied = q.status?.toLowerCase() === 'satisfied';
-              const isRead = q.creatorReadSatisfied || readIds.includes(q._id || q.id);
+            notifications.map((notif) => {
+              const isRead = readIds.includes(notif.id);
+              let icon = '🔔';
+              if (notif.type === 'ama') icon = '?';
+              if (notif.type === 'live_chat') icon = '💬';
+              if (notif.type === 'tip') icon = '💰';
+              if (notif.type === 'review') icon = '⭐';
+
               return (
                 <div 
-                  key={q._id || q.id}
-                  onClick={() => handleNotificationClick(q)}
+                  key={notif.id}
+                  onClick={() => handleNotificationClick(notif)}
                   style={{
                     background: '#16161e',
                     border: '1px solid #2A2A2A',
-                    borderLeft: `4px solid ${isRead ? '#475569' : (isSatisfied ? '#10b981' : '#FBBF24')}`,
+                    borderLeft: `4px solid ${isRead ? '#475569' : '#38BDF8'}`,
                     borderRadius: '16px',
                     padding: '16px',
                     display: 'flex',
@@ -142,12 +128,13 @@ const CreatorNotifications = () => {
                   }}
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <div style={{ color: isRead ? '#94a3b8' : (isSatisfied ? '#10b981' : '#FBBF24'), fontSize: '0.8rem', fontWeight: 600 }}>
-                      {isSatisfied ? 'Fan Satisfied' : (q.isFollowUp ? 'New Follow-up Question' : 'New Question')}
+                    <div style={{ color: isRead ? '#94a3b8' : '#38BDF8', fontSize: '1rem', fontWeight: 600, display: 'flex', gap: '8px', alignItems: 'center' }}>
+                      <span style={{ fontSize: '1.2rem' }}>{icon}</span>
+                      {notif.type.replace('_', ' ').toUpperCase()}
                     </div>
                     <div style={{ 
-                      background: isRead ? 'rgba(148, 163, 184, 0.15)' : (isSatisfied ? 'rgba(16, 185, 129, 0.15)' : 'rgba(251, 191, 36, 0.15)'), 
-                      color: isRead ? '#94a3b8' : (isSatisfied ? '#10b981' : '#FBBF24'), 
+                      background: isRead ? 'rgba(148, 163, 184, 0.15)' : 'rgba(56, 189, 248, 0.15)', 
+                      color: isRead ? '#94a3b8' : '#38BDF8', 
                       padding: '4px 8px', 
                       borderRadius: '8px', 
                       fontSize: '0.7rem', 
@@ -156,11 +143,11 @@ const CreatorNotifications = () => {
                       {isRead ? 'Read' : 'Unread'}
                     </div>
                   </div>
-                  <div style={{ fontSize: '1rem', fontWeight: 700, color: isRead ? '#cbd5e1' : '#fff' }}>
-                    {isSatisfied ? `${q.buyerName || q.handle || 'A fan'} is satisfied with your reply` : `From ${q.buyerName || q.followerName || 'A fan'}`}
+                  <div style={{ fontSize: '1rem', fontWeight: 700, color: isRead ? '#cbd5e1' : '#fff', lineHeight: '1.4' }}>
+                    {notif.title}
                   </div>
-                  <div style={{ color: '#94a3b8', fontSize: '0.9rem', lineHeight: '1.4' }}>
-                    Click to view {isSatisfied ? 'the thread' : 'and reply'} in your inbox.
+                  <div style={{ color: '#94a3b8', fontSize: '0.8rem', lineHeight: '1.4' }}>
+                    {new Date(notif.timestamp).toLocaleString()}
                   </div>
                 </div>
               );
@@ -204,8 +191,7 @@ const CreatorNotifications = () => {
               }}
             >
               <span style={{ 
-                fontSize: '20px',
-                filter: isActive ? cyanFilter : grayFilter
+                fontSize: '20px'
               }}>
                 {item.icon}
               </span>

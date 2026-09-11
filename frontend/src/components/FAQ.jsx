@@ -2,158 +2,118 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 export const fanFaqs = [
-  { question: "What is Skriibe?", answer: "Skriibe is a platform where fans can pay to ask questions directly to creators and receive personalized replies." },
-  { question: "How does Skriibe work?", answer: "Choose a creator, submit your message, make payment, and wait for their response." },
-  { question: "How do I ask a message?", answer: "Simply select a creator, write your message, make the payment, and submit it. The creator will receive your message and can respond through Skriibe." },
-  { question: "What happens if a creator doesn't answer my message?", answer: "Creators are expected to respond within 24 hours. If they don't, you may be eligible for a refund according to Skriibe's refund policy." },
-  { question: "Can I ask follow-up messages?", answer: "Yes, each follow-up is treated as a new message unless otherwise specified by the creator." },
-  { question: "Can I ask any creator on Skriibe?", answer: "You can ask messages to creators who have an active Skriibe profile and are currently accepting messages." },
-  { question: "How much does it cost to ask a message?", answer: "Each creator sets their own price. The cost will be displayed before you submit your message." },
-  { question: "Is my payment secure?", answer: "Yes, all payments are processed through secure payment providers." },
-  { question: "Can I edit or cancel my message after submitting it?", answer: "Once a message is submitted, it cannot be edited. Cancellation depends on whether the creator has already viewed or started responding to it." },
-  { question: "Can other users see my message or answer?", answer: "No. Messages and answers on Skriibe are only visible to the fan who asked the message and the creator who received it. They are not displayed publicly on the platform." },
-  { question: "Can creators reject messages?", answer: "Yes. Creators can decline messages that violate guidelines or fall outside their expertise." },
-  { question: "Can I get a refund if I don't like the answer?", answer: "Refunds are not based on personal satisfaction. Refund eligibility is governed by Skriibe's refund policy." },
-  { question: "What kind of messages can I send?", answer: "You can send messages for advice, opinions, guidance, feedback, recommendations, and creator insights." },
-  { question: "Will I be notified when my answer is ready?", answer: "Yes, you'll receive a notification as soon as the creator responds on Email, Skriibe Inbox & Wats app." },
-  { question: "Is there a limit to how many messages I can send?", answer: "No. Fans can send as many messages as they like, provided they complete the payment for each message." }
-];
-
-export const creatorFaqs = [
-  { question: "How do I start earning on Skriibe?", answer: "Create your profile, set your pricing, and start accepting messages." },
-  { question: "How much do creators earn from each message?", answer: "Creators earn 80% of the message price. Skriibe retains 20% as a platform fee. Payment processing fees are covered by Skriibe, so creators receive their full 80% share, subject to any applicable taxes or legal deductions." },
-  { question: "When do creators get paid?", answer: "Earnings are transferred according to Skriibe's payout schedule. Payouts are processed every Tuesday. To be eligible, earnings must be at least 7 days old at the time of payout processing." },
-  { question: "Can I decline a message?", answer: "Yes, if it violates guidelines or isn't something you're comfortable answering." },
-  { question: "What happens if I miss the 24-hour response window?", answer: "The message may become eligible for a refund under Skriibe's refund policy." },
-  { question: "Can I pause receiving messages?", answer: "Yes, you can temporarily stop accepting new messages." },
-  { question: "Can I change my pricing anytime?", answer: "Yes. Pricing can be updated whenever you choose." },
-  { question: "Can I report abusive users?", answer: "Yes, creators can report users who violate community standards." },
-  { question: "Do I need a subscription to use Skriibe?", answer: "No. Fans pay per question, while creators can join and start receiving questions without requiring fans to purchase a subscription." },
-  { question: "What if my payment succeeds but my message isn't submitted?", answer: "Our support team can help resolve payment-related issues at support@skriibe.com" },
-  { question: "How do refunds work?", answer: "If a creator doesn't respond within 24 hours, you may be eligible for a refund according to Skriibe's refund policy. If a response is submitted but is abusive, inappropriate, or clearly incomplete, you can raise a dispute for review by the Skriibe team." }
-];
-
-export const generalFaqs = [
-  { question: "Are the answers AI-generated?", answer: "Nope. Real creators. Real opinions. Real replies." },
-  { question: "Can I edit my message after sending it?", answer: "No. Once it's sent, it's on its way." },
-  { question: "Can I ask follow-up messages?", answer: "Absolutely. One free follow up question is available within 24 hrs of your message." },
-  { question: "Why was my message declined?", answer: "Usually because it was outside the creator's expertise, too vague, or didn't follow guidelines." },
-  { question: "What if someone sends an abusive message?", answer: "Report it. We'll review it so creators can focus on answering, not moderating." },
-  { question: "Can creators choose their own pricing?", answer: "Yes. Every creator decides what their time is worth." },
-  { question: "Can I report a creator's reply?", answer: "Yes. If a reply is abusive, inappropriate, or clearly low-quality, you can report it." },
-  { question: "Can I ask anything?", answer: "Almost. Just keep it respectful, relevant, and legal." },
-  { question: "What if the creator doesn't reply?", answer: "No reply, no problem. You'll get a refund." },
-  { question: "Is there a limit to how many messages I can ask?", answer: "Only your curiosity and your wallet." }
-];
-
-export const faqData = [
   {
-    question: "What is Skriibe?",
-    answer: "Skriibe is a platform where fans can pay to ask questions directly to creators and receive personalized replies."
+    question: "What is Skriibe Live Chat?",
+    answer: "Skriibe Live Chat lets you have a private, real-time 1-on-1 conversation with a creator. You pay according to the creator's displayed per-minute rate."
   },
   {
-    question: "How does Skriibe work?",
-    answer: "Choose a creator, submit your message, make payment, and wait for their response."
+    question: "How do I start a Live Chat?",
+    answer: "Open a creator's profile, check that Live Chat is available, review the creator's ₹/minute rate, make sure you have sufficient balance, and tap Start Chat."
   },
   {
-    question: "How do I ask a message?",
-    answer: "Simply select a creator, write your message, make the payment, and submit it. The creator will receive your message and can respond through Skriibe."
+    question: "When does billing start?",
+    answer: "Billing starts when the Live Chat session actually begins, according to the session's billing rules."
   },
   {
-    question: "What happens if a creator doesn't answer my message?",
-    answer: "Creators are expected to respond within 24 hours. If they don't, you may be eligible for a refund according to Skriibe's refund policy."
+    question: "Can I end the chat anytime?",
+    answer: "Yes. You can end the Live Chat whenever you want. You are charged only for the billable time used in the session."
   },
   {
-    question: "How much does it cost to ask a message?",
-    answer: "Each creator sets their own price. The cost will be displayed before you submit your message."
+    question: "What happens if the creator does not accept my chat?",
+    answer: "If the Live Chat does not start because the creator does not accept or is unavailable, you should not be charged for a live conversation."
   },
   {
-    question: "Can I ask any creator on Skriibe?",
-    answer: "You can ask messages to creators who have an active Skriibe profile and are currently accepting messages."
+    question: "Can I chat with an offline creator?",
+    answer: "Live Chat is available when the creator is online and accepting chats. If the creator is unavailable, you may use another available feature such as AMA, if enabled."
   },
   {
-    question: "Can other users see my question or answer?",
-    answer: "No. Questions and answers on Skriibe are only visible to the fan who asked the question and the creator who received it. They are not displayed publicly on the platform."
+    question: "What if my balance runs out during the chat?",
+    answer: "The chat should end or be handled according to the platform's low-balance rules. The fan should not be charged beyond the available balance unless explicitly supported by the platform's payment flow."
   },
   {
-    question: "Can creators reject questions?",
-    answer: "Yes. Creators can decline questions that violate guidelines or fall outside their expertise."
+    question: "Can I add balance before or during a chat?",
+    answer: "Fans can add balance through the available Skriibe payment flow. The exact top-up options depend on the current wallet/payment implementation."
   },
   {
-    question: "Will I be notified when my answer is ready?",
-    answer: "Yes, you'll receive a notification as soon as the creator responds on Email and Skriibe Inbox "
+    question: "Is my conversation private?",
+    answer: "Yes. Your Live Chat is a private conversation between you and the creator. It is not publicly displayed on Skriibe."
   },
   {
-    question: "How do refunds work?",
-    answer: "If a creator doesn't respond within 24 hours, you may be eligible for a refund according to Skriibe's refund policy. If a response is submitted but is abusive, inappropriate, or clearly incomplete, you can raise a dispute for review by the Skriibe team."
+    question: "Can the creator share my conversation?",
+    answer: "Skriibe treats the chat as private. Users should not share another person's private conversation or personal information without appropriate permission."
   },
   {
-    question: "Can I ask follow-up questions?",
-    answer: "Yes, each follow-up is treated as a new question unless otherwise specified by the creator."
+    question: "Can I get a refund?",
+    answer: "If there is a problem with a Live Chat or an incorrect charge, contact Skriibe Support. Refund eligibility is assessed based on the issue, session status, billing record, and applicable Skriibe policy."
   },
   {
-    question: "Is my payment secure?",
-    answer: "Yes, all payments are processed through secure payment providers."
-  },
-  {
-    question: "Can I edit or cancel my question after submitting it?",
-    answer: "Once a question is submitted, it cannot be edited. Cancellation depends on whether the creator has already viewed or started responding to it."
-  },
-  {
-    question: "Can I get a refund if I don't like the answer?",
-    answer: "Refunds are not based on personal satisfaction. Refund eligibility is governed by Skriibe's refund policy."
-  },
-  {
-    question: "What kind of questions can I ask?",
-    answer: "You can ask for advice, opinions, guidance, feedback, recommendations, and creator insights."
-  },
-  {
-    question: "Is there a limit to how many messages I can ask?",
-    answer: "No. Fans can ask as many messages as they like, provided they complete the payment for each message."
-  },
-  {
-    question: "How do I start earning on Skriibe?",
-    answer: "Create your profile, set your pricing, and start accepting messages."
-  },
-  {
-    question: "How much do creators earn from each question?",
-    answer: "Creators earn 80% of the question price. Skriibe retains 20% as a platform fee. Payment processing fees are covered by Skriibe, so creators receive their full 80% share, subject to any applicable taxes or legal deductions."
-  },
-  {
-    question: "When do creators get paid?",
-    answer: "Earnings are transferred according to Skriibe's payout schedule. Payouts are processed every Tuesday. To be eligible, earnings must be at least 7 days old at the time of payout processing."
-  },
-  {
-    question: "Can I decline a question?",
-    answer: "Yes, if it violates guidelines or isn't something you're comfortable answering."
-  },
-  {
-    question: "What happens if I miss the 24-hour response window?",
-    answer: "The question may become eligible for a refund under Skriibe's refund policy."
-  },
-  {
-    question: "Can I pause receiving questions?",
-    answer: "Yes, you can temporarily stop accepting new questions."
-  },
-  {
-    question: "Can I change my pricing anytime?",
-    answer: "Yes. Pricing can be updated whenever you choose."
-  },
-  {
-    question: "Can I report abusive users?",
-    answer: "Yes, creators can report users who violate community standards."
-  },
-  {
-    question: "Do I need a subscription to use Skriibe?",
-    answer: "No. Fans pay per question, while creators can join and start receiving questions without requiring fans to purchase a subscription."
-  },
-  {
-    question: "What if my payment succeeds but my question isn't submitted?",
-    answer: "Our support team can help resolve payment-related issues at support@skriibe.com"
+    question: "What should I do if I was charged incorrectly?",
+    answer: "Contact Skriibe Support and provide the relevant chat/order ID, creator name, approximate time, and a short description of the issue. Support can verify the session and billing record."
   }
 ];
 
-const FAQ = ({ theme }) => {
+export const creatorFaqs = [
+  {
+    question: "What is Skriibe Live Chat for creators?",
+    answer: "It allows creators to offer paid, real-time 1-on-1 conversations with fans at a creator-selected per-minute rate."
+  },
+  {
+    question: "How do I enable Live Chat?",
+    answer: "Complete your creator profile and enable Live Chat from the creator controls, subject to Skriibe's eligibility and onboarding requirements."
+  },
+  {
+    question: "Can I choose my own rate?",
+    answer: "Yes. Creators can choose from the pricing options made available by Skriibe and select the rate that best fits their audience and positioning."
+  },
+  {
+    question: "How does creator availability work?",
+    answer: "Creators can make themselves available for Live Chat when they are ready to receive real-time conversations. The product should clearly show whether the creator is available or away."
+  },
+  {
+    question: "What happens when I go offline?",
+    answer: "When you are not accepting Live Chats, fans should see that you are unavailable and should not be able to start a new live session with you."
+  },
+  {
+    question: "How do I receive a chat request?",
+    answer: "When a fan starts a Live Chat with you and you are available, the request/session appears in your creator interface. Follow the on-screen controls to accept, start, or end the session."
+  },
+  {
+    question: "How am I paid?",
+    answer: "Creator earnings are based on eligible billable Live Chat revenue generated through your sessions. Skriibe's platform fee/commission is deducted according to the creator agreement."
+  },
+  {
+    question: "What is Skriibe's commission?",
+    answer: "The current Skriibe business model provides creators 80% of eligible revenue and Skriibe retains 20%, subject to the applicable terms and exclusions."
+  },
+  {
+    question: "When do I receive my payout?",
+    answer: "Creator payouts are processed according to Skriibe's payout schedule and applicable minimum settlement period. The current planned schedule is Tuesday payouts with a minimum 7-day period."
+  },
+  {
+    question: "What happens if a fan requests a refund?",
+    answer: "Support/Admin reviews the session, billing record, reason for the request, and applicable refund policy. A refund may affect the creator's eligible earnings for that transaction."
+  },
+  {
+    question: "What if I miss or cannot accept a chat?",
+    answer: "If you cannot take a Live Chat, keep your status unavailable where possible. Repeated missed requests or poor response behaviour may affect creator quality metrics or account review."
+  },
+  {
+    question: "How long should I stay available?",
+    answer: "Creators should only switch to available when they are genuinely ready for a real-time conversation. This helps protect fan experience and creator response metrics."
+  },
+  {
+    question: "Can I change my rate later?",
+    answer: "Yes, if rate changes are enabled by Skriibe. Any rate change should apply to new sessions according to the product's pricing rules."
+  },
+  {
+    question: "Can I see my Live Chat earnings?",
+    answer: "Creator analytics should show relevant revenue, session, duration, and other Live Chat metrics available in the current dashboard."
+  }
+];
+
+export const allFaqs = [...fanFaqs, ...creatorFaqs];
+
+const FAQ = ({ theme = 'dark' }) => {
   const [openIndex, setOpenIndex] = useState(null);
   const navigate = useNavigate();
 
@@ -161,57 +121,95 @@ const FAQ = ({ theme }) => {
     setOpenIndex(openIndex === index ? null : index);
   };
 
-  const visibleFaqs = faqData.slice(0, 5);
+  // Only show the first 5 FAQs on the landing page
+  const visibleFaqs = fanFaqs.slice(0, 5);
+  const isLight = theme === 'light';
 
   return (
-    <div className={`w-full ${theme === 'light' ? 'bg-[#f8fafc]' : 'bg-black'} py-20 px-4 flex flex-col items-center font-syne`}>
-      <div className="max-w-2xl w-full">
-        <div className="text-center mb-12">
-          <h2 className={`${theme === 'light' ? 'text-black' : 'text-white'} text-xl md:text-2xl font-bold tracking-[0.25em] uppercase mb-2`}>
+    <section className="w-full mt-12 sm:mt-16 md:mt-20 mb-4 sm:mb-5 md:mb-6">
+      <div className="max-w-3xl mx-auto w-full">
+        <div className="text-center mb-10 sm:mb-12">
+          <p className="text-lg sm:text-xl md:text-2xl font-bold uppercase tracking-[0.25em] text-[#FF5E62] mb-4 sm:mb-6">
             FAQS
+          </p>
+          <h2
+            className={`text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight ${
+              isLight ? 'text-gray-900' : 'text-white'
+            }`}
+          >
+            The Questions Everyone DM Us
           </h2>
-          <h3 className="font-libre text-skriibe-blue text-5xl md:text-6xl font-normal">
-            Good to know
-          </h3>
+          <p
+            className={`text-sm sm:text-base mt-3 ${
+              isLight ? 'text-gray-600' : 'text-gray-400'
+            }`}
+          >
+            Everything you need to know about starting conversations on Skriibe.
+          </p>
         </div>
 
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-3.5">
           {visibleFaqs.map((faq, index) => (
-            <div 
+            <div
               key={index}
-              className={`border ${theme === 'light' ? 'border-gray-200 bg-white' : 'border-[#38265c] bg-black'} rounded-2xl overflow-hidden transition-all duration-300`}
+              className={`rounded-2xl border transition-all duration-200 overflow-hidden ${
+                isLight
+                  ? 'bg-white border-gray-200/90 shadow-sm'
+                  : 'bg-[#13131A] border-[#1E1E28]'
+              }`}
             >
               <button
                 onClick={() => toggleFAQ(index)}
-                className="w-full flex justify-between items-center px-6 py-5 text-left focus:outline-none"
+                className="w-full flex justify-between items-center px-6 py-4.5 sm:py-5 text-left focus:outline-none cursor-pointer"
               >
-                <span className={`${theme === 'light' ? 'text-black' : 'text-white'} text-lg font-medium`}>{faq.question}</span>
-                <span className={`${theme === 'light' ? 'text-gray-500' : 'text-[#a094ba]'} text-3xl font-light ml-4 transition-transform duration-300`} style={{ transform: openIndex === index ? 'rotate(45deg)' : 'rotate(0deg)' }}>
+                <span
+                  className={`text-base sm:text-lg md:text-xl font-semibold pr-4 ${
+                    isLight ? 'text-gray-900' : 'text-white'
+                  }`}
+                >
+                  {faq.question}
+                </span>
+                <span
+                  className={`text-2xl font-light shrink-0 transition-transform duration-300 ${
+                    isLight ? 'text-gray-500' : 'text-[#3BA8D8]'
+                  }`}
+                  style={{
+                    transform: openIndex === index ? 'rotate(45deg)' : 'rotate(0deg)'
+                  }}
+                >
                   +
                 </span>
               </button>
-              
-              <div 
-                className={`px-6 ${theme === 'light' ? 'text-gray-600' : 'text-[#94a3b8]'} transition-all duration-300 ease-in-out ${openIndex === index ? 'pb-5 opacity-100 max-h-40' : 'max-h-0 opacity-0 overflow-hidden'}`}
+
+              <div
+                className={`px-6 transition-all duration-300 ease-in-out ${
+                  isLight ? 'text-gray-600' : 'text-gray-400'
+                } ${
+                  openIndex === index
+                    ? 'pb-5 opacity-100 max-h-48'
+                    : 'max-h-0 opacity-0 overflow-hidden'
+                }`}
               >
-                {faq.answer}
+                <p className="text-sm sm:text-[15px] leading-relaxed">
+                  {faq.answer}
+                </p>
               </div>
             </div>
           ))}
         </div>
 
-        {faqData.length > 5 && (
-          <div className="mt-8 flex justify-center">
-            <button
-              onClick={() => navigate('/faqs')}
-              className={`px-8 py-3 ${theme === 'light' ? 'bg-white border-gray-200 text-black hover:bg-gray-50' : 'bg-[#111] border-[#38265c] text-white hover:bg-[#1a1a1a]'} border rounded-full font-medium transition-colors duration-300 shadow-md`}
-            >
-              View more
-            </button>
-          </div>
-        )}
+        {/* Show More Button navigating to /faqs page */}
+        <div className="mt-6 sm:mt-8 flex justify-center">
+          <button
+            onClick={() => navigate('/faqs')}
+            className="px-8 py-3 rounded-xl bg-[#3BA8D8] hover:bg-[#3497c3] text-black font-bold text-sm sm:text-base tracking-wide transition-all duration-200 shadow-[0_0_20px_rgba(59,168,216,0.3)] flex items-center gap-2 hover:scale-[1.02] cursor-pointer"
+          >
+            Show more
+            <span aria-hidden="true">&rarr;</span>
+          </button>
+        </div>
       </div>
-    </div>
+    </section>
   );
 };
 

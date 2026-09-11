@@ -11,6 +11,7 @@ import { Field } from '../../components/ama/ui/Field';
 import ImageCropperModal from '../../components/common/ImageCropperModal';
 import { parsePhoneNumberFromString } from 'libphonenumber-js';
 import { validatePhoneNumber, COUNTRIES } from '../../utils/phoneValidation';
+import { EXPERTISE_OPTIONS, normalizeExpertiseList } from '../../utils/expertiseConstants';
 
 const CreatorOnboardProfile = () => {
   const navigate = useNavigate();
@@ -23,7 +24,7 @@ const CreatorOnboardProfile = () => {
     email: (passedCreator.email && !passedCreator.email.includes('@temp.skriibe.com')) ? passedCreator.email : '',
     phone: passedCreator.phone || '',
     bio: passedCreator.bio?.trim() === '' ? '' : passedCreator.bio || '',
-    expertise: (passedCreator.expertise && passedCreator.expertise.length === 1 && passedCreator.expertise[0] === 'Others') ? [] : (passedCreator.expertise || []),
+    expertise: (passedCreator.expertise && passedCreator.expertise.length === 1 && passedCreator.expertise[0] === 'Others') ? [] : normalizeExpertiseList(passedCreator.expertise || []),
     instagramHandle: passedCreator.instagramHandle || '',
     instagramConnected: passedCreator.instagramConnected || false,
     instagramFollowers: passedCreator.instagramFollowers || 0
@@ -43,18 +44,7 @@ const CreatorOnboardProfile = () => {
   const [cropImageSrc, setCropImageSrc] = useState(null);
 
   // List of standard expertise tag options
-  const expertiseOptions = [
-    'Career & Finance',
-    'Health & Fitness',
-    'Tech & Skills',
-    'Fashion & Lifestyle',
-    'Entertainment',
-    'Education',
-    'Entrepreneurship',
-    'Relationships',
-    'Spirituality',
-    'Others'
-  ];
+  const expertiseOptions = EXPERTISE_OPTIONS;
 
   useEffect(() => {
     const loadCreator = async () => {
@@ -69,7 +59,7 @@ const CreatorOnboardProfile = () => {
             email: (creator.email && !creator.email.includes('@temp.skriibe.com')) ? creator.email : prev.email,
             phone: creator.phone || prev.phone,
             bio: creator.bio?.trim() === '' ? '' : (creator.bio || prev.bio || ''),
-            expertise: (creator.expertise && creator.expertise.length === 1 && creator.expertise[0] === 'Others') ? [] : (creator.expertise?.length > 0 ? creator.expertise : prev.expertise),
+            expertise: (creator.expertise && creator.expertise.length === 1 && creator.expertise[0] === 'Others') ? [] : (creator.expertise?.length > 0 ? normalizeExpertiseList(creator.expertise) : normalizeExpertiseList(prev.expertise)),
             instagramHandle: creator.instagramHandle || prev.instagramHandle || '',
             instagramConnected: localStorage.getItem('force_ig_connected') === 'true' ? true : (creator.instagramConnected || false),
             instagramFollowers: creator.instagramFollowers || prev.instagramFollowers || 0
@@ -214,7 +204,7 @@ const CreatorOnboardProfile = () => {
     setLoading(true);
     try {
       const finalHandle = form.handle;
-      const finalExpertise = form.expertise.map(t => t === 'Others' ? customExpertise.trim() : t);
+      const finalExpertise = normalizeExpertiseList(form.expertise.map(t => t === 'Others' ? customExpertise.trim() : t));
 
       // Upload the avatar if there is a new one selected
       if (avatarFile) {
@@ -235,7 +225,7 @@ const CreatorOnboardProfile = () => {
       });
 
       const creatorPayload = res.data?.creator || res.creator || res.data;
-      navigate('/onboard/pricing', { state: { creator: creatorPayload } });
+      navigate('/onboard/live-chat', { state: { creator: creatorPayload } });
     } catch (err) {
       showError(err.response?.data?.message || 'Could not connect to server — make sure the backend is running.');
     } finally {
@@ -557,46 +547,7 @@ const CreatorOnboardProfile = () => {
                 {/* INSTAGRAM CONNECT & PROFILE SECTION */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', padding: '24px', background: 'rgba(255, 255, 255, 0.02)', borderRadius: '16px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
                   
-                  {/* LINK INSTAGRAM CTA & SECURE TEXT */}
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
-                    <button
-                      type="button"
-                      onClick={handleInstagramConnect}
-                      disabled={true}
-                      style={{
-                        background: 'transparent',
-                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                        borderRadius: '16px',
-                        padding: '12px',
-                        width: '100%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '16px',
-                        cursor: 'default',
-                        transition: 'all 0.2s',
-                      }}
-                    >
-                      <div style={{
-                        width: '40px',
-                        height: '40px',
-                        borderRadius: '10px',
-                        background: 'linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: 'white'
-                      }}>
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
-                          <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
-                          <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
-                        </svg>
-                      </div>
-                      <span style={{ color: '#ffffff', fontWeight: 'bold', fontSize: '16px' }}>
-                        {form.instagramConnected ? 'Instagram Connected' : 'Link Your Instagram '}
-                      </span>
-                    </button>
-                  </div>
+                  {/* LINK INSTAGRAM CTA REMOVED AS REQUESTED */}
 
                   {/* PROFILE PICTURE */}
                   <div>
@@ -675,7 +626,7 @@ const CreatorOnboardProfile = () => {
                       display: 'block',
                       marginBottom: '10px'
                     }}>
-                      USERNAME <span style={{ color: '#ef4444' }}>*</span>
+                      CREATE UR USERNAME <span style={{ color: '#ef4444' }}>*</span>
                     </label>
                     <div style={{
                       background: 'rgba(255, 255, 255, 0.03)',
@@ -705,7 +656,7 @@ const CreatorOnboardProfile = () => {
                     </div>
                     <div style={{ marginTop: '8px', fontSize: '12px', color: '#64748b' }}>
                       Your public profile link:<br />
-                      <span style={{ color: '#06b6d4' }}>https://skriibe.com/{form.handle || 'username'}</span>
+                      <span style={{ color: '#06b6d4' }}>https://skriibe.com/{form.handle || 'yourhandle'}</span>
                     </div>
                   </div>
 
@@ -970,11 +921,12 @@ const CreatorOnboardProfile = () => {
                     display: 'block',
                     fontWeight: 700
                   }}>
-                    BIO (OPTIONAL, MAX 200 CHARS)
+                    ADD INTRO MESSAGE (A short message for your fans before they start chatting)
                   </label>
                   <textarea
                     value={form.bio}
                     onChange={(e) => handleInputChange('bio', e.target.value.slice(0, 200))}
+                    placeholder="Heyyy! Got something on your mind? Let’s chat!"
                     rows={2}
                     onFocus={() => setBioFocused(true)}
                     onBlur={() => setBioFocused(false)}
@@ -991,13 +943,13 @@ const CreatorOnboardProfile = () => {
                   />
                   <div style={{
                     display: 'flex',
-                    justifyContent: 'flex-end',
+                    justifyContent: 'space-between',
                     marginTop: '4px',
                     fontSize: '9px',
-                    fontFamily: 'monospace, var(--font-mono)',
-                    color: form.bio.length >= 180 ? '#ef4444' : '#94a3b8'
+                    fontFamily: 'monospace, var(--font-mono)'
                   }}>
-                    {form.bio.length}/200
+                    <span></span>
+                    <span style={{ color: form.bio.length >= 180 ? '#ef4444' : '#94a3b8' }}>{form.bio.length}/200</span>
                   </div>
                 </div>
               </div>

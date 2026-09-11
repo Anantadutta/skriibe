@@ -21,6 +21,9 @@ const FanSchema = new mongoose.Schema({
   whatsappPhone: { type: String, default: '' },
   phone: { type: String, default: '' },
   whatsappConsent: { type: Boolean, default: false },
+  walletBalance: { type: Number, default: 0 },
+  hasUsedFreeChat: { type: Boolean, default: false },
+  isDeleted: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now }
 });
 

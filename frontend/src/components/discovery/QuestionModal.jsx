@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import api from '../../services/api';
+import { getExpertiseIcon } from '../../utils/expertiseIcons';
 
 const QuestionModal = ({ creator, onClose }) => {
   const [step, setStep] = useState('overview'); // 'overview' | 'ask'
@@ -124,19 +125,26 @@ const QuestionModal = ({ creator, onClose }) => {
 
             {/* Topic Tags & Live */}
             <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', flexWrap: 'wrap', justifyContent: 'center' }}>
-              {creator.expertise?.slice(0,2).map(exp => (
-                <span key={exp} style={{
-                  background: 'rgba(6, 182, 212, 0.1)',
-                  color: '#06b6d4',
-                  fontSize: '12px',
-                  fontWeight: '600',
-                  padding: '4px 12px',
-                  borderRadius: '16px',
-                  border: '1px solid rgba(6, 182, 212, 0.2)'
-                }}>
-                  {exp}
-                </span>
-              ))}
+              {creator.expertise?.slice(0,2).map(exp => {
+                const icon = getExpertiseIcon(exp, 12);
+                return (
+                  <span key={exp} style={{
+                    background: 'rgba(6, 182, 212, 0.1)',
+                    color: '#06b6d4',
+                    fontSize: '12px',
+                    fontWeight: '600',
+                    padding: '4px 12px',
+                    borderRadius: '16px',
+                    border: '1px solid rgba(6, 182, 212, 0.2)',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}>
+                    {icon}
+                    {exp}
+                  </span>
+                );
+              })}
               <span style={{
                 background: 'rgba(16, 185, 129, 0.1)',
                 color: '#10b981',
@@ -229,9 +237,7 @@ const QuestionModal = ({ creator, onClose }) => {
               </button>
             </div>
 
-            <div style={{ color: '#64748b', fontSize: '12px', marginTop: '20px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span>🔒</span> Secured payments · 100% refund if no reply
-            </div>
+
 
           </div>
         ) : (

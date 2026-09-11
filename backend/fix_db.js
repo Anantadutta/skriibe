@@ -1,20 +1,23 @@
 const mongoose = require('mongoose');
-const Creator = require('./models/Creator');
-require('dotenv').config();
 
-async function fixDB() {
-  try {
-    await mongoose.connect(process.env.MONGO_URI);
-    const result = await Creator.updateMany(
-      { 'stats.replyRate': 0 },
-      { $set: { 'stats.replyRate': 100 } }
+mongoose.connect('mongodb://localhost:27017/skriibe', { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(async () => {
+    const creatorSchema = new mongoose.Schema({}, { strict: false });
+    const Creator = mongoose.model('Creator', creatorSchema);
+    
+    const result = await Creator.updateOne(
+      { handle: 'vasundhara' },
+      { $set: { avatarUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=1000&auto=format&fit=crop' } }
     );
-    console.log(`Successfully fixed ${result.modifiedCount} creators!`);
-  } catch (err) {
-    console.error(err);
-  } finally {
+    
+    if (result.modifiedCount > 0) {
+      console.log("Vasundhara's local picture updated successfully!");
+    } else {
+      console.log("Found Vasundhara, but picture was already set or handle not found.");
+    }
     process.exit(0);
-  }
-}
-
-fixDB();
+  })
+  .catch(err => {
+    console.error(err);
+    process.exit(1);
+  });

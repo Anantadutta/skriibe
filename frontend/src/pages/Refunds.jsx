@@ -60,272 +60,288 @@ const Refunds = () => {
           </h1>
           
           <div className={`text-base md:text-lg leading-relaxed space-y-6 ${theme === 'light' ? 'text-gray-700' : 'text-gray-300'} font-sans`}>
-            <h2 className={`text-2xl font-bold mt-8 mb-4 ${theme === 'light' ? 'text-black' : 'text-white'}`}>1. Overview</h2>
-            <p>Skriibe is a paid Ask Me Anything (AMA) platform connecting creators with their audiences. Buyers pay a fee set by the Creator to submit a question and receive a response within 24 hours, or a full refund, unless the Creator validly rejects the question (see Section 3.1). All payments are processed via authorised payment gateway partners including Razorpay. This policy explains when and how refunds are issued.</p>
-            <p>Skriibe facilitates creator response obligations and provides refund remedies where obligations are not fulfilled.</p>
-            <div className={`p-4 rounded-xl font-medium border-l-4 border-[#3BA8D8] ${theme === 'light' ? 'bg-[#e0f2fe] text-gray-800' : 'bg-[#0c4a6e] text-gray-100'}`}>
-              <strong>Core Guarantee:</strong> If a Creator does not reply within 24 hours of a confirmed payment, and has not validly rejected the question, the Buyer receives a full 100% refund.
-            </div>
+            <h2 className={`text-2xl font-bold mt-8 mb-4 ${theme === 'light' ? 'text-black' : 'text-white'}`}>1. OVERVIEW</h2>
+            <p>Skriibe is a creator monetization and fan-engagement platform operated by EdLern Innovations Private Limited ("Skriibe", "we", "us", or "our").</p>
+            <p>Skriibe enables users ("Fans", "Users", "you", or "your") to interact with creators through paid interaction services, including:</p>
+            <ol className="list-decimal pl-6 space-y-2">
+              <li><strong>Live Chat</strong> – real-time, one-to-one conversations billed on a per-minute basis at the rate displayed by the Creator;</li>
+              <li><strong>AMA (Ask Me Anything)</strong> – paid questions or messages submitted to a Creator for an asynchronous response; and</li>
+              <li><strong>Tips</strong> – voluntary payments made by a Fan to a Creator in appreciation of the Creator's content, interaction, or service.</li>
+            </ol>
+            <p>This Refund &amp; Cancellation Policy explains when a payment may be cancelled, refunded, or otherwise reviewed by Skriibe.</p>
+            <p>Skriibe operates a combination of automatic refunds and support-based refund reviews. Except where an automatic refund is expressly provided under this Policy, a refund is not guaranteed and will be assessed based on the circumstances of the transaction, applicable platform records, Creator activity, and applicable law.</p>
+            <p>Nothing in this Policy limits any rights available to a User under applicable law.</p>
 
-            <h2 className={`text-2xl font-bold mt-8 mb-4 ${theme === 'light' ? 'text-black' : 'text-white'}`}>2. How Payments Work</h2>
-            <p>Every transaction follows this sequence:</p>
+            <h2 className={`text-2xl font-bold mt-8 mb-4 ${theme === 'light' ? 'text-black' : 'text-white'}`}>2. HOW PAYMENTS WORK</h2>
+            <h3 className={`text-xl font-bold mt-6 mb-2 ${theme === 'light' ? 'text-black' : 'text-white'}`}>2.1 Live Chat</h3>
+            <p>For Live Chat:</p>
             <ul className="list-disc pl-6 space-y-2">
-              <li>Buyer submits a question and pays via UPI, card, or net banking through Razorpay.</li>
-              <li>Payment is held in escrow by Razorpay. Creator is notified via Email & Skriibe Notification Inbox. Payments are processed and settled through authorised payment partners in accordance with applicable RBI regulations.</li>
-              <li>Within 24 hours, the Creator responds to the question, or validly rejects it under Section 3.1. If answered, the Buyer receives the Answer via Email & Skriibe Notification Inbox.</li>
-              <li>A 24-hour dispute window opens for Buyers who received an Answer. Buyer can raise a dispute if unsatisfied (see Section 5).</li>
-              <li>If no dispute is raised within the 24-hour window, payment for that Answer is released to the Creator on the next Tuesday payout cycle following expiry of the window.</li>
-              <li>If the Creator validly rejects the question under Section 3.1 instead of responding, the Buyer is refunded automatically and there is no Answer to dispute.</li>
+              <li>The Fan selects a Creator and views the Creator's applicable per-minute rate before initiating the conversation.</li>
+              <li>Billing begins when the Live Chat connection is successfully established.</li>
+              <li>The Fan is charged based on the applicable billing mechanism and actual billable interaction time displayed by Skriibe.</li>
+              <li>The Fan may end the Live Chat at any time.</li>
+              <li>Once a Live Chat has been successfully connected and the corresponding service has been delivered, the amount relating to the completed portion of the session is generally non-refundable, except where a refund is approved under this Policy.</li>
             </ul>
 
-            <h3 className={`text-xl font-bold mt-6 mb-4 ${theme === 'light' ? 'text-black' : 'text-white'}`}>Revenue Split</h3>
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr>
-                    <TableHeader>Component</TableHeader>
-                    <TableHeader>Amount</TableHeader>
-                    <TableHeader>Notes</TableHeader>
-                  </tr>
-                </thead>
+            <h3 className={`text-xl font-bold mt-6 mb-2 ${theme === 'light' ? 'text-black' : 'text-white'}`}>2.2 AMA</h3>
+            <p>For AMA:</p>
+            <ul className="list-disc pl-6 space-y-2">
+              <li>The Fan selects a Creator and submits a question/message after viewing the applicable price.</li>
+              <li>Payment is collected at the time the AMA is submitted.</li>
+              <li>The Creator is notified through Skriibe and/or the registered notification channels.</li>
+              <li>There is no fixed response deadline for AMA. If the Creator does not respond within 15 calendar days of submission, the refund provisions in Section 4.1 apply.</li>
+              <li>If the Creator does not respond within the automatic refund period specified in Section 4, the applicable amount will be automatically refunded to the Fan's Skriibe Wallet, subject to the conditions of this Policy.</li>
+            </ul>
+
+            <h3 className={`text-xl font-bold mt-6 mb-2 ${theme === 'light' ? 'text-black' : 'text-white'}`}>2.3 Tips</h3>
+            <p>Tips are voluntary payments made by Fans to Creators.</p>
+            <p>Once a Tip has been successfully submitted, it is non-refundable, except where the transaction itself was duplicated or incorrectly processed due to a payment-system error.</p>
+            <p>A Tip is not a payment for a guaranteed response, outcome, advice, or future service.</p>
+
+            <h2 className={`text-2xl font-bold mt-8 mb-4 ${theme === 'light' ? 'text-black' : 'text-white'}`}>3. CANCELLATION</h2>
+            <h3 className={`text-xl font-bold mt-6 mb-2 ${theme === 'light' ? 'text-black' : 'text-white'}`}>3.1 Live Chat Cancellation</h3>
+            <p>A Fan may end an ongoing Live Chat at any time.</p>
+            <p>Ending a Live Chat does not automatically result in a refund. The Fan will generally be charged for the billable portion of the session already completed.</p>
+            <p>If a Fan believes that the Live Chat was affected by a technical failure, incorrect billing, unauthorized interruption, or Creator misconduct, the Fan may raise a support request in accordance with Section 5.</p>
+
+            <h3 className={`text-xl font-bold mt-6 mb-2 ${theme === 'light' ? 'text-black' : 'text-white'}`}>3.2 AMA Cancellation</h3>
+            <p>Once an AMA has been submitted and payment processed, a change of mind does not create a right to a refund. The refund provisions in Section 4.1 apply where the Creator does not respond within 15 calendar days.</p>
+
+            <h3 className={`text-xl font-bold mt-6 mb-2 ${theme === 'light' ? 'text-black' : 'text-white'}`}>3.3 Tips</h3>
+            <p>Tips cannot be cancelled after successful submission.</p>
+
+            <h2 className={`text-2xl font-bold mt-8 mb-4 ${theme === 'light' ? 'text-black' : 'text-white'}`}>4. WHEN YOU MAY RECEIVE A REFUND</h2>
+            <h3 className={`text-xl font-bold mt-6 mb-2 ${theme === 'light' ? 'text-black' : 'text-white'}`}>4.1 Automatic Refunds</h3>
+            <p>Skriibe will automatically initiate a refund in the following circumstances:</p>
+            <p className="font-semibold mt-4">A. AMA — Creator Does Not Respond</p>
+            <p>If:</p>
+            <ul className="list-disc pl-6 space-y-2">
+              <li>the Fan has successfully submitted and paid for an AMA;</li>
+              <li>the submitted question/message does not violate Skriibe's Terms, Community Guidelines, or applicable law; and</li>
+              <li>the Creator has not responded within 15 calendar days from the date of submission,</li>
+            </ul>
+            <p className="mt-2">Skriibe will initiate a refund within 48 hours of the 15-day window closing — no separate request required to the Fan's Skriibe Wallet.</p>
+            <p>No separate refund request is required.</p>
+            <p>If the AMA is found to violate Skriibe's Terms, Community Guidelines, or applicable law, no automatic refund will be issued solely because the Creator did not respond.</p>
+
+            <p className="font-semibold mt-4">B. Duplicate Payment</p>
+            <p>Where the same transaction is successfully charged more than once due to a verified payment gateway or technical error, the duplicate transaction amount will be refunded.</p>
+            <p>Where reasonably possible, the duplicate payment will be refunded to the original payment method used for the transaction.</p>
+
+            <h3 className={`text-xl font-bold mt-6 mb-2 ${theme === 'light' ? 'text-black' : 'text-white'}`}>4.2 Support-Based Refund Review</h3>
+            <p>For issues that do not qualify for an automatic refund, the Fan may submit a refund or dispute request through Skriibe Support.</p>
+            <p className="font-semibold mt-4">Refund requests may include, without limitation:</p>
+            <p className="font-medium mt-2">Live Chat</p>
+            <ul className="list-disc pl-6 space-y-2">
+              <li>Verified Skriibe technical failure;</li>
+              <li>Creator disconnecting unexpectedly during a session;</li>
+              <li>Incorrect or excessive billing;</li>
+              <li>Billing continuing after the session has ended;</li>
+              <li>Material service interruption caused by Skriibe;</li>
+              <li>Creator conduct that violates Skriibe's Community Guidelines or Terms;</li>
+              <li>Other verified circumstances where the paid service was materially not delivered.</li>
+            </ul>
+
+            <p className="font-medium mt-4">AMA</p>
+            <ul className="list-disc pl-6 space-y-2">
+              <li>Creator response is materially unrelated to the submitted question/message;</li>
+              <li>Creator response is not delivered because of a verified platform issue;</li>
+              <li>Creator conduct violates Skriibe's Community Guidelines or Terms;</li>
+              <li>Incorrect billing or duplicate charging;</li>
+              <li>Other verified circumstances where the paid service was materially not delivered.</li>
+            </ul>
+            <p className="mt-4">Skriibe may approve a full refund, partial refund, or no refund, depending on the circumstances.</p>
+            <p>Where appropriate, Skriibe may use platform records, transaction records, session logs, timestamps, messages, Creator activity, and other relevant information to review the request.</p>
+
+            <h3 className={`text-xl font-bold mt-6 mb-2 ${theme === 'light' ? 'text-black' : 'text-white'}`}>4.3 NO REFUND IN THESE CASES</h3>
+            <p>Except where required by applicable law, Skriibe will generally not approve refunds for:</p>
+            <ol className="list-decimal pl-6 space-y-2">
+              <li>Change of mind after an AMA has been submitted;</li>
+              <li>Dissatisfaction with a Creator's opinion, personality, response, advice, style, or viewpoint where the Creator has delivered the service and has not violated Skriibe's policies;</li>
+              <li>A Fan simply disagreeing with or disliking a Creator's response;</li>
+              <li>A successfully completed Live Chat where the billed service was delivered correctly;</li>
+              <li>A Tip after successful submission;</li>
+              <li>Incorrect, incomplete, misleading, or outdated information provided by the Fan;</li>
+              <li>A Fan failing to remain available, connected, or responsive during a Live Chat;</li>
+              <li>Internet, device, network, or connectivity issues that are outside Skriibe's control, unless otherwise determined by Skriibe;</li>
+              <li>An AMA containing illegal, abusive, sexually explicit, threatening, harassing, discriminatory, or otherwise prohibited content;</li>
+              <li>A refund request submitted after the applicable support period;</li>
+              <li>A Creator's response not meeting a Fan's subjective expectation where the response was otherwise delivered and compliant;</li>
+              <li>Any attempt to obtain a refund through fraudulent, misleading, or abusive means.</li>
+            </ol>
+            <p className="italic text-sm">The above list is illustrative and does not limit Skriibe's right to assess individual cases.</p>
+
+            <h2 className={`text-2xl font-bold mt-8 mb-4 ${theme === 'light' ? 'text-black' : 'text-white'}`}>5. REFUND REQUESTS AND SUPPORT</h2>
+            <p>Except for automatic refunds, Users must raise refund or dispute requests through the official Skriibe Support channel.</p>
+            <h3 className={`text-xl font-bold mt-6 mb-2 ${theme === 'light' ? 'text-black' : 'text-white'}`}>5.1 Live Chat</h3>
+            <p>A refund or dispute relating to a Live Chat must generally be raised within 24 hours of the end of the Live Chat.</p>
+            <h3 className={`text-xl font-bold mt-6 mb-2 ${theme === 'light' ? 'text-black' : 'text-white'}`}>5.2 AMA</h3>
+            <p>A refund or dispute relating to an AMA response must generally be raised within 7 calendar days of receiving the response.</p>
+            <p>If the Creator has not responded, the Fan does not need to submit a separate request where the automatic 15-day refund under Section 4.1 applies.</p>
+            <h3 className={`text-xl font-bold mt-6 mb-2 ${theme === 'light' ? 'text-black' : 'text-white'}`}>5.3 Required Information</h3>
+            <p>The Fan should provide:</p>
+            <ul className="list-disc pl-6 space-y-2">
+              <li>Registered email address or phone number;</li>
+              <li>Transaction ID;</li>
+              <li>Chat/AMA ID, where applicable;</li>
+              <li>Date and approximate time of the transaction;</li>
+              <li>Description of the issue;</li>
+              <li>Relevant screenshots or other supporting evidence, where available.</li>
+            </ul>
+            <p className="mt-2">Skriibe may request additional information where reasonably necessary to investigate the matter.</p>
+            <h3 className={`text-xl font-bold mt-6 mb-2 ${theme === 'light' ? 'text-black' : 'text-white'}`}>5.4 Review Period</h3>
+            <p>Skriibe will aim to acknowledge support requests within 24 hours and communicate a decision or further update generally within 48 hours.</p>
+            <p>Complex matters may require additional time for investigation.</p>
+            <p>Skriibe may review platform records and other relevant information before making a decision.</p>
+
+            <h2 className={`text-2xl font-bold mt-8 mb-4 ${theme === 'light' ? 'text-black' : 'text-white'}`}>6. REFUND METHOD</h2>
+            <p>Unless otherwise required by applicable law or determined by Skriibe, approved refunds may be credited to the Fan's Skriibe Wallet.</p>
+            <p>The refunded amount may then be used for eligible services available on Skriibe.</p>
+            <p>Where Skriibe determines that a refund should be returned to the original payment method, the refund will be processed through the applicable payment gateway or payment partner.</p>
+            <p>The actual time taken for the amount to appear in the original payment account may depend on the relevant bank, card network, UPI provider, payment gateway, or other financial institution.</p>
+            <p>Skriibe is not responsible for delays caused solely by external payment providers or banking networks.</p>
+
+            <h2 className={`text-2xl font-bold mt-8 mb-4 ${theme === 'light' ? 'text-black' : 'text-white'}`}>7. REFUND AMOUNT</h2>
+            <p>Where a refund is approved, Skriibe may determine whether the appropriate refund is:</p>
+            <ul className="list-disc pl-6 space-y-2">
+              <li>Full;</li>
+              <li>Partial; or</li>
+              <li>Limited to the affected portion of the transaction.</li>
+            </ul>
+            <p className="mt-4">For Live Chat disputes, the refund may be calculated based on the verified portion of the session affected by the relevant issue.</p>
+            <p>Where permitted by applicable law, non-recoverable payment processing, gateway, transaction, or other charges actually incurred by Skriibe may be considered when determining the refundable amount.</p>
+            <p>No deduction will be made where applicable law requires the full amount to be refunded.</p>
+
+            <h2 className={`text-2xl font-bold mt-8 mb-4 ${theme === 'light' ? 'text-black' : 'text-white'}`}>8. CREATOR EARNINGS AND REFUNDS</h2>
+            <p>Skriibe operates a revenue-sharing model under which the Creator receives the applicable Creator share of eligible transactions.</p>
+            <p>Where a refund is approved for a transaction from which Creator earnings have already been calculated or credited:</p>
+            <ul className="list-disc pl-6 space-y-2">
+              <li>the corresponding Creator earnings may be reversed or adjusted;</li>
+              <li>the adjustment may be applied against future Creator payouts or other amounts payable to the Creator;</li>
+              <li>where the Creator is determined to have caused or materially contributed to the issue, Skriibe may take additional action under its Creator Terms and Community Guidelines.</li>
+            </ul>
+            <p className="mt-4">A refund decision to a Fan does not automatically mean that a Creator has violated Skriibe's policies. Each matter may be reviewed separately.</p>
+
+            <h2 className={`text-2xl font-bold mt-8 mb-4 ${theme === 'light' ? 'text-black' : 'text-white'}`}>9. CREATOR FLAGGING AND PROHIBITED CONTENT</h2>
+            <p>Creators may flag AMA questions/messages or other Fan activity that they believe contains:</p>
+            <ul className="list-disc pl-6 space-y-2">
+              <li>Illegal content;</li>
+              <li>Sexually explicit content;</li>
+              <li>Abusive or threatening language;</li>
+              <li>Harassment;</li>
+              <li>Hate or discriminatory content;</li>
+              <li>Content that violates Skriibe's Community Guidelines or Terms.</li>
+            </ul>
+            <p className="mt-4">Flagged content may be reviewed by Skriibe.</p>
+            <p>If an AMA question/message is determined to violate applicable Skriibe policies, Skriibe may:</p>
+            <ul className="list-disc pl-6 space-y-2">
+              <li>refuse or restrict the interaction;</li>
+              <li>suspend or terminate the User's account;</li>
+              <li>withhold or reverse applicable Creator earnings; and/or</li>
+              <li>determine that the User is not eligible for a refund where the payment relates to prohibited content.</li>
+            </ul>
+            <p className="mt-4">Nothing in this section limits any rights available to a User under applicable law.</p>
+
+            <h2 className={`text-2xl font-bold mt-8 mb-4 ${theme === 'light' ? 'text-black' : 'text-white'}`}>10. TECHNICAL FAILURES</h2>
+            <p>Skriibe will make reasonable efforts to maintain the availability and functionality of its platform. However, Skriibe is not responsible for technical problems caused solely by:</p>
+            <ul className="list-disc pl-6 space-y-2">
+              <li>the User's device;</li>
+              <li>User's internet connection;</li>
+              <li>third-party network failure;</li>
+              <li>mobile carrier issues;</li>
+              <li>banking or payment-provider outages;</li>
+              <li>force majeure events; or</li>
+              <li>other circumstances outside Skriibe's reasonable control.</li>
+            </ul>
+            <p className="mt-4">Where a technical issue is determined to have been caused by Skriibe and materially affected a paid service, Skriibe may provide an appropriate full or partial refund based on the circumstances.</p>
+            <p>For Live Chat, Skriibe may use its technical logs and session records to determine the duration of the session and whether a platform-side interruption occurred.</p>
+
+            <h2 className={`text-2xl font-bold mt-8 mb-4 ${theme === 'light' ? 'text-black' : 'text-white'}`}>11. PAYMENT ERRORS AND DOUBLE CHARGES</h2>
+            <p>If a User experiences a payment failure, the User should first verify whether the payment has actually been debited from the relevant bank account or payment instrument before attempting another payment.</p>
+            <p>If the User has been charged more than once for the same transaction due to a verified payment or technical error, the duplicate amount will be refunded.</p>
+            <p>Skriibe may request transaction details or supporting evidence to verify the duplicate charge.</p>
+
+            <h2 className={`text-2xl font-bold mt-8 mb-4 ${theme === 'light' ? 'text-black' : 'text-white'}`}>12. CHARGEBACKS</h2>
+            <p>Users are encouraged to contact Skriibe Support and use the dispute process under this Policy before initiating a chargeback with their bank or payment provider.</p>
+            <p>Where a chargeback is initiated, Skriibe may provide relevant transaction records, session information, timestamps, payment information, and other platform records to the payment provider or financial institution as permitted by law.</p>
+            <p>Where Skriibe's records establish that a paid service was delivered and the applicable refund/dispute period has expired, Skriibe may contest the chargeback.</p>
+            <p>Fraudulent or abusive chargeback activity may result in suspension or termination of the User's Skriibe account, subject to applicable law.</p>
+            <p>Chargeback timelines are determined by the relevant payment provider, bank, card network, UPI provider, or other financial institution and may be outside Skriibe's control.</p>
+
+            <h2 className={`text-2xl font-bold mt-8 mb-4 ${theme === 'light' ? 'text-black' : 'text-white'}`}>13. TAXES AND REFUNDS</h2>
+            <p>Where applicable, taxes collected by Skriibe in connection with a transaction will be handled in accordance with applicable tax laws and regulations.</p>
+            <p>Where a refund requires reversal or adjustment of applicable taxes, Skriibe may make the corresponding adjustment in accordance with applicable law and tax requirements.</p>
+            <p>Transaction records and receipts may be made available to Users through the Skriibe platform or applicable payment provider.</p>
+
+            <h2 className={`text-2xl font-bold mt-8 mb-4 ${theme === 'light' ? 'text-black' : 'text-white'}`}>14. FRAUDULENT OR ABUSIVE REFUND REQUESTS</h2>
+            <p>Skriibe reserves the right to investigate refund requests that appear to involve:</p>
+            <ul className="list-disc pl-6 space-y-2">
+              <li>Fraud;</li>
+              <li>Misrepresentation;</li>
+              <li>Repeated or abusive refund requests;</li>
+              <li>Manipulation of platform functionality;</li>
+              <li>False complaints;</li>
+              <li>Unauthorized use of payment instruments; or</li>
+              <li>Attempts to obtain services without payment.</li>
+            </ul>
+            <p className="mt-4">Where appropriate and permitted by law, Skriibe may suspend or restrict an account while investigating such activity.</p>
+            <p>A User whose account is terminated for violating Skriibe's Terms or Community Guidelines may not be eligible for a refund of amounts associated with prohibited or fraudulent activity, subject to applicable law.</p>
+
+            <h2 className={`text-2xl font-bold mt-8 mb-4 ${theme === 'light' ? 'text-black' : 'text-white'}`}>15. CONSUMER RIGHTS</h2>
+            <p>This Policy is intended to establish Skriibe's standard refund and cancellation process.</p>
+            <p>Nothing contained in this Policy is intended to exclude, restrict, or waive any rights or remedies that a User may have under applicable Indian law, including rights available under the Consumer Protection Act, 2019, where applicable.</p>
+            <p>Users may approach the appropriate consumer dispute redressal mechanism or other competent authority where permitted by law.</p>
+
+            <h2 className={`text-2xl font-bold mt-8 mb-4 ${theme === 'light' ? 'text-black' : 'text-white'}`}>16. GRIEVANCE AND SUPPORT CONTACT</h2>
+            <p>For refund-related questions, Users should contact Skriibe through the official Support channel.</p>
+            <p><strong>Support Email:</strong> <a href="mailto:support@skriibe.com" className="text-[#3BA8D8] hover:underline font-medium">support@skriibe.com</a></p>
+            <p><strong>Subject:</strong> Refund Query — [Transaction ID]</p>
+            <p>Users should include their registered contact details, transaction ID, date of transaction, nature of the issue, and supporting information.</p>
+
+            <div className="overflow-x-auto my-6">
+              <table className={`w-full border-collapse border text-sm md:text-base ${theme === 'light' ? 'border-gray-300 bg-white' : 'border-gray-700 bg-white/[0.02]'}`}>
                 <tbody>
-                  <tr>
-                    <TableCell>Buyer pays</TableCell>
-                    <TableCell>Price set by Creator (e.g. Rs.99)</TableCell>
-                    <TableCell>Collected upfront via Razorpay</TableCell>
+                  <tr className={`border-b ${theme === 'light' ? 'border-gray-300' : 'border-gray-700'}`}>
+                    <td className={`w-1/3 sm:w-1/4 px-4 py-3 font-semibold border-r ${theme === 'light' ? 'bg-[#f0f4fa] text-gray-900 border-gray-300' : 'bg-white/[0.06] text-white border-gray-700'}`}>
+                      Grievance Officer
+                    </td>
+                    <td className={`px-4 py-3 ${theme === 'light' ? 'text-gray-800' : 'text-gray-200'}`}>
+                      Tarundeep Singh
+                    </td>
+                  </tr>
+                  <tr className={`border-b ${theme === 'light' ? 'border-gray-300' : 'border-gray-700'}`}>
+                    <td className={`w-1/3 sm:w-1/4 px-4 py-3 font-semibold border-r ${theme === 'light' ? 'bg-[#f0f4fa] text-gray-900 border-gray-300' : 'bg-white/[0.06] text-white border-gray-700'}`}>
+                      Designation
+                    </td>
+                    <td className={`px-4 py-3 ${theme === 'light' ? 'text-gray-800' : 'text-gray-200'}`}>
+                      Founder
+                    </td>
                   </tr>
                   <tr>
-                    <TableCell>Platform fee (Skriibe)</TableCell>
-                    <TableCell>20% of transaction</TableCell>
-                    <TableCell>Deducted before Creator payout</TableCell>
-                  </tr>
-                  <tr>
-                    <TableCell>Creator receives</TableCell>
-                    <TableCell>80% of transaction</TableCell>
-                    <TableCell>e.g. Rs.79.20 on a Rs.99 question</TableCell>
-                  </tr>
-                  <tr>
-                    <TableCell>Razorpay gateway fee</TableCell>
-                    <TableCell>2% + 18% GST on fee</TableCell>
-                    <TableCell>Absorbed by Skriibe. Not charged to Creator or Buyer.</TableCell>
-                  </tr>
-                  <tr>
-                    <TableCell>Creator payout day</TableCell>
-                    <TableCell>Every Tuesday</TableCell>
-                    <TableCell>Auto bank transfer via Razorpay</TableCell>
+                    <td className={`w-1/3 sm:w-1/4 px-4 py-3 font-semibold border-r ${theme === 'light' ? 'bg-[#f0f4fa] text-gray-900 border-gray-300' : 'bg-white/[0.06] text-white border-gray-700'}`}>
+                      Email
+                    </td>
+                    <td className={`px-4 py-3 ${theme === 'light' ? 'text-gray-800' : 'text-gray-200'}`}>
+                      <a href="mailto:founder@skriibe.com" className="text-[#3BA8D8] hover:underline font-medium">
+                        founder@skriibe.com
+                      </a>
+                    </td>
                   </tr>
                 </tbody>
               </table>
             </div>
 
-            <h2 className={`text-2xl font-bold mt-8 mb-4 ${theme === 'light' ? 'text-black' : 'text-white'}`}>3. When You Get a Refund</h2>
-            <h3 className={`text-xl font-bold mt-6 mb-2 ${theme === 'light' ? 'text-black' : 'text-white'}`}>3.1 Automatic Refunds (No Action Needed)</h3>
-            <p>A full refund is automatically triggered in these cases:</p>
-            <ul className="list-disc pl-6 space-y-2">
-              <li>Creator does not reply within the 24-hour Response Window, and has not validly rejected the question.</li>
-              <li>Creator explicitly declines or rejects the submitted question (for example, because it falls outside their expertise, or is incomplete, misleading, or unclear), as permitted under the Contract Between Fan and Creator.</li>
-              <li>Creator account is suspended after payment but before a response is delivered.</li>
-              <li>A technical error on the platform prevents question delivery or response receipt.</li>
-              <li>Buyer is charged more than once for the same question due to a payment gateway error.</li>
-            </ul>
+            <p>Skriibe will acknowledge complaints within a reasonable period and endeavour to resolve them within the timelines specified in this Policy, subject to the complexity of the matter and applicable law.</p>
 
-            <h3 className={`text-xl font-bold mt-6 mb-2 ${theme === 'light' ? 'text-black' : 'text-white'}`}>3.2 Dispute-Based Refunds (Buyer Must Raise)</h3>
-            <p>Within 24-hour of receiving a response, Buyers may raise a dispute and request a refund if:</p>
-            <ul className="list-disc pl-6 space-y-2">
-              <li><strong>Irrelevant Answer</strong> – the response was vague and off-topic.</li>
-              <li><strong>Abusive / Vulgar</strong> – the response contained abusive, offensive, hateful, or vulgar content.</li>
-            </ul>
+            <h2 className={`text-2xl font-bold mt-8 mb-4 ${theme === 'light' ? 'text-black' : 'text-white'}`}>17. GOVERNING LAW AND JURISDICTION</h2>
+            <p>This Policy shall be governed by and interpreted in accordance with the laws of India.</p>
+            <p>Subject to any mandatory rights available to consumers or other Users under applicable law, disputes arising in connection with this Policy or the use of Skriibe shall be subject to the jurisdiction of the competent courts at Chandigarh, India.</p>
 
-            <h3 className={`text-xl font-bold mt-6 mb-2 ${theme === 'light' ? 'text-black' : 'text-white'}`}>3.3 No Refund in These Cases</h3>
-            <p>Refunds will not be issued if:</p>
-            <ul className="list-disc pl-6 space-y-2">
-              <li>The Buyer is unhappy with a response that genuinely addressed their question.</li>
-              <li>The Buyer changes their mind after payment is completed.</li>
-              <li>The dispute is raised after the 7-day window has expired.</li>
-              <li>The question violated Skriibe's Terms of Service.</li>
-              <li>The refund request is submitted outside the platform (e.g. by WhatsApp or third-party email).</li>
-            </ul>
-            <p className="italic text-sm">Actual credit timelines may vary depending on banking networks and payment providers.</p>
-
-            <h2 className={`text-2xl font-bold mt-8 mb-4 ${theme === 'light' ? 'text-black' : 'text-white'}`}>4. Refund Timeline</h2>
-            <p>Skriibe initiates all refunds through Razorpay. Two timelines apply: (a) how fast Skriibe acts, and (b) how fast the money reaches your account.</p>
-
-            <h3 className={`text-xl font-bold mt-6 mb-2 ${theme === 'light' ? 'text-black' : 'text-white'}`}>4.1 Skriibe Acts Within</h3>
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr>
-                    <TableHeader>Refund Type</TableHeader>
-                    <TableHeader>Skriibe Initiates Within</TableHeader>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <TableCell>SLA breach (no reply in 24h)</TableCell>
-                    <TableCell>24-hour window expiring</TableCell>
-                  </tr>
-                  <tr>
-                    <TableCell>Creator rejection</TableCell>
-                    <TableCell>24-hour of Creator declining</TableCell>
-                  </tr>
-                  <tr>
-                    <TableCell>Dispute ruled in Buyer's favour</TableCell>
-                    <TableCell>48-hours of Admin decision</TableCell>
-                  </tr>
-                  <tr>
-                    <TableCell>Payment error / double charge</TableCell>
-                    <TableCell>24-hours of detection</TableCell>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            <h3 className={`text-xl font-bold mt-6 mb-2 ${theme === 'light' ? 'text-black' : 'text-white'}`}>4.2 Money Reaches Your Account (Post-Initiation by Razorpay)</h3>
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr>
-                    <TableHeader>Payment Method</TableHeader>
-                    <TableHeader>Typical</TableHeader>
-                    <TableHeader>Maximum</TableHeader>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr><TableCell>UPI (GPay, PhonePe, Paytm)</TableCell><TableCell>2-3 business days</TableCell><TableCell>5 business days</TableCell></tr>
-                  <tr><TableCell>Debit Card</TableCell><TableCell>5-7 business days</TableCell><TableCell>10 business days</TableCell></tr>
-                  <tr><TableCell>Credit Card</TableCell><TableCell>5-7 business days</TableCell><TableCell>10 business days</TableCell></tr>
-                  <tr><TableCell>Net Banking</TableCell><TableCell>3-5 business days</TableCell><TableCell>7 business days</TableCell></tr>
-                  <tr><TableCell>Razorpay / Paytm Wallet</TableCell><TableCell>1-2 business days</TableCell><TableCell>3 business days</TableCell></tr>
-                </tbody>
-              </table>
-            </div>
-            <p className="mt-4 font-medium">Total worst case: Skriibe initiates within 24 hours + Razorpay processes within 5 business days = maximum 6 business days. Most refunds resolve in 3-4 business days. Business days exclude weekends and national holidays.</p>
-
-            <h2 className={`text-2xl font-bold mt-8 mb-4 ${theme === 'light' ? 'text-black' : 'text-white'}`}>5. How to Raise a Dispute</h2>
-            <p>To raise a dispute, follow these steps within 7 days of receiving the Creator's response:</p>
-            <ul className="list-disc pl-6 space-y-2">
-              <li>Log in to skriibe.com and go to your Message History.</li>
-              <li>Find the relevant message and tap "Flag this answer."</li>
-              <li>Select a reason: “Irrelevant Answer” or “Abusive / Vulgar” (see Section 5.1 below for definitions).</li>
-              <li>Add a brief explanation (minimum 50 characters).</li>
-              <li>Submit. You will receive a confirmation on your account</li>
-              <li>Skriibe Admin reviews within 48 hours and communicates the decision via Email.</li>
-            </ul>
-
-            <h3 className={`text-xl font-bold mt-6 mb-2 ${theme === 'light' ? 'text-black' : 'text-white'}`}>Dispute Outcomes</h3>
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr>
-                    <TableHeader>Outcome</TableHeader>
-                    <TableHeader>Buyer</TableHeader>
-                    <TableHeader>Creator</TableHeader>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr><TableCell>Ruled in Buyer's favour</TableCell><TableCell>Full refund within 48 hours</TableCell><TableCell>Payment cancelled. Strike issued.</TableCell></tr>
-                  <tr><TableCell>Ruled in Creator's favour</TableCell><TableCell>No refund</TableCell><TableCell>Payment released next Tuesday</TableCell></tr>
-                  <tr><TableCell>Inconclusive</TableCell><TableCell>Partial refund (Admin discretion)</TableCell><TableCell>Partial payment. No strike.</TableCell></tr>
-                  <tr><TableCell>Creator ignores dispute (&gt;24h)</TableCell><TableCell>Full auto-refund</TableCell><TableCell>Strike issued automatically</TableCell></tr>
-                </tbody>
-              </table>
-            </div>
-
-            <h3 className={`text-xl font-bold mt-6 mb-2 ${theme === 'light' ? 'text-black' : 'text-white'}`}>5.1 Reasons a Buyer May Report a Creator</h3>
-            <p>When flagging a response in Question History, the Buyer selects one of the following reasons:</p>
-            <ul className="list-disc pl-6 space-y-2">
-              <li><strong>Irrelevant Answer</strong> – The response was vague and off-topic.</li>
-              <li><strong>Abusive / Vulgar</strong> – The response contained abusive, offensive, hateful, or vulgar content.</li>
-            </ul>
-
-            <h3 className={`text-xl font-bold mt-6 mb-2 ${theme === 'light' ? 'text-black' : 'text-white'}`}>5.2 Reasons a Creator May Flag a Fan</h3>
-            <p>Creators may flag an incoming question for the following reasons. A flagged question is not answered and is escalated to Skriibe Admin for review; the Buyer is refunded if the flag is upheld.</p>
-            <ul className="list-disc pl-6 space-y-2">
-              <li><strong>Nudity / Sexual Content</strong> – The question contains nudity or sexual content.</li>
-              <li><strong>Abusive Language</strong> – The question contains insults, threats, hate speech, or harassment.</li>
-            </ul>
-
-            <h2 className={`text-2xl font-bold mt-8 mb-4 ${theme === 'light' ? 'text-black' : 'text-white'}`}>6. Creator Strike Policy</h2>
-            <p>Skriibe operates a strike system to maintain platform quality. Strikes are issued when refunds are triggered by Creator failures.</p>
-
-            <h3 className={`text-xl font-bold mt-6 mb-2 ${theme === 'light' ? 'text-black' : 'text-white'}`}>Creator Health Score</h3>
-            <p>The Creator Health Score is an internal rating, visible to the Creator on their dashboard, that reflects a Creator’s overall reliability on Skriibe. It is calculated from response timeliness (replies within the 24-hour window), dispute rate (the share of answered questions that result in a Buyer dispute), and strike history. A higher score improves visibility in search and discovery; a lower score reduces it. The score is reduced when a strike is issued and gradually recovers with consistent on-time, dispute-free responses.</p>
-
-            <h3 className={`text-xl font-bold mt-6 mb-2 ${theme === 'light' ? 'text-black' : 'text-white'}`}>Strike Ladder</h3>
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr>
-                    <TableHeader>Strike</TableHeader>
-                    <TableHeader>Consequence</TableHeader>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <TableCell>Strike 1 – Guidelines Warning</TableCell>
-                    <TableCell>Formal warning issued. Creator Health Score reduced (see Health Score definition above).</TableCell>
-                  </tr>
-                  <tr>
-                    <TableCell>Strike 2 (within 60 days) – Admin Review</TableCell>
-                    <TableCell>Account flagged for Admin Review. Search visibility and platform discovery may be reduced.</TableCell>
-                  </tr>
-                  <tr>
-                    <TableCell>Strike 3 (within 90 days) – 7-Day Account Pause + Payout Hold</TableCell>
-                    <TableCell>Creator page paused for 7 days. Pending payouts held until the pause is lifted.</TableCell>
-                  </tr>
-                  <tr>
-                    <TableCell>Strike 4 (within 90 days) – Permanent Ban + Payout Freeze</TableCell>
-                    <TableCell>Account permanently removed from Skriibe. All pending and held earnings are frozen and reviewed before any release.</TableCell>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            <p className="mt-4">Strikes decay after 90 days of clean behaviour. Creators may appeal within 48 hours of issuance by emailing <a href="mailto:founder@skriibe.com" className="text-[#3BA8D8] hover:underline">founder@skriibe.com</a>.</p>
-
-            <h2 className={`text-2xl font-bold mt-8 mb-4 ${theme === 'light' ? 'text-black' : 'text-white'}`}>7. Chargebacks</h2>
-            <ul className="list-disc pl-6 space-y-2">
-              <li>Buyers are encouraged to use Skriibe's dispute process (Section 5) before initiating a chargeback with their bank.</li>
-              <li>Skriibe reserves the right to contest chargebacks where platform records confirm a response was delivered within the 24-hour window and no valid dispute was raised within the 7-day dispute window.</li>
-              <li>Filing a fraudulent chargeback where a valid response was received and the dispute window has expired constitutes a Terms of Service violation and may result in account suspension.</li>
-              <li>All chargeback investigations are concluded within 15 business days per Razorpay and RBI guidelines.</li>
-            </ul>
-
-            <h2 className={`text-2xl font-bold mt-8 mb-4 ${theme === 'light' ? 'text-black' : 'text-white'}`}>8. GST & Tax</h2>
-            <ul className="list-disc pl-6 space-y-2">
-              <li>GST is collected and remitted on the platform fee component of each transaction under the GST Act, 2017. On a refund, the GST component is also reversed.</li>
-              <li>TDS under Section 194-O of the Income Tax Act, 1961 is deducted on Creator payouts at 0.1% (with PAN, effective 1 October 2024) or 5% (without PAN, per Section 206AA). TDS is deposited with the Government and reflected in Form 26AS.</li>
-              <li>Transaction receipts are available on the platform for all completed payments.</li>
-            </ul>
-
-            <h2 className={`text-2xl font-bold mt-8 mb-4 ${theme === 'light' ? 'text-black' : 'text-white'}`}>9. Contact & Grievance Officer</h2>
-            <p>For refund queries or disputes not resolved through the platform:</p>
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr>
-                    <TableHeader>Contact Details</TableHeader>
-                    <TableHeader></TableHeader>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr><TableCell>Email</TableCell><TableCell><a href="mailto:founder@skriibe.com" className="text-[#3BA8D8] hover:underline">founder@skriibe.com</a></TableCell></tr>
-                  <tr><TableCell>Platform</TableCell><TableCell>Dispute button on any question page at skriibe.com</TableCell></tr>
-                  <tr><TableCell>Response time</TableCell><TableCell>Acknowledged within 24 hours. Resolved within 48-72 hours.</TableCell></tr>
-                  <tr><TableCell>Grievance Officer</TableCell><TableCell>Tarundeep Singh, Founder — <a href="mailto:founder@skriibe.com" className="text-[#3BA8D8] hover:underline">founder@skriibe.com</a></TableCell></tr>
-                  <tr><TableCell>Legal resolution</TableCell><TableCell>15 days (acknowledged within 24 hours) per Information Technology (Intermediary Guidelines and Digital Media Ethics Code) Rules, 2021</TableCell></tr>
-                </tbody>
-              </table>
-            </div>
-            <p className="mt-4">Consumer rights under the Consumer Protection Act, 2019 are not limited by this policy. Users may approach the Consumer Disputes Redressal Commission at the appropriate level.</p>
-
-            <h2 className={`text-2xl font-bold mt-8 mb-4 ${theme === 'light' ? 'text-black' : 'text-white'}`}>10. Governing Law & Amendments</h2>
-            <ul className="list-disc pl-6 space-y-2">
-              <li>This policy is governed by the laws of India. Disputes not resolved through the platform are subject to the exclusive jurisdiction of the courts of Chandigarh, India.</li>
-              <li>Skriibe may amend this policy at any time. Material changes will be communicated 7 days in advance via email and in-app notification.</li>
-              <li>Continued use of the platform after an amendment takes effect constitutes acceptance of the revised policy.</li>
-              <li>The latest version of this policy is always available at skriibe.com/refund-policy.</li>
-              <li>If any provision is found unenforceable, the remaining provisions continue in full effect.</li>
-            </ul>
+            <h2 className={`text-2xl font-bold mt-8 mb-4 ${theme === 'light' ? 'text-black' : 'text-white'}`}>18. AMENDMENTS</h2>
+            <p>Skriibe may modify, update, or amend this Refund &amp; Cancellation Policy from time to time.</p>
+            <p>Where material changes are made, Skriibe will endeavour to communicate such changes at least 7 days before they take effect. Skriibe may communicate such changes through the platform, email, notification, or other reasonable means.</p>
+            <p>The latest version of this Policy will be made available through the Skriibe platform.</p>
+            <p>If any provision of this Policy is determined to be invalid or unenforceable, the remaining provisions will continue to remain in effect to the extent permitted by applicable law.</p>
           </div>
         </div>
       </main>

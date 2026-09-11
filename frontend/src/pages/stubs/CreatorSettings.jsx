@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+
 import { mockCreator } from '../../mock/questions';
 import { getMe } from '../../services/creatorApi';
 import api from '../../services/api';
@@ -7,6 +8,58 @@ import { useAuth } from '../../context/AuthContext';
 import { switchRole } from '../../services/fanApi';
 import ImageCropperModal from '../../components/common/ImageCropperModal';
 import { getCurrencySymbol } from '../../utils/phoneValidation';
+import { EXPERTISE_OPTIONS, normalizeExpertiseList } from '../../utils/expertiseConstants';
+import { getExpertiseIcon } from '../../utils/expertiseIcons';
+
+const formatLiveChatTimings = (slots) => {
+  if (!slots || slots.length === 0) return 'Not set';
+  
+  const daysOrder = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const slotsByTime = {};
+  
+  slots.forEach(slot => {
+    const parts = slot.split('|');
+    if (parts.length === 2) {
+      const [day, time] = parts;
+      if (!slotsByTime[time]) slotsByTime[time] = [];
+      slotsByTime[time].push(day);
+    }
+  });
+
+  const formattedParts = [];
+  
+  for (const [time, days] of Object.entries(slotsByTime)) {
+    const sortedDays = days.sort((a, b) => daysOrder.indexOf(a) - daysOrder.indexOf(b));
+    let groups = [];
+    let tempGroup = [sortedDays[0]];
+
+    for (let i = 1; i < sortedDays.length; i++) {
+      const prevDayIdx = daysOrder.indexOf(sortedDays[i - 1]);
+      const currDayIdx = daysOrder.indexOf(sortedDays[i]);
+      
+      if (currDayIdx === prevDayIdx + 1) {
+        tempGroup.push(sortedDays[i]);
+      } else {
+        if (tempGroup.length >= 2) {
+          groups.push(`${tempGroup[0]} to ${tempGroup[tempGroup.length - 1]}`);
+        } else {
+          groups.push(tempGroup[0]);
+        }
+        tempGroup = [sortedDays[i]];
+      }
+    }
+    
+    if (tempGroup.length >= 2) {
+      groups.push(`${tempGroup[0]} to ${tempGroup[tempGroup.length - 1]}`);
+    } else {
+      groups.push(tempGroup[0]);
+    }
+    
+    formattedParts.push(`${groups.join(', ')} ${time}`);
+  }
+  
+  return formattedParts.join('; ');
+};
 
 const CreatorSettings = () => {
   const navigate = useNavigate();
@@ -71,10 +124,10 @@ const CreatorSettings = () => {
   const formattedFollowers = creator.instagramFollowers 
     ? (creator.instagramFollowers >= 1000 ? (creator.instagramFollowers/1000).toFixed(1).replace('.0', '') + 'K' : creator.instagramFollowers) 
     : '12K';
-  const defaultBio = 'Welcome to my Skriibe! Ask me anything.';
+  const defaultBio = 'Heyyy! Got something on your mind? Let’s chat!';
   const [bio, setBio] = useState(creator.bio || '');
   
-  const [expertiseList, setExpertiseList] = useState(creator.expertise || []);
+  const [expertiseList, setExpertiseList] = useState(normalizeExpertiseList(creator.expertise || []));
   const [isEditingExpertise, setIsEditingExpertise] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [customExpertise, setCustomExpertise] = useState('');
@@ -85,6 +138,10 @@ const CreatorSettings = () => {
   const [isEditingBio, setIsEditingBio] = useState(false);
   const [isEditingPrice, setIsEditingPrice] = useState(false);
   const [isEditingCap, setIsEditingCap] = useState(false);
+  
+  const [liveChatPrice, setLiveChatPrice] = useState(creator.liveChatPrice || 5);
+  const [isEditingLiveChatPrice, setIsEditingLiveChatPrice] = useState(false);
+  
   
   const [weeklyGoal, setWeeklyGoal] = useState(creator.weeklyGoal || 1500);
   const [isEditingGoal, setIsEditingGoal] = useState(false);
@@ -106,6 +163,7 @@ const CreatorSettings = () => {
       if (!isEditingBio && creator.bio) setBio(creator.bio);
       if (!isEditingPhone && creator.phone) setPhone(creator.phone);
       if (!isEditingEmail && creator.email) setEmail(creator.email);
+
       if (!isEditingInstagram) {
         if (creator.instagramHandle) setInstagram(creator.instagramHandle);
         else if (creator.handle) setInstagram(`@${creator.handle}`);
@@ -117,7 +175,7 @@ const CreatorSettings = () => {
         setAvatar(dName ? dName[0].toUpperCase() : '');
       }
       if (creator.isPaused !== undefined) setIsPaused(creator.isPaused);
-      if (!isEditingExpertise && creator.expertise) setExpertiseList(creator.expertise);
+      if (!isEditingExpertise && creator.expertise) setExpertiseList(normalizeExpertiseList(creator.expertise));
     }
   }, [creator, isEditingPrice, isEditingCap, isEditingGoal, isEditingBio, isEditingPhone, isEditingEmail, isEditingInstagram, isEditingExpertise]);
   const emailContainerRef = useRef(null);
@@ -247,7 +305,8 @@ const CreatorSettings = () => {
       return;
     }
     try {
-      const finalExpertise = expertiseList.map(t => t === 'Others' ? (customExpertise.trim() || 'Others') : t);
+      const rawExpertise = expertiseList.map(t => t === 'Others' ? (customExpertise.trim() || 'Others') : t);
+      const finalExpertise = normalizeExpertiseList(rawExpertise);
       await api.post('/creators/settings', { expertise: finalExpertise });
       setIsEditingExpertise(false);
       setExpertiseList(finalExpertise);
@@ -290,6 +349,18 @@ const CreatorSettings = () => {
       console.error('Failed to save price', err);
     }
   };
+
+  const handleSaveLiveChatPrice = async () => {
+    const priceVal = Number(liveChatPrice);
+    try {
+      await api.post('/creators/settings', { liveChatPrice: priceVal });
+      setIsEditingLiveChatPrice(false);
+      setCreator(prev => ({ ...prev, liveChatPrice: priceVal }));
+    } catch (err) {
+      console.error('Failed to save live chat price', err);
+    }
+  };
+
 
   const handleSaveCap = async () => {
     const capVal = Number(dailyCap);
@@ -382,8 +453,9 @@ const CreatorSettings = () => {
 
   const navItems = [
     { label: 'HOME', icon: '🏠', route: '/creator/dashboard' },
-    { label: 'INBOX', icon: '💬', route: '/creator/inbox' },
-    { label: 'PAYOUTS', icon: '💰', route: '/creator/payouts' },
+    { label: 'CHATS', icon: '💬', route: '/creator/inbox' },
+    { label: 'TRANSACTIONS', icon: '💰', route: '/creator/payouts' },
+    { label: 'ANALYTICS', icon: '📊', route: '/creator/analytics' },
     { label: 'SETTINGS', icon: '⚙️', route: '/creator/settings' },
   ];
 
@@ -534,22 +606,48 @@ const CreatorSettings = () => {
                 {creator.handle || creator.username ? `skriibe.com/${creator.handle || creator.username}` : ''}
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '4px' }}>
-                {expertiseList.map((exp, idx) => (
-                  <div 
-                    key={idx}
-                    style={{ 
-                      background: 'rgba(99, 102, 241, 0.1)', border: '1px solid rgba(99, 102, 241, 0.2)',
-                      borderRadius: '12px', padding: '4px 10px', display: 'inline-flex', alignItems: 'center', gap: '6px',
-                      color: '#A5B4FC', fontSize: '0.85rem', fontWeight: 600
-                    }}
-                  >
-                    {exp}
-                  </div>
-                ))}
+                {expertiseList.map((exp, idx) => {
+                  const icon = getExpertiseIcon(exp, 14);
+                  return (
+                    <div 
+                      key={idx}
+                      style={{ 
+                        background: 'rgba(6, 182, 212, 0.1)', border: '1px solid rgba(6, 182, 212, 0.2)',
+                        borderRadius: '12px', padding: '4px 10px', display: 'inline-flex', alignItems: 'center', gap: '6px',
+                        color: '#06b6d4', fontSize: '0.85rem', fontWeight: 600
+                      }}
+                    >
+                      {icon}
+                      {exp}
+                    </div>
+                  );
+                })}
               </div>
               
-              <div style={{ color: '#E2E8F0', fontSize: '0.9rem', lineHeight: '1.5', marginTop: '8px' }}>
-                {creator.instagramFollowers >= 1000 ? (creator.instagramFollowers/1000).toFixed(1).replace('.0', '') + 'K' : (creator.instagramFollowers || 0)} followers
+              <div style={{ color: '#E2E8F0', fontSize: '0.9rem', lineHeight: '1.5', marginTop: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <svg 
+                  width="16" 
+                  height="16" 
+                  viewBox="0 0 24 24" 
+                  fill="none" 
+                  xmlns="http://www.w3.org/2000/svg"
+                  style={{ flexShrink: 0, borderRadius: '4px', overflow: 'hidden' }}
+                >
+                  <defs>
+                    <linearGradient id="igSettingsFollowersGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="#f09433" />
+                      <stop offset="25%" stopColor="#e6683c" />
+                      <stop offset="50%" stopColor="#dc2743" />
+                      <stop offset="75%" stopColor="#cc2366" />
+                      <stop offset="100%" stopColor="#bc1888" />
+                    </linearGradient>
+                  </defs>
+                  <rect width="24" height="24" rx="6" fill="url(#igSettingsFollowersGrad)" />
+                  <rect x="4.5" y="4.5" width="15" height="15" rx="4" stroke="#ffffff" strokeWidth="1.8" fill="none" />
+                  <circle cx="12" cy="12" r="3.4" stroke="#ffffff" strokeWidth="1.8" fill="none" />
+                  <circle cx="16" cy="8" r="1.1" fill="#ffffff" />
+                </svg>
+                <span>{creator.instagramFollowers >= 1000 ? (creator.instagramFollowers/1000).toFixed(1).replace('.0', '') + 'K' : (creator.instagramFollowers || 0)} followers</span>
               </div>
 
 
@@ -558,21 +656,22 @@ const CreatorSettings = () => {
 
           <div style={{ height: '1px', background: 'rgba(255,255,255,0.08)', width: '100%', position: 'relative', zIndex: 1 }} />
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', position: 'relative', zIndex: 1, padding: '4px 0' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', position: 'relative', zIndex: 1, padding: '4px 0', gap: '32px' }}>
 
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1, gap: '4px' }}>
-              <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#FFF' }}>{currencySymbol}{questionPrice}</span>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+              <span style={{ fontSize: '0.85rem', color: '#38bdf8', fontWeight: 700 }}>Live Chat</span>
+              <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#FFF' }}>{currencySymbol}{creator?.liveChatPrice || liveChatPrice}</span>
+              <span style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: 600 }}>Per minute</span>
+            </div>
+
+            <div style={{ width: '1px', background: 'rgba(255,255,255,0.1)' }} />
+
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+              <span style={{ fontSize: '0.85rem', color: '#38bdf8', fontWeight: 700 }}>Ask Me Anything</span>
+              <span style={{ fontSize: !creator?.ama_enabled ? '1rem' : '1.25rem', fontWeight: 800, color: '#FFF' }}>
+                {!creator?.ama_enabled ? 'Not set' : `${currencySymbol}${questionPrice}`}
+              </span>
               <span style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: 600 }}>Per question</span>
-            </div>
-            <div style={{ width: '1px', background: 'rgba(255,255,255,0.08)' }} />
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1, gap: '4px' }}>
-              <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#FFF' }}>{dailyCap}</span>
-              <span style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: 600 }}>Daily cap</span>
-            </div>
-            <div style={{ width: '1px', background: 'rgba(255,255,255,0.08)' }} />
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1, gap: '4px' }}>
-              <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#FFF' }}>{currencySymbol}{weeklyGoal}</span>
-              <span style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: 600 }}>Weekly goal</span>
             </div>
           </div>
         </div>
@@ -715,11 +814,63 @@ const CreatorSettings = () => {
           </div>
         )}
 
-        {/* AMA SETTINGS SECTION */}
+        {/* LIVE CHAT TIMINGS BANNER */}
+        <div style={{
+          background: '#13161C',
+          border: '1px solid #1F2937',
+          borderRadius: '16px',
+          padding: '14px 16px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '8px',
+          marginBottom: '24px',
+          textAlign: 'left'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{
+                width: '8px',
+                height: '8px',
+                borderRadius: '50%',
+                background: '#38BDF8'
+              }} />
+              <span style={{ fontWeight: 800, fontSize: '0.95rem', color: '#ffffff' }}>
+                Live Chat Timings
+              </span>
+            </div>
+            <button 
+              onClick={() => navigate('/onboard/live-chat', { state: { creator, returnTo: '/creator/settings' } })}
+              style={{
+                background: 'rgba(255,255,255,0.1)',
+                border: 'none',
+                color: '#fff',
+                fontSize: '12px',
+                padding: '4px 8px',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px'
+              }}
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 20h9"></path>
+                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+              </svg>
+              Edit
+            </button>
+          </div>
+          <div style={{ color: '#94a3b8', fontSize: '0.85rem', lineHeight: '1.5' }}>
+            Your live chat timings are <strong style={{ color: '#fff' }}>{formatLiveChatTimings(creator?.liveChatTimeSlots)}</strong>. You will be shown online on the platform during these hours.
+          </div>
+        </div>
+
+
+        {/* PROFILE SETTINGS SECTION */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.75rem', fontWeight: 800, color: '#94a3b8', letterSpacing: '1px', textTransform: 'uppercase' }}>
             <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#38BDF8' }} />
-            AMA SETTINGS
+            Profile Settings
           </div>
 
           <div style={{
@@ -729,6 +880,69 @@ const CreatorSettings = () => {
             display: 'flex',
             flexDirection: 'column'
           }}>
+            {/* Live Chat Price Row */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', borderBottom: '1px solid #2A2A2A' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(56, 189, 248, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#38BDF8' }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 20h9"></path>
+                    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                  </svg>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                  <div style={{ color: '#ffffff', fontSize: '0.85rem', fontWeight: 700 }}>Live Chat Price</div>
+                  <div style={{ color: '#64748b', fontSize: '0.75rem' }}>Price per minute</div>
+                </div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                {isEditingLiveChatPrice ? (
+                  <>
+                    <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                      <select 
+                        value={liveChatPrice}
+                        onChange={(e) => setLiveChatPrice(e.target.value)}
+                        style={{
+                          background: '#16161e',
+                          border: '1px solid #29C5F6',
+                          color: '#ffffff',
+                          borderRadius: '8px',
+                          padding: '8px 10px',
+                          fontSize: '0.85rem',
+                          width: '70px',
+                          outline: 'none',
+                          fontWeight: 600,
+                          cursor: 'pointer'
+                        }}
+                      >
+                        {[5, 10, 15, 25, 50].map(opt => (
+                          <option key={opt} value={opt}>{opt}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <button 
+                      onClick={handleSaveLiveChatPrice}
+                      style={{
+                        background: '#38BDF8', border: 'none', color: '#0E0E0E',
+                        borderRadius: '12px', padding: '8px 16px', fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer'
+                      }}
+                    >Save</button>
+                  </>
+                ) : (
+                  <>
+                    <span style={{ color: '#ffffff', fontWeight: 700, fontSize: '0.9rem' }}>{currencySymbol}{liveChatPrice} / min</span>
+                    <button 
+                      onClick={() => setIsEditingLiveChatPrice(true)}
+                      style={{
+                        background: '#252530', border: 'none', color: '#ffffff', borderRadius: '12px', padding: '8px 14px', fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer'
+                      }}
+                    >Edit</button>
+                  </>
+                )}
+              </div>
+            </div>
+
+
+
             {/* Question Price Row */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', borderBottom: '1px solid #2A2A2A' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
@@ -736,170 +950,22 @@ const CreatorSettings = () => {
                   {currencySymbol}
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                  <div style={{ color: '#ffffff', fontSize: '0.85rem', fontWeight: 700 }}>Message price</div>
+                  <div style={{ color: '#ffffff', fontSize: '0.85rem', fontWeight: 700 }}>AMA price</div>
                   <div style={{ color: '#64748b', fontSize: '0.75rem' }}>What fans pay per message.</div>
                 </div>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                {isEditingPrice ? (
-                  <>
-                    <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                      <span style={{ position: 'absolute', left: '10px', color: '#94a3b8', fontSize: '0.85rem' }}>{currencySymbol}</span>
-                      <input 
-                        type="text" 
-                        inputMode="numeric"
-                        pattern="[0-9]*"
-                        value={questionPrice} 
-                        onChange={(e) => setQuestionPrice(e.target.value)}
-                        style={{
-                          background: '#16161e',
-                          border: '1px solid #29C5F6',
-                          color: '#ffffff',
-                          borderRadius: '8px',
-                          padding: '8px 10px 8px 24px',
-                          fontSize: '0.85rem',
-                          width: '70px',
-                          outline: 'none',
-                          fontWeight: 600,
-                          boxSizing: 'border-box'
-                        }}
-                        autoFocus
-                      />
-                    </div>
-                    <button 
-                      onClick={handleSavePrice}
-                      style={{
-                        background: '#38BDF8', border: 'none', color: '#0E0E0E',
-                        borderRadius: '12px', padding: '8px 16px', fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer'
-                      }}
-                    >Save</button>
-                  </>
-                ) : (
-                  <>
-                    <span style={{ color: '#ffffff', fontWeight: 700, fontSize: '0.9rem' }}>{currencySymbol}{questionPrice}</span>
-                    <button 
-                      onClick={() => setIsEditingPrice(true)}
-                      style={{
-                        background: '#252530', border: 'none', color: '#ffffff', borderRadius: '12px', padding: '8px 14px', fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer'
-                      }}
-                    >Edit</button>
-                  </>
-                )}
-              </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <span style={{ color: '#ffffff', fontWeight: 700, fontSize: '0.9rem' }}>
+                    {!creator.ama_enabled ? 'Not set' : `${currencySymbol}${questionPrice}`}
+                  </span>
+                  <button 
+                    onClick={() => navigate('/onboard/pricing', { state: { returnTo: '/creator/settings' } })}
+                    style={{
+                      background: '#252530', border: 'none', color: '#ffffff', borderRadius: '12px', padding: '8px 14px', fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer'
+                    }}
+                  >Edit</button>
+                </div>
             </div>
-
-            {/* Daily Question Cap Row */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', borderBottom: '1px solid #2A2A2A' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(168, 85, 247, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#A855F7' }}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="3" y1="15" x2="21" y2="15"></line><line x1="9" y1="3" x2="9" y2="21"></line><line x1="15" y1="3" x2="15" y2="21"></line></svg>
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                  <div style={{ color: '#ffffff', fontSize: '0.85rem', fontWeight: 700 }}>Daily message cap</div>
-                  <div style={{ color: '#64748b', fontSize: '0.75rem' }}>Max messages you'll take a day</div>
-                </div>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                {isEditingCap ? (
-                  <>
-                    <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                      <input 
-                        type="text" 
-                        inputMode="numeric"
-                        pattern="[0-9]*"
-                        value={dailyCap} 
-                        onChange={(e) => {
-                          if (e.target.value === '') {
-                            setDailyCap('');
-                            return;
-                          }
-                          let val = parseInt(e.target.value.replace(/\D/g, ''));
-                          if (isNaN(val)) return;
-                          if (val > 100) val = 100;
-                          setDailyCap(val.toString());
-                        }}
-                        style={{
-                          background: '#16161e', border: '1px solid #29C5F6', color: '#ffffff',
-                          borderRadius: '8px', padding: '8px 10px', fontSize: '0.85rem', width: '60px',
-                          outline: 'none', fontWeight: 600, boxSizing: 'border-box', textAlign: 'center'
-                        }}
-                        autoFocus
-                      />
-                    </div>
-                    <button 
-                      onClick={handleSaveCap}
-                      style={{
-                        background: '#38BDF8', border: 'none', color: '#0E0E0E',
-                        borderRadius: '12px', padding: '8px 16px', fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer'
-                      }}
-                    >Save</button>
-                  </>
-                ) : (
-                  <>
-                    <span style={{ color: '#ffffff', fontWeight: 700, fontSize: '0.9rem', whiteSpace: 'nowrap' }}>{dailyCap} / day</span>
-                    <button 
-                      onClick={() => setIsEditingCap(true)}
-                      style={{
-                        background: '#252530', border: 'none', color: '#ffffff', borderRadius: '12px', padding: '8px 14px', fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer'
-                      }}
-                    >Edit</button>
-                  </>
-                )}
-              </div>
-            </div>
-
-
-
-            {/* Weekly Goal Row */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', borderBottom: '1px solid #2A2A2A' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(56, 189, 248, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#38BDF8' }}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                  <div style={{ color: '#ffffff', fontSize: '0.85rem', fontWeight: 700 }}>Set your Weekly Earnings Goal</div>
-                  <div style={{ color: '#64748b', fontSize: '0.75rem' }}>Set your target</div>
-                </div>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                {isEditingGoal ? (
-                  <>
-                    <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                      <span style={{ position: 'absolute', left: '12px', color: '#94a3b8', fontSize: '0.85rem', fontWeight: 500 }}>{currencySymbol}</span>
-                      <input 
-                        type="number" 
-                        value={weeklyGoal} 
-                        onChange={(e) => setWeeklyGoal(e.target.value)}
-                        style={{
-                          background: '#16161e', border: '1px solid #29C5F6', color: '#ffffff',
-                          borderRadius: '8px', padding: '8px 10px 8px 24px', fontSize: '0.85rem', width: '80px',
-                          outline: 'none', fontWeight: 600, boxSizing: 'border-box'
-                        }}
-                        autoFocus
-                      />
-                    </div>
-                    <button 
-                      onClick={handleSaveGoal}
-                      style={{
-                        background: '#38BDF8', border: 'none', color: '#0E0E0E',
-                        borderRadius: '12px', padding: '8px 16px', fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer'
-                      }}
-                    >Save</button>
-                  </>
-                ) : (
-                  <>
-                    <span style={{ color: '#ffffff', fontWeight: 700, fontSize: '0.9rem' }}>{currencySymbol}{weeklyGoal}</span>
-                    <button 
-                      onClick={() => setIsEditingGoal(true)}
-                      style={{
-                        background: '#252530', border: 'none', color: '#ffffff', borderRadius: '12px', padding: '8px 14px', fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer'
-                      }}
-                    >Edit</button>
-                  </>
-                )}
-              </div>
-            </div>
-
             {/* Expertise Row */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', borderBottom: '1px solid #2A2A2A' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
@@ -936,38 +1002,37 @@ const CreatorSettings = () => {
                       <div style={{
                         position: 'absolute', top: '44px', right: '0', background: '#16161e',
                         border: '1px solid #2A2A2A', borderRadius: '8px', padding: '8px',
-                        display: 'flex', flexDirection: 'column', gap: '4px', zIndex: 10, width: '200px',
+                        display: 'flex', flexDirection: 'column', gap: '4px', zIndex: 10, width: '220px',
                         boxShadow: '0 8px 24px rgba(0,0,0,0.6)'
                       }}>
+                        <div style={{ maxHeight: '240px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '4px' }}>
                           {Array.from(new Set([
-                          'Career & Finance', 'Health & Fitness', 'Tech & Skills',
-                          'Fashion & Lifestyle', 'Entertainment',
-                          'Education', 'Entrepreneurship',
-                          'Relationships', 'Spirituality', 'Others',
-                          ...expertiseList
-                        ])).filter(cat => cat !== 'General').map(cat => (
-                          <label key={cat} style={{ 
-                            display: 'flex', alignItems: 'center', gap: '8px', padding: '6px', 
-                            borderRadius: '4px', fontSize: '13px', 
-                            cursor: expertiseList.includes(cat) || expertiseList.length < 2 ? 'pointer' : 'not-allowed',
-                            opacity: !expertiseList.includes(cat) && expertiseList.length >= 2 ? 0.5 : 1,
-                            background: 'rgba(255,255,255,0.02)'
-                          }}>
-                            <input 
-                              type="checkbox" 
-                              checked={expertiseList.includes(cat)}
-                              disabled={!expertiseList.includes(cat) && expertiseList.length >= 2}
-                              onChange={(e) => {
-                                if (e.target.checked) {
-                                  if (expertiseList.length < 2) setExpertiseList([...expertiseList, cat]);
-                                } else {
-                                  setExpertiseList(expertiseList.filter(c => c !== cat));
-                                }
-                              }}
-                            />
-                            {cat}
-                          </label>
-                        ))}
+                            ...EXPERTISE_OPTIONS,
+                            ...expertiseList
+                          ])).filter(cat => cat !== 'General').map(cat => (
+                            <label key={cat} style={{ 
+                              display: 'flex', alignItems: 'center', gap: '8px', padding: '6px', 
+                              borderRadius: '4px', fontSize: '13px', 
+                              cursor: expertiseList.includes(cat) || expertiseList.length < 2 ? 'pointer' : 'not-allowed',
+                              opacity: !expertiseList.includes(cat) && expertiseList.length >= 2 ? 0.5 : 1,
+                              background: 'rgba(255,255,255,0.02)'
+                            }}>
+                              <input 
+                                type="checkbox" 
+                                checked={expertiseList.includes(cat)}
+                                disabled={!expertiseList.includes(cat) && expertiseList.length >= 2}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    if (expertiseList.length < 2) setExpertiseList([...expertiseList, cat]);
+                                  } else {
+                                    setExpertiseList(expertiseList.filter(c => c !== cat));
+                                  }
+                                }}
+                              />
+                              {cat}
+                            </label>
+                          ))}
+                        </div>
 
                         {expertiseList.includes('Others') && (
                           <input
@@ -1011,6 +1076,29 @@ const CreatorSettings = () => {
               </div>
             </div>
 
+            {/* Scheduling Row */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', borderBottom: '1px solid #2A2A2A' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(168, 85, 247, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#a855f7' }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line>
+                  </svg>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                  <div style={{ color: '#ffffff', fontSize: '0.85rem', fontWeight: 700 }}>Scheduling</div>
+                  <div style={{ color: '#64748b', fontSize: '0.75rem' }}>Your working hours</div>
+                </div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <button 
+                  onClick={() => navigate('/creator/scheduling')}
+                  style={{
+                    background: '#252530', border: 'none', color: '#ffffff', borderRadius: '12px', padding: '8px 14px', fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer'
+                  }}
+                >Edit</button>
+              </div>
+            </div>
+
             {/* Bio Row */}
             <div style={{ display: 'flex', flexDirection: 'column', padding: '16px', gap: '10px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -1019,7 +1107,7 @@ const CreatorSettings = () => {
                     ✏️
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                    <div style={{ color: '#ffffff', fontSize: '0.85rem', fontWeight: 700 }}>Bio</div>
+                    <div style={{ color: '#ffffff', fontSize: '0.85rem', fontWeight: 700 }}>Intro message</div>
                     <div style={{ color: '#64748b', fontSize: '0.75rem' }}>Your profile description</div>
                   </div>
                 </div>
@@ -1171,8 +1259,12 @@ const CreatorSettings = () => {
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="5" width="20" height="14" rx="2" ry="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                  <div style={{ color: '#ffffff', fontSize: '0.85rem', fontWeight: 700 }}>Bank Account</div>
-                  <div style={{ color: '#64748b', fontSize: '0.75rem' }}>{creator.bankLinked ? 'Linked' : 'Not linked'}</div>
+                  <div style={{ color: '#ffffff', fontSize: '0.85rem', fontWeight: 700 }}>Payout Method</div>
+                  <div style={{ color: '#64748b', fontSize: '0.75rem' }}>
+                    {(creator.payoutSetupCompleted || creator.bankLinked || creator.upiId)
+                      ? (creator.payoutMethod === 'upi' || creator.upiId ? `UPI (${creator.upiId || 'Linked'})` : 'Bank Account (Linked)')
+                      : 'Not linked'}
+                  </div>
                 </div>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -1180,7 +1272,7 @@ const CreatorSettings = () => {
                   onClick={() => navigate('/creator/setup-payouts', { state: { creator } })}
                   style={{ background: '#252530', border: 'none', color: '#ffffff', borderRadius: '12px', padding: '8px 14px', fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer' }}
                 >
-                  {creator.bankLinked ? 'Edit details' : 'Setup'}
+                  {(creator.payoutSetupCompleted || creator.bankLinked || creator.upiId) ? 'Edit details' : 'Setup'}
                 </button>
               </div>
             </div>
@@ -1190,11 +1282,7 @@ const CreatorSettings = () => {
 
         {/* DANGER ZONE */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.75rem', fontWeight: 800, color: '#ef4444', letterSpacing: '1px', textTransform: 'uppercase' }}>
-            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#ef4444' }} />
-            DANGER ZONE
-          </div>
-          
+
           <div style={{
             background: '#1c161a',
             borderRadius: '20px',
@@ -1212,7 +1300,7 @@ const CreatorSettings = () => {
             }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                 <div style={{ color: '#ef4444', fontSize: '0.85rem', fontWeight: 700 }}>Pause my page temporarily</div>
-                <div style={{ color: '#64748b', fontSize: '0.75rem' }}>Hide from discovery</div>
+                <div style={{ color: '#64748b', fontSize: '0.75rem' }}>Appear offline in discovery but receive AMAs</div>
               </div>
               <button style={{
                 background: isPaused ? '#ef4444' : 'transparent', border: '1px solid rgba(239, 68, 68, 0.3)', color: isPaused ? '#ffffff' : '#ef4444',
@@ -1240,35 +1328,6 @@ const CreatorSettings = () => {
 
         {/* ACCOUNT SWITCH & SIGN OUT */}
         <div style={{ paddingBottom: '100px', paddingTop: '24px', display: 'flex', flexDirection: 'column', gap: '16px', alignItems: 'center' }}>
-            <button 
-              onClick={async () => {
-                try {
-                  const res = await switchRole('fan');
-                  if (res.success) {
-                    setAuthData(roles, 'fan', res.token);
-                    window.location.href = '/discovery';
-                  }
-                } catch (err) {
-                  setCustomAlert('Failed to switch to Fan mode');
-                }
-              }}
-              style={{
-                background: 'rgba(56, 189, 248, 0.1)',
-                border: '1px solid rgba(56, 189, 248, 0.3)',
-                color: '#38bdf8',
-                padding: '12px 24px',
-                borderRadius: '12px',
-                fontWeight: '600',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                transition: 'background 0.2s'
-              }}
-            >
-              <span style={{ fontSize: '18px' }}>👤</span> Switch to Fan Mode →
-            </button>
-
           <button style={{
             background: 'transparent', border: 'none', color: '#f87171',
             fontSize: '0.9rem', fontWeight: 700, cursor: 'pointer', marginTop: '8px'
@@ -1316,8 +1375,7 @@ const CreatorSettings = () => {
               }}
             >
               <span style={{ 
-                fontSize: '20px',
-                filter: isActive ? cyanFilter : grayFilter
+                fontSize: '20px'
               }}>
                 {item.icon}
               </span>
@@ -1348,8 +1406,8 @@ const CreatorSettings = () => {
             </h3>
             <p style={{ margin: '0 0 24px', color: '#94a3b8', fontSize: '0.9rem', lineHeight: '1.5' }}>
               {isPaused 
-                ? "Are you sure you want to unpause? Your profile will be visible and open for questions."
-                : "Are you sure you want to pause your page? Your profile will be temporarily hidden from the discovery page and you won't be able to receive new questions until you unpause."
+                ? "Are you sure you want to unpause? Your profile will be visible and open for chats."
+                : "Are you sure you want to pause your page? Your profile will be temporarily hidden from the discovery page and you won't be able to receive new chats until you unpause."
               }
             </p>
             {!isPaused && (

@@ -15,6 +15,7 @@ const AdminAlert = require('../models/AdminAlert');
 const otpStore = require('../utils/otpStore');
 const { verifyCreatorToken } = require('../middleware/auth');
 const { sendWelcomeEmail, sendProfileSubmittedEmail, sendPasswordResetEmail } = require('../utils/emailService');
+const { normalizeExpertiseList } = require('../utils/expertiseConstants');
 const crypto = require('crypto');
 
 const cloudinary = require('cloudinary').v2;
@@ -101,7 +102,11 @@ const otpLimiter = rateLimit({
 // Mock connectDB for the routes (as pattern in server.js)
 const connectDB = async () => {
   if (mongoose.connection.readyState === 1) return;
-  await mongoose.connect(process.env.MONGO_URI);
+  try {
+    await mongoose.connect(process.env.MONGO_URI);
+  } catch (err) {
+    console.error('MongoDB Connection Error:', err.message);
+  }
 };
 
 /**
@@ -176,13 +181,31 @@ router.post('/verify-otp', async (req, res) => {
     let referredBy = null;
     let referredByName = null;
     if (ref) {
-      const referrer = await Creator.findOne({ referralCode: ref });
+      const referrer = await Creator.findOne({
+        $or: [
+          { referralCode: ref.toUpperCase() },
+          { handle: ref.toLowerCase() },
+          { handle: ref }
+        ]
+      });
       if (referrer) {
         referredBy = referrer._id;
         referredByName = referrer.name || referrer.email || referrer.phone || 'Anonymous';
       }
     }
     creator = await Creator.create({ phone, referredBy, referredByName });
+    if (referredBy) {
+      await Creator.findByIdAndUpdate(referredBy, { $inc: { totalReferrals: 1 } });
+      const Referral = require('../models/Referral');
+      await Referral.create({
+        referrerId: referredBy,
+        referredCreatorId: creator._id,
+        name: creator.name,
+        handle: creator.handle,
+        email: creator.email || phone,
+        profilePic: creator.avatarUrl || creator.profileUrl
+      });
+    }
     isNew = true;
     
     // Create Admin Alert for Signup
@@ -218,7 +241,7 @@ router.post('/verify-otp', async (req, res) => {
       name: creator.name,
       handle: creator.handle,
       ama_enabled: creator.ama_enabled,
-      expertise: creator.expertise || [],
+      expertise: normalizeExpertiseList(creator.expertise || []),
       onboardingComplete
     },
     token
@@ -230,59 +253,91 @@ router.post('/verify-otp', async (req, res) => {
  * @desc Signup via email and password
  */
 router.post('/email-signup', async (req, res) => {
-  const { email, password, ref } = req.body;
+  try {
+    const { email, password, ref } = req.body;
 
-  if (!email || !password) {
-    return res.status(400).json({ message: 'Email and password are required.' });
-  }
-
-  await connectDB();
-
-  let creator = await Creator.findOne({ email });
-
-  if (creator) {
-    return res.status(400).json({ message: 'Email is already registered. Please login.' });
-  }
-
-  let referredBy = null;
-  let referredByName = null;
-  if (ref) {
-    const referrer = await Creator.findOne({ referralCode: ref });
-    if (referrer) {
-      referredBy = referrer._id;
-      referredByName = referrer.name || referrer.email || 'Anonymous';
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Email and password are required.' });
     }
+
+    await connectDB();
+
+    let creator = await Creator.findOne({ email });
+
+    if (creator) {
+      return res.status(400).json({ message: 'Email is already registered. Please login.' });
+    }
+
+    let referredBy = null;
+    let referredByName = null;
+    if (ref) {
+      const referrer = await Creator.findOne({
+        $or: [
+          { referralCode: ref.toUpperCase() },
+          { handle: ref.toLowerCase() },
+          { handle: ref }
+        ]
+      });
+      if (referrer) {
+        referredBy = referrer._id;
+        referredByName = referrer.name || referrer.email || 'Anonymous';
+      }
+    }
+
+    const createData = { email, password };
+    if (referredBy) createData.referredBy = referredBy;
+    if (referredByName) createData.referredByName = referredByName;
+
+    creator = await Creator.create(createData);
+
+    if (referredBy) {
+      await Creator.findByIdAndUpdate(referredBy, { $inc: { totalReferrals: 1 } });
+      const Referral = require('../models/Referral');
+      await Referral.create({
+        referrerId: referredBy,
+        referredCreatorId: creator._id,
+        name: creator.name,
+        handle: creator.handle,
+        email: creator.email,
+        profilePic: creator.avatarUrl || creator.profileUrl
+      });
+    }
+
+    // Create Admin Alert
+    try {
+      await AdminAlert.create({
+        type: 'creator_signup',
+        title: 'New creator signup',
+        message: `Creator signed up via Email: ${email}`,
+        referenceId: creator._id
+      });
+    } catch (alertErr) {
+      console.error('Failed to create AdminAlert:', alertErr);
+    }
+
+    const token = jwt.sign(
+      { creatorId: creator._id, email: creator.email },
+      process.env.JWT_SECRET || 'secret',
+      { expiresIn: '7d' }
+    );
+
+    res.json({
+      success: true,
+      creator: {
+        id: creator._id,
+        email: creator.email,
+        name: creator.name,
+        handle: creator.handle,
+        ama_enabled: creator.ama_enabled,
+        expertise: normalizeExpertiseList(creator.expertise || []),
+        onboardingComplete: false
+      },
+      token
+    });
+  } catch (err) {
+    console.error('Email signup error:', err);
+    res.status(500).json({ message: err.message || 'An error occurred during signup' });
   }
-
-  creator = await Creator.create({ email, password, referredBy, referredByName });
-
-  // Create Admin Alert
-  await AdminAlert.create({
-    type: 'creator_signup',
-    title: 'New creator signup',
-    message: `Creator signed up via Email: ${email}`,
-    referenceId: creator._id
-  });
-
-  const token = jwt.sign(
-    { creatorId: creator._id, email: creator.email },
-    process.env.JWT_SECRET || 'secret',
-    { expiresIn: '7d' }
-  );
-
-  res.json({
-    success: true,
-    creator: {
-      id: creator._id,
-      email: creator.email,
-      name: creator.name,
-      handle: creator.handle,
-      ama_enabled: creator.ama_enabled,
-      expertise: creator.expertise || [],
-      onboardingComplete: false
-    },
-    token
-  });
 });
 
 /**
@@ -329,8 +384,6 @@ router.post('/email-login', async (req, res) => {
     await creator.save();
   }
 
-
-
   if (creator.password !== password) {
     return res.status(400).json({ message: 'Invalid credentials.' });
   }
@@ -351,7 +404,7 @@ router.post('/email-login', async (req, res) => {
       name: creator.name,
       handle: creator.handle,
       ama_enabled: creator.ama_enabled,
-      expertise: creator.expertise || [],
+      expertise: normalizeExpertiseList(creator.expertise || []),
       onboardingComplete
     },
     token
@@ -487,8 +540,14 @@ router.get('/me', verifyCreatorToken, async (req, res) => {
       await creator.save();
     }
 
-    // Removed mock data auto-seeding here so new users can enter their own details
-    res.json({ success: true, creator: { ...creator.toObject(), activeStrikesCount } });
+    res.json({ 
+      success: true, 
+      creator: { 
+        ...creator.toObject(), 
+        expertise: normalizeExpertiseList(creator.expertise || []),
+        activeStrikesCount 
+      } 
+    });
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
   }
@@ -516,12 +575,83 @@ router.post('/check-handle', async (req, res) => {
 router.get('/my-referrals', verifyCreatorToken, async (req, res) => {
   try {
     await connectDB();
-    const referrals = await Creator.find({
-      referredBy: req.creator.creatorId,
-      handle: { $exists: true, $ne: null }
-    }).select('name handle profilePic email createdAt').sort({ createdAt: -1 });
+    const Earning = require('../models/Earning');
+    const Question = require('../models/Question');
+    const Referral = require('../models/Referral');
+    
+    const referrerId = req.creator.creatorId;
+    const currentCreator = await Creator.findById(referrerId);
 
-    res.json({ success: true, referrals });
+    // Auto-migrate active creators who don't have a Referral record
+    const activeCreators = await Creator.find({
+      referredBy: referrerId
+    }).select('name handle profilePic avatarUrl profileUrl email createdAt').sort({ createdAt: -1 });
+
+    for (const c of activeCreators) {
+      const existingRef = await Referral.findOne({ referredCreatorId: c._id });
+      if (!existingRef) {
+        await Referral.create({
+          referrerId,
+          referredCreatorId: c._id,
+          name: c.name,
+          handle: c.handle,
+          email: c.email,
+          profilePic: c.profilePic || c.avatarUrl || c.profileUrl,
+          status: 'Active',
+          createdAt: c.createdAt
+        });
+      }
+    }
+
+    const allReferrals = await Referral.find({ referrerId }).populate('referredCreatorId', 'name handle profilePic avatarUrl email').sort({ createdAt: -1 });
+
+    // Calculate earnings per referral
+    const affiliateEarnings = await Earning.find({
+      creatorId: referrerId,
+      earningType: 'affiliate_referral'
+    });
+
+    const lifetimeEarnings = affiliateEarnings.reduce((acc, curr) => acc + (curr.amount || 0), 0);
+
+    const earningsPerCreator = {};
+    for (const e of affiliateEarnings) {
+      if (!e.questionId) continue;
+      const q = await Question.findById(e.questionId).select('creatorId');
+      if (q) {
+        const referredId = q.creatorId.toString();
+        earningsPerCreator[referredId] = (earningsPerCreator[referredId] || 0) + (e.amount || 0);
+      }
+    }
+
+    let mappedReferrals = allReferrals.map(r => {
+      let cName = r.name;
+      let cHandle = r.handle;
+      let cPic = r.profilePic;
+      let cEmail = r.email;
+
+      if (r.status === 'Active' && r.referredCreatorId && typeof r.referredCreatorId === 'object') {
+        const c = r.referredCreatorId;
+        cName = c.name || cName;
+        cHandle = c.handle || cHandle;
+        cPic = c.avatarUrl || c.profilePic || cPic;
+        cEmail = c.email || cEmail;
+      }
+
+      return {
+        _id: r.referredCreatorId?._id || r.referredCreatorId || r._id,
+        name: cName,
+        handle: cHandle,
+        profilePic: cPic,
+        email: cEmail,
+        createdAt: r.createdAt,
+        status: r.status,
+        earnings: r.referredCreatorId ? (earningsPerCreator[(r.referredCreatorId._id || r.referredCreatorId).toString()] || 0) : 0
+      };
+    });
+
+    const totalReferrals = Math.max(currentCreator?.totalReferrals || 0, mappedReferrals.length);
+
+    res.json({ success: true, referrals: mappedReferrals, totalReferrals, lifetimeEarnings });
   } catch (error) {
     console.error('Failed to fetch referrals:', error);
     res.status(500).json({ message: 'Server error' });
@@ -557,9 +687,12 @@ router.post('/onboarding/profile', verifyCreatorToken, async (req, res) => {
   const existingPhone = await Creator.findOne({ phone, _id: { $ne: req.creator.creatorId } });
   if (existingPhone) return res.status(400).json({ message: 'Phone number already in use' });
 
+  const defaultBio = "Heyyy! Got something on your mind? Let’s chat!";
+  const finalBio = (bio && bio.trim()) ? bio.trim() : defaultBio;
+
   const updatedCreator = await Creator.findByIdAndUpdate(
     req.creator.creatorId,
-    { name, handle, profileUrl: `skriibe.com/${handle}`, email, phone, bio, expertise, instagramHandle, instagramFollowers },
+    { name, handle, profileUrl: `skriibe.com/${handle}`, email, phone, bio: finalBio, expertise: normalizeExpertiseList(expertise), instagramHandle, instagramFollowers },
     { new: true }
   );
 
@@ -588,10 +721,10 @@ router.post('/onboarding/profile', verifyCreatorToken, async (req, res) => {
 router.post('/onboarding/pricing', verifyCreatorToken, async (req, res) => {
   const { price, dailyCap, weeklyGoal } = req.body;
 
-  if (typeof price !== 'number' || price < 10 || price > 9999) return res.status(400).json({ message: 'Invalid price' });
+  if (typeof price !== 'number' || (price !== 0 && (price < 10 || price > 9999))) return res.status(400).json({ message: 'Invalid price' });
   if (typeof dailyCap !== 'number' || dailyCap < 5 || dailyCap > 100) return res.status(400).json({ message: 'Invalid daily cap' });
 
-  const updateData = { price, pricePerQuestion: price, dailyCap, ama_enabled: true, isLive: true };
+  const updateData = { price, pricePerQuestion: price, dailyCap, ama_enabled: price > 0 };
   if (typeof weeklyGoal === 'number') updateData.weeklyGoal = weeklyGoal;
 
   await connectDB();
@@ -618,6 +751,41 @@ router.post('/onboarding/pricing', verifyCreatorToken, async (req, res) => {
 });
 
 /**
+ * @route POST /api/creators/onboarding/live-chat
+ * @desc Save live chat onboarding data
+ */
+router.post('/onboarding/live-chat', verifyCreatorToken, async (req, res) => {
+  const { liveChatPrice, liveChatDevotedHours, liveChatTimeSlots } = req.body;
+
+  if (typeof liveChatPrice !== 'number' || liveChatPrice < 0) return res.status(400).json({ message: 'Invalid price' });
+  if (typeof liveChatDevotedHours !== 'number' || liveChatDevotedHours < 1 || liveChatDevotedHours > 24) return res.status(400).json({ message: 'Invalid devoted hours' });
+
+  const updateData = { 
+    liveChatPrice, 
+    liveChatDevotedHours, 
+    liveChatTimeSlots: Array.isArray(liveChatTimeSlots) ? liveChatTimeSlots : [],
+    liveChatEnabled: true
+  };
+
+  await connectDB();
+  const updatedCreator = await Creator.findByIdAndUpdate(
+    req.creator.creatorId,
+    updateData,
+    { new: true }
+  );
+
+  if (!updatedCreator) {
+    res.clearCookie('creator_token', getClearCookieOptions());
+    return res.status(401).json({ message: 'Session expired or user deleted. Please log in again.' });
+  }
+
+  res.json({ 
+    success: true, 
+    creator: updatedCreator 
+  });
+});
+
+/**
  * @route POST /api/creators/link-bank
  * @desc Link bank account
  */
@@ -632,7 +800,7 @@ router.post('/link-bank', verifyCreatorToken, async (req, res) => {
   }
 
   const updateData = {};
-  if (pan) updateData.panNumber = pan; // Also fixes existing bug where pan was saved to non-existent 'pan' field instead of 'panNumber'
+  if (pan) updateData.panNumber = pan;
   if (accountName) updateData.bankAccountName = accountName;
   if (accountNumber) updateData.bankAccountNumber = accountNumber;
   if (ifsc) updateData.bankIfsc = ifsc;
@@ -645,7 +813,6 @@ router.post('/link-bank', verifyCreatorToken, async (req, res) => {
   if (finalAccount && finalIfsc && finalAccount === creator.verifiedAccountNumber && finalIfsc === creator.verifiedIfsc) {
     updateData.bankLinked = true;
   } else {
-    // A change was made that does not match verified records
     updateData.bankLinked = false;
     updateData.bankVerificationStatus = 'pending';
   }
@@ -700,6 +867,67 @@ router.post('/toggle-live', verifyCreatorToken, async (req, res) => {
 });
 
 /**
+ * @route POST /api/creators/toggle-live-chat
+ * @desc Toggle creator live chat status
+ */
+router.post('/toggle-live-chat', verifyCreatorToken, async (req, res) => {
+  const { liveChatEnabled } = req.body;
+  if (typeof liveChatEnabled !== 'boolean') return res.status(400).json({ message: 'Invalid status' });
+
+  try {
+    await connectDB();
+    const currentCreator = await Creator.findById(req.creator.creatorId);
+    if (!currentCreator) return res.status(404).json({ message: 'Not found' });
+    if (liveChatEnabled && currentCreator.suspensionUntil && new Date() < new Date(currentCreator.suspensionUntil)) {
+      return res.status(403).json({ message: 'Account is currently suspended. You cannot enable Live Chat.' });
+    }
+
+    const updatedCreator = await Creator.findByIdAndUpdate(
+      req.creator.creatorId,
+      { liveChatEnabled },
+      { new: true }
+    );
+
+    if (!updatedCreator) {
+      res.clearCookie('creator_token', getClearCookieOptions());
+      return res.status(401).json({ message: 'Session expired or user deleted. Please log in again.' });
+    }
+
+    res.json({ success: true, creator: updatedCreator });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+/**
+ * @route POST /api/creators/update-live-chat-price
+ * @desc Update creator live chat price
+ */
+router.post('/update-live-chat-price', verifyCreatorToken, async (req, res) => {
+  const { liveChatPrice } = req.body;
+  if (typeof liveChatPrice !== 'number' || liveChatPrice < 0) return res.status(400).json({ message: 'Invalid price' });
+
+  try {
+    await connectDB();
+    const updatedCreator = await Creator.findByIdAndUpdate(
+      req.creator.creatorId,
+      { liveChatPrice },
+      { new: true }
+    );
+
+    if (!updatedCreator) {
+      return res.status(404).json({ message: 'Not found' });
+    }
+
+    res.json({ success: true, creator: updatedCreator });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+/**
  * @route POST /api/creators/logout
  * @desc Logout creator
  */
@@ -712,13 +940,18 @@ router.post('/logout', (req, res) => {
  * @desc Update general settings
  */
 router.post('/settings', verifyCreatorToken, async (req, res) => {
-  const { weeklyGoal, pricePerQuestion, dailyCap, autoPause, isPaused, pauseReason, bio, phone, instagramHandle, expertise, email } = req.body;
+  const { weeklyGoal, pricePerQuestion, dailyCap, autoPause, isPaused, pauseReason, bio, phone, instagramHandle, expertise, email, liveChatPrice } = req.body;
   const updateData = {};
   if (typeof weeklyGoal === 'number') updateData.weeklyGoal = weeklyGoal;
   if (typeof pricePerQuestion === 'number') {
-    if (pricePerQuestion < 1) return res.status(400).json({ message: 'Invalid price. Must be at least 1.' });
+    if (pricePerQuestion !== 0 && (pricePerQuestion < 10 || pricePerQuestion > 9999)) return res.status(400).json({ message: 'Invalid price.' });
     updateData.pricePerQuestion = pricePerQuestion;
     updateData.price = pricePerQuestion;
+    updateData.ama_enabled = pricePerQuestion > 0;
+  }
+  if (typeof liveChatPrice === 'number') {
+    if (liveChatPrice < 1) return res.status(400).json({ message: 'Invalid live chat price. Must be at least 1.' });
+    updateData.liveChatPrice = liveChatPrice;
   }
   if (typeof dailyCap === 'number') updateData.dailyCap = dailyCap;
   if (typeof autoPause === 'boolean') updateData.autoPause = autoPause;
@@ -727,7 +960,9 @@ router.post('/settings', verifyCreatorToken, async (req, res) => {
   if (typeof phone === 'string') updateData.phone = phone;
   if (typeof instagramHandle === 'string') updateData.instagramHandle = instagramHandle;
   if (typeof email === 'string') updateData.email = email;
-  if (Array.isArray(expertise)) updateData.expertise = expertise;
+  if (Array.isArray(expertise)) {
+    updateData.expertise = normalizeExpertiseList(expertise);
+  }
   await connectDB();
   const updatedCreator = await Creator.findByIdAndUpdate(
     req.creator.creatorId,
@@ -742,7 +977,6 @@ router.post('/settings', verifyCreatorToken, async (req, res) => {
 
   if (isPaused === true) {
     const AccountActionLog = require('../models/AccountActionLog');
-    const AdminAlert = require('../models/AdminAlert');
     await AccountActionLog.create({
       userType: 'creator',
       action: 'pause',
@@ -760,14 +994,129 @@ router.post('/settings', verifyCreatorToken, async (req, res) => {
     }
   }
 
-  res.json({ success: true, creator: updatedCreator });
+  res.json({ 
+    success: true, 
+    creator: {
+      ...updatedCreator.toObject(),
+      expertise: normalizeExpertiseList(updatedCreator.expertise || [])
+    }
+  });
 });
 
 router.get('/connect-instagram', verifyCreatorToken, (req, res) => {
   const redirectUri = `${process.env.INSTAGRAM_REDIRECT_URI}`;
   const token = req.headers.authorization ? req.headers.authorization.split(' ')[1] : '';
-  const url = `https://api.instagram.com/oauth/authorize?client_id=${process.env.INSTAGRAM_CLIENT_ID}&redirect_uri=${redirectUri}&scope=user_profile&response_type=code&state=${token}`;
-  res.json({ url });
+  
+  const state = Buffer.from(JSON.stringify({
+    creatorId: req.creator.creatorId,
+    token: token,
+    source: 'web'
+  })).toString('base64');
+  
+  const instagramUrl = `https://api.instagram.com/oauth/authorize?client_id=${process.env.INSTAGRAM_CLIENT_ID}&redirect_uri=${redirectUri}&scope=user_profile,user_media&response_type=code&state=${state}`;
+  
+  res.json({ url: instagramUrl });
+});
+
+/**
+ * @route POST /api/creators/save-payout-details
+ * @desc Save and verify creator payout setup details
+ */
+router.post('/save-payout-details', verifyCreatorToken, async (req, res) => {
+  try {
+    const { 
+      pan, 
+      aadharLast4, 
+      payoutMethod = 'upi', 
+      upiId, 
+      bankAccountName, 
+      bankAccountNumber, 
+      bankIfsc, 
+      confirmed 
+    } = req.body;
+
+    if (!pan || !aadharLast4) {
+      return res.status(400).json({ message: 'PAN and Aadhaar last 4 digits are required.' });
+    }
+
+    const panTrimmed = pan.trim().toUpperCase();
+    const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
+    if (!panRegex.test(panTrimmed)) {
+      return res.status(400).json({ message: 'Please enter a valid PAN format (e.g. ABCDE1234F).' });
+    }
+
+    const aadharTrimmed = aadharLast4.toString().trim();
+    if (!/^\d{4}$/.test(aadharTrimmed)) {
+      return res.status(400).json({ message: 'Please enter exactly the last 4 digits of your Aadhaar number.' });
+    }
+
+    if (!confirmed) {
+      return res.status(400).json({ message: 'Please confirm that these are your own details.' });
+    }
+
+    if (payoutMethod === 'bank') {
+      if (!bankAccountName || !bankAccountName.trim()) {
+        return res.status(400).json({ message: 'Account holder name is required.' });
+      }
+      if (!bankAccountNumber || !bankAccountNumber.trim()) {
+        return res.status(400).json({ message: 'Account number is required.' });
+      }
+      if (!bankIfsc || !bankIfsc.trim()) {
+        return res.status(400).json({ message: 'IFSC code is required.' });
+      }
+      const ifscRegex = /^[A-Z]{4}0[A-Z0-9]{6}$/;
+      if (!ifscRegex.test(bankIfsc.trim().toUpperCase())) {
+        return res.status(400).json({ message: 'Please enter a valid 11-character IFSC code.' });
+      }
+    } else {
+      if (!upiId || !upiId.trim() || !upiId.includes('@')) {
+        return res.status(400).json({ message: 'Please enter a valid UPI ID (e.g. you@okaxis).' });
+      }
+    }
+
+    await connectDB();
+    const creator = await Creator.findById(req.creator.creatorId);
+    if (!creator) {
+      return res.status(404).json({ message: 'Creator not found.' });
+    }
+
+    creator.panNumber = panTrimmed;
+    creator.panVerificationStatus = 'verified';
+    creator.panVerifiedAt = new Date();
+    creator.aadharLast4 = aadharTrimmed;
+    creator.payoutMethod = payoutMethod;
+    creator.payoutSetupCompleted = true;
+    creator.payoutDetailsConfirmed = true;
+
+    if (payoutMethod === 'bank') {
+      creator.bankAccountName = bankAccountName.trim();
+      creator.bankAccountNumber = bankAccountNumber.trim();
+      creator.bankIfsc = bankIfsc.trim().toUpperCase();
+      creator.verifiedAccountNumber = bankAccountNumber.trim();
+      creator.verifiedIfsc = bankIfsc.trim().toUpperCase();
+      creator.bankVerificationStatus = 'verified';
+      creator.bankNameAtBank = bankAccountName.trim();
+      creator.bankVerifiedAt = new Date();
+      creator.bankLinked = true;
+    } else {
+      creator.upiId = upiId.trim();
+      creator.bankLinked = true;
+    }
+
+    await creator.save();
+
+    res.json({
+      success: true,
+      message: 'Payout details saved successfully',
+      creator: {
+        ...creator.toObject(),
+        expertise: normalizeExpertiseList(creator.expertise || [])
+      }
+    });
+  } catch (err) {
+    console.error('Error saving payout details in /creators:', err);
+    res.status(500).json({ message: 'Server error saving payout details' });
+  }
 });
 
 module.exports = router;

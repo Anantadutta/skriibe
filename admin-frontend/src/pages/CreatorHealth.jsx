@@ -9,6 +9,8 @@ const CreatorHealth = () => {
   const [creators, setCreators] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('All'); // All, Healthy, Critical
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showReviewsModal, setShowReviewsModal] = useState(null);
 
   useEffect(() => {
     const fetchCreators = async () => {
@@ -43,9 +45,19 @@ const CreatorHealth = () => {
     }
   }, [loading, creators, location.state]);
 
-  const allCreators = creators;
-  const healthy = creators.filter(c => c.calculatedStats?.healthStatus === 'Account Healthy');
-  const critical = creators.filter(c => c.calculatedStats?.healthStatus !== 'Account Healthy');
+  const filteredCreators = creators.filter(c => {
+    if (!searchQuery) return true;
+    const q = searchQuery.toLowerCase();
+    return (
+      (c.name && c.name.toLowerCase().includes(q)) ||
+      (c.handle && c.handle.toLowerCase().includes(q)) ||
+      (c.email && c.email.toLowerCase().includes(q))
+    );
+  });
+
+  const allCreators = filteredCreators;
+  const healthy = filteredCreators.filter(c => c.calculatedStats?.healthStatus === 'Account Healthy');
+  const critical = filteredCreators.filter(c => c.calculatedStats?.healthStatus !== 'Account Healthy');
 
   let currentList = [];
   if (activeTab === 'All') currentList = allCreators;
@@ -78,7 +90,7 @@ const CreatorHealth = () => {
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
         <div style={{ fontSize: '0.9rem', color: '#64748b' }}>
-          Admin <span style={{ color: '#ffffff', fontWeight: 'bold' }}>/ Creator Life</span>
+          Admin <span style={{ color: '#ffffff', fontWeight: 'bold' }}>/ Creator Review</span>
         </div>
         <NotificationBell />
       </div>
@@ -87,9 +99,26 @@ const CreatorHealth = () => {
 
       <div style={{ display: 'flex', flexDirection: 'column' }}>
         <h1 className="font-wide" style={{ margin: 0, fontSize: '1.75rem', letterSpacing: '-0.03em', color: '#ffffff' }}>
-          Creator Life
+          Creator Review
         </h1>
-        <div style={{ fontSize: '0.85rem', color: '#94a3b8', marginTop: '4px' }}>Monitor creator performance and SLA breaches</div>
+        <div style={{ fontSize: '0.85rem', color: '#94a3b8', marginTop: '4px' }}>Monitor creator performance</div>
+      </div>
+
+      {/* Search Bar */}
+      <div>
+        <div style={{ display: 'flex', alignItems: 'center', background: '#13131A', border: '1px solid #1E1E2D', borderRadius: '12px', padding: '12px 16px' }}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '12px' }}>
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input 
+            type="text" 
+            placeholder="Search creators by name, handle, or email..." 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            style={{ background: 'transparent', border: 'none', color: '#ffffff', fontSize: '0.95rem', width: '100%', outline: 'none' }}
+          />
+        </div>
       </div>
 
       {/* Tabs */}
@@ -195,33 +224,95 @@ const CreatorHealth = () => {
                   </div>
                 )}
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '12px' }}>
-                  <div style={{ background: '#15100C', padding: '16px', borderRadius: '12px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
-                    <div className="font-wide" style={{ color: '#38BDF8', fontSize: '1.4rem', fontWeight: '900' }}>{stats.replyRate}%</div>
-                    <div style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Reply</div>
+                <div style={{ background: '#15100C', padding: '16px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', marginTop: '12px' }}>
+                  <div style={{ color: '#64748b', fontSize: '0.85rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Rating</div>
+                  <div style={{ display: 'flex', gap: '4px' }}>
+                    {[1, 2, 3, 4, 5].map(star => (
+                      <svg key={star} width="24" height="24" viewBox="0 0 24 24" fill={star <= (stats.rating || 0) ? "#F59E0B" : "none"} stroke="#F59E0B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                      </svg>
+                    ))}
                   </div>
-                  <div style={{ background: '#15100C', padding: '16px', borderRadius: '12px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
-                    <div className="font-wide" style={{ color: '#38BDF8', fontSize: '1.4rem', fontWeight: '900' }}>{stats.avgResponseTimeMins || 0}m</div>
-                    <div style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Avg</div>
-                  </div>
-                  <div style={{ background: '#15100C', padding: '16px', borderRadius: '12px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
-                    <div className="font-wide" style={{ color: '#38BDF8', fontSize: '1.4rem', fontWeight: '900', textAlign: 'center', lineHeight: '1.1' }}>
-                      {stats.answered || 0}
-                    </div>
-                    <div style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: 'bold', textTransform: 'uppercase', marginTop: '4px' }}>Answered</div>
-                  </div>
-                  <div style={{ background: '#15100C', padding: '16px', borderRadius: '12px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
-                    <div className="font-wide" style={{ color: '#EF4444', fontSize: '1.4rem', fontWeight: '900', textAlign: 'center', lineHeight: '1.1' }}>
-                      {creator.activeStrikesCount >= 4 ? '4 (Suspended)' : (creator.activeStrikesCount || 0)}
-                    </div>
-                    <div style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: 'bold', textTransform: 'uppercase', marginTop: '4px' }}>Strikes</div>
+                  <div style={{ color: '#E2E8F0', fontWeight: 'bold', fontSize: '1.2rem', marginLeft: '8px' }}>
+                    {stats.rating ? stats.rating.toFixed(1) : '0.0'}
                   </div>
                 </div>
+
+                {stats.fanReviews && stats.fanReviews.length > 0 && (
+                  <div style={{ marginTop: '4px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                      <div style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold', textTransform: 'uppercase' }}>Fan Reviews</div>
+                      {stats.fanReviews.length > 1 && (
+                        <button 
+                          onClick={() => setShowReviewsModal({ creator, reviews: stats.fanReviews })}
+                          style={{ background: 'transparent', border: 'none', color: '#38BDF8', fontSize: '0.8rem', fontWeight: 'bold', cursor: 'pointer', padding: 0 }}
+                        >
+                          View all
+                        </button>
+                      )}
+                    </div>
+                    {stats.fanReviews.slice(0, 1).map((review, idx) => (
+                      <div key={idx} style={{ background: '#1A1A24', padding: '12px', borderRadius: '8px', border: '1px solid #2A2A35' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                          <div style={{ color: '#E2E8F0', fontWeight: 'bold', fontSize: '0.85rem' }}>{review.fanName}</div>
+                          <div style={{ color: '#F59E0B', fontSize: '0.8rem', fontWeight: 'bold' }}>★ {review.rating.toFixed(1)}</div>
+                        </div>
+                        {review.tags && review.tags.length > 0 && (
+                          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '6px' }}>
+                            {review.tags.map((tag, i) => (
+                              <span key={i} style={{ background: '#2A2A35', color: '#94a3b8', fontSize: '0.7rem', padding: '2px 8px', borderRadius: '12px' }}>{tag}</span>
+                            ))}
+                          </div>
+                        )}
+                        {review.feedback && <div style={{ color: '#94a3b8', fontSize: '0.85rem', fontStyle: 'italic' }}>"{review.feedback}"</div>}
+                        <div style={{ color: '#64748b', fontSize: '0.7rem', marginTop: '6px' }}>{new Date(review.date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             );
           })
         )}
       </div>
+      
+      {/* Reviews Modal */}
+      {showReviewsModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.7)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ background: '#13131A', width: '90%', maxWidth: '500px', maxHeight: '80vh', borderRadius: '16px', border: '1px solid #1E1E2D', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+            <div style={{ padding: '20px', borderBottom: '1px solid #1E1E2D', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ color: '#fff', fontSize: '1.1rem', fontWeight: 'bold' }}>
+                All Reviews for {showReviewsModal.creator.name}
+              </div>
+              <button 
+                onClick={() => setShowReviewsModal(null)}
+                style={{ background: 'transparent', border: 'none', color: '#64748b', fontSize: '1.5rem', cursor: 'pointer' }}
+              >
+                &times;
+              </button>
+            </div>
+            <div style={{ padding: '20px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {showReviewsModal.reviews.map((review, idx) => (
+                <div key={idx} style={{ background: '#1A1A24', padding: '12px', borderRadius: '8px', border: '1px solid #2A2A35' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                    <div style={{ color: '#E2E8F0', fontWeight: 'bold', fontSize: '0.85rem' }}>{review.fanName}</div>
+                    <div style={{ color: '#F59E0B', fontSize: '0.8rem', fontWeight: 'bold' }}>★ {review.rating.toFixed(1)}</div>
+                  </div>
+                  {review.tags && review.tags.length > 0 && (
+                    <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '6px' }}>
+                      {review.tags.map((tag, i) => (
+                        <span key={i} style={{ background: '#2A2A35', color: '#94a3b8', fontSize: '0.7rem', padding: '2px 8px', borderRadius: '12px' }}>{tag}</span>
+                      ))}
+                    </div>
+                  )}
+                  {review.feedback && <div style={{ color: '#94a3b8', fontSize: '0.85rem', fontStyle: 'italic' }}>"{review.feedback}"</div>}
+                  <div style={{ color: '#64748b', fontSize: '0.7rem', marginTop: '6px' }}>{new Date(review.date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

@@ -77,13 +77,45 @@ passport.use(new GoogleStrategy({
             return done(null, false, { message: 'No account found. Please register first.' });
           }
           isNewCreator = true;
+
+          let referredBy = null;
+          let referredByName = null;
+          if (stateObj.ref) {
+            const referrer = await Creator.findOne({
+              $or: [
+                { referralCode: stateObj.ref.toUpperCase() },
+                { handle: stateObj.ref.toLowerCase() },
+                { handle: stateObj.ref }
+              ]
+            });
+            if (referrer) {
+              referredBy = referrer._id;
+              referredByName = referrer.name || referrer.email || 'Anonymous';
+            }
+          }
+
           creator = new Creator({
             email,
             name: profile.displayName || '',
             avatarUrl: profile.photos?.[0]?.value || '',
-            authProvider: 'google'
+            authProvider: 'google',
+            referredBy,
+            referredByName
           });
           await creator.save();
+
+          if (referredBy) {
+            await Creator.findByIdAndUpdate(referredBy, { $inc: { totalReferrals: 1 } });
+            const Referral = require('../models/Referral');
+            await Referral.create({
+              referrerId: referredBy,
+              referredCreatorId: creator._id,
+              name: creator.name,
+              handle: creator.handle,
+              email: creator.email,
+              profilePic: creator.avatarUrl || creator.profileUrl
+            });
+          }
 
           const AdminAlert = require('../models/AdminAlert');
           await AdminAlert.create({
@@ -155,13 +187,45 @@ passport.use(new FacebookStrategy({
             return done(null, false, { message: 'No account found. Please register first.' });
           }
           isNewCreator = true;
+
+          let referredBy = null;
+          let referredByName = null;
+          if (stateObj.ref) {
+            const referrer = await Creator.findOne({
+              $or: [
+                { referralCode: stateObj.ref.toUpperCase() },
+                { handle: stateObj.ref.toLowerCase() },
+                { handle: stateObj.ref }
+              ]
+            });
+            if (referrer) {
+              referredBy = referrer._id;
+              referredByName = referrer.name || referrer.email || 'Anonymous';
+            }
+          }
+
           creator = new Creator({
             email,
             name: `${profile.name?.givenName || ''} ${profile.name?.familyName || ''}`.trim() || profile.displayName || '',
             avatarUrl: profile.photos?.[0]?.value || '',
-            authProvider: 'facebook'
+            authProvider: 'facebook',
+            referredBy,
+            referredByName
           });
           await creator.save();
+
+          if (referredBy) {
+            await Creator.findByIdAndUpdate(referredBy, { $inc: { totalReferrals: 1 } });
+            const Referral = require('../models/Referral');
+            await Referral.create({
+              referrerId: referredBy,
+              referredCreatorId: creator._id,
+              name: creator.name,
+              handle: creator.handle,
+              email: creator.email,
+              profilePic: creator.avatarUrl || creator.profileUrl
+            });
+          }
 
           const AdminAlert = require('../models/AdminAlert');
           await AdminAlert.create({
@@ -294,7 +358,8 @@ router.post('/verify-otp', async (req, res) => {
 router.get('/google', (req, res, next) => {
   const role = req.query.role === 'fan' ? 'fan' : 'creator';
   const action = req.query.action === 'login' ? 'login' : 'signup';
-  const state = Buffer.from(JSON.stringify({ role, action })).toString('base64');
+  const ref = req.query.ref;
+  const state = Buffer.from(JSON.stringify({ role, action, ref })).toString('base64');
   passport.authenticate('google', { scope: ['profile', 'email'], prompt: 'select_account', state })(req, res, next);
 });
 
@@ -338,7 +403,8 @@ router.get('/google/callback', (req, res, next) => {
 router.get('/facebook', (req, res, next) => {
   const role = req.query.role === 'fan' ? 'fan' : 'creator';
   const action = req.query.action === 'login' ? 'login' : 'signup';
-  const state = Buffer.from(JSON.stringify({ role, action })).toString('base64');
+  const ref = req.query.ref;
+  const state = Buffer.from(JSON.stringify({ role, action, ref })).toString('base64');
   passport.authenticate('facebook', { scope: ['email', 'public_profile'], state })(req, res, next);
 });
 

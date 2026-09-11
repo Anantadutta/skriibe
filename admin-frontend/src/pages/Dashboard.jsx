@@ -9,8 +9,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [showSlaModal, setShowSlaModal] = useState(false);
-  const [showRefundsModal, setShowRefundsModal] = useState(false);
+  const [showMissedChatsModal, setShowMissedChatsModal] = useState(false);
 
   const getLocalDateString = () => {
     const d = new Date();
@@ -145,19 +144,19 @@ const Dashboard = () => {
           <div className="text-muted" style={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '1px' }}>ACTIVE CREATORS</div>
         </div>
         <div 
-          onClick={() => setShowSlaModal(true)}
+          onClick={() => setShowMissedChatsModal(true)}
           className="bg-card" 
           style={{ padding: '24px 20px', display: 'flex', flexDirection: 'column', gap: '8px', cursor: 'pointer' }}
         >
-          <div className="font-wide text-red" style={{ fontSize: '2rem' }}>{data.slaBreaches}</div>
-          <div className="text-muted" style={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '1px' }}>SLA BREACHES</div>
+          <div className="font-wide text-red" style={{ fontSize: '2rem' }}>{data.missedChatsCount || 0}</div>
+          <div className="text-muted" style={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '1px' }}>MISSED CHATS</div>
         </div>
       </div>
 
       <hr style={{ border: 'none', borderTop: '1px solid #1e1e2d', margin: '8px 0' }} />
 
       {/* Action Metrics Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '12px' }}>
         <div 
           onClick={() => navigate('/admin/open-questions')}
           style={{ background: '#13131A', border: '1px solid #1E1E2D', borderRadius: '12px', padding: '16px 12px', textAlign: 'center', cursor: 'pointer' }}
@@ -165,133 +164,93 @@ const Dashboard = () => {
           <div className="font-wide text-yellow" style={{ fontSize: '1.4rem' }}>{data.actionMetrics.openQuestions}</div>
           <div style={{ color: '#94a3b8', fontSize: '0.7rem', marginTop: '4px' }}>Open questions →</div>
         </div>
+        
         <div 
-          onClick={() => setShowRefundsModal(true)}
-          style={{ background: '#13131A', border: '1px solid #1E1E2D', borderRadius: '12px', padding: '16px 12px', textAlign: 'center', cursor: 'pointer' }}
+          style={{ background: '#13131A', border: '1px solid #1E1E2D', borderRadius: '12px', padding: '16px 12px' }}
         >
-          <div className="font-wide text-red" style={{ fontSize: '1.4rem' }}>{data.actionMetrics.refundsToday}</div>
-          <div style={{ color: '#94a3b8', fontSize: '0.7rem', marginTop: '4px' }}>Refunds till now →</div>
+          <div 
+            style={{ display: 'flex', gap: '8px', marginBottom: '16px', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: '#0F0F13', border: '1px solid #2A2A2A', borderRadius: '6px', padding: '4px 8px' }}>
+              <span style={{ color: '#64748b', fontSize: '0.7rem' }}>From:</span>
+              <input 
+                type="date" 
+                value={dateRange.startDate}
+                onChange={(e) => setDateRange(prev => ({ ...prev, startDate: e.target.value }))}
+                style={{ background: 'transparent', border: 'none', color: '#e2e8f0', fontSize: '0.75rem', outline: 'none', cursor: 'pointer' }}
+              />
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: '#0F0F13', border: '1px solid #2A2A2A', borderRadius: '6px', padding: '4px 8px' }}>
+              <span style={{ color: '#64748b', fontSize: '0.7rem' }}>To:</span>
+              <input 
+                type="date" 
+                value={dateRange.endDate}
+                onChange={(e) => setDateRange(prev => ({ ...prev, endDate: e.target.value }))}
+                style={{ background: 'transparent', border: 'none', color: '#e2e8f0', fontSize: '0.75rem', outline: 'none', cursor: 'pointer' }}
+              />
+            </div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', textAlign: 'center', gap: '8px' }}>
+            <div>
+              <div className="font-wide text-blue" style={{ fontSize: '1.4rem' }}>{data.actionMetrics.liveChats || 0}</div>
+              <div style={{ color: '#94a3b8', fontSize: '0.65rem', marginTop: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{dateRange.startDate === dateRange.endDate ? 'Live Chats Today' : 'Live Chats'}</div>
+            </div>
+            <div>
+              <div className="font-wide text-green" style={{ fontSize: '1.4rem' }}>{data.actionMetrics.amas || 0}</div>
+              <div style={{ color: '#94a3b8', fontSize: '0.65rem', marginTop: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{dateRange.startDate === dateRange.endDate ? 'AMAs Today' : 'AMAs'}</div>
+            </div>
+            <div>
+              <div className="font-wide text-yellow" style={{ fontSize: '1.4rem' }}>{data.actionMetrics.tips || 0}</div>
+              <div style={{ color: '#94a3b8', fontSize: '0.65rem', marginTop: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{dateRange.startDate === dateRange.endDate ? 'Tips Today' : 'Tips'}</div>
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Removed Recent Activity section */}
       
-      {/* SLA Modal */}
-      {showSlaModal && (
+
+
+      {/* Missed Chats Modal */}
+      {showMissedChatsModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(4px)' }}>
           <div style={{ background: '#13131A', width: '90%', maxWidth: '600px', borderRadius: '16px', border: '1px solid #1E1E2D', padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px', maxHeight: '80vh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <button onClick={() => setShowSlaModal(false)} style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <button onClick={() => setShowMissedChatsModal(false)} style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
               </button>
-              <h2 className="font-wide" style={{ margin: 0, fontSize: '1.5rem', color: '#fff' }}>SLA Breaches (&gt;24h Pending)</h2>
+              <h2 className="font-wide" style={{ margin: 0, fontSize: '1.5rem', color: '#fff' }}>Missed Chats</h2>
             </div>
-            <p style={{ color: '#94a3b8', fontSize: '0.9rem', margin: 0, paddingLeft: '40px' }}>These questions have been paid for but not answered within 24 hours.</p>
+            <p style={{ color: '#94a3b8', fontSize: '0.9rem', margin: 0, paddingLeft: '40px' }}>Chats cancelled by fans before creator joined.</p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '12px' }}>
-              {data.breachedQuestions && data.breachedQuestions.length > 0 ? (
-                data.breachedQuestions.map(bq => (
-                  <div key={bq._id} style={{ background: '#0F0F13', padding: '16px', borderRadius: '8px', border: '1px solid #2A2A35' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                      <div style={{ color: '#fff', fontWeight: 'bold' }}>Buyer: {bq.buyerName || bq.fanId?.name || 'Anonymous Buyer'}</div>
-                      <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                        <div style={{ color: '#10B981', fontWeight: 'bold' }}>₹{bq.amountPaid || 0}</div>
-                        <div style={{ color: '#EF4444', fontSize: '0.8rem', fontWeight: 'bold' }}>
-                          {bq.status === 'expired' ? 'Strike Initiated (Expired)' : `${Math.floor((new Date() - new Date(bq.createdAt)) / (1000 * 60 * 60))}h Overdue`}
-                        </div>
+              {data.missedChatsData && data.missedChatsData.length > 0 ? (
+                data.missedChatsData.map(chat => (
+                  <div key={chat._id} style={{ background: '#0F0F13', padding: '16px', borderRadius: '8px', border: '1px solid #2A2A35' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <div style={{ color: '#fff', fontWeight: 'bold' }}>
+                        Fan: {chat.fanId?.name || 'Anonymous Fan'} 
+                        <span style={{ color: '#10B981', marginLeft: '8px' }}>(Wallet: ₹{chat.fanId?.walletBalance || 0})</span>
                       </div>
+                      <div style={{ color: '#EF4444', fontSize: '0.8rem', fontWeight: 'bold' }}>MISSED</div>
                     </div>
                     
                     <div style={{ color: '#94a3b8', fontSize: '0.85rem', marginBottom: '4px' }}>
-                      Creator: <span style={{ color: '#cbd5e1' }}>{bq.creatorId?.name || 'Unknown'} (@{bq.creatorId?.handle || 'unknown'}) {bq.creatorId?.email ? `• ${bq.creatorId.email}` : ''}</span>
+                      Creator: <span style={{ color: '#cbd5e1' }}>{chat.creatorId?.name || 'Unknown'} (@{chat.creatorId?.handle || 'unknown'}) {chat.creatorId?.email ? `• ${chat.creatorId.email}` : ''}</span>
                     </div>
 
-                    <div style={{ color: '#94a3b8', fontSize: '0.85rem', marginBottom: '8px' }}>
-                      Sent on: <span style={{ color: '#cbd5e1' }}>{bq.createdAt ? new Date(bq.createdAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) : 'Unknown'}</span>
-                    </div>
-
-                    <div style={{ color: '#e2e8f0', fontSize: '0.9rem', fontStyle: 'italic', background: '#1a1a24', padding: '8px', borderRadius: '4px' }}>
-                      "{bq.questionText}"
+                    <div style={{ color: '#94a3b8', fontSize: '0.85rem' }}>
+                      Time: <span style={{ color: '#cbd5e1' }}>{chat.startTime ? new Date(chat.startTime).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) : 'Unknown'}</span>
                     </div>
                   </div>
                 ))
               ) : (
-                <div style={{ color: '#64748b', textAlign: 'center', padding: '24px' }}>No active SLA breaches! 🚀</div>
+                <div style={{ color: '#64748b', textAlign: 'center', padding: '24px' }}>No missed chats! 🎉</div>
               )}
             </div>
 
             <button 
-              onClick={() => setShowSlaModal(false)}
-              style={{ background: '#2A2A35', color: '#fff', border: 'none', padding: '12px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', marginTop: '8px' }}
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Refunds Modal */}
-      {showRefundsModal && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(4px)' }}>
-          <div style={{ background: '#13131A', width: '90%', maxWidth: '600px', borderRadius: '16px', border: '1px solid #1E1E2D', padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px', maxHeight: '80vh', overflowY: 'auto' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <button onClick={() => setShowRefundsModal(false)} style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
-              </button>
-              <h2 className="font-wide" style={{ margin: 0, fontSize: '1.5rem', color: '#fff' }}>Refunds Till Now</h2>
-            </div>
-            <p style={{ color: '#94a3b8', fontSize: '0.9rem', margin: 0, paddingLeft: '40px' }}>These questions were resolved as refunds till now.</p>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '12px' }}>
-              {data.adminRefundsData && data.adminRefundsData.length > 0 ? (
-                data.adminRefundsData.map(rq => (
-                  <div key={rq._id} style={{ background: '#0F0F13', padding: '16px', borderRadius: '8px', border: '1px solid #2A2A35' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                      <div style={{ color: '#fff', fontWeight: 'bold' }}>Buyer: {rq.buyerName || rq.fanId?.name || 'Anonymous'}</div>
-                      <div style={{ color: '#10B981', fontWeight: 'bold' }}>₹{rq.amountPaid || 0}</div>
-                    </div>
-                    
-                    <div style={{ color: '#94a3b8', fontSize: '0.85rem', marginBottom: '4px' }}>
-                      Creator: <span style={{ color: '#cbd5e1' }}>{rq.creatorId?.name || 'Unknown'} (@{rq.creatorId?.handle || 'unknown'}) {rq.creatorId?.email ? `• ${rq.creatorId.email}` : ''}</span>
-                    </div>
-
-                    <div style={{ color: '#94a3b8', fontSize: '0.85rem', marginBottom: '4px' }}>
-                      Sent on: <span style={{ color: '#cbd5e1' }}>{rq.createdAt ? new Date(rq.createdAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) : 'Unknown'}</span>
-                    </div>
-
-                    {rq.status === 'expired' ? (
-                      <div style={{ color: '#94a3b8', fontSize: '0.85rem', marginBottom: '12px' }}>
-                        Reason: <span style={{ color: '#F59E0B', fontWeight: 'bold' }}>SLA Breach (Auto Refund)</span>
-                      </div>
-                    ) : (
-                      <div style={{ color: '#94a3b8', fontSize: '0.85rem', marginBottom: '12px' }}>
-                        Admin Decision: <span style={{ color: rq.adminDecision === 'fan_wins' ? '#EF4444' : '#38bdf8', fontWeight: 'bold' }}>
-                          {rq.adminDecision === 'fan_wins' ? 'Full Refund to Buyer' : (rq.adminDecision === 'creator_wins' ? 'No Refund (Creator Wins)' : rq.adminDecision || 'Unknown')}
-                        </span>
-                      </div>
-                    )}
-
-                    <div style={{ color: '#e2e8f0', fontSize: '0.9rem', fontStyle: 'italic', background: '#1a1a24', padding: '8px', borderRadius: '4px', marginBottom: '8px' }}>
-                      <span style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>QUESTION</span>
-                      "{rq.questionText}"
-                    </div>
-                    {rq.answerText ? (
-                      <div style={{ color: '#e2e8f0', fontSize: '0.9rem', background: '#1a1a24', padding: '8px', borderRadius: '4px' }}>
-                        <span style={{ color: '#38bdf8', fontSize: '0.75rem', fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>ANSWER</span>
-                        {rq.answerText}
-                      </div>
-                    ) : (
-                      <div style={{ color: '#64748b', fontSize: '0.8rem', fontStyle: 'italic' }}>No answer provided.</div>
-                    )}
-                  </div>
-                ))
-              ) : (
-                <div style={{ color: '#64748b', textAlign: 'center', padding: '24px' }}>No refunds issued till now.</div>
-              )}
-            </div>
-
-            <button 
-              onClick={() => setShowRefundsModal(false)}
+              onClick={() => setShowMissedChatsModal(false)}
               style={{ background: '#2A2A35', color: '#fff', border: 'none', padding: '12px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', marginTop: '8px' }}
             >
               Close

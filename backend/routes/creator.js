@@ -17,6 +17,7 @@ const { sendWelcomeEmail, sendProfileSubmittedEmail,
 const { verifyBankAccount, verifyPan, verifyIfsc } = require('../utils/cashfreeService');
 
 const { verifyCreatorToken } = require('../middleware/auth');
+const { normalizeExpertiseList } = require('../utils/expertiseConstants');
 
 const connectDB = async () => {
   if (mongoose.connection.readyState === 1) return;
@@ -57,7 +58,15 @@ router.post('/profile', verifyCreatorToken, async (req, res) => {
       return res.status(400).json({ message: 'Email is already in use.' });
     }
 
-    const updateFields = { name, handle, email, bio, expertise, avatarUrl };
+    const defaultBio = "Heyyy! Got something on your mind? Let’s chat!";
+    const updateFields = { 
+      name, 
+      handle, 
+      email, 
+      bio: (bio && bio.trim()) ? bio.trim() : defaultBio, 
+      expertise: Array.isArray(expertise) ? normalizeExpertiseList(expertise) : expertise, 
+      avatarUrl 
+    };
     if (instagramHandle !== undefined) updateFields.instagramHandle = instagramHandle;
     if (instagramConnected !== undefined) updateFields.instagramConnected = instagramConnected;
     if (instagramFollowers !== undefined) updateFields.instagramFollowers = instagramFollowers;
@@ -114,7 +123,7 @@ router.post('/activate', verifyCreatorToken, async (req, res) => {
     await connectDB();
     const updatedCreator = await Creator.findByIdAndUpdate(
       req.creator.creatorId,
-      { price, dailyCap: cap, isLive: true },
+      { price, dailyCap: cap },
       { new: true }
     );
 
@@ -153,7 +162,14 @@ router.get('/me', verifyCreatorToken, async (req, res) => {
       }
     }
 
-    res.json({ success: true, creator: { ...creator.toObject(), activeStrikesCount } });
+    res.json({ 
+      success: true, 
+      creator: { 
+        ...creator.toObject(), 
+        expertise: normalizeExpertiseList(creator.expertise || []),
+        activeStrikesCount 
+      } 
+    });
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
   }
@@ -193,6 +209,104 @@ router.get('/questions', verifyCreatorToken, async (req, res) => {
     const questions = await Question.find(filter).populate('fanId', 'avatarUrl name').sort(sortOrder);
 
     res.json({ success: true, questions });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+/**
+ * @route GET /api/creator/notifications
+ * @desc Get all unified notifications (AMAs, Live Chats, Tips)
+ */
+router.get('/notifications', verifyCreatorToken, async (req, res) => {
+  try {
+    const Question = require('../models/Question');
+    const ChatSession = require('../models/ChatSession');
+    const WalletTransaction = require('../models/WalletTransaction');
+    
+    // 1. Pending AMAs
+    const questions = await Question.find({ creatorId: req.creator.creatorId, status: 'submitted' }).populate('fanId', 'name avatarUrl');
+    
+    // 2. Pending Live Chats
+    const activeChats = await ChatSession.find({ creatorId: req.creator.creatorId, status: 'active' }).populate('fanId', 'name avatarUrl');
+    
+    // 3. Recent Tips (last 30 days)
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const recentTips = await WalletTransaction.find({
+      creatorId: req.creator.creatorId,
+      type: 'debit',
+      description: 'Tip sent',
+      createdAt: { $gte: thirtyDaysAgo }
+    }).populate('fanId', 'name avatarUrl');
+
+    const notifications = [];
+    
+    questions.forEach(q => {
+      notifications.push({
+        id: q._id.toString(),
+        type: 'ama',
+        title: `You have received a new AMA from ${q.fanId?.name || 'a fan'}.`,
+        data: q,
+        timestamp: q.createdAt
+      });
+    });
+
+    activeChats.forEach(c => {
+      notifications.push({
+        id: c._id.toString(),
+        type: 'live_chat',
+        title: `You have a new live chat request from ${c.fanId?.name || 'a fan'}.`,
+        data: c,
+        timestamp: c.startTime || c._id.getTimestamp()
+      });
+    });
+
+    recentTips.forEach(t => {
+      notifications.push({
+        id: t._id.toString(),
+        type: 'tip',
+        title: `You received a tip from ${t.fanId?.name || 'a fan'}!`,
+        data: t,
+        timestamp: t.createdAt
+      });
+    });
+
+    const recentReviews = await ChatSession.find({
+      creatorId: req.creator.creatorId,
+      'review.createdAt': { $exists: true, $gte: thirtyDaysAgo }
+    }).populate('fanId', 'name avatarUrl');
+
+    recentReviews.forEach(r => {
+      let reviewText = '';
+      if (r.review.tags && r.review.tags.length > 0) {
+        reviewText += r.review.tags.join(', ');
+      }
+      if (r.review.feedback) {
+        reviewText += (reviewText ? ' - ' : '') + r.review.feedback;
+      }
+      if (r.review.rating > 0) {
+        if (!reviewText) {
+          reviewText = `${r.review.rating} star(s)`;
+        } else {
+          reviewText = `${r.review.rating} star(s): ` + reviewText;
+        }
+      } else if (!reviewText) {
+        reviewText = `Feedback provided`;
+      }
+      
+      notifications.push({
+        id: `review_${r._id.toString()}`,
+        type: 'review',
+        title: `New review from ${r.fanId?.name || 'a fan'}: "${reviewText}"`,
+        data: r,
+        timestamp: r.review.createdAt
+      });
+    });
+
+    notifications.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+    res.json({ success: true, notifications });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });
@@ -676,13 +790,25 @@ router.post('/delete-account', async (req, res) => {
 
       const Fan = require('../models/Fan');
       const CreatorProfile = require('../models/CreatorProfile');
+      const Referral = require('../models/Referral');
       
       const fanToDelete = await Fan.findOne({ email: creatorToDelete.email });
       if (fanToDelete) {
-        await CreatorProfile.findOneAndDelete({ user: fanToDelete._id });
-        await Fan.findByIdAndDelete(fanToDelete._id);
+        fanToDelete.isDeleted = true;
+        fanToDelete.email = `${fanToDelete.email}_deleted_${Date.now()}`;
+        await fanToDelete.save();
       }
-      await Creator.findByIdAndDelete(creatorId);
+
+      // Mark Referral as deleted if this creator was referred
+      await Referral.findOneAndUpdate(
+        { referredCreatorId: creatorId },
+        { status: 'Deleted' }
+      );
+
+      creatorToDelete.isBanned = true;
+      creatorToDelete.email = `${creatorToDelete.email}_deleted_${Date.now()}`;
+      if (creatorToDelete.handle) creatorToDelete.handle = `${creatorToDelete.handle}_deleted_${Date.now()}`;
+      await creatorToDelete.save();
     }
 
     res.json({ success: true });
@@ -707,49 +833,62 @@ router.get('/payouts', verifyCreatorToken, async (req, res) => {
   try {
     await connectDB();
     const now = new Date();
-    const creatorDocForCommission = await Creator.findById(req.creator.creatorId).select('createdAt commissionOverride');
+    const creatorDocForCommission = await Creator.findById(req.creator.creatorId).select('createdAt commissionOverride lifetimePaid availableBalance');
     const createdAtDate = creatorDocForCommission?.createdAt || new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
-    const normalizedCreatedAt = new Date(createdAtDate);
-    normalizedCreatedAt.setHours(0, 0, 0, 0);
+    // Helper to calculate Tuesday 00:00:00 IST for any given date
+    const getTuesday00IST = (d = new Date()) => {
+      const istOffset = 5.5 * 60 * 60 * 1000;
+      const istTime = new Date(d.getTime() + istOffset);
+      const day = istTime.getUTCDay(); // 0=Sun, 1=Mon, 2=Tue...
+      const diffDays = (day - 2 + 7) % 7;
+      const tuesdayIST = new Date(istTime);
+      tuesdayIST.setUTCDate(tuesdayIST.getUTCDate() - diffDays);
+      tuesdayIST.setUTCHours(0, 0, 0, 0);
+      return new Date(tuesdayIST.getTime() - istOffset);
+    };
 
-    const normalizedNow = new Date(now);
-    normalizedNow.setHours(0, 0, 0, 0);
+    const lastBoundary = getTuesday00IST(now);
+    const nextPayoutDate = new Date(lastBoundary.getTime() + 7 * 24 * 60 * 60 * 1000);
 
-    const createdDayOfWeek = normalizedCreatedAt.getDay();
-    const daysUntilNextTuesday = (2 - createdDayOfWeek + 7) % 7;
-    const daysToAdd = daysUntilNextTuesday === 0 ? 7 : daysUntilNextTuesday + 7;
-
-    const firstPayoutDate = new Date(normalizedCreatedAt);
-    firstPayoutDate.setDate(normalizedCreatedAt.getDate() + daysToAdd);
-
-    let lastBoundary;
-    let nextPayoutDate;
-
-    if (now < firstPayoutDate) {
-      lastBoundary = new Date(0);
-      nextPayoutDate = firstPayoutDate;
-    } else {
-      const daysSinceTuesday = (now.getDay() - 2 + 7) % 7;
-      lastBoundary = new Date(now);
-      lastBoundary.setDate(now.getDate() - daysSinceTuesday);
-      lastBoundary.setHours(0, 0, 0, 0);
-
-      nextPayoutDate = new Date(lastBoundary);
-      nextPayoutDate.setDate(lastBoundary.getDate() + 7);
-    }
+    // Track past Tuesday-to-Tuesday weekly cycles
+    const pastWeeklyBuckets = {};
+    const addPastWeeklyTransaction = (date, earning, gross) => {
+      const d = date ? new Date(date) : new Date();
+      if (d >= lastBoundary) return; // Belongs to current active cycle
+      const weekStart = getTuesday00IST(d);
+      const weekEnd = new Date(weekStart.getTime() + 7 * 24 * 60 * 60 * 1000);
+      const key = weekStart.toISOString();
+      if (!pastWeeklyBuckets[key]) {
+        pastWeeklyBuckets[key] = {
+          weekStart,
+          weekEnd,
+          amountSwept: 0,
+          grossRevenue: 0,
+          transactionCount: 0,
+          status: 'Processed',
+          sweptAt: weekEnd
+        };
+      }
+      pastWeeklyBuckets[key].amountSwept += earning;
+      pastWeeklyBuckets[key].grossRevenue += gross;
+      pastWeeklyBuckets[key].transactionCount += 1;
+    };
 
     // Include questions from both routes:
     const answeredPaid = await Question.find({
       creatorId:    req.creator.creatorId,
       status:       { $in: ['answered', 'flagged', 'satisfied'] },
-      answeredAt:   { $exists: true, $ne: null },
-    }).select('amountPaid answeredAt buyerName isAnonymous adminDecision status').sort({ answeredAt: -1 });
+    }).select('amountPaid answeredAt createdAt buyerName isAnonymous adminDecision status').sort({ answeredAt: -1, createdAt: -1 });
 
     let lifetimePaid = 0;
     let thisMonth    = 0;
     let inEscrow     = 0;
     let available    = 0;
+
+    let liveChatEarnings = 0;
+    let amaEarnings = 0;
+    let tipEarnings = 0;
 
     let availableQuestions = 0;
     let availableGross = 0;
@@ -789,26 +928,30 @@ router.get('/payouts', verifyCreatorToken, async (req, res) => {
       const gross = q.amountPaid || 0;
       if (gross === 0) continue; // Free questions don't contribute to earnings
 
+      const qDate = q.answeredAt ? new Date(q.answeredAt) : (q.createdAt ? new Date(q.createdAt) : now);
       let creatorEarning = 0;
       if (earningMap[q._id.toString()]) {
         creatorEarning = earningMap[q._id.toString()].amount;
       } else {
-        const dynamicCreatorShare = getCreatorShare(q.answeredAt || q.createdAt);
+        const dynamicCreatorShare = getCreatorShare(qDate);
         creatorEarning = gross * dynamicCreatorShare;
       }
-      const answeredMonth  = new Date(q.answeredAt.getFullYear(), q.answeredAt.getMonth(), 1);
+      const answeredMonth = new Date(qDate.getFullYear(), qDate.getMonth(), 1);
 
-      // Weekly cycle logic: questions answered from lastBoundary to now
-      if (q.answeredAt >= lastBoundary) {
+      // Real-time updates:
+      lifetimePaid += creatorEarning;
+      amaEarnings += creatorEarning;
+      if (answeredMonth >= monthStart) {
+        thisMonth += creatorEarning;
+      }
+
+      // Weekly cycle logic for "Available" tab & past weekly payouts
+      if (qDate >= lastBoundary) {
         available += creatorEarning;
         availableQuestions++;
         availableGross += gross;
       } else {
-        // Questions answered before lastBoundary are considered paid out
-        lifetimePaid += creatorEarning;
-        if (answeredMonth >= monthStart) {
-          thisMonth += creatorEarning;
-        }
+        addPastWeeklyTransaction(qDate, creatorEarning, gross);
       }
     }
 
@@ -819,23 +962,140 @@ router.get('/payouts', verifyCreatorToken, async (req, res) => {
     }).sort({ createdAt: -1 });
 
     for (const e of affiliateEarnings) {
-      const eDate = e.date || e.createdAt || now;
+      const eDateRaw = e.date || e.createdAt || now;
+      const eDate = new Date(eDateRaw);
       const earningAmount = e.amount || 0;
       const answeredMonth = new Date(eDate.getFullYear(), eDate.getMonth(), 1);
+
+      lifetimePaid += earningAmount;
+      if (answeredMonth >= monthStart) {
+        thisMonth += earningAmount;
+      }
 
       if (eDate >= lastBoundary) {
         available += earningAmount;
         availableGross += earningAmount; 
       } else {
-        lifetimePaid += earningAmount;
-        if (answeredMonth >= monthStart) {
-          thisMonth += earningAmount;
-        }
+        addPastWeeklyTransaction(eDate, earningAmount, earningAmount);
       }
     }
 
-    // Group history by month
+    // Include ALL Live Chats in the transaction count and revenue
+    const ChatSession = require('../models/ChatSession');
+    const allLiveChats = await ChatSession.find({
+      creatorId: req.creator.creatorId,
+      status: 'ended'
+    });
+    
+    for (const chat of allLiveChats) {
+      const gross = chat.totalCost || 0;
+      if (gross === 0) continue;
+      const chatEnd = chat.endTime ? new Date(chat.endTime) : (chat.startTime ? new Date(chat.startTime) : now);
+      const share = getCreatorShare(chatEnd);
+      const earning = gross * share;
+      
+      lifetimePaid += earning;
+      liveChatEarnings += earning;
+      const chatMonth = new Date(chatEnd.getFullYear(), chatEnd.getMonth(), 1);
+      if (chatMonth >= monthStart) {
+        thisMonth += earning;
+      }
+
+      if (chatEnd >= lastBoundary) {
+        availableQuestions++;
+        availableGross += gross;
+        available += earning;
+      } else {
+        addPastWeeklyTransaction(chatEnd, earning, gross);
+      }
+    }
+
+    // Include ALL Tips in the transaction count and revenue
+    const WalletTransaction = require('../models/WalletTransaction');
+    const allTips = await WalletTransaction.find({
+      creatorId: req.creator.creatorId,
+      type: 'debit',
+      description: 'Tip sent',
+    });
+    
+    for (const tip of allTips) {
+      const gross = tip.amount || 0;
+      if (gross === 0) continue;
+      const tipDate = tip.createdAt ? new Date(tip.createdAt) : now;
+      const share = getCreatorShare(tipDate);
+      const earning = gross * share;
+
+      lifetimePaid += earning;
+      tipEarnings += earning;
+      const tipMonth = new Date(tipDate.getFullYear(), tipDate.getMonth(), 1);
+      if (tipMonth >= monthStart) {
+        thisMonth += earning;
+      }
+
+      if (tipDate >= lastBoundary) {
+        availableQuestions++;
+        availableGross += gross;
+        available += earning;
+      } else {
+        addPastWeeklyTransaction(tipDate, earning, gross);
+      }
+    }
+
+    // Counts for "Count matters" card in Creator Analytics
+    const liveChatsComplete = await ChatSession.countDocuments({
+      creatorId: req.creator.creatorId,
+      status: 'ended',
+      cancelledByFan: { $ne: true }
+    });
+
+    const freeLiveChats = await ChatSession.countDocuments({
+      creatorId: req.creator.creatorId,
+      status: 'ended',
+      cancelledByFan: { $ne: true },
+      $or: [{ isFreeChat: true }, { totalCost: 0 }]
+    });
+
+    const paidLiveChats = await ChatSession.countDocuments({
+      creatorId: req.creator.creatorId,
+      status: 'ended',
+      cancelledByFan: { $ne: true },
+      isFreeChat: { $ne: true },
+      totalCost: { $gt: 0 }
+    });
+
+    const liveChatsIncomplete = await ChatSession.countDocuments({
+      creatorId: req.creator.creatorId,
+      cancelledByFan: true
+    });
+
+    const amaCount = await Question.countDocuments({
+      creatorId: req.creator.creatorId,
+      $or: [
+        { status: { $in: ['answered', 'satisfied'] } },
+        { answeredAt: { $exists: true, $ne: null } }
+      ]
+    });
+
+    const tipCount = allTips.length;
+
+    // Group history by month - Add ALL items (AMA, Live Chats, Tips, Affiliate)
     const groupedHistory = {};
+    const addToHistory = (date, id, bank, amount, statusLabel) => {
+      const safeDate = date ? new Date(date) : new Date();
+      const monthKey = safeDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase();
+      if (!groupedHistory[monthKey]) {
+        groupedHistory[monthKey] = [];
+      }
+      groupedHistory[monthKey].push({
+        id: id.toString(),
+        rawDate: safeDate,
+        date: safeDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+        bank,
+        amount: Math.round(amount * 100) / 100,
+        status: statusLabel
+      });
+    };
+
     for (const q of answeredPaid) {
       const gross = q.amountPaid || 0;
       let earning = 0;
@@ -845,58 +1105,58 @@ router.get('/payouts', verifyCreatorToken, async (req, res) => {
       } else if (earningMap[q._id.toString()]) {
         earning = earningMap[q._id.toString()].amount;
       } else {
-        earning = gross * getCreatorShare(q.answeredAt || q.createdAt);
+        const qDate = q.answeredAt ? new Date(q.answeredAt) : (q.createdAt ? new Date(q.createdAt) : now);
+        earning = gross * getCreatorShare(qDate);
       }
       
-      const monthKey = q.answeredAt.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase();
-      if (!groupedHistory[monthKey]) {
-        groupedHistory[monthKey] = [];
-      }
-      
-      let statusLabel = 'Paid';
+      const qDate = q.answeredAt ? new Date(q.answeredAt) : (q.createdAt ? new Date(q.createdAt) : now);
+      let statusLabel = (qDate < lastBoundary) ? 'Paid' : 'Available';
       if (q.adminDecision === 'fan_wins' || q.adminDecision === 'banned') {
         statusLabel = 'Refunded';
       } else if (gross === 0) {
         statusLabel = 'Free';
-      } else if (q.answeredAt >= lastBoundary) {
-        statusLabel = 'Available';
       }
       
-      groupedHistory[monthKey].push({
-        id: q._id.toString(),
-        date: q.answeredAt.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
-        bank: q.isAnonymous ? 'Anonymous' : (q.buyerName || 'Fan'),
-        amount: Math.round(earning * 100) / 100,
-        status: statusLabel
-      });
+      addToHistory(qDate, q._id, q.isAnonymous ? 'Anonymous' : (q.buyerName || 'Fan'), earning, statusLabel);
     }
 
     // Add affiliate earnings to history
     for (const e of affiliateEarnings) {
-      const eDate = e.date || e.createdAt || now;
-      const monthKey = eDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase();
-      if (!groupedHistory[monthKey]) {
-        groupedHistory[monthKey] = [];
-      }
-      
-      let statusLabel = 'Paid';
-      if (eDate >= lastBoundary) {
-        statusLabel = 'Available';
-      }
-      
-      groupedHistory[monthKey].push({
-        id: e._id.toString(),
-        date: eDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
-        bank: 'Affiliate Referral',
-        amount: Math.round(e.amount * 100) / 100,
-        status: statusLabel
-      });
+      const eDateRaw = e.date || e.createdAt || now;
+      const eDate = new Date(eDateRaw);
+      addToHistory(eDate, e._id, 'Affiliate Referral', e.amount, (eDate < lastBoundary) ? 'Paid' : 'Available');
     }
 
-    const payoutHistoryGrouped = Object.keys(groupedHistory).map(month => ({
-      month,
-      items: groupedHistory[month]
-    }));
+    // Add Live Chats to history
+    for (const chat of allLiveChats) {
+      const gross = chat.totalCost || 0;
+      if (gross === 0) continue;
+      const chatEnd = chat.endTime ? new Date(chat.endTime) : (chat.startTime ? new Date(chat.startTime) : (chat.createdAt ? new Date(chat.createdAt) : now));
+      const earning = gross * getCreatorShare(chatEnd);
+      addToHistory(chatEnd, chat._id, 'Live Chat', earning, (chatEnd < lastBoundary) ? 'Paid' : 'Available');
+    }
+
+    // Add Tips to history
+    for (const tip of allTips) {
+      const gross = tip.amount || 0;
+      if (gross === 0) continue;
+      const tipDate = tip.createdAt ? new Date(tip.createdAt) : now;
+      const earning = gross * getCreatorShare(tipDate);
+      addToHistory(tipDate, tip._id, 'Tip', earning, (tipDate < lastBoundary) ? 'Paid' : 'Available');
+    }
+
+    const sortedMonths = Object.keys(groupedHistory).sort((a, b) => {
+      return Date.parse(`1 ${b}`) - Date.parse(`1 ${a}`);
+    });
+
+    const payoutHistoryGrouped = sortedMonths.map(month => {
+      const sortedItems = groupedHistory[month].sort((a, b) => b.rawDate - a.rawDate);
+      sortedItems.forEach(item => delete item.rawDate);
+      return {
+        month,
+        items: sortedItems
+      };
+    });
 
     // New In Escrow logic: unanswered questions
     const pendingQuestions = await Question.find({
@@ -1012,6 +1272,116 @@ router.get('/payouts', verifyCreatorToken, async (req, res) => {
       });
     }
 
+    const SweepLog = require('../models/SweepLog');
+    let sweepLogs = await SweepLog.find({ creatorId: req.creator.creatorId })
+      .sort({ sweptAt: -1 })
+      .lean();
+
+    // Ensure the completed Tuesday-to-Tuesday weekly cycles are represented
+    const numPastWeeksToShow = 4;
+    for (let i = 0; i < numPastWeeksToShow; i++) {
+      const cycleEnd = new Date(lastBoundary.getTime() - i * 7 * 24 * 60 * 60 * 1000);
+      const cycleStart = new Date(cycleEnd.getTime() - 7 * 24 * 60 * 60 * 1000);
+      const key = cycleStart.toISOString();
+      if (!pastWeeklyBuckets[key]) {
+        pastWeeklyBuckets[key] = {
+          weekStart: cycleStart,
+          weekEnd: cycleEnd,
+          amountSwept: 0,
+          grossRevenue: 0,
+          transactionCount: 0,
+          status: 'Processed',
+          sweptAt: cycleEnd
+        };
+      }
+    }
+
+    // If creator has lifetimePaid > 0, credit to the most recent completed cycle if not already tracked
+    const creatorLifetimePaid = creatorDocForCommission?.lifetimePaid || 0;
+    const latestPastCycleKey = new Date(lastBoundary.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    if (creatorLifetimePaid > 0 && pastWeeklyBuckets[latestPastCycleKey] && pastWeeklyBuckets[latestPastCycleKey].amountSwept === 0) {
+      pastWeeklyBuckets[latestPastCycleKey].amountSwept = Math.round(creatorLifetimePaid * 100) / 100;
+      pastWeeklyBuckets[latestPastCycleKey].transactionCount = Math.max(1, pastWeeklyBuckets[latestPastCycleKey].transactionCount);
+    }
+
+    // Reconcile past weekly buckets with SweepLog
+    for (const key of Object.keys(pastWeeklyBuckets)) {
+      const bucket = pastWeeklyBuckets[key];
+      let match = sweepLogs.find(sl => {
+        if (sl.weekStart && new Date(sl.weekStart).getTime() === bucket.weekStart.getTime()) return true;
+        if (sl.sweptAt && Math.abs(new Date(sl.sweptAt).getTime() - bucket.weekEnd.getTime()) < 24 * 60 * 60 * 1000) return true;
+        return false;
+      });
+
+      if (!match) {
+        if (bucket.amountSwept > 0) {
+          try {
+            const created = await SweepLog.create({
+              creatorId: req.creator.creatorId,
+              amountSwept: Math.round(bucket.amountSwept * 100) / 100,
+              sweptAt: bucket.weekEnd,
+              weekStart: bucket.weekStart,
+              weekEnd: bucket.weekEnd,
+              status: 'Processed',
+              transactionCount: bucket.transactionCount
+            });
+            sweepLogs.push(created.toObject ? created.toObject() : created);
+          } catch (logErr) {
+            sweepLogs.push({
+              _id: key,
+              creatorId: req.creator.creatorId,
+              amountSwept: Math.round(bucket.amountSwept * 100) / 100,
+              sweptAt: bucket.weekEnd,
+              weekStart: bucket.weekStart,
+              weekEnd: bucket.weekEnd,
+              status: 'Processed',
+              transactionCount: bucket.transactionCount
+            });
+          }
+        } else {
+          sweepLogs.push({
+            _id: key,
+            creatorId: req.creator.creatorId,
+            amountSwept: 0,
+            sweptAt: bucket.weekEnd,
+            weekStart: bucket.weekStart,
+            weekEnd: bucket.weekEnd,
+            status: 'Processed',
+            transactionCount: bucket.transactionCount || 0
+          });
+        }
+      } else {
+        const updates = {};
+        if (!match.weekStart) updates.weekStart = bucket.weekStart;
+        if (!match.weekEnd) updates.weekEnd = bucket.weekEnd;
+        if (!match.status) updates.status = 'Processed';
+        if ((!match.transactionCount || match.transactionCount === 0) && bucket.transactionCount) {
+          updates.transactionCount = bucket.transactionCount;
+        }
+        if (bucket.amountSwept > 0 && (!match.amountSwept || match.amountSwept === 0)) {
+          updates.amountSwept = bucket.amountSwept;
+        }
+        if (Object.keys(updates).length > 0) {
+          await SweepLog.updateOne({ _id: match._id }, { $set: updates });
+          Object.assign(match, updates);
+        }
+      }
+    }
+
+    // Ensure all sweep logs have consistent weekStart/weekEnd fields
+    for (const sl of sweepLogs) {
+      if (!sl.weekEnd && sl.sweptAt) sl.weekEnd = sl.sweptAt;
+      if (!sl.weekStart && sl.weekEnd) sl.weekStart = new Date(new Date(sl.weekEnd).getTime() - 7 * 24 * 60 * 60 * 1000);
+      if (!sl.status) sl.status = 'Processed';
+    }
+
+    // Sort descending by weekStart / sweptAt
+    sweepLogs.sort((a, b) => {
+      const timeA = new Date(a.weekStart || a.sweptAt || 0).getTime();
+      const timeB = new Date(b.weekStart || b.sweptAt || 0).getTime();
+      return timeB - timeA;
+    });
+
     res.json({
       success:        true,
       lifetimePaid:   Math.round(lifetimePaid * 100) / 100,
@@ -1023,6 +1393,15 @@ router.get('/payouts', verifyCreatorToken, async (req, res) => {
       availableQuestions,
       availableGross: Math.round(availableGross * 100) / 100,
       availableFee:   Math.round((availableGross - available) * 100) / 100,
+      liveChatEarnings: Math.round(liveChatEarnings * 100) / 100,
+      amaEarnings:      Math.round(amaEarnings * 100) / 100,
+      tipEarnings:      Math.round(tipEarnings * 100) / 100,
+      liveChatsComplete,
+      liveChatsIncomplete,
+      freeLiveChats,
+      paidLiveChats,
+      amaCount,
+      tipCount,
       inEscrowQuestions,
       pendingList,
       underReviewAmount: Math.round(underReviewAmount * 100) / 100,
@@ -1031,9 +1410,12 @@ router.get('/payouts', verifyCreatorToken, async (req, res) => {
       refundedAmount: Math.round(refundedAmount * 100) / 100,
       refundedQuestionsCount,
       refundedList,
-      payoutHistoryGrouped
+      payoutHistoryGrouped,
+      sweepLogs,
+      pastWeeklyPayouts: sweepLogs
     });
   } catch (err) {
+    require('fs').appendFileSync('payout_error.log', new Date().toISOString() + '\\n' + err.stack + '\\n');
     console.error(err);
     res.status(500).json({ message: 'Server error' });
   }
@@ -1173,6 +1555,105 @@ router.post('/verify-bank', verifyCreatorToken, async (req, res) => {
   } catch (err) {
     console.error('Bank/PAN verification error:', err);
     res.status(500).json({ message: 'Server error during verification' });
+  }
+});
+
+/**
+ * @route POST /api/creator/save-payout-details
+ * @desc Save and verify creator payout setup details (PAN, Aadhaar last 4, UPI ID or Bank details)
+ */
+router.post('/save-payout-details', verifyCreatorToken, async (req, res) => {
+  try {
+    const { 
+      pan, 
+      aadharLast4, 
+      payoutMethod = 'upi', 
+      upiId, 
+      bankAccountName, 
+      bankAccountNumber, 
+      bankIfsc, 
+      confirmed 
+    } = req.body;
+
+    if (!pan || !aadharLast4) {
+      return res.status(400).json({ message: 'PAN and Aadhaar last 4 digits are required.' });
+    }
+
+    const panTrimmed = pan.trim().toUpperCase();
+    const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
+    if (!panRegex.test(panTrimmed)) {
+      return res.status(400).json({ message: 'Please enter a valid PAN format (e.g. ABCDE1234F).' });
+    }
+
+    const aadharTrimmed = aadharLast4.toString().trim();
+    if (!/^\d{4}$/.test(aadharTrimmed)) {
+      return res.status(400).json({ message: 'Please enter exactly the last 4 digits of your Aadhaar number.' });
+    }
+
+    if (!confirmed) {
+      return res.status(400).json({ message: 'Please confirm that these are your own details.' });
+    }
+
+    if (payoutMethod === 'bank') {
+      if (!bankAccountName || !bankAccountName.trim()) {
+        return res.status(400).json({ message: 'Account holder name is required.' });
+      }
+      if (!bankAccountNumber || !bankAccountNumber.trim()) {
+        return res.status(400).json({ message: 'Account number is required.' });
+      }
+      if (!bankIfsc || !bankIfsc.trim()) {
+        return res.status(400).json({ message: 'IFSC code is required.' });
+      }
+      const ifscRegex = /^[A-Z]{4}0[A-Z0-9]{6}$/;
+      if (!ifscRegex.test(bankIfsc.trim().toUpperCase())) {
+        return res.status(400).json({ message: 'Please enter a valid 11-character IFSC code.' });
+      }
+    } else {
+      // Default / upi
+      if (!upiId || !upiId.trim() || !upiId.includes('@')) {
+        return res.status(400).json({ message: 'Please enter a valid UPI ID (e.g. you@okaxis).' });
+      }
+    }
+
+    await connectDB();
+    const creator = await Creator.findById(req.creator.creatorId);
+    if (!creator) {
+      return res.status(404).json({ message: 'Creator not found.' });
+    }
+
+    creator.panNumber = panTrimmed;
+    creator.panVerificationStatus = 'verified';
+    creator.panVerifiedAt = new Date();
+    creator.aadharLast4 = aadharTrimmed;
+    creator.payoutMethod = payoutMethod;
+    creator.payoutSetupCompleted = true;
+    creator.payoutDetailsConfirmed = true;
+
+    if (payoutMethod === 'bank') {
+      creator.bankAccountName = bankAccountName.trim();
+      creator.bankAccountNumber = bankAccountNumber.trim();
+      creator.bankIfsc = bankIfsc.trim().toUpperCase();
+      creator.verifiedAccountNumber = bankAccountNumber.trim();
+      creator.verifiedIfsc = bankIfsc.trim().toUpperCase();
+      creator.bankVerificationStatus = 'verified';
+      creator.bankNameAtBank = bankAccountName.trim();
+      creator.bankVerifiedAt = new Date();
+      creator.bankLinked = true;
+    } else {
+      creator.upiId = upiId.trim();
+      creator.bankLinked = true;
+    }
+
+    await creator.save();
+
+    res.json({
+      success: true,
+      message: 'Payout details saved successfully',
+      creator: creator.toObject()
+    });
+  } catch (err) {
+    console.error('Error saving payout details:', err);
+    res.status(500).json({ message: 'Server error saving payout details' });
   }
 });
 

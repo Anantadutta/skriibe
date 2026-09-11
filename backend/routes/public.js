@@ -6,6 +6,7 @@ const router = express.Router();
 const mongoose = require('mongoose');
 const Creator = require('../models/Creator');
 const Question = require('../models/Question');
+const { normalizeExpertiseList, EXPERTISE_MAPPING } = require('../utils/expertiseConstants');
 
 router.get('/debug-questions', async (req, res) => {
   try {
@@ -30,7 +31,7 @@ router.get('/creator/:handle', async (req, res) => {
       handle = handle.substring(1);
     }
     const creator = await Creator.findOne({ handle: new RegExp(`^${handle}$`, 'i') }).select(
-      'name handle avatarUrl bio expertise stats instagramHandle instagramFollowers price pricePerQuestion responseTime questionsAnswered instagramConnected isLive isPaused'
+      'name handle avatarUrl bio expertise stats instagramHandle instagramFollowers price pricePerQuestion responseTime questionsAnswered instagramConnected isLive isPaused liveChatEnabled liveChatPrice liveChatTimeSlots ama_enabled'
     );
     if (!creator) {
       return res.status(404).json({ success: false, message: 'Creator not found' });
@@ -44,7 +45,7 @@ router.get('/creator/:handle', async (req, res) => {
         handle: creator.handle,
         avatarUrl: creator.avatarUrl,
         bio: creator.bio || '',
-        expertise: creator.expertise || [],
+        expertise: normalizeExpertiseList(creator.expertise || []),
         stats: {
           ...(creator.stats || { replyRate: 100, avgReplyTime: 0 }),
           totalAnswered: answeredCount
@@ -58,6 +59,10 @@ router.get('/creator/:handle', async (req, res) => {
         instagramLinked: creator.instagramConnected,
         isLive: creator.isLive,
         isPaused: creator.isPaused || false,
+        liveChatEnabled: creator.liveChatEnabled || false,
+        liveChatPrice: creator.liveChatPrice || 5,
+        liveChatTimeSlots: creator.liveChatTimeSlots || [],
+        ama_enabled: creator.ama_enabled
       },
     });
   } catch (err) {
@@ -72,9 +77,7 @@ router.get('/creators', async (req, res) => {
   try {
     const { live, category, search } = req.query;
     let query = { 
-      isPaused: { $ne: true },
       isBanned: { $ne: true },
-      ama_enabled: true,
       handle: { $exists: true, $nin: [null, ''] },
       name: { $exists: true, $nin: [null, ''] },
       $or: [
@@ -84,30 +87,95 @@ router.get('/creators', async (req, res) => {
       ]
     };
     const PREDEFINED_CATEGORIES = [
-      'Career & Finance', 'Health & Fitness', 'Tech & Skills', 
-      'Fashion & Lifestyle', 'Entertainment', 
-      'Education', 'Entrepreneurship', 'Relationships', 
-      'Spirituality'
+      'Lifestyle', 'Beauty', 'Fitness', 'Finance', 'Tech',
+      'Entrepreneurship', 'Education', 'Motivation', 'Dating',
+      'Food', 'Travel', 'Music', 'Gaming', 'Comedy'
     ];
     
     if (live === 'true') query.isLive = true;
     if (category === 'Others') {
-      query.expertise = { $elemMatch: { $nin: PREDEFINED_CATEGORIES } };
-    } else if (category) {
-      query.expertise = category;
+      const allKnown = new Set([
+        ...PREDEFINED_CATEGORIES.map(c => c.toLowerCase()),
+        ...Object.keys(EXPERTISE_MAPPING)
+      ]);
+      query.expertise = { $elemMatch: { $nin: Array.from(allKnown).map(k => new RegExp(`^${k}$`, 'i')) } };
+    } else if (category && category !== 'All Categories' && category !== 'All') {
+      const aliases = Object.entries(EXPERTISE_MAPPING)
+        .filter(([k, v]) => v.toLowerCase() === category.toLowerCase())
+        .map(([k]) => new RegExp(`^${k}$`, 'i'));
+      query.expertise = { $in: [category, ...aliases] };
     }
     
     if (search) {
       const cleanSearch = search.replace(/^@/, '');
-      query.$or = [
+      const lowerSearch = cleanSearch.toLowerCase();
+      
+      const searchKeywordsMapping = {
+        'entrepreneur': 'Entrepreneurship',
+        'startup': 'Entrepreneurship',
+        'founder': 'Entrepreneurship',
+        'startups': 'Entrepreneurship',
+        'money': 'Finance',
+        'investing': 'Finance',
+        'investment': 'Finance',
+        'wealth': 'Finance',
+        'workout': 'Fitness',
+        'gym': 'Fitness',
+        'health': 'Fitness',
+        'skincare': 'Beauty',
+        'makeup': 'Beauty',
+        'recipes': ['Cooking', 'Food'],
+        'chef': ['Cooking', 'Food'],
+        'restaurants': 'Food',
+        'holidays': 'Travel',
+        'trips': 'Travel',
+        'songs': 'Music',
+        'singer': 'Music',
+        'games': 'Gaming',
+        'gamer': 'Gaming',
+        'jokes': 'Comedy',
+        'relationships': 'Dating',
+        'love': 'Dating',
+        'study': 'Education',
+        'learning': 'Education',
+        'inspiration': 'Motivation',
+        'self-help': 'Motivation'
+      };
+
+      const matchedExpertises = [];
+      for (const [key, value] of Object.entries(searchKeywordsMapping)) {
+        if (lowerSearch.includes(key)) {
+          if (Array.isArray(value)) {
+            matchedExpertises.push(...value);
+          } else {
+            matchedExpertises.push(value);
+          }
+        }
+      }
+
+      const orConditions = [
         { name: { $regex: cleanSearch, $options: 'i' } },
         { handle: { $regex: cleanSearch, $options: 'i' } },
-        { instagramHandle: { $regex: cleanSearch, $options: 'i' } }
+        { instagramHandle: { $regex: cleanSearch, $options: 'i' } },
+        { expertise: { $regex: cleanSearch, $options: 'i' } }
       ];
+
+      if (matchedExpertises.length > 0) {
+        matchedExpertises.forEach(exp => {
+          orConditions.push({ expertise: { $regex: exp, $options: 'i' } });
+        });
+      }
+
+      if (query.$or) {
+        query.$and = [{ $or: query.$or }, { $or: orConditions }];
+        delete query.$or;
+      } else {
+        query.$or = orConditions;
+      }
     }
 
     const creators = await Creator.find(query).select(
-      'name handle avatarUrl bio expertise price pricePerQuestion responseTime stats verified instagramFollowers instagramConnected isLive isPaused'
+      'name handle avatarUrl profileUrl bio expertise price pricePerQuestion responseTime stats verified instagramFollowers instagramConnected isLive isPaused liveChatEnabled liveChatPrice liveChatTimeSlots ama_enabled'
     ).lean();
     
     // Sort: Live creators first, then by replyRate descending
@@ -122,9 +190,10 @@ router.get('/creators', async (req, res) => {
       id: c._id,
       name: c.name || 'Anonymous',
       handle: c.handle || 'unknown',
-      avatarUrl: c.avatarUrl || '',
+      avatarUrl: c.avatarUrl || c.profileUrl || '',
+      profileUrl: c.profileUrl || '',
       bio: c.bio || '',
-      expertise: c.expertise || [],
+      expertise: normalizeExpertiseList(c.expertise || []),
       price: c.price || c.pricePerQuestion,
       pricePerQuestion: c.price || c.pricePerQuestion,
       responseTime: c.responseTime || '48 hours',
@@ -134,9 +203,13 @@ router.get('/creators', async (req, res) => {
         avgReplyTime: c.stats?.avgReplyTime || 0
       },
       verified: c.verified || false,
-      isLive: c.isLive || false,
+      isLive: c.isLive,
       isPaused: c.isPaused || false,
-      instagramFollowers: c.instagramFollowers
+      instagramFollowers: c.instagramFollowers,
+      liveChatEnabled: c.liveChatEnabled || false,
+      liveChatPrice: c.liveChatPrice || 5,
+      liveChatTimeSlots: c.liveChatTimeSlots || [],
+      ama_enabled: c.ama_enabled
     }));
 
     return res.json({

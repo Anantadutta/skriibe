@@ -51,7 +51,8 @@ const QuestionSchema = new mongoose.Schema(
     disputeId: { type: String, unique: true, sparse: true },
     adminNotes: { type: String, default: '' },
     adminDecision: { type: String, enum: ['pending', 'creator_wins', 'fan_wins', 'banned', 'deleted'], default: 'pending' },
-    isBuyerBanned: { type: Boolean, default: false }
+    isBuyerBanned: { type: Boolean, default: false },
+    deletedByFan: { type: Boolean, default: false }
   },
   { timestamps: true }
 );

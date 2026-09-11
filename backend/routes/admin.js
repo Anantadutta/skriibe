@@ -6,6 +6,8 @@ const Fan = require('../models/Fan');
 const Question = require('../models/Question');
 const DeletedAccountReason = require('../models/DeletedAccountReason');
 const AdminAlert = require('../models/AdminAlert');
+const ChatSession = require('../models/ChatSession');
+const Message = require('../models/Message');
 
 const connectDB = async () => {
   if (mongoose.connection.readyState === 1) return;
@@ -64,9 +66,19 @@ router.get('/dashboard', async (req, res) => {
       paymentStatus: 'paid',
       createdAt: { $gte: startOfDay, $lte: endOfDay }
     });
+
+    // Also count completed live chats within the date range
+    const todayChats = await ChatSession.find({
+      status: 'ended',
+      totalCost: { $gt: 0 },
+      startTime: { $gte: startOfDay, $lte: endOfDay }
+    });
     
-    const creatorIds = [...new Set(todayQuestions.map(q => q.creatorId.toString()))];
-    const creators = await Creator.find({ _id: { $in: creatorIds } });
+    const questionCreatorIds = todayQuestions.filter(q => q.creatorId).map(q => q.creatorId.toString());
+    const chatCreatorIds = todayChats.filter(c => c.creatorId).map(c => c.creatorId.toString());
+    const allCreatorIds = [...new Set([...questionCreatorIds, ...chatCreatorIds])];
+
+    const creators = await Creator.find({ _id: { $in: allCreatorIds } });
     const creatorMap = {};
     creators.forEach(c => creatorMap[c._id.toString()] = c);
 
@@ -74,11 +86,12 @@ router.get('/dashboard', async (req, res) => {
     let revenue = 0;
     const now = new Date();
 
-    todayQuestions.forEach(q => {
-      const amount = q.isFollowUp ? 0 : (q.amountPaid || q.price || 0);
+    const processTransaction = (amount, creatorId, transactionDate) => {
+      if (!creatorId) return;
+      
       gmvToday += amount;
 
-      const creator = creatorMap[q.creatorId.toString()];
+      const creator = creatorMap[creatorId.toString()];
       let creatorSharePercentage = 0.8; // default 80% creator, 20% skriibe
 
       if (creator && creator.commissionOverride && creator.commissionOverride.startDate) {
@@ -86,9 +99,9 @@ router.get('/dashboard', async (req, res) => {
         const end = creator.commissionOverride.endDate ? new Date(creator.commissionOverride.endDate) : null;
         start.setHours(0,0,0,0);
         if (end) end.setHours(23,59,59,999);
-        const qDate = new Date(q.createdAt);
+        const tDate = new Date(transactionDate);
         
-        if (qDate >= start && (!end || qDate <= end)) {
+        if (tDate >= start && (!end || tDate <= end)) {
           creatorSharePercentage = creator.commissionOverride.creatorShare / 100;
         }
       }
@@ -102,28 +115,60 @@ router.get('/dashboard', async (req, res) => {
       }
       
       revenue += (amount * skriibeActualCut);
+    };
+
+    todayQuestions.forEach(q => {
+      const amount = q.isFollowUp ? 0 : (q.amountPaid || q.price || 0);
+      processTransaction(amount, q.creatorId, q.createdAt);
+    });
+
+    todayChats.forEach(c => {
+      const amount = c.totalCost || 0;
+      processTransaction(amount, c.creatorId, c.startTime);
     });
 
     gmvToday = Number(gmvToday.toFixed(2));
     revenue = Number(revenue.toFixed(2));
 
-      const adminRefundsList = await Question.find({
-        adminDecision: { $in: ['fan_wins', 'partial_refund'] }
+      const missedChatsList = await ChatSession.find({ 
+        cancelledByFan: true,
+        startTime: { $gte: startOfDay, $lte: endOfDay }
       })
-      .populate('creatorId', 'name handle email')
-      .select('questionText answerText adminDecision status buyerName amountPaid createdAt creatorId');
+        .populate('creatorId', 'name handle email')
+        .populate('fanId', 'name email walletBalance')
+        .sort({ startTime: -1 });
+
+      const amasCount = await Question.countDocuments({
+        paymentStatus: 'paid',
+        createdAt: { $gte: startOfDay, $lte: endOfDay }
+      });
+
+      const liveChatsCount = await ChatSession.countDocuments({
+        status: 'ended',
+        totalMinutes: { $gt: 0 },
+        startTime: { $gte: startOfDay, $lte: endOfDay }
+      });
+
+      const WalletTransaction = require('../models/WalletTransaction');
+      const tipsCount = await WalletTransaction.countDocuments({
+        description: { $regex: /tip/i },
+        createdAt: { $gte: startOfDay, $lte: endOfDay }
+      });
 
       const dashboardData = {
         gmvToday: gmvToday,
         revenue: revenue,
         activeCreators: activeCreatorsCount || await Creator.countDocuments(),
+        missedChatsCount: missedChatsList.length,
+        missedChatsData: missedChatsList,
         slaBreaches: slaBreachesCount,
         breachedQuestions: breachedQuestions,
         actionMetrics: {
           openQuestions: openQuestionsCount,
-          refundsToday: adminRefundsList.length
+          amas: amasCount,
+          liveChats: liveChatsCount,
+          tips: tipsCount
         },
-        adminRefundsData: adminRefundsList,
       recentActivity: [
         { id: 1, text: 'Auto-refund triggered · Q#1234 · SLA breach · 2 min ago' },
         { id: 2, text: '@priya_fit verified and activated · 5 min ago' },
@@ -148,10 +193,9 @@ router.get('/transactions', async (req, res) => {
     const questions = await Question.find({})
       .populate('creatorId', 'name handle avatarUrl')
       .populate('fanId', 'name')
-      .sort({ createdAt: -1 })
       .lean();
 
-    const parentQuestions = questions.filter(q => !q.isFollowUp);
+    const parentQuestions = questions.filter(q => !q.isFollowUp).map(q => ({...q, type: 'ama'}));
     const followUps = questions.filter(q => q.isFollowUp);
 
     // Group follow-ups under parents
@@ -159,10 +203,39 @@ router.get('/transactions', async (req, res) => {
       pq.followUps = followUps.filter(fq => String(fq.parentQuestionId) === String(pq._id));
     });
 
-    res.json(parentQuestions);
+    const chats = await ChatSession.find({
+      chatId: { $exists: true, $ne: null }
+    })
+      .populate('creatorId', 'name handle avatarUrl')
+      .populate('fanId', 'name')
+      .lean();
+
+    const formattedChats = chats.map(c => ({
+      ...c,
+      type: 'chat',
+      createdAt: c.startTime || c.createdAt || new Date()
+    }));
+
+    const combined = [...parentQuestions, ...formattedChats].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    res.json(combined);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Server error fetching transactions' });
+  }
+});
+
+/**
+ * @route GET /api/admin/transactions/chat/:sessionId
+ * @desc Get chat messages for a specific session
+ */
+router.get('/transactions/chat/:sessionId', async (req, res) => {
+  try {
+    const messages = await Message.find({ sessionId: req.params.sessionId }).sort({ sentAt: 1 }).lean();
+    res.json(messages);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error fetching chat messages' });
   }
 });
 
@@ -223,6 +296,14 @@ router.get('/verification-queue', (req, res) => {
 });
 
 /**
+ * @route GET /api/admin/debug-reviews
+ */
+router.get('/debug-reviews', async (req, res) => {
+  const sessions = await ChatSession.find({ 'review.rating': { $exists: true, $ne: null } });
+  res.json({ count: sessions.length, sessions });
+});
+
+/**
  * @route GET /api/admin/creators
  * @desc Get all creators with calculated health stats
  */
@@ -231,6 +312,7 @@ router.get('/creators', async (req, res) => {
     await connectDB();
     const creators = await Creator.find({}).sort({ createdAt: -1 }).lean();
     const Question = require('../models/Question');
+    const ChatSession = require('../models/ChatSession');
 
     // Calculate stats for each creator
     const creatorsWithStats = await Promise.all(creators.map(async (creator) => {
@@ -278,6 +360,30 @@ router.get('/creators', async (req, res) => {
         }
       }
 
+      const chatSessions = await ChatSession.find({ creatorId: creator._id, 'review.rating': { $exists: true, $ne: null } }).populate('fanId', 'name');
+      
+      let sumRating = 0;
+      let reviewCount = 0;
+      let fanReviews = [];
+
+      chatSessions.forEach(cs => {
+        if (cs.review && cs.review.rating) {
+          sumRating += cs.review.rating;
+          reviewCount++;
+          if (cs.review.feedback || (cs.review.tags && cs.review.tags.length > 0)) {
+            fanReviews.push({
+              fanName: cs.fanId?.name || 'Anonymous',
+              rating: cs.review.rating,
+              feedback: cs.review.feedback || '',
+              tags: cs.review.tags || [],
+              date: cs.review.createdAt || cs.endTime || cs.startTime
+            });
+          }
+        }
+      });
+
+      const avgRating = reviewCount > 0 ? (sumRating / reviewCount) : 0;
+
       let healthStatus = 'Account Healthy';
       if (creator.isBanned) {
          healthStatus = 'Permanently Removed';
@@ -289,6 +395,8 @@ router.get('/creators', async (req, res) => {
          healthStatus = '2 — Warning & Review';
       } else if (activeStrikesCount === 1) {
          healthStatus = '1 — Strike 1';
+      } else if (avgRating > 0 && avgRating <= 3.9) {
+         healthStatus = 'Low Rating';
       }
 
       return {
@@ -300,7 +408,9 @@ router.get('/creators', async (req, res) => {
           slaBreaches,
           avgResponseTimeMins,
           answered,
-          healthStatus
+          healthStatus,
+          rating: avgRating,
+          fanReviews
         }
       };
     }));
@@ -425,10 +535,21 @@ router.get('/fans', async (req, res) => {
     await connectDB();
     const fans = await Fan.find({}).sort({ createdAt: -1 }).lean();
     
+    const ChatSession = require('../models/ChatSession');
+    const WalletTransaction = require('../models/WalletTransaction');
+    
     const fansWithStats = await Promise.all(fans.map(async (fan) => {
       // paymentStatus: 'paid' implies it was actually asked, but let's count all questions linked to them
       const totalQuestionsAsked = await Question.countDocuments({ fanId: fan._id });
-      return { ...fan, totalQuestionsAsked };
+      
+      const totalChatsInitiated = await ChatSession.countDocuments({ fanId: fan._id });
+      
+      const tipsProvided = await WalletTransaction.countDocuments({ 
+        fanId: fan._id, 
+        description: { $regex: /tip/i }
+      });
+      
+      return { ...fan, totalQuestionsAsked, totalChatsInitiated, tipsProvided };
     }));
     
     res.json(fansWithStats);
@@ -439,8 +560,46 @@ router.get('/fans', async (req, res) => {
 });
 
 /**
+ * @route GET /api/admin/tips
+ * @desc Get all tips
+ */
+router.get('/tips', async (req, res) => {
+  try {
+    const WalletTransaction = require('../models/WalletTransaction');
+    const tips = await WalletTransaction.find({
+      description: { $regex: /tip/i }
+    })
+      .populate('fanId', 'name email')
+      .populate('creatorId', 'name handle')
+      .sort({ createdAt: -1 })
+      .lean();
+
+    res.json(tips);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error fetching tips' });
+  }
+});
+
+/**
+ * @route GET /api/admin/wallet-transactions
+ * @desc Get all wallet transactions
+ */
+router.get('/wallet-transactions', async (req, res) => {
+  try {
+    const WalletTransaction = require('../models/WalletTransaction');
+    const txs = await WalletTransaction.find().lean();
+    res.json(txs);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error fetching wallet transactions' });
+  }
+});
+
+/**
  * @route GET /api/admin/open-questions
  * @desc Get all open (submitted) questions
+
  */
 router.get('/open-questions', async (req, res) => {
   try {
@@ -581,44 +740,8 @@ router.get('/alerts', async (req, res) => {
     const Creator = require('../models/Creator');
     const Fan = require('../models/Fan');
 
-    let alerts = await AdminAlert.find().sort({ createdAt: -1 });
-
-    // Dynamically backfill/sync alerts for old data that might have missed the trigger
-    const disputes = await Question.find({ status: { $in: ['rejected', 'flagged'] } });
-    for (const d of disputes) {
-      if (d.status === 'rejected') {
-        await AdminAlert.updateOne(
-          { referenceId: d._id, type: { $in: ['creator_reject', 'creator_flag'] } },
-          { 
-            $setOnInsert: { 
-              type: d.rejectReason === 'abuse' ? 'creator_flag' : 'creator_reject',
-              title: d.rejectReason === 'abuse' ? 'Creator flagged abuse' : 'Creator rejected question',
-              message: `Creator rejected question #${d.disputeId || d._id.toString().slice(-6)}: ${d.rejectReason || 'expertise'}`,
-              referenceId: d._id,
-              createdAt: d.updatedAt
-            }
-          },
-          { upsert: true }
-        );
-      } else if (d.status === 'flagged') {
-        await AdminAlert.updateOne(
-          { referenceId: d._id, type: 'buyer_flag' },
-          {
-            $setOnInsert: {
-              type: 'buyer_flag',
-              title: 'Buyer flagged a reply',
-              message: `Buyer flagged reply for question #${d.disputeId || d._id.toString().slice(-6)}`,
-              referenceId: d._id,
-              createdAt: d.updatedAt
-            }
-          },
-          { upsert: true }
-        );
-      }
-    }
-      
-    // Fetch latest alerts after sync
-    alerts = await AdminAlert.find().sort({ createdAt: -1 });
+    const allowedTypes = ['creator_signup', 'fan_signup', 'creator_delete', 'fan_delete'];
+    const alerts = await AdminAlert.find({ type: { $in: allowedTypes } }).sort({ createdAt: -1 });
 
     res.json(alerts);
   } catch (err) {
@@ -914,5 +1037,8 @@ router.get('/affiliators', async (req, res) => {
     res.status(500).json({ error: 'Server error fetching affiliators' });
   }
 });
+
+// Mount user queries support router
+router.use('/queries', require('./queries'));
 
 module.exports = router;

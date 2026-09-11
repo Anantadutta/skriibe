@@ -5,9 +5,13 @@ import api from '../../services/api';
 const CreatorInbox = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [activeTab, setActiveTab] = useState('All');
+  const [activeTab, setActiveTab] = useState('Pending');
+  const [inboxMode, setInboxMode] = useState('liveChat');
+  const [liveChatTab, setLiveChatTab] = useState('history');
   const [flaggedSubFilter, setFlaggedSubFilter] = useState('All');
   const [questions, setQuestions] = useState([]);
+  const [liveChats, setLiveChats] = useState([]);
+  const [pendingChats, setPendingChats] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expandedThreads, setExpandedThreads] = useState({});
   const [now, setNow] = useState(Date.now());
@@ -27,8 +31,9 @@ const CreatorInbox = () => {
 
   const navItems = [
     { label: 'HOME', icon: '🏠', route: '/creator/dashboard' },
-    { label: 'INBOX', icon: '💬', route: '/creator/inbox' },
-    { label: 'PAYOUTS', icon: '💰', route: '/creator/payouts' },
+    { label: 'CHATS', icon: '💬', route: '/creator/inbox' },
+    { label: 'TRANSACTIONS', icon: '💰', route: '/creator/payouts' },
+    { label: 'ANALYTICS', icon: '📊', route: '/creator/analytics' },
     { label: 'SETTINGS', icon: '⚙️', route: '/creator/settings' },
   ];
 
@@ -36,12 +41,30 @@ const CreatorInbox = () => {
     const fetchQuestions = async (isBackground = false) => {
       if (!isBackground) setLoading(true);
       try {
-        const res = await api.get(`/creator/questions?t=${Date.now()}`);
-        if (res.data.success) {
-          setQuestions(res.data.questions);
+        const [qRes, chatRes, pendingRes] = await Promise.all([
+          api.get(`/creator/questions?t=${Date.now()}`),
+          api.get(`/chat/creator-history?t=${Date.now()}`),
+          api.get(`/chat/pending?t=${Date.now()}`)
+        ]);
+        if (qRes.data.success) {
+          setQuestions(qRes.data.questions);
+        }
+        if (chatRes.data.success) {
+          const nowMs = Date.now();
+          const filteredSessions = chatRes.data.sessions.filter(s => {
+            if (!s.totalMinutes || s.totalMinutes === 0) {
+              const chatTime = new Date(s.endTime || s.startTime || s.createdAt).getTime();
+              return (nowMs - chatTime) <= 30 * 24 * 60 * 60 * 1000;
+            }
+            return true;
+          });
+          setLiveChats(filteredSessions);
+        }
+        if (pendingRes.data.success) {
+          setPendingChats(pendingRes.data.pendingChats);
         }
       } catch (err) {
-        console.error('Error fetching questions:', err);
+        console.error('Error fetching data:', err);
       } finally {
         if (!isBackground) setLoading(false);
       }
@@ -166,39 +189,56 @@ const CreatorInbox = () => {
           >
             <span style={{ fontSize: '1.2rem', color: '#94a3b8' }}>‹</span>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
             <h2 style={{ fontSize: '1.4rem', fontWeight: 700, margin: 0 }}>Message inbox</h2>
-            <div style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: '2px' }}>
-              <span style={{ color: '#FBBF24', fontWeight: 600 }}>{pendingRoots.length}</span> awaiting your reply · ₹{pendingRoots.length * 99} protected
-            </div>
           </div>
         </div>
 
-        {/* Search */}
-        <div style={{ position: 'relative' }}>
-          <span style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)' }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-          </span>
-          <input 
-            type="text" 
-            placeholder="Search messages..." 
-            style={{
-              width: '100%',
-              background: '#1A1A1A',
-              border: '1px solid #2A2A2A',
-              borderRadius: '16px',
-              padding: '14px 16px 14px 44px',
-              color: '#ffffff',
+        {/* Inbox Mode Switcher */}
+        <div style={{ display: 'flex', background: '#1A1A1A', borderRadius: '30px', padding: '4px', marginBottom: '8px', border: '1px solid #2A2A2A' }}>
+          <div 
+            onClick={() => setInboxMode('liveChat')}
+            style={{ 
+              flex: 1, 
+              padding: '10px 0', 
+              textAlign: 'center', 
+              cursor: 'pointer',
+              background: inboxMode === 'liveChat' ? '#2A2A35' : 'transparent',
+              color: inboxMode === 'liveChat' ? '#ffffff' : '#94a3b8',
+              borderRadius: '30px',
+              fontWeight: inboxMode === 'liveChat' ? 700 : 600,
               fontSize: '0.95rem',
-              outline: 'none',
-              boxSizing: 'border-box'
+              transition: 'all 0.2s ease',
             }}
-          />
+          >
+            Live chat
+          </div>
+          <div 
+            onClick={() => setInboxMode('messages')}
+            style={{ 
+              flex: 1, 
+              padding: '10px 0', 
+              textAlign: 'center', 
+              cursor: 'pointer',
+              background: inboxMode === 'messages' ? '#2A2A35' : 'transparent',
+              color: inboxMode === 'messages' ? '#ffffff' : '#94a3b8',
+              borderRadius: '30px',
+              fontWeight: inboxMode === 'messages' ? 700 : 600,
+              fontSize: '0.95rem',
+              transition: 'all 0.2s ease',
+            }}
+          >
+            Ask me anything
+          </div>
         </div>
+
+        {inboxMode === 'messages' ? (
+          <>
+
 
         {/* Tabs */}
         <div style={{ display: 'flex', background: '#1A1A1A', borderRadius: '16px', padding: '6px', gap: '4px', border: '1px solid #2A2A2A' }}>
-          {['All', 'Pending', 'Replied', 'Flagged'].map((tabName) => {
+          {['Pending', 'Replied'].map((tabName) => {
             const isActive = activeTab === tabName;
             const count = tabCounts[tabName] || 0;
             return (
@@ -222,31 +262,8 @@ const CreatorInbox = () => {
         </div>
 
         <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#94a3b8', letterSpacing: '1px', marginTop: '8px' }}>
-          {activeTab === 'All' ? 'ALL MESSAGES' : activeTab.toUpperCase() + ' MESSAGES'}
+          {activeTab.toUpperCase() + ' MESSAGES'}
         </div>
-
-        {activeTab === 'Flagged' && (
-          <div style={{ display: 'flex', gap: '8px', marginTop: '4px', marginBottom: '8px' }}>
-            {['All', 'Flagged', 'Rejected'].map(filterOption => (
-              <div 
-                key={filterOption}
-                onClick={() => setFlaggedSubFilter(filterOption)}
-                style={{
-                  padding: '6px 12px',
-                  borderRadius: '16px',
-                  fontSize: '0.8rem',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  background: flaggedSubFilter === filterOption ? '#38bdf8' : '#1F2937',
-                  color: flaggedSubFilter === filterOption ? '#0F172A' : '#94a3b8',
-                  transition: 'all 0.2s ease'
-                }}
-              >
-                {filterOption}
-              </div>
-            ))}
-          </div>
-        )}
 
         {/* List */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', paddingBottom: '100px' }}>
@@ -523,6 +540,228 @@ const CreatorInbox = () => {
           });
           })()}
         </div>
+          </>
+        ) : (pendingChats && pendingChats.length > 0) || (liveChats && liveChats.some(c => c.totalMinutes > 0)) ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', paddingBottom: '100px' }}>
+            
+            {pendingChats && pendingChats.length > 0 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  Live Chat Requests
+                  <span style={{ background: '#FACC15', color: '#000', padding: '2px 8px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 800 }}>
+                    {pendingChats.filter(chat => Math.max(0, now - new Date(chat.time).getTime()) <= (8 * 60 * 1000)).length}
+                  </span>
+                </h3>
+                {Array.from(
+                   new Map(
+                     pendingChats
+                       .filter(chat => Math.max(0, now - new Date(chat.time).getTime()) <= (8 * 60 * 1000))
+                       .sort((a, b) => new Date(a.time) - new Date(b.time)) // Oldest first so newest overwrites in Map
+                       .map(chat => [chat.fanName, chat])
+                   ).values()
+                 )
+                 .sort((a, b) => new Date(b.time) - new Date(a.time)) // Sort descending again for display
+                 .map((chat) => {
+                  const chatTimeMs = new Date(chat.time).getTime();
+                  const waitingMs = Math.max(0, now - chatTimeMs);
+                  const waitingMins = Math.floor(waitingMs / 60000);
+                  const waitingSecs = Math.floor((waitingMs % 60000) / 1000);
+                  const isExpired = waitingMs > (3 * 60 * 1000); // 3 minutes expiration
+                  const formattedTime = new Date(chat.time).toLocaleTimeString('en-US', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit' });
+
+                  return (
+                    <div key={chat.sessionId} style={{ background: '#13161C', border: '1px solid #3BA8D8', borderRadius: '16px', padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                        <div style={{ color: '#fff', fontWeight: 800, fontSize: '1.05rem' }}>{chat.fanName} wants to chat</div>
+                        {chat.rate !== 0 && chat.rate !== '0' && (
+                          <div style={{ color: '#3BA8D8', fontSize: '0.85rem', fontWeight: 600 }}>₹{chat.rate}/min</div>
+                        )}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span style={{ color: '#94a3b8', fontSize: '0.75rem', fontWeight: 600 }}>Waiting: {waitingMins}m {waitingSecs}s</span>
+                        </div>
+                        <div style={{ color: '#94a3b8', fontSize: '0.75rem' }}>Requested at {formattedTime} IST</div>
+                      </div>
+                      {isExpired ? (
+                        <span style={{ color: '#EF4444', fontWeight: 800, fontSize: '0.9rem' }}>Expired</span>
+                      ) : (
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+                          {(chat.rate === 0 || chat.rate === '0') && (
+                            <span style={{ color: '#22C55E', fontWeight: 800, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Free Chat</span>
+                          )}
+                          <button 
+                            onClick={() => navigate(`/creator/dashboard/live-chat/${chat.sessionId}`)}
+                            style={{ background: '#22C55E', color: '#fff', border: 'none', borderRadius: '8px', padding: '8px 16px', fontWeight: 800, cursor: 'pointer' }}
+                          >
+                            Accept
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {liveChats && liveChats.length > 0 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div style={{ display: 'flex', gap: '16px', borderBottom: '1px solid #1F2937', marginBottom: '8px' }}>
+                  <button 
+                    onClick={() => setLiveChatTab('history')}
+                    style={{ 
+                      background: 'none', border: 'none', color: liveChatTab === 'history' ? '#3BA8D8' : '#94a3b8', 
+                      fontWeight: 800, fontSize: '1rem', padding: '0 0 8px 0', cursor: 'pointer',
+                      borderBottom: liveChatTab === 'history' ? '2px solid #3BA8D8' : '2px solid transparent'
+                    }}
+                  >
+                    History
+                  </button>
+                  <button 
+                    onClick={() => setLiveChatTab('missed')}
+                    style={{ 
+                      background: 'none', border: 'none', color: liveChatTab === 'missed' ? '#3BA8D8' : '#94a3b8', 
+                      fontWeight: 800, fontSize: '1rem', padding: '0 0 8px 0', cursor: 'pointer',
+                      borderBottom: liveChatTab === 'missed' ? '2px solid #3BA8D8' : '2px solid transparent'
+                    }}
+                  >
+                    Missed Chats
+                  </button>
+                </div>
+            {liveChats.filter(c => liveChatTab === 'history' ? c.totalMinutes > 0 : (!c.totalMinutes || c.totalMinutes === 0)).length === 0 ? (
+              <div style={{ textAlign: 'center', color: '#94a3b8', padding: '20px 0', fontSize: '0.9rem' }}>
+                {liveChatTab === 'history' ? 'No history found.' : 'No missed chats found.'}
+              </div>
+            ) : liveChats.filter(c => liveChatTab === 'history' ? c.totalMinutes > 0 : (!c.totalMinutes || c.totalMinutes === 0)).map(chat => {
+              if (liveChatTab === 'missed') {
+                const missedDate = new Date(chat.endTime || chat.startTime || chat.createdAt);
+                const formattedMissedDate = missedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ', ' + missedDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+
+                return (
+                  <div 
+                    key={chat._id || chat.id} 
+                    style={{ 
+                      background: '#13161C', 
+                      border: '1px solid #1F2937', 
+                      borderRadius: '16px', 
+                      padding: '16px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <div style={{ position: 'relative', width: '48px', height: '48px' }}>
+                        {chat.fanId?.avatarUrl ? (
+                          <img 
+                            src={chat.fanId.avatarUrl.startsWith('http') ? chat.fanId.avatarUrl : `http://localhost:5000${chat.fanId.avatarUrl}`} 
+                            alt={chat.fanId?.name} 
+                            style={{ width: '48px', height: '48px', borderRadius: '50%', objectFit: 'cover' }}
+                          />
+                        ) : (
+                          <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: '#D1D5DB', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6B7280' }}>
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                          </div>
+                        )}
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <div style={{ color: '#fff', fontWeight: 600, fontSize: '1.1rem' }}>{chat.fanId?.name || 'Fan'}</div>
+                        <div style={{ color: '#EF4444', fontSize: '0.85rem' }}>Missed at {formattedMissedDate}</div>
+                      </div>
+                    </div>
+                    <button 
+                      onClick={async (e) => {
+                        e.stopPropagation();
+                        try {
+                          const res = await api.post('/chat/notify-missed', { fanId: chat.fanId?._id || chat.fanId?.id || chat.fanId, sessionId: chat._id || chat.id || chat.sessionId });
+                          if (res.data.success) {
+                            alert('Notification sent!');
+                          }
+                        } catch (err) {
+                          console.error(err);
+                          alert('Failed to send notification');
+                        }
+                      }}
+                      style={{ 
+                        background: '#1A2234', 
+                        border: '1px solid #29354F', 
+                        color: '#38BDF8', 
+                        padding: '8px 16px', 
+                        borderRadius: '8px', 
+                        fontSize: '0.9rem', 
+                        fontWeight: 600,
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Notify
+                    </button>
+                  </div>
+                );
+              }
+
+              const formattedDate = new Date(chat.endTime || chat.startTime).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+              return (
+                <div 
+                  key={chat._id || chat.id} 
+                  onClick={() => navigate(`/creator/dashboard/live-chat/${chat.sessionId || chat._id}`)}
+                  style={{ 
+                  background: '#13161C', 
+                  border: '1px solid #1F2937', 
+                  borderRadius: '16px', 
+                  padding: '16px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '12px',
+                  cursor: 'pointer'
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <div style={{ position: 'relative', width: '40px', height: '40px' }}>
+                        {chat.fanId?.avatarUrl ? (
+                          <img 
+                            src={chat.fanId.avatarUrl.startsWith('http') ? chat.fanId.avatarUrl : `http://localhost:5000${chat.fanId.avatarUrl}`} 
+                            alt={chat.fanId?.name} 
+                            style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }}
+                          />
+                        ) : (
+                          <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#3BA8D8', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '18px', fontWeight: 'bold' }}>
+                            {chat.fanId?.name?.charAt(0).toUpperCase() || '?'}
+                          </div>
+                        )}
+                      </div>
+                      <div>
+                        <div style={{ color: '#fff', fontWeight: 800, fontSize: '1.05rem' }}>{chat.fanId?.name || 'Fan'}</div>
+                        <div style={{ color: '#94a3b8', fontSize: '0.8rem' }}>{formattedDate}</div>
+                      </div>
+                    </div>
+                    <div style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', padding: '6px 12px', borderRadius: '20px', fontSize: '0.85rem', fontWeight: 700 }}>
+                      ₹{Number(chat.totalCost || 0).toFixed(2)}
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', gap: '16px', background: '#0E0E0E', padding: '12px', borderRadius: '12px' }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ color: '#94a3b8', fontSize: '0.75rem', marginBottom: '4px' }}>DURATION</div>
+                      <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.9rem' }}>
+                        {Math.floor(chat.totalMinutes || 0)}m {Math.round(((chat.totalMinutes || 0) % 1) * 60)}s
+                      </div>
+                    </div>
+                    <div style={{ width: '1px', background: '#1F2937' }}></div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ color: '#94a3b8', fontSize: '0.75rem', marginBottom: '4px' }}>RATE</div>
+                      <div style={{ color: '#3BA8D8', fontWeight: 700, fontSize: '0.9rem' }}>
+                        ₹{chat.ratePerMinute || 0}/min
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+              </div>
+            )}
+          </div>
+        ) : (
+          <div style={{ textAlign: 'center', color: '#94a3b8', padding: '60px 0', fontSize: '0.9rem' }}>
+            No live chats found.
+          </div>
+        )}
 
       </div>
 
@@ -561,8 +800,7 @@ const CreatorInbox = () => {
               }}
             >
               <span style={{ 
-                fontSize: '20px',
-                filter: isActive ? cyanFilter : grayFilter
+                fontSize: '20px'
               }}>
                 {item.icon}
               </span>

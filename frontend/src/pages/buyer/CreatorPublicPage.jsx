@@ -296,31 +296,23 @@ const CreatorPublicPage = () => {
           </div>
         </div>
 
-        {/* STATS ROW (3 boxes) */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
-          <div style={{ background: '#1A1A1A', borderRadius: '14px', padding: '16px 8px', textAlign: 'center' }}>
-            <div style={{ fontSize: '1.4rem', fontWeight: '900', color: '#29C5F6' }}>{creator.stats?.replyRate || 100}%</div>
-            <div style={{ fontSize: '0.65rem', color: '#64748b', marginTop: '4px', fontWeight: '700', letterSpacing: '1px' }}>REPLY</div>
-          </div>
-          <div style={{ background: '#1A1A1A', borderRadius: '14px', padding: '16px 8px', textAlign: 'center' }}>
-            <div style={{ fontSize: '1.4rem', fontWeight: '900', color: '#29C5F6' }}>{formatTime(creator.stats?.avgReplyTime ?? '2h')}</div>
-            <div style={{ fontSize: '0.65rem', color: '#64748b', marginTop: '4px', fontWeight: '700', letterSpacing: '1px' }}>AVG</div>
-          </div>
-          <div style={{ background: '#1A1A1A', borderRadius: '14px', padding: '16px 8px', textAlign: 'center' }}>
-            <div style={{ fontSize: '1.4rem', fontWeight: '900', color: '#29C5F6' }}>{creator.stats?.totalAnswered ?? creator.questionsAnswered ?? 0}</div>
-            <div style={{ fontSize: '0.65rem', color: '#64748b', marginTop: '4px', fontWeight: '700', letterSpacing: '1px' }}>ANSWERED</div>
-          </div>
-        </div>
+
 
         {/* BIO */}
-        <div>
-          <p style={{ margin: 0, fontSize: '0.95rem', color: '#94a3b8', lineHeight: '1.5' }}>
-            {creator.bio || "Welcome to my skriibe! Ask me anything. I'll get back to you within 24 hours"}
+        <div style={{ 
+          background: 'rgba(255, 255, 255, 0.02)', 
+          border: '1px solid rgba(255, 255, 255, 0.08)', 
+          borderRadius: '16px',
+          padding: '16px',
+          textAlign: 'left',
+          marginBottom: '16px',
+          width: '100%',
+          boxSizing: 'border-box'
+        }}>
+          <p style={{ margin: 0, fontSize: '0.95rem', color: '#94a3b8', lineHeight: '1.5', whiteSpace: 'pre-wrap' }}>
+            {creator.bio || "Heyyy! Got something on your mind? Let’s chat!"}
           </p>
         </div>
-        
-        {/* DIVIDER */}
-        <div style={{ width: '100%', height: '1px', background: '#1A1A1A' }} />
 
         {/* ASK ME ANYTHING CARD */}
         <div style={{
@@ -463,9 +455,8 @@ const CreatorPublicPage = () => {
             </div>
             <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '8px', color: '#94a3b8', fontSize: '0.85rem', lineHeight: '1.5' }}>
               <li style={{ display: 'flex', gap: '8px' }}><span style={{ color: '#f97316', fontWeight: 'bold' }}>1.</span> Ask one clear message per payment for the best response.</li>
-              <li style={{ display: 'flex', gap: '8px' }}><span style={{ color: '#f97316', fontWeight: 'bold' }}>2.</span> Full refund if there's no reply within 24 hours.</li>
-              <li style={{ display: 'flex', gap: '8px' }}><span style={{ color: '#f97316', fontWeight: 'bold' }}>3.</span> Be respectful. Abusive, hateful, or vulgar content is not allowed.</li>
-              <li style={{ display: 'flex', gap: '8px' }}><span style={{ color: '#f97316', fontWeight: 'bold' }}>4.</span> Share only what's needed for a helpful answer.</li>
+              <li style={{ display: 'flex', gap: '8px' }}><span style={{ color: '#f97316', fontWeight: 'bold' }}>2.</span> Be respectful. Abusive, hateful, or vulgar content is not allowed.</li>
+              <li style={{ display: 'flex', gap: '8px' }}><span style={{ color: '#f97316', fontWeight: 'bold' }}>3.</span> Share only what's needed for a helpful answer.</li>
             </ul>
             
             <label style={{

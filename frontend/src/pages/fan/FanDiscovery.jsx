@@ -8,18 +8,24 @@ import { getFanMe, switchRole } from '../../services/fanApi';
 import { useAuth } from '../../context/AuthContext';
 import { io } from 'socket.io-client';
 import { getThoughtOfTheDay } from '../../utils/dailyThoughts';
+import { checkIfLiveNow } from '../../utils/timeUtils';
 
 const categories = [
   { id: 'All', label: 'All Categories', query: 'All creators' },
-  { id: 'Career', label: 'Career & Finance', query: 'Career & Finance' },
-  { id: 'Health', label: 'Health & Fitness', query: 'Health & Fitness' },
-  { id: 'Tech', label: 'Tech & Skills', query: 'Tech & Skills' },
-  { id: 'Fashion', label: 'Fashion & Lifestyle', query: 'Fashion & Lifestyle' },
-  { id: 'Entertainment', label: 'Entertainment', query: 'Entertainment' },
-  { id: 'Education', label: 'Education', query: 'Education' },
+  { id: 'Lifestyle', label: 'Lifestyle', query: 'Lifestyle' },
+  { id: 'Beauty', label: 'Beauty', query: 'Beauty' },
+  { id: 'Fitness', label: 'Fitness', query: 'Fitness' },
+  { id: 'Finance', label: 'Finance', query: 'Finance' },
+  { id: 'Tech', label: 'Tech', query: 'Tech' },
   { id: 'Entrepreneurship', label: 'Entrepreneurship', query: 'Entrepreneurship' },
-  { id: 'Relationships', label: 'Relationships', query: 'Relationships' },
-  { id: 'Spirituality', label: 'Spirituality', query: 'Spirituality' },
+  { id: 'Education', label: 'Education', query: 'Education' },
+  { id: 'Motivation', label: 'Motivation', query: 'Motivation' },
+  { id: 'Dating', label: 'Dating', query: 'Dating' },
+  { id: 'Food', label: 'Food', query: 'Food' },
+  { id: 'Travel', label: 'Travel', query: 'Travel' },
+  { id: 'Music', label: 'Music', query: 'Music' },
+  { id: 'Gaming', label: 'Gaming', query: 'Gaming' },
+  { id: 'Comedy', label: 'Comedy', query: 'Comedy' },
   { id: 'Others', label: 'Others', query: 'Others' }
 ];
 
@@ -31,6 +37,8 @@ const FanDiscovery = () => {
   const [fanCreatorHandle, setFanCreatorHandle] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
+  const [creatorFilter, setCreatorFilter] = useState('Online'); // 'Online', 'Offline'
+  const [isFirstTimeUser, setIsFirstTimeUser] = useState(false);
   const debounceTimeout = useRef(null);
   const navigate = useNavigate();
   const { roles, setAuthData } = useAuth();
@@ -105,6 +113,7 @@ const FanDiscovery = () => {
           if (res.fan.creatorHandle) {
             setFanCreatorHandle(res.fan.creatorHandle);
           }
+          setIsFirstTimeUser(!res.fan.hasUsedFreeChat);
         }
       } catch (err) {
         console.error('Failed to fetch user profile', err);
@@ -125,13 +134,37 @@ const FanDiscovery = () => {
     };
   }, []);
 
-  const filteredCreators = creators.filter(c => {
-    if (c.isPaused) return false;
+  const baseFilteredCreators = creators.filter(c => {
     if (fanCreatorHandle && c.handle && c.handle.toLowerCase() === fanCreatorHandle.toLowerCase()) return false;
     return true;
   });
+
+  const isCreatorOnline = (c) => {
+    if (c.isPaused) return false;
+    if (c.isLive === true) return true;
+    return checkIfLiveNow(c.liveChatTimeSlots);
+  };
+
+  const onlineCount = baseFilteredCreators.filter(isCreatorOnline).length;
+  const offlineCount = baseFilteredCreators.filter(c => !isCreatorOnline(c)).length;
+  const allCount = baseFilteredCreators.length;
+
+  const filteredCreators = baseFilteredCreators.filter(c => {
+    const online = isCreatorOnline(c);
+    if (creatorFilter === 'Online' && !online) return false;
+    if (creatorFilter === 'Offline' && online) return false;
+    return true;
+  });
+
   const isSearching = searchQuery !== '' || activeCategory !== 'All';
   const displayCreators = isSearching ? filteredCreators : filteredCreators.slice(0, 4);
+
+  const onlineCreators = baseFilteredCreators.filter(isCreatorOnline);
+  const recentCreator = onlineCreators.length > 0 
+    ? [...onlineCreators].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))[0]
+    : null;
+  const recentCreatorName = recentCreator?.name?.split(' ')[0] || 'A creator';
+  const recentCreatorHandle = recentCreator?.handle || '';
 
   return (
     <div style={{
@@ -144,7 +177,7 @@ const FanDiscovery = () => {
     }}>
       <FanNavbar />
 
-      <main style={{ flex: 1, padding: 'min(40px, 5vw)', maxWidth: '1200px', margin: '0 auto', width: '100%', boxSizing: 'border-box', overflowX: 'hidden' }}>
+      <main style={{ flex: 1, padding: 'min(40px, 5vw) min(40px, 5vw) 90px', maxWidth: '1200px', margin: '0 auto', width: '100%', boxSizing: 'border-box', overflowX: 'hidden' }}>
         
         <div style={{ marginBottom: '16px' }}>
           
@@ -213,93 +246,64 @@ const FanDiscovery = () => {
             </div>
           </div>
 
-          <h1 style={{ fontSize: '36px', fontWeight: '800', lineHeight: '1.1', margin: '0 0 16px 0', letterSpacing: '-2px', textAlign: 'left', width: 'fit-content', WebkitFontSmoothing: 'antialiased', MozOsxFontSmoothing: 'grayscale' }}>
-            Ask anyone.<br />
-            <span style={{ 
-              background: 'linear-gradient(90deg, #38bdf8 0%, #a78bfa 50%, #34d399 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              whiteSpace: 'nowrap'
-            }}>
-              Get a real answer.
-            </span>
-          </h1>
-        </div>
-
-        {/* Tips for a great question section */}
-        <div style={{ 
-          marginBottom: '40px',
-          background: '#0f0f1a',
-          border: '1px solid rgba(255, 255, 255, 0.08)',
-          borderRadius: '16px',
-          padding: '24px'
-        }}>
-          <h2 style={{ fontSize: '20px', fontWeight: '700', marginBottom: '24px', color: '#fff', marginTop: 0 }}>
-            Tips for a great message
-          </h2>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            {/* Item 1 */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-              <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'rgba(124, 58, 237, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', flexShrink: 0 }}>
-                <span style={{ color: '#7c3aed', fontWeight: '900' }}>?</span>
-              </div>
-              <div>
-                <div style={{ fontSize: '16px', fontWeight: '700', marginBottom: '4px', color: '#fff' }}>Be clear and specific</div>
-                <div style={{ fontSize: '14px', color: '#94a3b8' }}>Specific messages get better answers.</div>
-              </div>
-            </div>
-
-            {/* Item 2 */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-              <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'rgba(239, 68, 68, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', flexShrink: 0 }}>
-                <span style={{ color: '#ef4444' }}>❤️</span>
-              </div>
-              <div>
-                <div style={{ fontSize: '16px', fontWeight: '700', marginBottom: '4px', color: '#fff' }}>Be respectful</div>
-                <div style={{ fontSize: '14px', color: '#94a3b8' }}>Let's keep it kind and positive.</div>
-              </div>
-            </div>
-
-            {/* Item 3 */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-              <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'rgba(59, 130, 246, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-                  <polyline points="22,6 12,13 2,6"></polyline>
-                </svg>
-              </div>
-              <div>
-                <div style={{ fontSize: '16px', fontWeight: '700', marginBottom: '4px', color: '#fff' }}>One message at a time</div>
-                <div style={{ fontSize: '14px', color: '#94a3b8' }}>You can always ask another one!</div>
-              </div>
-            </div>
-          </div>
-
-          <div style={{
-            background: 'linear-gradient(135deg, rgba(124, 58, 237, 0.12) 0%, rgba(124, 58, 237, 0.04) 100%)',
+          {/* Free Chat Box */}
+          {isFirstTimeUser && (
+            <div style={{
+            background: 'linear-gradient(135deg, #a78bfa 0%, #f472b6 100%)',
             borderRadius: '16px',
             padding: '24px',
-            textAlign: 'center',
-            marginTop: '32px',
-            border: '1px solid rgba(124, 58, 237, 0.1)'
+            width: '100%',
+            maxWidth: '400px',
+            position: 'relative',
+            color: '#fff',
+            boxShadow: '0 4px 20px rgba(236, 72, 153, 0.2)',
+            marginBottom: '32px',
+            boxSizing: 'border-box'
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', marginBottom: '8px' }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-              </svg>
-              <span style={{ color: '#7c3aed', fontWeight: '700', fontSize: '15px' }}>Private & Safe</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <div style={{ 
+                background: 'rgba(0, 0, 0, 0.25)', 
+                padding: '6px 14px', 
+                borderRadius: '20px', 
+                fontSize: '11px', 
+                fontWeight: '800', 
+                letterSpacing: '0.5px' 
+              }}>
+                FREE CHAT AVAILABLE
+              </div>
             </div>
-            <div style={{ color: '#94a3b8', fontSize: '14px', lineHeight: '1.5' }}>
-              Your message is sent privately to the creator.<br/>
-              It won't be shared with others.
+            <h3 style={{ margin: '0 0 8px 0', fontSize: '22px', fontWeight: '800', letterSpacing: '-0.5px' }}>
+              You have 1 free chat left today
+            </h3>
+            <p style={{ margin: '0 0 24px 0', fontSize: '14px', fontWeight: '500', opacity: 0.95, lineHeight: '1.4' }}>
+              {recentCreatorName} is online right now — it costs you nothing.
+            </p>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button 
+                onClick={() => recentCreatorHandle ? navigate(`/creator/${recentCreatorHandle}`) : null}
+                style={{
+                  width: '100%',
+                  background: '#1C1F26',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '12px',
+                  padding: '14px',
+                  fontWeight: '700',
+                  fontSize: '15px',
+                  cursor: 'pointer'
+                }}>
+                Start free chat
+              </button>
             </div>
           </div>
+          )}
         </div>
+
+
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', marginTop: '32px' }}>
           <h2 style={{ margin: 0, fontSize: '24px', fontWeight: '700' }}>
-            {isSearching ? 'Search results' : 'Trending creators'}
+            {isSearching ? 'Search results' : 'Online now'}
           </h2>
         </div>
 
@@ -310,7 +314,7 @@ const FanDiscovery = () => {
           marginBottom: '32px'
         }}>
           {displayCreators.map(creator => (
-            <CreatorCard key={creator.id || creator.handle} creator={creator} />
+            <CreatorCard key={creator.id || creator.handle} creator={creator} isFirstTimeUser={isFirstTimeUser} />
           ))}
           
           {displayCreators.length === 0 && !loading && (
@@ -354,29 +358,7 @@ const FanDiscovery = () => {
             Explore more creators <span>→</span>
           </button>
 
-          <button 
-            onClick={handleSwitchToCreatorMode}
-            style={{
-              background: 'rgba(56, 189, 248, 0.1)',
-              border: '1px solid rgba(56, 189, 248, 0.3)',
-              color: '#38bdf8',
-              padding: '16px 32px',
-              fontSize: '16px',
-              fontWeight: 800,
-              borderRadius: '16px',
-              cursor: 'pointer',
-              transition: 'transform 0.2s, background 0.2s',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: '300px',
-              gap: '8px'
-            }}
-            onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.background = 'rgba(56, 189, 248, 0.2)'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.background = 'rgba(56, 189, 248, 0.1)'; }}
-          >
-            <span style={{ fontSize: '20px' }}>👤</span> Switch to creator mode
-          </button>
+
         </div>
 
       </main>

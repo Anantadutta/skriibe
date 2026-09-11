@@ -24,6 +24,8 @@ import CommissionSettings from './pages/CommissionSettings';
 import CreatorBankDetails from './pages/CreatorBankDetails';
 import Affiliators from './pages/Affiliators';
 import AdminLayout from './components/AdminLayout';
+import Tips from './pages/Tips';
+import Queries from './pages/Queries';
 
 // Authentication guard
 const ProtectedRoute = ({ isAdmin }) => {
@@ -52,6 +54,7 @@ function App() {
             <Route path="dispute/:id/strike" element={<StrikeCreator />} />
             <Route path="dispute/:id/dismiss" element={<DismissDispute />} />
             <Route path="creators" element={<CreatorHealth />} />
+            <Route path="tips" element={<Tips />} />
             <Route path="open-questions" element={<OpenQuestions />} />
             <Route path="buyers" element={<BuyerManagement />} />
             <Route path="creator-disputes" element={<CreatorDisputes />} />
@@ -61,6 +64,7 @@ function App() {
             <Route path="buyers/confirm-block" element={<ConfirmBlock />} />
             <Route path="buyers/unban" element={<UnbanBuyer />} />
             <Route path="alerts" element={<AdminAlerts />} />
+            <Route path="queries" element={<Queries />} />
             <Route path="transactions" element={<Transactions />} />
             <Route path="account-actions" element={<DeletionPauseReasons />} />
             <Route path="commission" element={<CommissionSettings />} />

@@ -1,12 +1,30 @@
 export const getImageUrl = (url) => {
-  if (!url) return '';
-  const apiUrl = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : 'http://localhost:5000';
+  if (!url || url === 'null' || url === 'undefined') return '';
+  let apiUrl = 'http://localhost:5000';
+  if (import.meta.env.VITE_API_URL) {
+    apiUrl = import.meta.env.VITE_API_URL.replace('/api', '');
+  } else if (typeof window !== 'undefined' && window.location.hostname && window.location.hostname !== 'localhost') {
+    apiUrl = `${window.location.protocol}//${window.location.hostname}:5000`;
+  }
   
-  if (url.startsWith('http://localhost:5000')) {
-    return url.replace('http://localhost:5000', apiUrl);
+  if (url.startsWith('data:')) return url;
+
+  // Handle uploaded files that might contain an outdated host origin
+  if (url.includes('/uploads/')) {
+    const uploadPath = url.substring(url.indexOf('/uploads/'));
+    return `${apiUrl}${uploadPath}`;
   }
-  if (url.startsWith('/uploads')) {
-    return `${apiUrl}${url}`;
+
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
   }
-  return url;
+  
+  let path = url;
+  if (!path.startsWith('/') && !path.startsWith('uploads/')) {
+    path = `/uploads/${path}`;
+  } else if (!path.startsWith('/')) {
+    path = `/${path}`;
+  }
+  
+  return `${apiUrl}${path}`;
 };

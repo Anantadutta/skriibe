@@ -8,7 +8,7 @@ import { io } from 'socket.io-client';
 import TransparentLogo from '../../components/TransparentLogo';
 import { getCurrencySymbol } from '../../utils/phoneValidation';
 
-const TABS = ['Available', 'Protected', 'Under Review', 'Refunded', 'History'];
+const TABS = ['Available', 'History'];
 
 const escrowReleases = [
   { date: '17 Jun 2025', amount: '₹316.80', questions: 4 },
@@ -29,7 +29,14 @@ const underReviewQuestions = [
 
 
 
-const StatusIcon = ({ status }) => {
+const StatusIcon = ({ status, bank }) => {
+  if (bank === 'Tip') return (
+    <div style={{ width: 40, height: 40, borderRadius: '50%', backgroundColor: 'rgba(234,179,8,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#EAB308" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+      </svg>
+    </div>
+  );
   if (status === 'Paid') return (
     <div style={{ width: 40, height: 40, borderRadius: '50%', backgroundColor: 'rgba(34,197,94,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#22C55E" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -104,7 +111,7 @@ const CreatorPayouts = () => {
   const [activeTab, setActiveTab] = useState('Available');
   const [refundSubTab, setRefundSubTab] = useState('All');
   const tabsRef = useRef(null);
-  const [payoutStats, setPayoutStats] = useState({ lifetimePaid: 0, thisMonth: 0, inEscrow: 0, available: 0, nextPayoutDate: null, availableQuestions: 0, availableGross: 0, availableFee: 0, inEscrowQuestions: 0, pendingList: [], underReviewAmount: 0, underReviewQuestionsCount: 0, underReviewList: [] });
+  const [payoutStats, setPayoutStats] = useState({ lifetimePaid: 0, thisMonth: 0, inEscrow: 0, available: 0, nextPayoutDate: null, availableQuestions: 0, availableGross: 0, availableFee: 0, inEscrowQuestions: 0, pendingList: [], underReviewAmount: 0, underReviewQuestionsCount: 0, underReviewList: [], sweepLogs: [], pastWeeklyPayouts: [] });
   const [creatorCreatedAt, setCreatorCreatedAt] = useState(null);
   const [currencySymbol, setCurrencySymbol] = useState('₹');
   const [questions, setQuestions] = useState([]);
@@ -221,8 +228,7 @@ const CreatorPayouts = () => {
   const dynamicEligibleQuestionsList = questions
     .filter(q => ['answered', 'satisfied'].includes(q.status?.toLowerCase()) && !q.isFollowUp && new Date(q.createdAt) >= lastPayoutDate);
 
-  const dynamicTotalRevenue = dynamicEligibleQuestionsList
-    .reduce((sum, q) => sum + (q.amountPaid || q.pricePaid || creator?.pricePerQuestion || 0), 0);
+  const dynamicTotalRevenue = payoutStats.availableGross || 0;
 
   const dynamicAvailable = payoutStats.available || 0;
 
@@ -259,12 +265,6 @@ const CreatorPayouts = () => {
       month: 'short',
       year: 'numeric'
     });
-  };
-
-  const scrollTabs = () => {
-    if (tabsRef.current) {
-      tabsRef.current.scrollBy({ left: 120, behavior: 'smooth' });
-    }
   };
 
   const handleTabClick = (tab, e) => {
@@ -319,7 +319,7 @@ const CreatorPayouts = () => {
 
             {/* Page title */}
             <div style={{ marginBottom: '16px' }}>
-              <h1 style={{ fontSize: '26px', fontWeight: '800', margin: '0 0 3px 0' }}>Payouts</h1>
+              <h1 style={{ fontSize: '26px', fontWeight: '800', margin: '0 0 3px 0' }}>Transactions</h1>
               <p style={{ fontSize: '13px', color: '#686860', margin: 0 }}>Your earnings overview</p>
             </div>
 
@@ -357,12 +357,7 @@ const CreatorPayouts = () => {
                 ))}
               </div>
             </div>
-            <div
-              onClick={scrollTabs}
-              style={{ fontSize: '11px', color: '#444', textAlign: 'right', marginBottom: '18px', cursor: 'pointer', userSelect: 'none' }}
-            >
-              ← swipe to see all tabs
-            </div>
+
 
             {/* ── AVAILABLE ── */}
             {activeTab === 'Available' && (
@@ -385,15 +380,15 @@ const CreatorPayouts = () => {
                     </div>
                     <div style={{ fontSize: '12px', color: '#A8A8A0', lineHeight: '1.55' }}>
                       <span style={{ color: '#fff', fontWeight: '600' }}>These earnings are ready to be paid out.</span>{' '}
-                      Accumulated earnings from answered messages since the start of your current weekly cycle. Payouts happen every Tuesday.
+                      Accumulated earnings from all transactions since the start of your current weekly cycle. Payouts update every Tuesday at 00:00.
                     </div>
                   </div>
                 </Card>
 
                 <Card style={{ padding: '18px' }}>
-                  <div style={{ fontSize: '10px', fontWeight: '700', color: '#686860', letterSpacing: '1px', marginBottom: '14px' }}>OVERVIEW</div>
+                  <div style={{ fontSize: '10px', fontWeight: '700', color: '#686860', letterSpacing: '1px', marginBottom: '14px', textTransform: 'uppercase' }}>ELIGIBLE TRANSACTIONS</div>
                   {[
-                    ['Eligible Messages', dynamicEligibleCount.toString()],
+                    ['Transactions', dynamicEligibleCount.toString()],
                     ['Total Revenue', fmt(dynamicTotalRevenue)],
                     ['Your Earnings', fmt(dynamicAvailable)],
             
@@ -404,196 +399,59 @@ const CreatorPayouts = () => {
                     </div>
                   ))}
                 </Card>
+
+                {/* PAST WEEKLY PAYOUTS */}
+                {(() => {
+                  const pastPayoutsList = (payoutStats.sweepLogs && payoutStats.sweepLogs.length > 0)
+                    ? payoutStats.sweepLogs
+                    : (payoutStats.pastWeeklyPayouts || []);
+                  return (
+                    <div style={{ marginTop: '32px' }}>
+                      <h3 style={{ fontSize: '14px', fontWeight: '700', marginBottom: '16px', color: '#E2E8F0', letterSpacing: '0.5px', textTransform: 'uppercase' }}>Past Weekly Payouts</h3>
+                      {pastPayoutsList.length > 0 ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                          {pastPayoutsList.map(sweep => (
+                            <Card key={sweep._id || sweep.weekStart} style={{ padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#0F131A', border: '1px solid rgba(255,255,255,0.05)' }}>
+                              <div>
+                                <div style={{ fontSize: '14px', fontWeight: '700', color: '#fff', marginBottom: '4px' }}>
+                                  {sweep.weekStart && sweep.weekEnd ? (
+                                    `${new Date(sweep.weekStart).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' })} – ${new Date(sweep.weekEnd).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}`
+                                  ) : (
+                                    new Date(sweep.sweptAt).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })
+                                  )}
+                                </div>
+                                <div style={{ fontSize: '12px', color: '#94A3B8', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                  <span style={{ color: '#10B981', fontWeight: '600' }}>✓ Processed</span>
+                                  <span>•</span>
+                                  <span>Weekly payout</span>
+                                  <span>•</span>
+                                  <span>{sweep.transactionCount || 0} {sweep.transactionCount === 1 ? 'transaction' : 'transactions'}</span>
+                                </div>
+                              </div>
+                              <div style={{ fontSize: '16px', fontWeight: '800', color: (sweep.amountSwept > 0) ? '#10B981' : '#94A3B8' }}>
+                                {fmt(sweep.amountSwept)}
+                              </div>
+                            </Card>
+                          ))}
+                        </div>
+                      ) : (
+                        <Card style={{ padding: '24px', textAlign: 'center', color: '#686860', fontSize: '13px', background: '#0F131A', border: '1px solid rgba(255,255,255,0.05)' }}>
+                          No past payouts yet. Weekly cycles run Tuesday to Tuesday and update every Tuesday at 00:00.
+                        </Card>
+                      )}
+                    </div>
+                  );
+                })()}
               </>
             )}
 
-            {/* ── PROTECTED ── */}
-            {activeTab === 'Protected' && (
-              <>
-                <Card style={{ padding: '22px', marginBottom: '16px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '5px', color: '#686860', fontSize: '12px', marginBottom: '8px' }}>
-                    Protected Amount
-                  </div>
-                  <div style={{ fontSize: '34px', fontWeight: '800', letterSpacing: '-1px', marginBottom: '4px' }}>{fmt(dynamicProtected)}</div>
-                  <div style={{ color: '#686860', fontSize: '12px', marginBottom: '12px' }}>{dynamicProtectedCount} Messagess</div>
-                  <div style={{ backgroundColor: 'rgba(59,130,246,0.07)', border: '1px solid rgba(59,130,246,0.2)', borderRadius: '12px', padding: '14px', display: 'flex', gap: '10px', width: '100%', boxSizing: 'border-box' }}>
-                    <div style={{ color: '#60A5FA', flexShrink: 0, marginTop: '2px' }}><InfoIcon color="#60A5FA" /></div>
-                    <div style={{ fontSize: '12px', color: '#A8A8A0', lineHeight: '1.6' }}>
-                      These are potential earnings from messages you haven't answered yet.<br />
-                      Answer them before they expire to move the funds to Available for Payout.
-                    </div>
-                  </div>
-                </Card>
 
-                <div style={{ fontSize: '10px', fontWeight: '700', color: '#686860', letterSpacing: '1px', marginBottom: '10px' }}>PENDING MESSAGES</div>
-                <Card style={{ overflow: 'hidden', marginBottom: '14px' }}>
-                  {formattedPendingList && formattedPendingList.length > 0 ? formattedPendingList.map((item, i) => (
-                    <div key={item.id} onClick={() => navigate('/creator/inbox')} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderBottom: i < formattedPendingList.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none', cursor: 'pointer' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <CalendarIcon />
-                        <div>
-                          <div style={{ fontSize: '13px', fontWeight: '600', color: '#FAFAF8' }}>{item.buyerName}</div>
-                          <div style={{ fontSize: '11px', color: '#686860', marginTop: '3px' }}>{item.date}</div>
-                        </div>
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <div style={{ textAlign: 'right' }}>
-                          <div style={{ fontSize: '13px', fontWeight: '700', color: '#FAFAF8' }}>{fmt(item.amount)}</div>
-                          <div style={{ fontSize: '11px', color: '#686860', marginTop: '3px' }}>Unanswered</div>
-                        </div>
-                        <ChevronRight />
-                      </div>
-                    </div>
-                  )) : (
-                    <div style={{ padding: '20px', textAlign: 'center', color: '#686860', fontSize: '12px' }}>No pending messages right now.</div>
-                  )}
-                </Card>
-
-              </>
-            )}
-
-            {/* ── UNDER REVIEW ── */}
-            {activeTab === 'Under Review' && (
-              <>
-                {dynamicUnderReviewCount > 0 ? (
-                  <>
-                    <Card style={{ padding: '20px', marginBottom: '16px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
-                        <div style={{ backgroundColor: 'rgba(251,146,60,0.13)', color: '#FB923C', borderRadius: '10px', width: '38px', height: '38px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-                            <line x1="12" y1="9" x2="12" y2="13"></line>
-                            <line x1="12" y1="17" x2="12.01" y2="17"></line>
-                          </svg>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '14px', fontWeight: '700' }}>
-                          Under Review 
-                        </div>
-                      </div>
-                      <div style={{ fontSize: '34px', fontWeight: '800', letterSpacing: '-1px', marginBottom: '4px' }}>{fmt(dynamicUnderReviewAmount)}</div>
-                      <div style={{ color: '#686860', fontSize: '12px', marginBottom: '16px' }}>{dynamicUnderReviewCount} Questions</div>
-                      <div style={{ backgroundColor: 'rgba(251,146,60,0.07)', border: '1px solid rgba(251,146,60,0.2)', borderRadius: '12px', padding: '14px', display: 'flex', gap: '10px' }}>
-                        <div style={{ color: '#FB923C', flexShrink: 0, marginTop: '1px' }}><InfoIcon color="#FB923C" /></div>
-                        <div style={{ fontSize: '12px', color: '#A8A8A0', lineHeight: '1.6' }}>
-                          These questions were flagged or rejected. Our team is reviewing them. You will be notified once resolved.
-                        </div>
-                      </div>
-                    </Card>
-
-                    <div style={{ fontSize: '10px', fontWeight: '700', color: '#686860', letterSpacing: '1px', marginBottom: '10px' }}>QUESTIONS UNDER REVIEW</div>
-                    <Card style={{ overflow: 'hidden' }}>
-                      {formattedUnderReviewList.map((item, i) => (
-                        <div key={item.id} onClick={() => navigate('/creator/inbox')} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderBottom: i < formattedUnderReviewList.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none', cursor: 'pointer' }}>
-                          <div>
-                            <div style={{ fontSize: '14px', fontWeight: '700', marginBottom: '3px' }}>{item.buyerName}</div>
-                            <div style={{ fontSize: '11px', color: item.adminMessage ? '#8b5cf6' : '#FB923C', fontWeight: '600' }}>{item.status}</div>
-                            {item.adminMessage && (
-                              <div style={{ fontSize: '11px', color: '#A8A8A0', marginTop: '4px', maxWidth: '200px', lineHeight: '1.4' }}>{item.adminMessage}</div>
-                            )}
-                          </div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <div style={{ textAlign: 'right' }}>
-                              <div style={{ fontSize: '13px', fontWeight: '700' }}>{fmt(item.amount)}</div>
-                              <div style={{ fontSize: '11px', color: '#686860' }}>{item.date}</div>
-                            </div>
-                            <ChevronRight />
-                          </div>
-                        </div>
-                      ))}
-                    </Card>
-                  </>
-                ) : (
-                  <Card style={{ padding: '20px', textAlign: 'center', color: '#686860', fontSize: '14px' }}>
-                    No disputes to review.
-                  </Card>
-                )}
-              </>
-            )}
-
-            {/* ── REFUNDED ── */}
-            {activeTab === 'Refunded' && (
-              <>
-                <Card style={{ padding: '20px', marginBottom: '16px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
-                    <div style={{ backgroundColor: 'rgba(239,68,68,0.13)', color: '#EF4444', borderRadius: '10px', width: '38px', height: '38px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <CalendarIcon color="#EF4444" />
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '14px', fontWeight: '700' }}>
-                      Refunded 
-                    </div>
-                  </div>
-                  <div style={{ fontSize: '34px', fontWeight: '800', letterSpacing: '-1px', color: '#EF4444', marginBottom: '4px' }}>{currencySymbol}{(payoutStats.refundedAmount || 0).toFixed(2)}</div>
-                  <div style={{ color: '#686860', fontSize: '12px', marginBottom: '16px' }}>{payoutStats.refundedQuestionsCount || 0} Questions</div>
-                  <div style={{ backgroundColor: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: '12px', padding: '14px', display: 'flex', gap: '10px' }}>
-                    <div style={{ color: '#EF4444', flexShrink: 0, marginTop: '1px' }}><InfoIcon color="#EF4444" /></div>
-                    <div style={{ fontSize: '12px', color: '#EF4444', lineHeight: '1.6' }}>
-                      These amounts were refunded to fans.<br />Creator share is not paid out.
-                    </div>
-                  </div>
-                </Card>
-
-                {/* Sub-tabs */}
-                <div style={{ display: 'flex', gap: '8px', marginBottom: '14px', backgroundColor: '#0f0f1c', borderRadius: '12px', padding: '4px', border: '1px solid rgba(255,255,255,0.07)' }}>
-                  {['All', 'Auto Refunds', 'Approved Refunds'].map(sub => (
-                    <button key={sub} onClick={() => setRefundSubTab(sub)} style={{ flex: 1, padding: '8px 4px', borderRadius: '9px', border: 'none', cursor: 'pointer', fontSize: '11px', fontWeight: refundSubTab === sub ? '700' : '400', backgroundColor: refundSubTab === sub ? '#FAFAF8' : 'transparent', color: refundSubTab === sub ? '#07070E' : '#686860', transition: 'all 0.18s' }}>
-                      {sub}
-                    </button>
-                  ))}
-                </div>
-
-                <Card style={{ overflow: 'hidden' }}>
-                  {(payoutStats.refundedList || [])
-                    .filter(item => refundSubTab === 'All' || (refundSubTab === 'Auto Refunds' && item.type === 'Auto Refund') || (refundSubTab === 'Approved Refunds' && item.type === 'Approved Refund'))
-                    .map((item, i, arr) => (
-                      <div key={item.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderBottom: i < arr.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none', cursor: 'pointer' }}>
-                        <div>
-                          <div style={{ fontSize: '12px', color: '#686860', marginBottom: '3px' }}>{item.date}</div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '7px', marginBottom: '3px' }}>
-                            <span style={{ fontSize: '13px', fontWeight: '700' }}>{item.buyerName}</span>
-                            <span style={{ fontSize: '10px', fontWeight: '600', padding: '2px 8px', borderRadius: '20px', backgroundColor: item.type === 'Auto Refund' ? 'rgba(59,130,246,0.15)' : 'rgba(168,85,247,0.15)', color: item.type === 'Auto Refund' ? '#60A5FA' : '#C084FC' }}>{item.type}</span>
-                          </div>
-                          <div style={{ fontSize: '11px', color: '#686860' }}>{item.reason}</div>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                          <span style={{ fontSize: '13px', fontWeight: '700', color: '#EF4444' }}>{item.amount}</span>
-                          <ChevronRight />
-                        </div>
-                      </div>
-                    ))}
-                </Card>
-              </>
-            )}
 
             {/* ── HISTORY ── */}
             {activeTab === 'History' && (
               <>
-                <Card style={{ padding: '24px', marginBottom: '24px', background: 'linear-gradient(145deg, #0F172A 0%, #0B0F19 100%)', border: '1px solid #1E293B' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#38BDF8', fontSize: '11px', fontWeight: '800', letterSpacing: '1.2px', marginBottom: '12px' }}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline>
-                      <polyline points="16 7 22 7 22 13"></polyline>
-                    </svg>
-                    LIFETIME PAID
-                  </div>
-                  <div style={{ fontSize: '42px', fontWeight: '900', letterSpacing: '-1px', color: '#fff', display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '4px', lineHeight: 1 }}>
-                    <span style={{ color: '#E2E8F0', fontSize: '32px' }}>{currencySymbol}</span>{dynamicLifetimePaid}
-                  </div>
-                  <div style={{ color: '#64748B', fontSize: '13px', fontWeight: '500', marginBottom: '24px' }}>
-                    Total amount credited to your account
-                  </div>
-                  
-                  <div style={{ background: '#1E293B', borderRadius: '14px', padding: '16px', border: '1px solid #334155' }}>
-                    <div style={{ color: '#64748B', fontSize: '10px', fontWeight: '800', letterSpacing: '1px', marginBottom: '8px', textTransform: 'uppercase' }}>
-                      This month
-                    </div>
-                    <div style={{ color: '#38BDF8', fontSize: '20px', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '2px' }}>
-                      <span style={{ fontSize: '16px' }}>{currencySymbol}</span>{(payoutStats.thisMonth || 0)}
-                    </div>
-                  </div>
-                </Card>
-
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                  <h3 style={{ fontSize: '16px', fontWeight: '700', margin: 0 }}>Payout History</h3>
+                  <h3 style={{ fontSize: '16px', fontWeight: '700', margin: 0 }}>Transaction history</h3>
                   <div style={{ position: 'relative' }} ref={filterMenuRef}>
                     <button onClick={() => setShowFilterMenu(!showFilterMenu)} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', color: '#A8A8A0', fontSize: '12px', padding: '7px 12px', cursor: 'pointer' }}>
                       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -626,11 +484,17 @@ const CreatorPayouts = () => {
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                         {group.items.map(item => (
                           <div key={item.id} onClick={() => navigate('/creator/inbox')} style={{ backgroundColor: '#0f0f1c', borderRadius: '14px', padding: '14px 16px', display: 'flex', alignItems: 'center', gap: '12px', border: '1px solid rgba(255,255,255,0.07)', cursor: 'pointer' }}>
-                            <StatusIcon status={item.status} />
+                            <StatusIcon status={item.status} bank={item.bank} />
                             <div style={{ flex: 1, minWidth: 0 }}>
                               <div style={{ fontSize: '14px', fontWeight: '700', marginBottom: '3px' }}>{item.date}</div>
                               <div style={{ fontSize: '11px', color: '#686860' }}>
-                                {item.bank} • {item.date === new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) ? 'Answered today' : `Answered on ${item.date}`}
+                                {item.bank} • {(() => {
+                                  const isToday = item.date === new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+                                  if (item.bank === 'Tip') return isToday ? 'Received today' : `Received on ${item.date}`;
+                                  if (item.bank === 'Live Chat') return isToday ? 'Ended today' : `Ended on ${item.date}`;
+                                  if (item.bank === 'Affiliate Referral') return isToday ? 'Earned today' : `Earned on ${item.date}`;
+                                  return isToday ? 'Answered today' : `Answered on ${item.date}`;
+                                })()}
                               </div>
                             </div>
                             <div style={{ textAlign: 'right', flexShrink: 0 }}>
@@ -645,7 +509,7 @@ const CreatorPayouts = () => {
                   ))
                 ) : (
                   <div style={{ padding: '20px', textAlign: 'center', color: '#686860', fontSize: '14px' }}>
-                    No payout history yet.
+                    No transaction history yet.
                   </div>
                 )}
               </>

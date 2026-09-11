@@ -96,15 +96,20 @@ const WaitlistForm = () => {
                         value={formData.expertise} onChange={(e) => setFormData({ ...formData, expertise: e.target.value })}
                     >
                         <option value="" disabled>Your field of expertise</option>
-                        <option>Career & Finance</option>
-                        <option>Health & Fitness</option>
-                        <option>Tech & Skills</option>
-                        <option>Fashion & Lifestyle</option>
-                        <option>Entertainment</option>
-                        <option>Education</option>
+                        <option>Lifestyle</option>
+                        <option>Beauty</option>
+                        <option>Fitness</option>
+                        <option>Finance</option>
+                        <option>Tech</option>
                         <option>Entrepreneurship</option>
-                        <option>Relationships</option>
-                        <option>Spirituality</option>
+                        <option>Education</option>
+                        <option>Motivation</option>
+                        <option>Dating</option>
+                        <option>Food</option>
+                        <option>Travel</option>
+                        <option>Music</option>
+                        <option>Gaming</option>
+                        <option>Comedy</option>
                         <option>Others</option>
                     </select>
                     {formData.expertise === 'Others' && (

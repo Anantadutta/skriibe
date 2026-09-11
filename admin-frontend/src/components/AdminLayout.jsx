@@ -5,6 +5,7 @@ import axios from 'axios';
 const AdminLayout = () => {
   const location = useLocation();
   const [unreadCount, setUnreadCount] = useState(0);
+  const [unreadQueriesCount, setUnreadQueriesCount] = useState(0);
 
   useEffect(() => {
     const fetchUnread = async () => {
@@ -15,6 +16,21 @@ const AdminLayout = () => {
       } catch (err) {
         console.error('Failed to fetch unread alerts count:', err);
       }
+
+      try {
+        const queryRes = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/queries/admin/stats`, { withCredentials: true });
+        if (queryRes.data?.unreadCount !== undefined) {
+          setUnreadQueriesCount(queryRes.data.unreadCount);
+        }
+      } catch (err) {
+        // Fallback check
+        try {
+          const fallbackRes = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/admin/queries/stats`, { withCredentials: true });
+          if (fallbackRes.data?.unreadCount !== undefined) {
+            setUnreadQueriesCount(fallbackRes.data.unreadCount);
+          }
+        } catch (e) {}
+      }
     };
     fetchUnread();
   }, [location.pathname]);
@@ -22,18 +38,18 @@ const AdminLayout = () => {
   const isDisputeDrilldown = location.pathname.includes('/admin/dispute/');
 
   const menuItems = [
+    { name: 'Analytics', path: '/admin/analytics', icon: '📈' },
     { name: 'Dashboard', path: '/admin/dashboard', icon: '📊' },
     { name: 'Alerts', path: '/admin/alerts', icon: '🔔', badge: unreadCount > 0 ? unreadCount : null },
-    { name: 'Creator Health', path: '/admin/creators', icon: '👥' },
-    { name: 'Buyer Health', path: '/admin/buyers', icon: '🛒' },
-    { name: 'Creator Disputes', path: '/admin/creator-disputes', icon: '⚔️' },
-    { name: 'Buyer Disputes', path: '/admin/buyer-disputes', icon: '⚖️' },
+    { name: 'Queries', path: '/admin/queries', icon: '❓', badge: unreadQueriesCount > 0 ? unreadQueriesCount : null },
+    { name: 'Creator Review', path: '/admin/creators', icon: '👥' },
+    { name: 'Fan Health', path: '/admin/buyers', icon: '🛒' },
+    { name: 'Tips', path: '/admin/tips', icon: '💝' },
     { name: 'Transactions', path: '/admin/transactions', icon: '💳' },
     { name: 'Account Actions', path: '/admin/account-actions', icon: '🚪' },
     { name: 'Commission %', path: '/admin/commission', icon: '⚙️' },
     { name: 'Bank Details', path: '/admin/bank-details', icon: '🏦' },
     { name: 'Affiliators', path: '/admin/affiliators', icon: '🤝' },
-    { name: 'Analytics', path: '/admin/analytics', icon: '📈' },
   ];
 
   return (

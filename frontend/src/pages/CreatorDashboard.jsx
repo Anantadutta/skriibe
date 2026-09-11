@@ -7,11 +7,12 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import TransparentLogo from '../components/TransparentLogo';
 import { mockCreator, mockQuestions } from '../mock/questions';
-import { getMe, toggleLive, getMyReferrals } from '../services/creatorApi';
+import { getMe, toggleLive, toggleLiveChat, updateLiveChatPrice, getMyReferrals } from '../services/creatorApi';
 import api from '../services/api';
 import { switchRole } from '../services/fanApi';
 import { useAuth } from '../context/AuthContext';
 import { getCurrencySymbol } from '../utils/phoneValidation';
+import { io } from 'socket.io-client';
 
 const CreatorDashboard = () => {
   const { username } = useParams();
@@ -21,7 +22,10 @@ const CreatorDashboard = () => {
 
   const [creator, setCreator] = useState(location.state?.creator || null);
   const [loadingInitial, setLoadingInitial] = useState(!location.state?.creator);
-  const [isLive, setIsLive] = useState(creator?.isLive !== false);
+  const [isLive, setIsLive] = useState(creator?.isLive === true);
+  const [isLiveChatEnabled, setIsLiveChatEnabled] = useState(creator?.liveChatEnabled !== false);
+  const [liveChatPrice, setLiveChatPrice] = useState(creator?.liveChatPrice || 5);
+  const [isEditingPrice, setIsEditingPrice] = useState(false);
   const [btnHover, setBtnHover] = useState(false);
   const [payoutStats, setPayoutStats] = useState({ available: 0 });
   const [questions, setQuestions] = useState([]);
@@ -29,16 +33,24 @@ const CreatorDashboard = () => {
   const [now, setNow] = useState(Date.now());
   const [isSavingStatus, setIsSavingStatus] = useState(false);
   const [abusivePopupQuestion, setAbusivePopupQuestion] = useState(null);
+  const [pendingChats, setPendingChats] = useState([]);
+  const [missedChats, setMissedChats] = useState([]);
+  const [cancelledSessions, setCancelledSessions] = useState(new Set());
+  const [acceptedChatsCount, setAcceptedChatsCount] = useState(0);
+  const [showNotifySuccessModal, setShowNotifySuccessModal] = useState(false);
+  const [notifications, setNotifications] = useState([]);
   
   // Referrals Modal State
   const [showReferralsModal, setShowReferralsModal] = useState(false);
   const [referralsList, setReferralsList] = useState([]);
   const [loadingReferrals, setLoadingReferrals] = useState(false);
+  const [showPendingModal, setShowPendingModal] = useState(false);
+  const [showMissedChatsModal, setShowMissedChatsModal] = useState(false);
 
   const currencySymbol = getCurrencySymbol(creator?.phone);
 
   useEffect(() => {
-    const timer = setInterval(() => setNow(Date.now()), 60000);
+    const timer = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(timer);
   }, []);
   
@@ -48,16 +60,14 @@ const CreatorDashboard = () => {
       try {
         const res = await getMe();
         if (res.success) {
-          if (!res.creator.ama_enabled) {
-            if (res.creator.expertise && res.creator.expertise.length > 0) {
-              navigate('/onboard/pricing', { replace: true });
-            } else {
-              navigate('/onboard/profile', { replace: true });
-            }
+          if (!res.creator.handle) {
+            navigate('/onboard/profile', { replace: true });
             return;
           }
           setCreator(res.creator);
-          setIsLive(res.creator.isLive !== false);
+          setIsLive(res.creator.isLive === true);
+          setIsLiveChatEnabled(res.creator.liveChatEnabled !== false);
+          setLiveChatPrice(res.creator.liveChatPrice || 5);
         }
       } catch (error) {
         console.error('Failed to fetch creator:', error);
@@ -79,6 +89,17 @@ const CreatorDashboard = () => {
       }
     };
 
+    const fetchNotifications = async () => {
+      try {
+        const res = await api.get(`/creator/notifications?t=${Date.now()}`);
+        if (res.data.success) {
+          setNotifications(res.data.notifications);
+        }
+      } catch (err) {
+        console.error('Error fetching notifications:', err);
+      }
+    };
+
     const fetchPayouts = async () => {
       try {
         const res = await api.get('/creator/payouts');
@@ -90,15 +111,99 @@ const CreatorDashboard = () => {
       }
     };
 
+    // Live Chat integration
+    const fetchPendingChats = async () => {
+      try {
+        const res = await api.get(`/chat/pending?t=${Date.now()}`);
+        if (res.data.success) {
+          setPendingChats(res.data.pendingChats);
+        }
+      } catch (err) {
+        console.error('Failed to fetch pending chats:', err);
+      }
+    };
+
+    const fetchMissedChats = async () => {
+      try {
+        const res = await api.get(`/chat/creator-history?t=${Date.now()}`);
+        if (res.data.success) {
+          const nowMs = Date.now();
+          const missed = res.data.sessions.filter(s => {
+            if (s.totalMinutes !== 0 || s.notifiedMissed) return false;
+            const chatTime = new Date(s.endTime || s.startTime || s.createdAt).getTime();
+            return (nowMs - chatTime) <= 24 * 60 * 60 * 1000;
+          });
+          setMissedChats(missed);
+          
+          // Calculate accepted chats this week (totalMinutes > 0 and within last 7 days)
+          const now = new Date();
+          const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+          
+          const acceptedThisWeek = res.data.sessions.filter(s => {
+            if (s.totalMinutes === 0) return false;
+            const chatTime = new Date(s.endTime || s.startTime || s.createdAt);
+            return chatTime >= sevenDaysAgo;
+          });
+          setAcceptedChatsCount(acceptedThisWeek.length);
+        }
+      } catch (err) {
+        console.error('Failed to fetch missed chats:', err);
+      }
+    };
+
     fetchQuestions();
+    fetchNotifications();
     fetchPayouts();
+    fetchPendingChats();
+    fetchMissedChats();
 
     const interval = setInterval(() => {
       fetchQuestions();
+      fetchNotifications();
       fetchPayouts();
-    }, 15000);
-    return () => clearInterval(interval);
-  }, [location.state?.creator]);
+      fetchPendingChats();
+      fetchMissedChats();
+    }, 5000);
+
+    let newSocket = null;
+    if (location.state?.creator || creator) {
+      const currentCreator = location.state?.creator || creator;
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      const socketUrl = apiUrl.replace('/api', '');
+      newSocket = io(socketUrl, { transports: ['websocket'] });
+
+      newSocket.on('connect', () => {
+        newSocket.emit('join_creator_room', { creatorId: currentCreator._id || currentCreator.id });
+      });
+
+      newSocket.on('incoming_chat_request', (data) => {
+        setPendingChats(prev => {
+          // Overwrite existing by removing it first
+          const filtered = prev.filter(c => c.sessionId !== data.sessionId);
+          return [data, ...filtered];
+        });
+      });
+
+      newSocket.on('chat_cancelled_by_fan', (data) => {
+        // Optimistically remove from pending queue immediately
+        if (data && data.sessionId) {
+          const sid = String(data.sessionId);
+          setCancelledSessions(prev => new Set(prev).add(sid));
+          setPendingChats(prev => prev.filter(c => String(c.sessionId) !== sid));
+        }
+        // Add a slight delay to allow any pending DB saves to complete before fetching
+        setTimeout(() => {
+          fetchPendingChats();
+          fetchMissedChats();
+        }, 500);
+      });
+    }
+
+    return () => {
+      clearInterval(interval);
+      if (newSocket) newSocket.disconnect();
+    };
+  }, [creator?._id, creator?.id]);
 
   useEffect(() => {
     if (questions.length > 0) {
@@ -118,8 +223,9 @@ const CreatorDashboard = () => {
 
   const navItems = [
     { label: 'HOME', icon: '🏠', route: '/creator/dashboard' },
-    { label: 'INBOX', icon: '💬', route: '/creator/inbox' },
-    { label: 'PAYOUTS', icon: '💰', route: '/creator/payouts' },
+    { label: 'CHATS', icon: '💬', route: '/creator/inbox' },
+    { label: 'TRANSACTIONS', icon: '💰', route: '/creator/payouts' },
+    { label: 'ANALYTICS', icon: '📊', route: '/creator/analytics' },
     { label: 'SETTINGS', icon: '⚙️', route: '/creator/settings' },
   ];
 
@@ -135,6 +241,37 @@ const CreatorDashboard = () => {
       setIsLive(!newStatus);
       setCreator(prev => ({ ...prev, isLive: !newStatus }));
       alert('Failed to update live status. Please try again.');
+    }
+  };
+
+  const handleLiveChatToggle = async () => {
+    const newStatus = !isLiveChatEnabled;
+    setIsLiveChatEnabled(newStatus);
+    setCreator(prev => ({ ...prev, liveChatEnabled: newStatus }));
+    try {
+      await toggleLiveChat(newStatus);
+    } catch (err) {
+      console.error('Failed to toggle live chat status:', err);
+      setIsLiveChatEnabled(!newStatus);
+      setCreator(prev => ({ ...prev, liveChatEnabled: !newStatus }));
+      alert('Failed to update live chat status. Please try again.');
+    }
+  };
+
+  const handlePriceUpdate = async () => {
+    try {
+      const res = await updateLiveChatPrice(Number(liveChatPrice));
+      if (res.data?.success || res.success) {
+        setCreator(prev => ({ ...prev, liveChatPrice: Number(liveChatPrice) }));
+        setIsEditingPrice(false);
+      } else {
+        throw new Error('Failed to update price');
+      }
+    } catch (err) {
+      console.error('Failed to update live chat price:', err);
+      alert('Failed to update price. Please try again.');
+      setLiveChatPrice(creator.liveChatPrice || 5); // Revert
+      setIsEditingPrice(false);
     }
   };
 
@@ -206,25 +343,17 @@ const CreatorDashboard = () => {
     }
   };
 
-  const handleOpenReferrals = async () => {
-    setShowReferralsModal(true);
-    setLoadingReferrals(true);
-    try {
-      const res = await getMyReferrals();
-      if (res.success) {
-        setReferralsList(res.referrals || []);
-      }
-    } catch (err) {
-      console.error('Failed to load referrals:', err);
-    } finally {
-      setLoadingReferrals(false);
-    }
+  const handleOpenReferrals = () => {
+    navigate('/creator/analytics', { state: { creator } });
   };
 
   const totalReceived = questions.length;
   const pendingCount = questions.filter(q => q.status?.toLowerCase() === 'pending').length;
   const disputeCount = questions.filter(q => q.status?.toLowerCase() === 'flagged').length;
   const repliedQuestions = questions.filter(q => ['answered', 'satisfied', 'rejected'].includes(q.status?.toLowerCase()));
+
+  const readIds = JSON.parse(localStorage.getItem('creatorReadNotifications') || '[]');
+  const unreadNotificationsCount = notifications.filter(n => !readIds.includes(n.id)).length;
   
   const denominator = totalReceived - pendingCount - disputeCount;
   const dynamicReplyRate = denominator > 0 
@@ -338,7 +467,44 @@ const CreatorDashboard = () => {
           0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
           100% { box-shadow: 0 0 0 14px rgba(34, 197, 94, 0); }
         }
+        .toggle-switch {
+          position: relative;
+          display: inline-block;
+          width: 44px;
+          height: 24px;
+        }
+        .toggle-switch input {
+          opacity: 0;
+          width: 0;
+          height: 0;
+        }
+        .slider {
+          position: absolute;
+          cursor: pointer;
+          top: 0; left: 0; right: 0; bottom: 0;
+          background-color: #4b5563;
+          transition: .4s;
+          border-radius: 24px;
+        }
+        .slider:before {
+          position: absolute;
+          content: "";
+          height: 18px;
+          width: 18px;
+          left: 3px;
+          bottom: 3px;
+          background-color: white;
+          transition: .4s;
+          border-radius: 50%;
+        }
+        input:checked + .slider {
+          background-color: #22C55E;
+        }
+        input:checked + .slider:before {
+          transform: translateX(20px);
+        }
       `}} />
+
 
       {/* Abusive Dispute Resolved Modal */}
       {abusivePopupQuestion && (
@@ -430,7 +596,7 @@ const CreatorDashboard = () => {
               }}
             >
               <span style={{ filter: 'grayscale(100%) sepia(100%) hue-rotate(350deg) saturate(500%) brightness(1.2)' }}>🔔</span>
-              {questions.filter(q => q.status?.toLowerCase() === 'submitted').length > 0 && (
+              {unreadNotificationsCount > 0 && (
                 <div style={{
                   position: 'absolute',
                   top: '-4px',
@@ -447,7 +613,7 @@ const CreatorDashboard = () => {
                   borderRadius: '50%',
                   border: '2px solid #0E0E0E'
                 }}>
-                  {questions.filter(q => q.status?.toLowerCase() === 'submitted').length}
+                  {unreadNotificationsCount}
                 </div>
               )}
             </div>
@@ -489,161 +655,479 @@ const CreatorDashboard = () => {
 
         {/* 2. EARNINGS CARD */}
         <div style={{
-          background: 'linear-gradient(145deg, #13161C 0%, #0B0D13 100%)',
+          background: '#0a0d14',
           borderRadius: '20px',
           padding: '20px',
           display: 'flex',
-          flexDirection: 'column',
-          gap: '16px',
-          border: '1px solid #1F2937',
+          flexDirection: 'row',
+          border: '1px solid #1E293B',
           position: 'relative',
-          overflow: 'hidden'
+          overflow: 'hidden',
+          width: '100%',
+          boxSizing: 'border-box'
         }}>
-          {/* Aesthetic glow in the corner */}
-          <div style={{
-            position: 'absolute',
-            top: '-20%',
-            right: '-10%',
-            width: '150px',
-            height: '150px',
-            background: 'radial-gradient(circle, rgba(41, 197, 246, 0.15) 0%, rgba(41, 197, 246, 0) 70%)',
-            filter: 'blur(30px)',
-            pointerEvents: 'none'
-          }} />
-
-          <div>
-            <div style={{ color: '#94a3b8', fontSize: '0.75rem', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase' }}>
-              EARNINGS · THIS WEEK
-            </div>
-            <div style={{ display: 'flex', alignItems: 'baseline', marginTop: '4px' }}>
-              <span style={{ fontSize: '2.2rem', color: '#29C5F6', marginRight: '4px' }}>{currencySymbol}</span>
-              <span style={{ fontSize: '3rem', fontWeight: 900, color: '#fff', letterSpacing: '-1.5px' }}>{dynamicWeeklyEarnings || 0}</span>
+          {/* Left Side */}
+          <div style={{ flex: 1, paddingRight: '12px', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ width: '22px', height: '22px', borderRadius: '50%', backgroundColor: '#3B82F6', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '12px', fontWeight: 'bold', flexShrink: 0 }}>
+                 {currencySymbol}
+              </div>
+              <div style={{ color: '#93C5FD', fontSize: '0.7rem', fontWeight: 800, letterSpacing: '0.5px', textTransform: 'uppercase', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                EARNINGS THIS WEEK
+              </div>
             </div>
             
-            <div style={{ color: '#94a3b8', fontSize: '0.85rem', fontWeight: 600, marginTop: '8px' }}>
-              Accepting messages. <span style={{ color: '#38bdf8' }}>{currencySymbol}{creator.pricePerQuestion || 0}</span>/message.
+            <div style={{ marginTop: '12px', fontSize: '2.5rem', fontWeight: 900, color: '#fff', letterSpacing: '-1px', lineHeight: '1', display: 'flex', alignItems: 'center', whiteSpace: 'nowrap' }}>
+              {currencySymbol}{dynamicWeeklyEarnings || 0}
             </div>
-
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '4px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: '#94a3b8' }}>
-              <span>Weekly goal</span>
-              <span><strong style={{ color: '#fff' }}>{currencySymbol}{dynamicWeeklyGoalProgress}</strong> / {currencySymbol}{creator.weeklyGoal || 1500}</span>
+            
+            <div style={{ marginTop: '14px', marginBottom: '14px', position: 'relative', height: '1px', background: 'rgba(255,255,255,0.1)' }}>
+              <div style={{ position: 'absolute', top: '-1px', left: '50%', transform: 'translateX(-50%)', width: '24px', height: '2px', background: '#3B82F6', boxShadow: '0 0 8px 2px rgba(59,130,246,0.8)', borderRadius: '2px' }} />
             </div>
-            <div style={{ width: '100%', height: '6px', background: '#1F2937', borderRadius: '4px', overflow: 'hidden' }}>
-              <div style={{ width: `${Math.min(100, (dynamicWeeklyGoalProgress / (creator.weeklyGoal || 1500)) * 100)}%`, height: '100%', background: 'linear-gradient(90deg, #29C5F6 0%, #38BDF8 100%)', borderRadius: '4px' }} />
-            </div>
-          </div>
-        </div>
-
-        {/* 3. STATS ROW */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
-          gap: '10px'
-        }}>
-          <div style={{
-            background: '#13161C',
-            border: '1px solid #1F2937',
-            borderRadius: '16px',
-            padding: '16px 8px',
-            textAlign: 'center',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center'
-          }}>
-            <div style={{ fontSize: '1.5rem', fontWeight: 900, color: '#F87171' }}>
-              {questions.filter(q => q.status?.toLowerCase() === 'submitted').length}
-            </div>
-            <div style={{ fontSize: '0.6rem', color: '#94a3b8', marginTop: '4px', fontWeight: 'bold', letterSpacing: '1px', textTransform: 'uppercase' }}>PENDING</div>
-          </div>
-          <div style={{
-            background: '#13161C',
-            border: '1px solid #1F2937',
-            borderRadius: '16px',
-            padding: '16px 8px',
-            textAlign: 'center',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center'
-          }}>
-            <div style={{ fontSize: '1.5rem', fontWeight: 900, color: '#34D399' }}>{dynamicReplyRate}%</div>
-            <div style={{ fontSize: '0.6rem', color: '#94a3b8', marginTop: '4px', fontWeight: 'bold', letterSpacing: '1px', textTransform: 'uppercase' }}>REPLY RATE</div>
-          </div>
-        </div>
-
-        {/* 4. LIVE STATUS BANNER */}
-        <div 
-          onClick={() => {
-            if (creator?.isPaused) {
-              navigate('/creator/settings', { state: { highlightPause: true } });
-            }
-          }}
-          style={{
-            background: creator?.isPaused ? '#13161C' : (isLive ? 'rgba(45, 212, 191, 0.04)' : '#13161C'),
-            border: creator?.isPaused ? '1px solid #ef4444' : (isLive ? '1px solid rgba(45, 212, 191, 0.3)' : '1px solid #1F2937'),
-            borderRadius: '16px',
-            padding: '14px 16px',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            transition: 'all 0.3s ease',
-            cursor: creator?.isPaused ? 'pointer' : 'default'
-          }}
-        >
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px' }}>
-              <div style={{
-                width: '8px',
-                height: '8px',
-                borderRadius: '50%',
-                background: creator?.isPaused ? '#ef4444' : (isLive ? '#2DD4BF' : '#94a3b8'),
-                transition: 'background-color 0.3s ease'
-              }} />
-              <span style={{ fontWeight: 800, fontSize: '0.95rem', color: creator?.isPaused ? '#ef4444' : '#ffffff' }}>
-                {creator?.isPaused ? 'Account paused by yourself temporarily' : `You're ${isLive ? 'LIVE' : 'OFFLINE'}`}
-              </span>
-            </div>
-            <div style={{ color: '#94a3b8', fontSize: '0.85rem', marginTop: '6px' }}>
-              {creator?.isPaused 
-                ? 'Not accepting messages temporarily' 
-                : (isSavingStatus ? 'Updating...' 
-                : (isLive ? 'Go offline on break, live again when back.' : 'Currently offline'))}
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.05)', borderRadius: '10px', padding: '8px 10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <div style={{ width: '16px', height: '16px', borderRadius: '50%', backgroundColor: '#3B82F6', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', flexShrink: 0 }}>
+                     <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+                       <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
+                     </svg>
+                  </div>
+                  <span style={{ color: '#fff', fontWeight: 600, fontSize: '0.75rem', whiteSpace: 'nowrap' }}>Live Chat</span>
+                </div>
+                <span style={{ color: '#38BDF8', fontWeight: 700, fontSize: '0.8rem', whiteSpace: 'nowrap' }}>{currencySymbol}{creator.liveChatPrice || 5}/min</span>
+              </div>
+              
+              {(creator.price > 0 || creator.pricePerQuestion > 0) && (
+                <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.05)', borderRadius: '10px', padding: '8px 10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <div style={{ width: '16px', height: '16px', borderRadius: '50%', backgroundColor: '#3B82F6', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 'bold', fontSize: '10px', flexShrink: 0 }}>
+                       ?
+                    </div>
+                    <span style={{ color: '#fff', fontWeight: 600, fontSize: '0.75rem', whiteSpace: 'nowrap' }}>AMA</span>
+                  </div>
+                  <span style={{ color: '#38BDF8', fontWeight: 700, fontSize: '0.8rem', whiteSpace: 'nowrap' }}>{currencySymbol}{creator.pricePerQuestion || creator.price}/msg</span>
+                </div>
+              )}
             </div>
           </div>
 
+          {/* Divider Line */}
+          <div style={{ width: '1px', background: 'rgba(255,255,255,0.1)', margin: '0 8px', flexShrink: 0 }} />
+
+          {/* Right Side */}
           <div 
-            onClick={(e) => {
-              if (creator?.isPaused) {
-                e.stopPropagation();
-                navigate('/creator/settings', { state: { highlightPause: true } });
-              } else {
-                handleToggle();
-              }
-            }}
-            style={{
-              width: '44px',
-              height: '26px',
-              borderRadius: '13px',
-              background: isLive ? '#2DD4BF' : '#1F2937',
-              position: 'relative',
-              cursor: 'pointer',
-              transition: 'all 0.3s ease'
-            }}
+            onClick={() => navigate('/creator/inbox')}
+            style={{ flex: 1, paddingLeft: '12px', display: 'flex', flexDirection: 'column', cursor: 'pointer' }}
           >
-            <div style={{
-              width: '22px',
-              height: '22px',
-              borderRadius: '50%',
-              background: '#ffffff',
-              position: 'absolute',
-              top: '2px',
-              left: isLive ? '20px' : '2px',
-              transition: 'all 0.3s ease',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
-            }} />
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+              <div style={{ width: '22px', height: '22px', borderRadius: '50%', backgroundColor: 'rgba(59, 130, 246, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#60A5FA', flexShrink: 0 }}>
+                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+              </div>
+              <div style={{ color: '#93C5FD', fontSize: '0.7rem', fontWeight: 800, letterSpacing: '0.5px', textTransform: 'uppercase', lineHeight: '1.3' }}>
+                CHATS ACCEPTED<br/>THIS WEEK
+              </div>
+            </div>
+            
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '16px', marginTop: '12px' }}>
+              <div style={{ fontSize: '3.5rem', fontWeight: 900, color: '#fff', letterSpacing: '-1.5px', lineHeight: '1' }}>
+                {acceptedChatsCount}
+              </div>
+              
+              <div style={{ color: '#3B82F6', display: 'flex', justifyContent: 'center' }}>
+                <svg width="45" height="25" viewBox="0 0 64 45" fill="#3B82F6">
+                  {/* Left Person */}
+                  <circle cx="14" cy="22" r="6.5" />
+                  <path d="M14 31c-5 0-9 3.5-9 8v6h15v-14h-6z" />
+                  {/* Right Person */}
+                  <circle cx="50" cy="22" r="6.5" />
+                  <path d="M50 31c5 0 9 3.5 9 8v6H44v-14h6z" />
+                  {/* Center Person (drawn last to be on top) */}
+                  <circle cx="32" cy="14" r="9.5" />
+                  <path d="M32 26c-7.5 0-14.5 4.5-14.5 11v8h29v-8c0-6.5-7-11-14.5-11z" />
+                </svg>
+              </div>
+            </div>
           </div>
+        </div>
+
+        {/* LIVE TOGGLE */}
+        <div style={{
+          background: 'rgba(255, 255, 255, 0.02)',
+          border: '1px solid rgba(255, 255, 255, 0.05)',
+          borderRadius: '16px',
+          padding: '20px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}>
+          <div>
+            <div style={{ color: '#fff', fontWeight: 700, fontSize: '1rem' }}>Accept Live Chats Now</div>
+            <div style={{ color: '#94a3b8', fontSize: '0.8rem', marginTop: '4px' }}>
+              Available Now? Go Live!<br />
+              You don’t have to wait for your scheduled slot.
+            </div>
+          </div>
+          <label className="toggle-switch">
+            <input type="checkbox" checked={isLive} onChange={handleToggle} />
+            <span className="slider"></span>
+          </label>
+        </div>
+
+        {/* 3. PENDING QUEUE */}
+        <div style={{
+          background: '#0B0D13',
+          border: '1px solid #1F2937',
+          borderRadius: '16px',
+          padding: '20px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '16px'
+        }}>
+          {/* Header */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <div style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: '50%',
+                background: pendingChats.filter(chat => !cancelledSessions.has(String(chat.sessionId))).length > 0 ? 'rgba(244, 63, 94, 0.1)' : 'rgba(124, 58, 237, 0.1)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: pendingChats.filter(chat => !cancelledSessions.has(String(chat.sessionId))).length > 0 ? '#F43F5E' : '#A78BFA'
+              }}>
+                {pendingChats.filter(chat => !cancelledSessions.has(String(chat.sessionId))).length > 0 ? (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M5 22h14"></path>
+                    <path d="M5 2h14"></path>
+                    <path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22"></path>
+                    <path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2"></path>
+                  </svg>
+                ) : (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                )}
+              </div>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontSize: '14px', fontWeight: 800, color: '#fff', letterSpacing: '0.5px' }}>PENDING QUEUE</span>
+                  {(() => {
+                    const uniquePendingChats = pendingChats.reduce((acc, chat) => {
+                      if (!acc.find(c => c.fanName === chat.fanName)) acc.push(chat);
+                      return acc;
+                    }, []);
+                    return uniquePendingChats.length > 0 ? (
+                      <span style={{ background: '#F43F5E', color: '#fff', fontSize: '10px', fontWeight: 800, padding: '2px 6px', borderRadius: '999px' }}>
+                        {uniquePendingChats.length}
+                      </span>
+                    ) : null;
+                  })()}
+                </div>
+                <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '2px' }}>
+                  Fans waiting to chat with you
+                </div>
+              </div>
+            </div>
+            
+            <button 
+              onClick={() => setShowPendingModal(true)}
+              style={{
+              background: 'transparent',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              color: '#fff',
+              fontSize: '11px',
+              padding: '6px 12px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px'
+            }}>
+              {pendingChats.filter(chat => !cancelledSessions.has(String(chat.sessionId))).length > 0 ? 'View All' : 'View All Queue'} <span style={{ fontSize: '10px' }}>{pendingChats.filter(chat => !cancelledSessions.has(String(chat.sessionId))).length > 0 ? '>' : '→'}</span>
+            </button>
+          </div>
+
+          {/* Body */}
+          {pendingChats.filter(chat => !cancelledSessions.has(String(chat.sessionId))).length > 0 ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '4px' }}>
+              {pendingChats.filter(chat => !cancelledSessions.has(String(chat.sessionId))).reduce((acc, chat) => {
+                if (!acc.find(c => c.fanName === chat.fanName)) acc.push(chat);
+                return acc;
+              }, []).slice(0, 3).map((chat, idx) => {
+                const timeDiff = now - new Date(chat.time).getTime();
+                const remainingMs = Math.max(0, 120000 - timeDiff);
+                const remMins = Math.floor(remainingMs / 60000);
+                const remSecs = String(Math.floor((remainingMs % 60000) / 1000)).padStart(2, '0');
+                const isUrgent = remainingMs <= 30000;
+                return (
+                  <div key={chat.sessionId || idx} style={{
+                    background: '#0B0D13',
+                    border: '1px solid #1c4456',
+                    borderRadius: '12px',
+                    padding: '16px',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: '8px',
+                    gap: '12px'
+                  }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'baseline', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        <span style={{ fontSize: '18px', fontWeight: 800, color: '#fff' }}>
+                          {chat.fanName} wants to chat
+                        </span>
+                        {chat.rate !== 0 && chat.rate !== '0' && (
+                          <span style={{ fontSize: '14px', color: '#29C5F6', fontWeight: 600 }}>
+                            {currencySymbol}{chat.rate !== undefined ? chat.rate : (creator.liveChatPrice || 5)}/min
+                          </span>
+                        )}
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', flexWrap: 'wrap' }}>
+                        <span style={{ color: '#22C55E', fontWeight: 600 }}>{currencySymbol}{Number(chat.walletBalance || 0).toFixed(2)} wallet</span>
+                        <span style={{ color: isUrgent ? '#ef4444' : '#94a3b8', fontWeight: isUrgent ? 800 : 400 }}>Time left: {remMins}:{remSecs}</span>
+                      </div>
+                      <div style={{ fontSize: '13px', color: '#64748b', marginTop: '4px' }}>
+                        Requested at {new Date(chat.time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })} IST
+                      </div>
+                    </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+                        {(chat.rate === 0 || chat.rate === '0') && (
+                          <span style={{ color: '#22C55E', fontWeight: 800, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Free Chat</span>
+                        )}
+                        <button 
+                          onClick={() => navigate(`/creator/dashboard/live-chat/${chat.sessionId}`)}
+                          style={{
+                            background: '#22C55E',
+                            color: '#fff',
+                            border: 'none',
+                            borderRadius: '8px',
+                            padding: '10px 20px',
+                            fontSize: '16px',
+                            fontWeight: 800,
+                            cursor: 'pointer',
+                            flexShrink: 0
+                          }}
+                        >
+                          Accept
+                        </button>
+                      </div>
+                    </div>
+                );
+              })}
+
+              {missedChats.length > 0 && (
+                <>
+                  <div style={{ width: '100%', height: '1px', background: 'rgba(255, 255, 255, 0.1)', margin: '16px 0' }} />
+                  <div style={{ width: '100%', textAlign: 'left' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'rgba(244, 63, 94, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F43F5E" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    </div>
+                    <h4 style={{ color: '#fff', fontSize: '15px', fontWeight: 700, margin: 0 }}>Missed Chats (24 hours)</h4>
+                  </div>
+                  {missedChats.length > 0 && (
+                    <div style={{ width: '28px', height: '28px', borderRadius: '50%', border: '1px solid rgba(255, 255, 255, 0.1)', background: 'rgba(255, 255, 255, 0.03)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '13px', fontWeight: 600 }}>
+                      {missedChats.length}
+                    </div>
+                  )}
+                </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      {missedChats.slice(0, 3).map(chat => (
+                        <div key={chat._id} style={{ background: 'rgba(255, 255, 255, 0.03)', borderRadius: '12px', padding: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            <img 
+                              src={chat.fanId?.avatarUrl ? (chat.fanId.avatarUrl.startsWith('http') ? chat.fanId.avatarUrl : `http://localhost:5000${chat.fanId.avatarUrl}`) : 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png'} 
+                              alt="Fan"
+                              style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover' }}
+                            />
+                            <div style={{ textAlign: 'left' }}>
+                              <div style={{ color: '#fff', fontWeight: 600, fontSize: '14px' }}>{chat.fanId?.name || 'A Fan'}</div>
+                              <div style={{ color: '#ef4444', fontSize: '11px', marginTop: '2px' }}>
+                                Missed at {new Date(chat.endTime || chat.startTime || chat.createdAt).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                              </div>
+                            </div>
+                          </div>
+                          <button 
+                            onClick={async (e) => {
+                              const btn = e.target;
+                              btn.disabled = true;
+                              btn.textContent = 'Notified';
+                              try {
+                                await api.post('/chat/notify-missed', { fanId: chat.fanId?._id, sessionId: chat._id || chat.id });
+                                setShowNotifySuccessModal(true);
+                                setMissedChats(prev => prev.filter(c => c._id !== chat._id && c.id !== chat.id));
+                              } catch (err) {
+                                console.error(err);
+                                btn.disabled = false;
+                                btn.textContent = 'Notify';
+                              }
+                            }}
+                            style={{ background: 'rgba(59, 130, 246, 0.1)', color: '#3B82F6', border: '1px solid rgba(59, 130, 246, 0.2)', padding: '6px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}
+                          >
+                            Notify
+                          </button>
+                        </div>
+                      ))}
+                      {missedChats.length > 3 && (
+                        <div 
+                          onClick={() => setShowMissedChatsModal(true)}
+                          style={{ 
+                            display: 'flex', 
+                            justifyContent: 'center', 
+                            alignItems: 'center', 
+                            padding: '10px', 
+                            cursor: 'pointer', 
+                            background: 'rgba(255, 255, 255, 0.03)', 
+                            borderRadius: '12px', 
+                            border: '1px solid rgba(255, 255, 255, 0.05)',
+                            marginTop: '4px'
+                          }}
+                        >
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                          </svg>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          ) : (
+            <div style={{
+              background: '#13161C',
+              border: '1px solid rgba(255, 255, 255, 0.05)',
+              borderRadius: '16px',
+              padding: '32px 20px',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              textAlign: 'center',
+              marginTop: '4px'
+            }}>
+              <div style={{ position: 'relative', marginBottom: '16px' }}>
+                <div style={{ width: '80px', height: '80px', borderRadius: '50%', border: '1px dashed rgba(167, 139, 250, 0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ position: 'relative' }}>
+                    <div style={{ background: '#7C3AED', width: '42px', height: '36px', borderRadius: '10px 10px 10px 3px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <div style={{ display: 'flex', gap: '3px' }}>
+                        <div style={{ width: '4px', height: '4px', background: '#fff', borderRadius: '50%' }}></div>
+                        <div style={{ width: '4px', height: '4px', background: '#fff', borderRadius: '50%' }}></div>
+                        <div style={{ width: '4px', height: '4px', background: '#fff', borderRadius: '50%' }}></div>
+                      </div>
+                    </div>
+                    <div style={{ position: 'absolute', bottom: '-3px', right: '-5px', background: '#22C55E', width: '16px', height: '16px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1.5px solid #13161C' }}>
+                      <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    </div>
+                  </div>
+                </div>
+                {/* Decorative sparks */}
+                <svg style={{ position: 'absolute', top: '4px', right: '4px' }} width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#A78BFA" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="2" x2="12" y2="6"></line><line x1="22" y1="12" x2="18" y2="12"></line><line x1="19.07" y1="4.93" x2="16.24" y2="7.76"></line></svg>
+              </div>
+              <h3 style={{ color: '#fff', fontSize: '16px', fontWeight: 700, margin: '0 0 8px 0' }}>No one in queue right now</h3>
+              <p style={{ color: '#94a3b8', fontSize: '13px', margin: '0 0 16px 0', maxWidth: '240px', lineHeight: '1.5' }}>
+                Awesome! You're all caught up.
+                <br /><br />
+                When fans join the queue, you'll see them here and can start chatting.
+              </p>
+              
+              <div style={{ width: '100%', height: '1px', background: 'rgba(255, 255, 255, 0.1)', margin: '16px 0' }} />
+              
+              <div style={{ width: '100%', textAlign: 'left' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'rgba(244, 63, 94, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F43F5E" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    </div>
+                    <h4 style={{ color: '#fff', fontSize: '15px', fontWeight: 700, margin: 0 }}>Missed Chats (24 hours)</h4>
+                  </div>
+                  {missedChats.length > 0 && (
+                    <div style={{ width: '28px', height: '28px', borderRadius: '50%', border: '1px solid rgba(255, 255, 255, 0.1)', background: 'rgba(255, 255, 255, 0.03)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '13px', fontWeight: 600 }}>
+                      {missedChats.length}
+                    </div>
+                  )}
+                </div>
+                {missedChats.length === 0 ? (
+                  <div style={{ color: '#64748b', fontSize: '12px', textAlign: 'center', padding: '16px 0' }}>
+                    No missed chats recently.
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {missedChats.slice(0, 3).map(chat => (
+                      <div key={chat._id} style={{ background: 'rgba(255, 255, 255, 0.03)', borderRadius: '12px', padding: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                          <img 
+                            src={chat.fanId?.avatarUrl ? (chat.fanId.avatarUrl.startsWith('http') ? chat.fanId.avatarUrl : `http://localhost:5000${chat.fanId.avatarUrl}`) : 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png'} 
+                            alt="Fan"
+                            style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover' }}
+                          />
+                          <div style={{ textAlign: 'left' }}>
+                            <div style={{ color: '#fff', fontWeight: 600, fontSize: '14px' }}>{chat.fanId?.name || 'A Fan'}</div>
+                            <div style={{ color: '#ef4444', fontSize: '11px', marginTop: '2px' }}>
+                              Missed at {new Date(chat.endTime || chat.startTime || chat.createdAt).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                            </div>
+                          </div>
+                        </div>
+                        <button 
+                          onClick={async (e) => {
+                            const btn = e.target;
+                            btn.disabled = true;
+                            btn.textContent = 'Notified';
+                            try {
+                              await api.post('/chat/notify-missed', { fanId: chat.fanId?._id, sessionId: chat._id || chat.id });
+                              setShowNotifySuccessModal(true);
+                              setMissedChats(prev => prev.filter(c => c._id !== chat._id && c.id !== chat.id));
+                            } catch (err) {
+                              console.error(err);
+                              btn.disabled = false;
+                              btn.textContent = 'Notify';
+                            }
+                          }}
+                          style={{ background: 'rgba(59, 130, 246, 0.1)', color: '#3B82F6', border: '1px solid rgba(59, 130, 246, 0.2)', padding: '6px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}
+                        >
+                          Notify
+                        </button>
+                      </div>
+                    ))}
+                    {missedChats.length > 3 && (
+                      <div 
+                        onClick={() => setShowMissedChatsModal(true)}
+                        style={{ 
+                          display: 'flex', 
+                          justifyContent: 'center', 
+                          alignItems: 'center', 
+                          padding: '10px', 
+                          cursor: 'pointer', 
+                          background: 'rgba(255, 255, 255, 0.03)', 
+                          borderRadius: '12px', 
+                          border: '1px solid rgba(255, 255, 255, 0.05)',
+                          marginTop: '4px'
+                        }}
+                      >
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Footer for populated state */}
+          {pendingChats.filter(chat => !cancelledSessions.has(String(chat.sessionId))).length > 0 && (
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid rgba(255, 255, 255, 0.05)', paddingTop: '16px', marginTop: '4px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#94a3b8', fontSize: '11px' }}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                {pendingChats.filter(chat => !cancelledSessions.has(String(chat.sessionId))).length} fans in queue
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#94a3b8', fontSize: '11px' }}>
+                <svg width="10" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                Chats are private & secure.
+              </div>
+            </div>
+          )}
         </div>
 
         {/* 4.5 AFFILIATE REFERRAL */}
@@ -686,12 +1170,12 @@ const CreatorDashboard = () => {
                 overflow: 'hidden',
                 textOverflow: 'ellipsis'
               }}>
-                skriibe.com/creator/signup?ref={creator.referralCode}
+                {window.location.host}/creator/signup?ref={creator.referralCode}
               </div>
               <div style={{ display: 'flex', gap: '8px' }}>
                 <button 
                   onClick={() => {
-                    navigator.clipboard.writeText(`https://skriibe.com/creator/signup?ref=${creator.referralCode}`);
+                    navigator.clipboard.writeText(`${window.location.origin}/creator/signup?ref=${creator.referralCode}`);
                     const btn = document.getElementById('dash-copy-btn');
                     if (btn) {
                       btn.innerText = 'Copied!';
@@ -723,7 +1207,7 @@ const CreatorDashboard = () => {
                       navigator.share({
                         title: 'Join Skriibe',
                         text: 'Join Skriibe using my referral link and start earning!',
-                        url: `https://skriibe.com/creator/signup?ref=${creator.referralCode}`
+                        url: `${window.location.origin}/creator/signup?ref=${creator.referralCode}`
                       }).catch(console.error);
                     }}
                     style={{
@@ -797,7 +1281,7 @@ const CreatorDashboard = () => {
         )}
 
         {/* SETUP PAYOUTS */}
-        {!creator.bankLinked ? (
+        {!creator.bankLinked && !creator.payoutSetupCompleted && !creator.upiId && (
           <div 
             onClick={() => navigate('/creator/setup-payouts')}
             style={{ 
@@ -827,40 +1311,9 @@ const CreatorDashboard = () => {
               Setup
             </div>
           </div>
-        ) : (
-          <div 
-            style={{ 
-              background: '#13161C', 
-              border: '1px solid #1F2937', 
-              borderRadius: '16px', 
-              padding: '16px 20px', 
-              display: 'flex', 
-              justifyContent: 'space-between', 
-              alignItems: 'center', 
-              marginTop: '4px'
-            }}
-          >
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-              <div style={{ fontWeight: 800, fontSize: '1.05rem', color: '#fff' }}>HDFC Bank - Savings</div>
-              <div style={{ color: '#10B981', fontSize: '0.8rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
-                ✓ Verified via penny drop
-              </div>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
-              <div style={{ background: 'rgba(16, 185, 129, 0.15)', color: '#10B981', padding: '6px 12px', borderRadius: '8px', fontSize: '0.8rem', fontWeight: 800 }}>
-                Linked
-              </div>
-              <span 
-                onClick={() => navigate('/creator/setup-payouts', { state: { creator } })}
-                style={{ color: '#94a3b8', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', textDecoration: 'underline' }}
-              >
-                Edit details
-              </span>
-            </div>
-          </div>
         )}
 
-        {/* ACCOUNT HEALTH */}
+        {/* ACCOUNT HEALTH 
         <h3 style={{ margin: '4px 0 0', fontSize: '1.1rem', fontWeight: 800 }}>Account health</h3>
         <div 
           onClick={() => navigate('/creator/health')}
@@ -887,128 +1340,10 @@ const CreatorDashboard = () => {
           </div>
           <div style={{ color: '#64748b' }}>→</div>
         </div>
-
-        {/* 5. ANSWER & EARN (Inbox preview) */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '12px' }}>
-          <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '8px' }}>
-            Answer & earn 
-            <span style={{ background: '#2A2A2A', padding: '2px 8px', borderRadius: '12px', fontSize: '0.75rem', color: '#94a3b8' }}>
-              {questions.filter(q => q.status?.toLowerCase() === 'submitted').length}
-            </span>
-          </h3>
-          <span 
-            onClick={() => navigate('/creator/inbox')}
-            style={{ color: '#29C5F6', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}
-          >
-            Go to inbox →
-          </span>
-        </div>
-        
-        {/* Render 2 pending questions */}
-        {(() => {
-          const pendingQuestions = questions.filter(q => q.status?.toLowerCase() === 'submitted');
-          if (pendingQuestions.length === 0) {
-            return (
-              <div style={{ background: '#1A1A1A', border: '1px dashed #2A2A2A', borderRadius: '16px', padding: '24px', textAlign: 'center', color: '#94a3b8', fontSize: '0.9rem' }}>
-                No pending messages right now.
-              </div>
-            );
-          }
-          return pendingQuestions.slice(0, 2).map((q, idx) => {
-            const diffMs = now - new Date(q.createdAt || now).getTime();
-            const hoursAgo = Math.floor(diffMs / (1000 * 60 * 60));
-            const minutesAgo = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-            let timeText = '';
-            if (hoursAgo > 0) {
-              timeText = `${hoursAgo}h ago`;
-            } else if (minutesAgo > 0) {
-              timeText = `${minutesAgo}m ago`;
-            } else {
-              timeText = `Just now`;
-            }
-
-            let timerColor = '#10B981'; // Green for recent
-            let timerBg = 'rgba(16, 185, 129, 0.15)';
-            if (hoursAgo > 20) {
-              timerColor = '#EF4444'; // Red for urgent (close to 24h limit)
-              timerBg = 'rgba(239, 68, 68, 0.15)';
-            } else if (hoursAgo > 12) {
-              timerColor = '#F59E0B'; // Yellow
-              timerBg = 'rgba(245, 158, 11, 0.15)';
-            }
-
-            return (
-              <div key={q._id || idx} style={{ background: '#13161C', border: '1px solid #1F2937', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <div style={{ display: 'flex', gap: '12px' }}>
-                    {(() => {
-                      const url = q.fanId?.avatarUrl;
-                      let finalAvatarUrl = url;
-                      if (url && !url.startsWith('http') && !url.startsWith('blob:')) {
-                        const backendBase = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace('/api', '');
-                        finalAvatarUrl = url.startsWith('/uploads') ? `${backendBase}${url}` : url;
-                      }
-                      return finalAvatarUrl ? (
-                        <img 
-                          src={finalAvatarUrl} 
-                          alt="" 
-                          style={{ width: '40px', height: '40px', borderRadius: '8px', objectFit: 'cover', flexShrink: 0 }} 
-                          onError={(e) => {
-                            e.target.style.display = 'none';
-                            if (e.target.nextSibling) e.target.nextSibling.style.display = 'flex';
-                          }}
-                        />
-                      ) : null;
-                    })()}
-                    <div style={{ display: q.fanId?.avatarUrl ? 'none' : 'flex', width: '40px', height: '40px', borderRadius: '8px', background: '#1E293B', color: '#38BDF8', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '1.2rem', flexShrink: 0 }}>
-                      {(q.buyerName || q.followerName || 'A')[0].toUpperCase()}
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column' }}>
-                      <div style={{ color: '#FBBF24', fontSize: '0.8rem', fontWeight: 600, marginBottom: '2px' }}>
-                        {q.isFollowUp ? 'Follow-up Question' : 'New Question'}
-                      </div>
-                      <span style={{ fontWeight: 700, fontSize: '1rem', color: '#fff' }}>
-                        {q.buyerName || q.followerName} <span style={{ color: '#38BDF8' }}>· {q.isFollowUp ? 'Free' : `${currencySymbol}${q.amountPaid || q.pricePaid}`}</span>
-                      </span>
-                    </div>
-                  </div>
-                  <div style={{ background: timerBg, color: timerColor, padding: '4px 10px', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    ⏱ {timeText}
-                  </div>
-                </div>
-                <div style={{ fontSize: '0.95rem', color: '#cbd5e1', lineHeight: '1.5', wordBreak: 'break-all', overflowWrap: 'anywhere' }}>
-                  "{q.questionText}"
-                </div>
-                <div style={{ display: 'flex', gap: '12px' }}>
-                  <button 
-                    onClick={() => {
-                      const rootQuestion = q.isFollowUp ? questions.find(r => (r._id || r.id) === q.parentQuestionId) : null;
-                      navigate(`/creator/dashboard/reply/${q._id || q.id}`, { state: { question: q, rootQuestion } });
-                    }}
-                    style={{ flex: 1, background: 'linear-gradient(90deg, #38BDF8 0%, #34D399 100%)', color: '#0F172A', border: 'none', borderRadius: '12px', padding: '14px', fontWeight: 800, fontSize: '0.95rem', cursor: 'pointer' }}
-                  >
-                    Reply
-                  </button>
-                  <button 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      const rootQuestion = q.isFollowUp ? questions.find(r => (r._id || r.id) === q.parentQuestionId) : null;
-                      navigate(`/creator/dashboard/reply/${q._id || q.id}`, { state: { question: q, rootQuestion, initialView: 'flag' } });
-                    }}
-                    style={{ width: '48px', background: '#1F2937', border: 'none', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
-                  >
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg>
-                  </button>
-                </div>
-              </div>
-            );
-          });
-        })()}
-
-
+        */}
 
         {/* 7. SHARE LINK */}
-        <div style={{ background: '#13161C', border: '1px dashed #1F2937', borderRadius: '16px', padding: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px' }}>
+        <div style={{ background: '#13161C', border: '1px dashed #1F2937', borderRadius: '16px', padding: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
 
             <div>
@@ -1045,41 +1380,8 @@ const CreatorDashboard = () => {
           </button>
         </div>
 
-        {/* 8. SWITCH TO FAN MODE CTA */}
-        {(
 
-          <div 
-            onClick={async () => {
-              try {
-                const res = await switchRole('fan');
-                if (res.success) {
-                  setAuthData(roles, 'fan', res.token);
-                  window.location.href = '/discovery';
-                }
-              } catch (err) {
-                alert(`Failed to switch: ${err.response?.data?.message || err.message}`);
-              }
-            }}
-            style={{ 
-              background: 'rgba(56, 189, 248, 0.05)', 
-              border: '1px solid rgba(56, 189, 248, 0.3)', 
-              borderRadius: '16px', 
-              padding: '20px', 
-              display: 'flex', 
-              justifyContent: 'center', 
-              alignItems: 'center', 
-              marginTop: '12px',
-              cursor: 'pointer',
-              gap: '12px',
-              transition: 'all 0.2s ease'
-            }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(56, 189, 248, 0.1)'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(56, 189, 248, 0.05)'; }}
-          >
-            <span style={{ fontSize: '1.4rem', filter: 'hue-rotate(60deg)' }}>👤</span>
-            <span style={{ fontWeight: 700, fontSize: '1.1rem', color: '#38bdf8' }}>Switch to Fan Mode →</span>
-          </div>
-        )}
+
 
 
       </div>
@@ -1119,8 +1421,7 @@ const CreatorDashboard = () => {
               }}
             >
               <span style={{ 
-                fontSize: '20px',
-                filter: isActive ? cyanFilter : grayFilter
+                fontSize: '20px'
               }}>
                 {item.icon}
               </span>
@@ -1189,6 +1490,194 @@ const CreatorDashboard = () => {
                 ))}
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Missed Chats Modal */}
+      {showMissedChatsModal && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          zIndex: 9999, padding: '20px'
+        }}>
+          <div style={{
+            background: '#0B0D13', borderRadius: '24px', width: '100%', maxWidth: '500px',
+            border: '1px solid #1F2937', padding: '24px', position: 'relative',
+            maxHeight: '80vh', display: 'flex', flexDirection: 'column'
+          }}>
+            <button 
+              onClick={() => setShowMissedChatsModal(false)}
+              style={{
+                position: 'absolute', top: '20px', right: '20px', background: '#1c161a', border: 'none',
+                color: '#fff', width: '32px', height: '32px', borderRadius: '50%', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center'
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+            <h2 style={{ color: '#fff', margin: '0 0 20px 0', fontSize: '1.4rem', fontWeight: 800 }}>All Missed Chats</h2>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', overflowY: 'auto', paddingRight: '4px' }}>
+              {missedChats.map(chat => (
+                <div key={chat._id} style={{ background: 'rgba(255, 255, 255, 0.03)', borderRadius: '12px', padding: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <img 
+                      src={chat.fanId?.avatarUrl ? (chat.fanId.avatarUrl.startsWith('http') ? chat.fanId.avatarUrl : `http://localhost:5000${chat.fanId.avatarUrl}`) : 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png'} 
+                      alt="Fan"
+                      style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover' }}
+                    />
+                    <div style={{ textAlign: 'left' }}>
+                      <div style={{ color: '#fff', fontWeight: 600, fontSize: '14px' }}>{chat.fanId?.name || 'A Fan'}</div>
+                      <div style={{ color: '#ef4444', fontSize: '11px', marginTop: '2px' }}>
+                        Missed at {new Date(chat.endTime || chat.startTime || chat.createdAt).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                      </div>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={async (e) => {
+                      const btn = e.target;
+                      btn.disabled = true;
+                      btn.textContent = 'Notified';
+                      try {
+                        await api.post('/chat/notify-missed', { fanId: chat.fanId?._id, sessionId: chat._id || chat.id });
+                        setShowNotifySuccessModal(true);
+                        setMissedChats(prev => prev.filter(c => c._id !== chat._id && c.id !== chat.id));
+                      } catch (err) {
+                        console.error(err);
+                        btn.disabled = false;
+                        btn.textContent = 'Notify';
+                      }
+                    }}
+                    style={{ background: 'rgba(59, 130, 246, 0.1)', color: '#3B82F6', border: '1px solid rgba(59, 130, 246, 0.2)', padding: '6px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}
+                  >
+                    Notify
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Pending Chats Modal */}
+      {showPendingModal && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          zIndex: 9999, padding: '20px'
+        }}>
+          <div style={{
+            background: '#0B0D13', borderRadius: '24px', width: '100%', maxWidth: '500px',
+            border: '1px solid #1F2937', padding: '24px', position: 'relative',
+            maxHeight: '80vh', display: 'flex', flexDirection: 'column'
+          }}>
+            <button 
+              onClick={() => setShowPendingModal(false)}
+              style={{
+                position: 'absolute', top: '20px', right: '20px', background: '#1c161a', border: 'none',
+                color: '#fff', width: '32px', height: '32px', borderRadius: '50%', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center'
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+            <h2 style={{ color: '#fff', margin: '0 0 20px 0', fontSize: '1.4rem', fontWeight: 800 }}>Pending Queue</h2>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', overflowY: 'auto', paddingRight: '4px' }}>
+              {pendingChats.filter(chat => !cancelledSessions.has(String(chat.sessionId))).reduce((acc, chat) => {
+                if (!acc.find(c => c.fanName === chat.fanName)) acc.push(chat);
+                return acc;
+              }, []).map((chat, idx) => {
+                const timeDiff = now - new Date(chat.time).getTime();
+                const remainingMs = Math.max(0, 120000 - timeDiff);
+                const remMins = Math.floor(remainingMs / 60000);
+                const remSecs = String(Math.floor((remainingMs % 60000) / 1000)).padStart(2, '0');
+                const isUrgent = remainingMs <= 30000;
+                return (
+                  <div key={chat.sessionId || idx} style={{
+                    background: '#13161C', border: '1px solid rgba(255, 255, 255, 0.05)',
+                    borderRadius: '12px', padding: '16px', display: 'flex',
+                    justifyContent: 'space-between', alignItems: 'center', gap: '12px'
+                  }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'baseline', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        <span style={{ fontSize: '16px', fontWeight: 800, color: '#fff' }}>
+                          {chat.fanName} wants to chat
+                        </span>
+                        <span style={{ fontSize: '12px', color: '#29C5F6', fontWeight: 600 }}>
+                          {currencySymbol}{creator.liveChatPrice || 5}/min
+                        </span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', flexWrap: 'wrap' }}>
+                        <span style={{ color: '#22C55E', fontWeight: 600 }}>{currencySymbol}{Number(chat.walletBalance || 0).toFixed(2)} wallet</span>
+                        <span style={{ color: isUrgent ? '#ef4444' : '#94a3b8', fontWeight: isUrgent ? 800 : 400 }}>Time left: {remMins}:{remSecs}</span>
+                      </div>
+                    </div>
+                    <button 
+                      onClick={() => navigate(`/creator/dashboard/live-chat/${chat.sessionId}`)}
+                      style={{
+                        background: '#22C55E', color: '#fff', border: 'none', borderRadius: '8px',
+                        padding: '8px 16px', fontSize: '14px', fontWeight: 800, cursor: 'pointer', flexShrink: 0
+                      }}
+                    >
+                      Accept
+                    </button>
+                  </div>
+                );
+              })}
+              {pendingChats.filter(chat => !cancelledSessions.has(String(chat.sessionId))).length === 0 && (
+                <div style={{ color: '#94a3b8', textAlign: 'center', padding: '20px' }}>No pending chats</div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showNotifySuccessModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0,0,0,0.85)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          zIndex: 10000,
+          padding: '20px'
+        }}>
+          <div style={{
+            background: '#13161C',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            borderRadius: '24px',
+            padding: '32px 24px',
+            width: '100%',
+            maxWidth: '360px',
+            textAlign: 'center',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center'
+          }}>
+            <div style={{ width: '64px', height: '64px', background: 'rgba(34, 197, 94, 0.1)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '20px' }}>
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+            </div>
+            <h3 style={{ color: '#fff', fontSize: '1.2rem', fontWeight: 800, margin: '0 0 16px 0' }}>Notification Sent!</h3>
+            <p style={{ color: '#94a3b8', fontSize: '14px', lineHeight: '1.6', margin: '0 0 24px 0' }}>
+              We've let them know you're available and ready to chat.
+            </p>
+            <button
+              onClick={() => setShowNotifySuccessModal(false)}
+              style={{
+                background: '#3B82F6',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '100px',
+                padding: '12px 32px',
+                fontWeight: 'bold',
+                fontSize: '16px',
+                cursor: 'pointer',
+                boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)'
+              }}
+            >
+              Okay
+            </button>
           </div>
         </div>
       )}

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import api from '../services/api';
 
 // Helper function to load the Razorpay script dynamically
 const loadRazorpayScript = () => {
@@ -27,74 +27,67 @@ const PaymentButton = ({ amount, courseName, onSuccess, disabled, buyerName = ''
       return;
     }
 
-    setLoading(true);
-
     try {
-      // 1. Create order on backend
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-      const orderResponse = await axios.post(`${apiUrl}/create-order`, {
-        amount: amount * 100, // converting ₹ to paise
+      setLoading(true);
+      
+      const { data: order } = await api.post('/create-order', {
+        amount: amount * 100, // amount in paise
       });
 
-      const orderData = orderResponse.data;
-
-      // 2. Setup Razorpay options
       const options = {
-        key: orderData.key_id || import.meta.env.VITE_RAZORPAY_KEY_ID, // Use backend provided key
-        amount: orderData.amount,
-        currency: orderData.currency,
-        name: 'skriibe',
-        description: courseName || 'Payment',
-        order_id: orderData.id,
-        handler: async function (response) {
-          try {
-            // 3. Verify payment on backend
-            const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-            const verifyResponse = await axios.post(`${apiUrl}/verify-payment`, {
-              razorpay_order_id: response.razorpay_order_id,
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_signature: response.razorpay_signature,
-            });
-
-            if (verifyResponse.data.success) {
-              // 4. Trigger success callback
-              if (onSuccess) {
-                onSuccess(response.razorpay_payment_id);
-              }
-            } else {
-              alert('Payment verification failed!');
-            }
-          } catch (error) {
-            console.error('Error verifying payment:', error);
-            alert('Payment verification error.');
-          }
-        },
+        key: order.key_id,
+        amount: order.amount,
+        currency: order.currency,
+        name: "Skriibe",
+        description: courseName,
+        order_id: order.id,
         prefill: {
           name: buyerName,
           email: buyerEmail,
           contact: buyerPhone,
         },
-        notes: {
-          address: 'skriibe Corporate Office',
-        },
         theme: {
-          color: '#10b981',
+          color: "#10b981",
         },
+        handler: async function (response) {
+          try {
+            const { data: verifyData } = await api.post('/verify-payment', {
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+            });
+
+            if (verifyData.success) {
+              if (onSuccess) {
+                onSuccess(response.razorpay_payment_id);
+              }
+            } else {
+              alert('Payment verification failed. Please contact support.');
+            }
+          } catch (err) {
+            console.error('Verification error:', err);
+            alert('Payment verification failed.');
+          } finally {
+            setLoading(false);
+          }
+        },
+        modal: {
+          ondismiss: function() {
+            setLoading(false);
+          }
+        }
       };
 
       const paymentObject = new window.Razorpay(options);
-
-      // Handle payment failure gracefully
       paymentObject.on('payment.failed', function (response) {
-        console.error('Payment Failed:', response.error);
         alert(`Payment failed: ${response.error.description}`);
+        setLoading(false);
       });
-
       paymentObject.open();
+
     } catch (error) {
       console.error('Error in payment flow:', error);
       alert(`Could not initiate payment: ${error.message || 'Please try again later'}`);
-    } finally {
       setLoading(false);
     }
   };

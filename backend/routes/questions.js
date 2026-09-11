@@ -7,6 +7,7 @@ const Question = require('../models/Question');
 const Creator = require('../models/Creator');
 const Counter = require('../models/Counter');
 const Order = require('../models/Order');
+const WalletTransaction = require('../models/WalletTransaction');
 const { sendFollowUpAskedEmail, sendNewQuestionEmail } = require('../utils/emailService');
 
 const { verifyFanToken } = require('../middleware/auth');
@@ -35,7 +36,38 @@ router.post('/', verifyFanToken, async (req, res) => {
     await connectDB();
 
     const Fan = require('../models/Fan');
-    const fanUser = await Fan.findById(req.fan.fanId);
+    let fanUser = null;
+    let fanId = req.fan?.fanId;
+    if (fanId) {
+      fanUser = await Fan.findById(fanId);
+    }
+    if (!fanUser && (req.fan?.email || buyerEmail)) {
+      fanUser = await Fan.findOne({ email: (req.fan?.email || buyerEmail).toLowerCase() });
+      if (fanUser) fanId = fanUser._id;
+    }
+    if (!fanUser && req.fan?.creatorId) {
+      const Creator = require('../models/Creator');
+      const creatorAcc = await Creator.findById(req.fan.creatorId);
+      if (creatorAcc?.fanId) {
+        fanUser = await Fan.findById(creatorAcc.fanId);
+        if (fanUser) fanId = fanUser._id;
+      } else if (creatorAcc?.email) {
+        fanUser = await Fan.findOne({ email: creatorAcc.email.toLowerCase() });
+        if (fanUser) fanId = fanUser._id;
+      }
+    }
+
+    let amountToDeduct = 0;
+    
+    const creator = await Creator.findById(creatorId);
+    if (!creator) {
+      return res.status(404).json({ message: 'Creator not found.' });
+    }
+
+    if (!isFollowUp) {
+      amountToDeduct = creator.pricePerQuestion || creator.price || 10;
+    }
+
     if (fanUser) {
       if (fanUser.isBanned) {
         return res.status(403).json({ message: 'Your account is permanently restricted from sending questions.' });
@@ -48,15 +80,18 @@ router.post('/', verifyFanToken, async (req, res) => {
         }
       }
       
+      if (!isFollowUp && (fanUser.walletBalance || 0) < amountToDeduct) {
+        return res.status(400).json({ message: 'Insufficient wallet balance.', requiresRecharge: true });
+      }
+
+      if (!isFollowUp && amountToDeduct > 0) {
+        fanUser.walletBalance = Math.max(0, (fanUser.walletBalance || 0) - amountToDeduct);
+      }
+
       if (buyerPhone && !fanUser.whatsappPhone && !fanUser.phone) {
         fanUser.whatsappPhone = buyerPhone;
       }
       await fanUser.save();
-    }
-
-    const creator = await Creator.findById(creatorId);
-    if (!creator) {
-      return res.status(404).json({ message: 'Creator not found.' });
     }
 
     if (creator.isBanned) {
@@ -78,12 +113,12 @@ router.post('/', verifyFanToken, async (req, res) => {
     const newQuestion = new Question({
       creatorId: creator._id,
       handle: creator.handle,
-      fanId: req.fan.fanId,
+      fanId: fanId || fanUser?._id,
       buyerName: buyerName || req.fan.name || req.fan.email,
       buyerEmail: buyerEmail || req.fan.email,
       buyerPhone: buyerPhone || '',
       questionText,
-      amountPaid: isFollowUp ? 0 : (creator.pricePerQuestion || creator.price || 0),
+      amountPaid: isFollowUp ? 0 : amountToDeduct,
       paymentStatus: 'paid', // Dummy payment status for now
       status: 'submitted',
       expiresAt: new Date(Date.now() + (parseInt(creator.responseTime) || 48) * 60 * 60 * 1000),
@@ -93,6 +128,23 @@ router.post('/', verifyFanToken, async (req, res) => {
     });
 
     await newQuestion.save();
+
+    if (!isFollowUp && amountToDeduct > 0 && (fanId || fanUser?._id)) {
+      try {
+        const tx = new WalletTransaction({
+          fanId: fanId || fanUser._id,
+          creatorId: creator._id,
+          amount: amountToDeduct,
+          type: 'debit',
+          reference: newQuestion._id.toString(),
+          status: 'completed',
+          description: `AMA • ${creator.name || creator.handle || 'Creator'}`
+        });
+        await tx.save();
+      } catch (txErr) {
+        console.error('Failed to create wallet transaction for question:', txErr);
+      }
+    }
 
     const newOrder = new Order({
       orderNumber: orderNumber,
@@ -124,6 +176,11 @@ router.post('/', verifyFanToken, async (req, res) => {
       question: newQuestion,
       avgReplyTime: creator.responseTime || '48 hours'
     });
+
+    if (req.io) {
+      req.io.to(`creator_${creatorId}`).emit('new-question', { question: newQuestion });
+      req.io.emit('new-question', { creatorId, questionId: newQuestion._id });
+    }
 
     // Update Creator Stats asynchronously
     (async () => {
@@ -166,11 +223,30 @@ router.post('/', verifyFanToken, async (req, res) => {
 router.get('/fan-history', verifyFanToken, async (req, res) => {
   try {
     await connectDB();
-    const questions = await Question.find({ fanId: req.fan.fanId })
+    const questions = await Question.find({ fanId: req.fan.fanId, deletedByFan: { $ne: true } })
       .populate('creatorId', 'name avatarUrl handle')
       .sort({ createdAt: -1 });
 
     res.status(200).json({ success: true, questions });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+/**
+ * @route DELETE /api/questions/:id/history
+ * @desc Hide a question from fan's history
+ */
+router.delete('/:id/history', verifyFanToken, async (req, res) => {
+  try {
+    await connectDB();
+    const question = await Question.findOne({ _id: req.params.id, fanId: req.fan.fanId });
+    if (!question) {
+      return res.status(404).json({ message: 'Question not found' });
+    }
+    await Question.updateOne({ _id: question._id }, { $set: { deletedByFan: true } });
+    res.status(200).json({ success: true, message: 'Question history deleted successfully' });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });
@@ -224,10 +300,10 @@ router.get('/notifications', verifyFanToken, async (req, res) => {
 router.get('/unread-count', verifyFanToken, async (req, res) => {
   try {
     await connectDB();
-    const count = await Question.countDocuments({
+    const Notification = require('../models/Notification');
+    const count = await Notification.countDocuments({
       fanId: req.fan.fanId,
-      status: 'answered',
-      fanRead: false
+      isRead: false
     });
     res.status(200).json({ success: true, count });
   } catch (err) {

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { mockCreator } from '../../mock/questions';
-import { getMe, linkBank, toggleLive, verifyIfsc } from '../../services/creatorApi';
+import { getMe, linkBank, savePayoutDetails, toggleLive, verifyIfsc } from '../../services/creatorApi';
 
 const InputCard = ({ label, value, onChange, placeholder, type = 'text', isUppercase = false, onBlur, error }) => {
   const [focused, setFocused] = useState(false);
@@ -58,52 +58,76 @@ const InputCard = ({ label, value, onChange, placeholder, type = 'text', isUpper
 const CreatorPayouts = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [creator, setCreator] = useState(location.state?.creator || mockCreator);
+  const initialCreator = location.state?.creator || mockCreator;
+  const [creator, setCreator] = useState(initialCreator);
 
-  const [accountName, setAccountName] = useState(creator.bankAccountName || '');
-  const [accountNumber, setAccountNumber] = useState(creator.bankAccountNumber || '');
-  const [confirmAccount, setConfirmAccount] = useState(creator.bankAccountNumber || '');
-  const [ifsc, setIfsc] = useState(creator.bankIfsc || '');
+  const [accountName, setAccountName] = useState(initialCreator.bankAccountName || '');
+  const [accountNumber, setAccountNumber] = useState(initialCreator.bankAccountNumber || '');
+  const [confirmAccount, setConfirmAccount] = useState(initialCreator.bankAccountNumber || '');
+  const [ifsc, setIfsc] = useState(initialCreator.bankIfsc || '');
   const [ifscError, setIfscError] = useState('');
-  const [panNumber, setPanNumber] = useState(creator.panNumber || creator.pan || '');
-  const [phone, setPhone] = useState(creator.phone || '');
+  const [panNumber, setPanNumber] = useState(initialCreator.panNumber || initialCreator.pan || '');
+  const [phone, setPhone] = useState(initialCreator.phone || '');
+  
+  // Payout method state
+  const [payoutMethod, setPayoutMethod] = useState(
+    initialCreator.payoutMethod || (initialCreator.bankAccountNumber && !initialCreator.upiId ? 'bank' : 'upi')
+  );
+  const [upiId, setUpiId] = useState(initialCreator.upiId || '');
+  const [aadharLast4, setAadharLast4] = useState(initialCreator.aadharLast4 || '');
+  const [confirmed, setConfirmed] = useState(
+    Boolean(initialCreator.payoutDetailsConfirmed || initialCreator.payoutSetupCompleted || initialCreator.panNumber)
+  );
+  const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     window.scrollTo(0, 0);
+    let isMounted = true;
     const fetchCreator = async () => {
       try {
         const res = await getMe();
-        if (res.success && res.creator) {
-          setCreator(res.creator);
-          setAccountName(res.creator.bankAccountName || '');
-          setAccountNumber(res.creator.bankAccountNumber || '');
-          setConfirmAccount(res.creator.bankAccountNumber || '');
-          setIfsc(res.creator.bankIfsc || '');
-          setPanNumber(res.creator.panNumber || res.creator.pan || '');
-          setPhone(res.creator.phone || '');
+        if (res.success && res.creator && isMounted) {
+          const c = res.creator;
+          setCreator(c);
+          setAccountName(c.bankAccountName || '');
+          setAccountNumber(c.bankAccountNumber || '');
+          setConfirmAccount(c.bankAccountNumber || '');
+          setIfsc(c.bankIfsc || '');
+          setPanNumber(c.panNumber || c.pan || '');
+          setPhone(c.phone || '');
+          setAadharLast4(c.aadharLast4 || '');
+          setUpiId(c.upiId || '');
+          if (c.payoutMethod) {
+            setPayoutMethod(c.payoutMethod);
+          } else if (c.bankAccountNumber && !c.upiId) {
+            setPayoutMethod('bank');
+          } else {
+            setPayoutMethod('upi');
+          }
+          if (c.payoutDetailsConfirmed || c.payoutSetupCompleted || c.panNumber || c.bankLinked) {
+            setConfirmed(true);
+          }
         }
       } catch (error) {
-        console.error('Failed to fetch creator:', error);
+        console.error('Failed to fetch creator in payout setup:', error);
+      } finally {
+        if (isMounted) setIsLoading(false);
       }
     };
-    if (!location.state?.creator || (!creator.panNumber && !creator.pan)) {
-      fetchCreator();
-    }
-  }, [location.state?.creator]);
+    fetchCreator();
+    return () => { isMounted = false; };
+  }, []);
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
   const navItems = [
     { label: 'HOME', icon: '🏠', route: '/creator/dashboard' },
-    { label: 'INBOX', icon: '💬', route: '/creator/inbox' },
-    { label: 'PAYOUTS', icon: '💰', route: '/creator/payouts' },
+    { label: 'CHATS', icon: '💬', route: '/creator/inbox' },
+    { label: 'TRANSACTIONS', icon: '💰', route: '/creator/payouts' },
+    { label: 'ANALYTICS', icon: '📊', route: '/creator/analytics' },
     { label: 'SETTINGS', icon: '⚙️', route: '/creator/settings' },
   ];
-
-  // Cyan filter: to make emojis turn cyan #29C5F6
-  const cyanFilter = 'invert(69%) sepia(87%) saturate(2714%) hue-rotate(164deg) brightness(99%) contrast(98%)';
-  // Gray filter
-  const grayFilter = 'invert(31%) sepia(13%) saturate(760%) hue-rotate(181deg) brightness(96%) contrast(85%)';
 
   return (
     <div style={{
@@ -126,7 +150,6 @@ const CreatorPayouts = () => {
         }
       `}} />
       
-      {/* Container to restrict width */}
       <div style={{
         width: '100%',
         maxWidth: '390px',
@@ -145,7 +168,6 @@ const CreatorPayouts = () => {
           position: 'relative',
           marginBottom: '4px'
         }}>
-          {/* Back Button */}
           <button
             onClick={() => navigate('/creator/dashboard')}
             style={{
@@ -164,7 +186,7 @@ const CreatorPayouts = () => {
               fontSize: '22px',
               fontWeight: '300',
               transition: 'background-color 0.2s',
-              paddingBottom: '2px' // optical alignment for chevron
+              paddingBottom: '2px'
             }}
             onMouseEnter={(e) => e.target.style.background = '#2A2A2A'}
             onMouseLeave={(e) => e.target.style.background = '#1A1A1A'}
@@ -179,164 +201,254 @@ const CreatorPayouts = () => {
             color: '#ffffff',
             letterSpacing: '-0.02em'
           }}>
-            Payout setup
+            Identity check
           </h2>
         </div>
 
-        {/* Progress Bar Card */}
-        <div style={{
-          background: '#1A1A1A',
-          border: '1px solid #2A2A2A',
-          borderRadius: '16px',
-          padding: '20px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '12px'
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '0.65rem', color: '#64748b', fontWeight: 700, letterSpacing: '1.2px' }}>
-              STEP 2 OF 2 — PAYOUT SETUP
-            </span>
-            <span style={{ fontSize: '0.75rem', color: '#29C5F6', fontWeight: 600 }}>
-              Almost done
-            </span>
-          </div>
-          <div style={{ width: '100%', height: '4px', background: '#2A2A2A', borderRadius: '2px', overflow: 'hidden' }}>
-            <div style={{ width: '90%', height: '100%', background: '#29C5F6', borderRadius: '2px' }} />
-          </div>
-        </div>
+        {/* Info Box - dynamic status */}
+        {(() => {
+          const isSetupCompleted = Boolean(
+            creator.payoutSetupCompleted || 
+            (creator.panNumber && (creator.upiId || (creator.bankAccountNumber && creator.bankIfsc)))
+          );
 
-        {/* Info Box */}
-        <div style={{
-          background: 'rgba(41, 197, 246, 0.05)',
-          border: '1px solid rgba(41, 197, 246, 0.2)',
-          borderRadius: '16px',
-          padding: '20px',
-          display: 'flex',
-          alignItems: 'flex-start',
-          gap: '12px'
-        }}>
-          <div style={{ 
-            width: '14px', 
-            height: '14px', 
-            borderRadius: '50%', 
-            border: '1.5px solid #29C5F6',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexShrink: 0,
-            marginTop: '3px'
-          }}>
-            <div style={{ width: '4px', height: '4px', background: '#29C5F6', borderRadius: '50%' }} />
-          </div>
-          <p style={{
-            margin: 0,
-            fontSize: '0.95rem',
-            color: '#94a3b8',
-            lineHeight: '1.5',
-            letterSpacing: '-0.01em'
-          }}>
-            Please add your bank details to receive payouts via Razorpay. Your page is already live, and payouts start next scheduled payout cycle on Tuesday.
-          </p>
-        </div>
-
-        {/* Bank Account Section */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: '#ffffff', marginBottom: '4px' }}>
-            Bank account
-          </h3>
-        
-          
-          <InputCard 
-            label="ACCOUNT HOLDER NAME *" 
-            value={accountName} 
-            onChange={setAccountName} 
-            placeholder="Name on bank account"
-          />
-          
-          <InputCard 
-            label="ACCOUNT NUMBER *" 
-            value={accountNumber} 
-            onChange={setAccountNumber} 
-            placeholder="Account number"
-          />
-
-          <InputCard 
-            label="RE-ENTER ACCOUNT NUMBER *" 
-            value={confirmAccount} 
-            onChange={setConfirmAccount} 
-            placeholder="Confirm account number"
-          />
-          {confirmAccount && accountNumber !== confirmAccount && (
-            <div style={{ color: '#EF4444', fontSize: '0.85rem', marginTop: '-8px', paddingLeft: '8px', fontWeight: 600 }}>
-              Account numbers do not match
+          return (
+            <div style={{
+              background: '#1A1A1A',
+              border: isSetupCompleted ? '1px solid rgba(34, 197, 94, 0.3)' : '1px solid #2A2A2A',
+              borderRadius: '16px',
+              padding: '20px',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'flex-start',
+              gap: '12px'
+            }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                 <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 700, color: '#ffffff', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                   {isSetupCompleted && <span style={{ color: '#22c55e' }}>✓</span>}
+                   {isSetupCompleted ? 'Payout details active' : 'Not started yet'}
+                 </h3>
+                 <p style={{ margin: 0, fontSize: '0.8rem', color: '#94a3b8', lineHeight: '1.4' }}>
+                   {isSetupCompleted 
+                     ? (payoutMethod === 'upi' 
+                         ? `Payouts are active via UPI (${upiId || creator.upiId || 'configured'}).` 
+                         : `Payouts are active to bank account ending in ••••${(accountNumber || creator.bankAccountNumber || '').slice(-4)}.`
+                       )
+                     : 'Your earnings are safe either way — this is only needed to pay them out.'}
+                 </p>
+              </div>
+              <div style={{ 
+                background: isSetupCompleted ? 'rgba(34, 197, 94, 0.12)' : 'rgba(245, 158, 11, 0.12)', 
+                color: isSetupCompleted ? '#22c55e' : '#f59e0b', 
+                border: isSetupCompleted ? '1px solid rgba(34, 197, 94, 0.25)' : '1px solid rgba(245, 158, 11, 0.25)',
+                padding: '4px 10px', 
+                borderRadius: '12px', 
+                fontSize: '0.7rem', 
+                fontWeight: 700, 
+                whiteSpace: 'nowrap' 
+              }}>
+                 {isSetupCompleted ? 'Active' : 'Not started'}
+              </div>
             </div>
-          )}
-          
+          );
+        })()}
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <InputCard 
-            label="IFSC CODE *" 
-            value={ifsc} 
-            onChange={(val) => {
-              setIfsc(val);
-              if (ifscError) setIfscError('');
-            }} 
-            placeholder="e.g. HDFC0001234"
-            onBlur={async () => {
-              if (ifsc.trim()) {
-                try {
-                  const res = await verifyIfsc(ifsc.trim());
-                  if (!res.data.verified) {
-                    setIfscError(res.data.reason || 'Invalid IFSC code');
-                  } else {
-                    setIfscError('');
-                  }
-                } catch (err) {
-                  console.error(err);
-                }
-              }
-            }}
-            error={ifscError}
-          />
-
-
-        </div>
-
-        {/* PAN Section */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '8px' }}>
-          <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: '#ffffff', marginBottom: '4px' }}>
-            PAN number <span style={{ color: '#64748b', fontWeight: 500, fontSize: '0.9rem' }}>for TDS compliance</span>
-          </h3>
-          
-          <InputCard 
-            label="PAN NUMBER *" 
+            label="PAN *" 
             value={panNumber} 
-            onChange={setPanNumber} 
+            onChange={(val) => setPanNumber(val.toUpperCase())} 
             placeholder="e.g. ABCDE1234F"
             isUppercase={true}
           />
-
-          <p style={{
-            margin: 0,
-            fontSize: '0.85rem',
-            color: '#64748b',
-            lineHeight: '1.5',
-            padding: '0 4px'
-          }}>
-            
-          </p>
+          
+          <div>
+            <InputCard 
+              label="LAST 4 DIGITS OF AADHAAR *" 
+              value={aadharLast4} 
+              onChange={(val) => {
+                if (val.length <= 4 && /^\d*$/.test(val)) {
+                  setAadharLast4(val);
+                }
+              }} 
+              placeholder="1234"
+            />
+            <p style={{
+              margin: 0,
+              fontSize: '0.75rem',
+              color: '#64748b',
+              lineHeight: '1.5',
+              padding: '0 4px',
+              marginTop: '6px'
+            }}>
+              Only the last four — we never ask for the full number.
+            </p>
+          </div>
         </div>
 
+        {/* WHERE SHOULD WE PAY YOU */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '8px' }}>
+          <h3 style={{ margin: 0, fontSize: '0.65rem', fontWeight: 700, color: '#64748b', letterSpacing: '1.2px', textTransform: 'uppercase' }}>
+            WHERE SHOULD WE PAY YOU
+          </h3>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button
+              onClick={() => setPayoutMethod('upi')}
+              style={{
+                flex: 1,
+                padding: '14px',
+                borderRadius: '12px',
+                background: payoutMethod === 'upi' ? '#132b35' : '#1A1A1A',
+                color: payoutMethod === 'upi' ? '#29C5F6' : '#ffffff',
+                border: payoutMethod === 'upi' ? '1px solid #29C5F6' : '1px solid #2A2A2A',
+                fontWeight: 600,
+                fontSize: '0.95rem',
+                cursor: 'pointer',
+                transition: 'all 0.2s'
+              }}
+            >
+              UPI
+            </button>
+            <button
+              onClick={() => setPayoutMethod('bank')}
+              style={{
+                flex: 1,
+                padding: '14px',
+                borderRadius: '12px',
+                background: payoutMethod === 'bank' ? '#132b35' : '#1A1A1A',
+                color: payoutMethod === 'bank' ? '#29C5F6' : '#ffffff',
+                border: payoutMethod === 'bank' ? '1px solid #29C5F6' : '1px solid #2A2A2A',
+                fontWeight: 600,
+                fontSize: '0.95rem',
+                cursor: 'pointer',
+                transition: 'all 0.2s'
+              }}
+            >
+              Bank account
+            </button>
+          </div>
+        </div>
 
+        {payoutMethod === 'upi' ? (
+           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+             <InputCard 
+               label="UPI ID *" 
+               value={upiId} 
+               onChange={setUpiId} 
+               placeholder="you@okaxis"
+             />
+           </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <InputCard 
+              label="ACCOUNT HOLDER NAME *" 
+              value={accountName} 
+              onChange={setAccountName} 
+              placeholder="Name on bank account"
+            />
+            
+            <InputCard 
+              label="ACCOUNT NUMBER *" 
+              value={accountNumber} 
+              onChange={setAccountNumber} 
+              placeholder="Account number"
+            />
+
+            <InputCard 
+              label="RE-ENTER ACCOUNT NUMBER *" 
+              value={confirmAccount} 
+              onChange={setConfirmAccount} 
+              placeholder="Confirm account number"
+            />
+            {confirmAccount && accountNumber !== confirmAccount && (
+              <div style={{ color: '#EF4444', fontSize: '0.85rem', marginTop: '-8px', paddingLeft: '8px', fontWeight: 600 }}>
+                Account numbers do not match
+              </div>
+            )}
+            
+            <InputCard 
+              label="IFSC CODE *" 
+              value={ifsc} 
+              isUppercase={true}
+              onChange={(val) => {
+                setIfsc(val.toUpperCase());
+                if (ifscError) setIfscError('');
+              }} 
+              placeholder="e.g. HDFC0001234"
+              onBlur={async () => {
+                if (ifsc.trim()) {
+                  try {
+                    const res = await verifyIfsc(ifsc.trim().toUpperCase());
+                    if (!res.data || !res.data.verified) {
+                      setIfscError(res.data?.reason || 'Invalid IFSC code');
+                    } else {
+                      setIfscError('');
+                    }
+                  } catch (err) {
+                    console.error(err);
+                  }
+                }
+              }}
+              error={ifscError}
+            />
+          </div>
+        )}
+
+        {/* Checkbox at the end */}
+        <label style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', cursor: 'pointer', marginTop: '8px' }}>
+          <div style={{ marginTop: '2px', position: 'relative', width: '20px', height: '20px', flexShrink: 0 }}>
+            <input
+              type="checkbox"
+              checked={confirmed}
+              onChange={(e) => setConfirmed(e.target.checked)}
+              style={{
+                width: '100%',
+                height: '100%',
+                opacity: 0,
+                position: 'absolute',
+                zIndex: 2,
+                cursor: 'pointer'
+              }}
+            />
+            <div style={{
+              width: '100%',
+              height: '100%',
+              border: confirmed ? 'none' : '1px solid #64748b',
+              borderRadius: '6px',
+              background: confirmed ? '#29C5F6' : 'transparent',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'all 0.2s'
+            }}>
+              {confirmed && (
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+              )}
+            </div>
+          </div>
+          <span style={{ color: '#94a3b8', fontSize: '0.85rem', lineHeight: '1.5', flex: 1 }}>
+            I confirm these are my own details, that I'm 18 or older, and that I own the rights to everything I publish.
+          </span>
+        </label>
 
         {/* Action Buttons */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '16px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '8px' }}>
           <button
+            disabled={isSaving}
             onClick={async () => {
-              if (!accountName.trim() || !accountNumber.trim() || !confirmAccount.trim() || !ifsc.trim() || !panNumber.trim()) {
-                setErrorMessage('Please fill in all mandatory fields (marked with a red asterisk) before going live.');
+              if (isSaving) return;
+
+              const isUpiMethod = payoutMethod === 'upi';
+              const isBankMethod = payoutMethod === 'bank';
+
+              if (!panNumber.trim()) {
+                setErrorMessage('Please enter your PAN number.');
                 setShowErrorModal(true);
                 return;
               }
+
               const formattedPan = panNumber.trim().toUpperCase();
               const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
               if (!panRegex.test(formattedPan)) {
@@ -344,92 +456,139 @@ const CreatorPayouts = () => {
                 setShowErrorModal(true);
                 return;
               }
-              if (accountNumber !== confirmAccount) {
-                setErrorMessage('Account numbers do not match.');
+
+              const formattedAadhar = aadharLast4.trim();
+              if (!/^\d{4}$/.test(formattedAadhar)) {
+                setErrorMessage('Please enter exactly the last 4 digits of your Aadhaar number.');
                 setShowErrorModal(true);
                 return;
               }
-              
-              // Explicitly verify IFSC code again in case user didn't trigger onBlur
-              try {
-                const ifscRes = await verifyIfsc(ifsc.trim());
-                if (!ifscRes.data || !ifscRes.data.verified) {
-                  setIfscError(ifscRes.data?.reason || 'Invalid IFSC code');
-                  setErrorMessage(ifscRes.data?.reason || 'Please enter a valid IFSC code.');
+
+              if (isUpiMethod) {
+                const trimmedUpi = upiId.trim();
+                if (!trimmedUpi || !trimmedUpi.includes('@')) {
+                  setErrorMessage('Please enter a valid UPI ID (e.g. you@okaxis).');
                   setShowErrorModal(true);
                   return;
-                } else {
-                  setIfscError(''); // clear any old error
                 }
-              } catch (err) {
-                console.error('IFSC Verification failed during submit:', err);
-                setErrorMessage('Could not verify IFSC. Please try again.');
+              }
+
+              if (isBankMethod) {
+                if (!accountName.trim()) {
+                  setErrorMessage('Please enter the account holder name.');
+                  setShowErrorModal(true);
+                  return;
+                }
+                if (!accountNumber.trim()) {
+                  setErrorMessage('Please enter your bank account number.');
+                  setShowErrorModal(true);
+                  return;
+                }
+                if (accountNumber.trim() !== confirmAccount.trim()) {
+                  setErrorMessage('Bank account numbers do not match.');
+                  setShowErrorModal(true);
+                  return;
+                }
+                if (!ifsc.trim()) {
+                  setErrorMessage('Please enter your bank IFSC code.');
+                  setShowErrorModal(true);
+                  return;
+                }
+                try {
+                  const ifscRes = await verifyIfsc(ifsc.trim().toUpperCase());
+                  if (!ifscRes.data || !ifscRes.data.verified) {
+                    setIfscError(ifscRes.data?.reason || 'Invalid IFSC code');
+                    setErrorMessage(ifscRes.data?.reason || 'Please enter a valid IFSC code.');
+                    setShowErrorModal(true);
+                    return;
+                  } else {
+                    setIfscError('');
+                  }
+                } catch (err) {
+                  console.error('IFSC Verification failed during submit:', err);
+                  setErrorMessage('Could not verify IFSC. Please try again.');
+                  setShowErrorModal(true);
+                  return;
+                }
+              }
+
+              if (!confirmed) {
+                setErrorMessage('Please confirm that these are your own details.');
                 setShowErrorModal(true);
                 return;
               }
+
               try {
-                const res = await linkBank({ 
+                setIsSaving(true);
+                const payload = {
                   pan: formattedPan,
-                  name: accountName.trim(),
-                  bank_account: accountNumber.trim(),
-                  ifsc: ifsc.trim()
-                });
-                
-                if (!res.data.verified) {
-                  const errorReason = res.data.reason || 'Invalid account details. Please try again.';
-                  setErrorMessage(errorReason);
-                  setShowErrorModal(true);
-                  return;
+                  aadharLast4: formattedAadhar,
+                  payoutMethod,
+                  upiId: isUpiMethod ? upiId.trim() : undefined,
+                  bankAccountName: isBankMethod ? accountName.trim() : undefined,
+                  bankAccountNumber: isBankMethod ? accountNumber.trim() : undefined,
+                  bankIfsc: isBankMethod ? ifsc.trim().toUpperCase() : undefined,
+                  confirmed: true
+                };
+
+                const res = await savePayoutDetails(payload);
+                if (res.data?.creator) {
+                  setCreator(res.data.creator);
                 }
-                
-                await toggleLive(true); // Automatically turn green (go live)
-                navigate('/creator/dashboard');
+                localStorage.setItem('bankLinked', 'true');
+                await toggleLive(true);
+                navigate('/creator/dashboard', { state: { creator: res.data?.creator } });
               } catch (error) {
                 console.error('Failed to link payouts:', error);
-                const serverMsg = error.response?.data?.message || 'Failed to link payout details. Please try again.';
+                const serverMsg = error?.response?.data?.message || 'Failed to link payout details. Please try again.';
                 setErrorMessage(serverMsg);
                 setShowErrorModal(true);
+              } finally {
+                setIsSaving(false);
               }
             }}
             style={{
-              background: '#29C5F6',
+              background: isSaving ? '#1a7590' : '#29C5F6',
               color: '#0E0E0E',
               border: 'none',
               borderRadius: '16px',
               padding: '18px',
               fontWeight: '700',
               fontSize: '1rem',
-              cursor: 'pointer',
+              cursor: isSaving ? 'not-allowed' : 'pointer',
               transition: 'all 0.2s ease',
               textAlign: 'center',
-              width: '100%'
+              width: '100%',
+              opacity: isSaving ? 0.7 : 1
             }}
-            onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(0.98)'; }}
+            onMouseEnter={(e) => { if (!isSaving) e.currentTarget.style.transform = 'scale(0.98)'; }}
             onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
           >
-            Save & Go To Dashboard  →
+            {isSaving ? 'Saving details...' : 'Save & Go To Dashboard  →'}
           </button>
 
-          <button
-            onClick={() => navigate('/creator/dashboard')}
-            style={{
-              background: 'transparent',
-              color: '#29C5F6',
-              border: '1px solid #29C5F6',
-              borderRadius: '16px',
-              padding: '18px',
-              fontWeight: '600',
-              fontSize: '1rem',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease',
-              textAlign: 'center',
-              width: '100%'
-            }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(41, 197, 246, 0.05)'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
-          >
-            Skip for now — remind me in 2 days
-          </button>
+          {(!accountName && !accountNumber && !ifsc && !panNumber && !upiId && !aadharLast4) && (
+            <button
+              onClick={() => navigate('/creator/dashboard')}
+              style={{
+                background: 'transparent',
+                color: '#29C5F6',
+                border: '1px solid #29C5F6',
+                borderRadius: '16px',
+                padding: '18px',
+                fontWeight: '600',
+                fontSize: '1rem',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                textAlign: 'center',
+                width: '100%'
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(41, 197, 246, 0.05)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+            >
+              Skip for now
+            </button>
+          )}
         </div>
 
         {/* Footer Note */}
@@ -481,8 +640,7 @@ const CreatorPayouts = () => {
               }}
             >
               <span style={{ 
-                fontSize: '20px',
-                filter: isActive ? cyanFilter : grayFilter
+                fontSize: '20px'
               }}>
                 {item.icon}
               </span>

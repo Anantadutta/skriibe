@@ -20,14 +20,12 @@ const SmartLoginRedirect = ({ children }) => {
         const data = res.data;
 
         if (data.authenticated && data.isCreator) {
-          const { ama_enabled, expertise } = data.creator;
+          const { handle } = data.creator;
 
-          if (ama_enabled) {
-            navigate('/creator/dashboard', { replace: true });
-          } else if (expertise && expertise.length > 0) {
-            navigate('/onboard/pricing', { replace: true });
-          } else {
+          if (!handle) {
             navigate('/onboard/profile', { replace: true });
+          } else {
+            navigate('/creator/dashboard', { replace: true });
           }
         } else {
           setLoading(false);

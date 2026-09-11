@@ -613,12 +613,21 @@ router.delete('/profile', verifyFanToken, async (req, res) => {
       req.io.emit('new-admin-alert');
     }
 
-    await Fan.findByIdAndDelete(req.fan.fanId);
+    const originalEmail = fan.email;
+    fan.isDeleted = true;
+    fan.email = `${fan.email}_deleted_${Date.now()}`;
+    await fan.save();
     
     const Creator = require('../models/Creator');
     const CreatorProfile = require('../models/CreatorProfile');
-    await Creator.findOneAndDelete({ email: fan.email });
-    await CreatorProfile.findOneAndDelete({ user: fan._id });
+    const creator = await Creator.findOne({ email: originalEmail });
+    if (creator) {
+      creator.isBanned = true; // effectively disable them
+      creator.email = `${creator.email}_deleted_${Date.now()}`;
+      if (creator.handle) creator.handle = `${creator.handle}_deleted_${Date.now()}`;
+      await creator.save();
+    }
+    // Don't physically delete CreatorProfile to keep history if needed
 
     res.json({ success: true, message: 'Account deleted successfully' });
   } catch (err) {

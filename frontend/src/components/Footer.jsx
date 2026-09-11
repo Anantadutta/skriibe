@@ -14,13 +14,26 @@ const creatorFaqs = [
   { q: "How do refunds work?", a: "If a creator doesn't respond within 24 hours, you may be eligible for a refund according to Skriibe's refund policy. If a response is submitted but is abusive, inappropriate, or clearly incomplete, you can raise a dispute for review by the Skriibe team." }
 ];
 
-const Footer = ({ theme }) => {
+const Footer = ({ theme, showTalkDirectly = true }) => {
   const [showHowItWorks, setShowHowItWorks] = useState(false);
   const [showCreatorFaqs, setShowCreatorFaqs] = useState(false);
   const [openFaqIndex, setOpenFaqIndex] = useState(null);
 
   return (
-    <footer className={`${theme === 'light' ? 'bg-[#f8fafc] text-black border-gray-200' : 'bg-[#0b0b0b] text-white border-[#1a1a1a]'} pt-16 pb-8 px-6 md:px-12 font-syne border-t relative`}>
+    <footer className={`${theme === 'light' ? 'bg-[#f8fafc] text-black border-gray-200' : 'bg-[#0b0b0b] text-white border-[#1a1a1a]'} pt-10 sm:pt-14 pb-8 px-6 md:px-12 font-syne border-t relative`}>
+      {/* Big #TALKDIRECTLY Banner */}
+      {showTalkDirectly && (
+        <div className="w-full text-center select-none overflow-hidden mb-8 sm:mb-10">
+          <h2
+            className={`text-6xl sm:text-8xl md:text-9xl lg:text-[130px] xl:text-[160px] font-normal uppercase tracking-tight leading-none ${
+              theme === 'light' ? 'text-black' : 'text-[#F5EDE8]'
+            }`}
+            style={{ fontFamily: "'Bebas Neue', sans-serif" }}
+          >
+            #TALKDIRECTLY
+          </h2>
+        </div>
+      )}
       {/* How it Works Modal */}
       {showHowItWorks && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
@@ -128,7 +141,7 @@ const Footer = ({ theme }) => {
             </a>
           </div>
           <p className={`${theme === 'light' ? 'text-gray-600' : 'text-[#a3a3a3]'} text-[15px] leading-relaxed max-w-sm mt-2`}>
-            A creator monetization platform that lets creators get paid to answer their followers' messages — turning free DMs into guaranteed, paid conversations delivered within 24 hours.
+            Skriibe Live Chat lets you have a private, real-time 1-on-1 conversation with a creator. You pay according to the creator's displayed per-minute rate.
           </p>
           <div className="flex gap-5 mt-2">
             {/* Instagram */}
@@ -157,11 +170,26 @@ const Footer = ({ theme }) => {
 
         {/* Links Columns */}
         <div className="col-span-1 flex flex-col gap-5">
-          <h4 className={`${theme === 'light' ? 'text-black' : 'text-white'} font-bold tracking-widest text-xs uppercase mb-2`}>Company</h4>
-          <a href="/about" className={`${theme === 'light' ? 'text-gray-600 hover:text-black' : 'text-[#a3a3a3] hover:text-white'} transition-colors text-sm`}>About Us</a>
-          <a href="/mission" className={`${theme === 'light' ? 'text-gray-600 hover:text-black' : 'text-[#a3a3a3] hover:text-white'} transition-colors text-sm`}>Mission</a>
-          <a href="/vision" className={`${theme === 'light' ? 'text-gray-600 hover:text-black' : 'text-[#a3a3a3] hover:text-white'} transition-colors text-sm`}>Vision</a>
-          <a href="/contact" className={`${theme === 'light' ? 'text-gray-600 hover:text-black' : 'text-[#a3a3a3] hover:text-white'} transition-colors text-sm`}>Contact Us</a>
+          <div className="flex flex-col gap-4">
+            <h4 className={`${theme === 'light' ? 'text-black' : 'text-white'} font-bold tracking-widest text-xs uppercase mb-1`}>Company</h4>
+            <a href="/about" className={`${theme === 'light' ? 'text-gray-600 hover:text-black' : 'text-[#a3a3a3] hover:text-white'} transition-colors text-sm`}>About Us</a>
+            <a href="/mission" className={`${theme === 'light' ? 'text-gray-600 hover:text-black' : 'text-[#a3a3a3] hover:text-white'} transition-colors text-sm`}>Mission</a>
+            <a href="/vision" className={`${theme === 'light' ? 'text-gray-600 hover:text-black' : 'text-[#a3a3a3] hover:text-white'} transition-colors text-sm`}>Vision</a>
+          </div>
+
+          <div className="pt-2 flex flex-col gap-2">
+            <h4
+              className={`${theme === 'light' ? 'text-black' : 'text-white'} font-bold tracking-widest text-xs uppercase`}
+            >
+              Contact Us
+            </h4>
+            <a
+              href="/raise-query"
+              className={`${theme === 'light' ? 'text-gray-600 hover:text-black' : 'text-[#a3a3a3] hover:text-white'} transition-colors text-sm`}
+            >
+              Raise a Query
+            </a>
+          </div>
         </div>
 
         <div className="col-span-1 flex flex-col gap-5">
@@ -178,6 +206,7 @@ const Footer = ({ theme }) => {
           <a href="/refunds" className={`${theme === 'light' ? 'text-gray-600 hover:text-black' : 'text-[#a3a3a3] hover:text-white'} transition-colors text-sm`}>Refund Policy</a>
           <a href="/agreement" className={`${theme === 'light' ? 'text-gray-600 hover:text-black' : 'text-[#a3a3a3] hover:text-white'} transition-colors text-sm`}>Creator & Fan Agreement</a>
           <a href="/guidelines" className={`${theme === 'light' ? 'text-gray-600 hover:text-black' : 'text-[#a3a3a3] hover:text-white'} transition-colors text-sm`}>Community Guidelines</a>
+          <a href="/cookies" className={`${theme === 'light' ? 'text-gray-600 hover:text-black' : 'text-[#a3a3a3] hover:text-white'} transition-colors text-sm`}>Cookie Policy</a>
         </div>
       </div>
 
@@ -187,9 +216,6 @@ const Footer = ({ theme }) => {
           © 2026 Skriibe. All rights reserved.<br />
           A product of EdLern Innovations Private Limited.<br />
           Made in India
-        </div>
-        <div className={`${theme === 'light' ? 'text-gray-600' : 'text-[#737373]'}`}>
-          Instagram brings the audience. <span className="text-[#3BA8D8]">skriibe brings the money.</span>
         </div>
       </div>
     </footer>

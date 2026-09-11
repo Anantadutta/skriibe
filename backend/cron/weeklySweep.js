@@ -1,83 +1,186 @@
 const mongoose = require('mongoose');
 const Creator = require('../models/Creator');
 const SweepLog = require('../models/SweepLog');
+const Question = require('../models/Question');
+const Earning = require('../models/Earning');
+const ChatSession = require('../models/ChatSession');
+const WalletTransaction = require('../models/WalletTransaction');
 
-const runWeeklySweep = async () => {
-    console.log('Starting weekly sweep of available balances...');
+// Helper to calculate Tuesday 00:00:00 IST for any given date
+const getTuesday00IST = (d = new Date()) => {
+    const istOffset = 5.5 * 60 * 60 * 1000;
+    const istTime = new Date(d.getTime() + istOffset);
+    const day = istTime.getUTCDay();
+    const diffDays = (day - 2 + 7) % 7;
+    const tuesdayIST = new Date(istTime);
+    tuesdayIST.setUTCDate(tuesdayIST.getUTCDate() - diffDays);
+    tuesdayIST.setUTCHours(0, 0, 0, 0);
+    return new Date(tuesdayIST.getTime() - istOffset);
+};
+
+const runWeeklySweep = async (forceNow = false) => {
+    console.log(`Starting weekly sweep of balances (forceNow: ${forceNow})...`);
     try {
-        // First Payout Rule: Account must be at least 6 days old to qualify for the sweep.
-        // This forces non-Tuesday signups to wait for the "next to next" Tuesday.
-        const sixDaysAgo = new Date(Date.now() - (6 * 24 * 60 * 60 * 1000));
-        
-        // Find all creators who have an availableBalance > 0
-        const creatorsWithBalance = await Creator.find({ 
-            availableBalance: { $gt: 0 },
-            bankLinked: true,
-            panVerificationStatus: 'verified',
-            isBanned: { $ne: true }, // Ensure they are not permanently banned
-            $and: [
-                {
-                    $or: [
-                        { payoutsFrozenUntil: { $exists: false } },
-                        { payoutsFrozenUntil: null },
-                        { payoutsFrozenUntil: { $lte: new Date() } } // Ensure payouts are not currently frozen
-                    ]
-                },
-                {
-                    $or: [
-                        { lifetimePaid: { $gt: 0 } }, // If they already had a payout before, pay them immediately
-                        { createdAt: { $lte: sixDaysAgo } } // Otherwise, must be at least 6 days old
-                    ]
-                }
-            ]
-        }).select('_id');
-        
+        const now = new Date();
+        let cycleEnd;
+        let cycleStart;
+
+        if (forceNow) {
+            cycleEnd = now;
+            cycleStart = getTuesday00IST(now);
+        } else {
+            cycleEnd = getTuesday00IST(now);
+            cycleStart = new Date(cycleEnd.getTime() - 7 * 24 * 60 * 60 * 1000);
+        }
+
+        // Find all active creators
+        const creators = await Creator.find({
+            isBanned: { $ne: true }
+        }).select('_id commissionOverride availableBalance lifetimePaid');
+
         let sweptCount = 0;
         let totalSweptAmount = 0;
 
-        for (const c of creatorsWithBalance) {
-            // Use an aggregation pipeline in findOneAndUpdate for a single, fully atomic transaction
-            // that updates both fields simultaneously.
-            const preUpdateCreator = await Creator.findOneAndUpdate(
-                { _id: c._id, availableBalance: { $gt: 0 } },
-                [
-                    { 
-                        $set: { 
-                            lifetimePaid: { $add: [{ $ifNull: ["$lifetimePaid", 0] }, "$availableBalance"] },
-                            availableBalance: 0 
-                        } 
+        for (const c of creators) {
+            // Check if sweep for this Tuesday cycle has already been logged
+            const existingLog = await SweepLog.findOne({
+                creatorId: c._id,
+                $or: [
+                    { weekStart: cycleStart },
+                    { sweptAt: { $gte: new Date(cycleEnd.getTime() - 3600000), $lte: new Date(cycleEnd.getTime() + 3600000) } }
+                ]
+            });
+
+            if (existingLog && !forceNow) {
+                continue; // Already swept this cycle
+            }
+
+            const getCreatorShare = (date) => {
+                let share = 0.8;
+                if (c.commissionOverride && c.commissionOverride.startDate) {
+                    const qDate = new Date(date);
+                    const start = new Date(c.commissionOverride.startDate);
+                    const end = c.commissionOverride.endDate ? new Date(c.commissionOverride.endDate) : null;
+                    start.setHours(0, 0, 0, 0);
+                    if (end) end.setHours(23, 59, 59, 999);
+                    if (qDate >= start && (!end || qDate <= end)) {
+                        share = (c.commissionOverride.creatorShare || 80) / 100;
                     }
-                ],
-                { new: false } // Return the document as it was BEFORE the update so we know how much was swept
-            );
+                }
+                return share;
+            };
 
-            // If preUpdateCreator is null, it means the balance was already 0 (maybe another instance swept it)
-            if (preUpdateCreator && preUpdateCreator.availableBalance > 0) {
-                const amountToSweep = preUpdateCreator.availableBalance;
+            let weeklyTotal = 0;
+            let weeklyTxCount = 0;
 
-                // Create audit log
+            // 1. Answered questions in [cycleStart, cycleEnd)
+            const answeredQuestions = await Question.find({
+                creatorId: c._id,
+                status: { $in: ['answered', 'satisfied'] },
+                $or: [
+                    { answeredAt: { $gte: cycleStart, $lt: cycleEnd } },
+                    { answeredAt: null, createdAt: { $gte: cycleStart, $lt: cycleEnd } }
+                ]
+            }).select('amountPaid answeredAt createdAt');
+
+            for (const q of answeredQuestions) {
+                const gross = q.amountPaid || 0;
+                if (gross > 0) {
+                    const qDate = q.answeredAt || q.createdAt || now;
+                    weeklyTotal += gross * getCreatorShare(qDate);
+                    weeklyTxCount++;
+                }
+            }
+
+            // 2. Affiliate earnings in [cycleStart, cycleEnd)
+            const affEarnings = await Earning.find({
+                creatorId: c._id,
+                earningType: 'affiliate_referral',
+                createdAt: { $gte: cycleStart, $lt: cycleEnd }
+            }).select('amount');
+
+            for (const a of affEarnings) {
+                weeklyTotal += (a.amount || 0);
+                weeklyTxCount++;
+            }
+
+            // 3. Live chat sessions ended in [cycleStart, cycleEnd)
+            const liveChats = await ChatSession.find({
+                creatorId: c._id,
+                status: 'ended',
+                $or: [
+                    { endTime: { $gte: cycleStart, $lt: cycleEnd } },
+                    { startTime: { $gte: cycleStart, $lt: cycleEnd } }
+                ]
+            }).select('totalCost endTime startTime');
+
+            for (const chat of liveChats) {
+                const gross = chat.totalCost || 0;
+                if (gross > 0) {
+                    const chatDate = chat.endTime || chat.startTime || now;
+                    weeklyTotal += gross * getCreatorShare(chatDate);
+                    weeklyTxCount++;
+                }
+            }
+
+            // 4. Tips in [cycleStart, cycleEnd)
+            const tips = await WalletTransaction.find({
+                creatorId: c._id,
+                type: 'debit',
+                description: 'Tip sent',
+                createdAt: { $gte: cycleStart, $lt: cycleEnd }
+            }).select('amount createdAt');
+
+            for (const tip of tips) {
+                const gross = tip.amount || 0;
+                if (gross > 0) {
+                    weeklyTotal += gross * getCreatorShare(tip.createdAt);
+                    weeklyTxCount++;
+                }
+            }
+
+            // Also check if creator had availableBalance
+            if (c.availableBalance > 0 && weeklyTotal === 0) {
+                weeklyTotal = c.availableBalance;
+                weeklyTxCount = weeklyTxCount || 1;
+            }
+
+            if (weeklyTotal > 0) {
+                const roundedAmount = Math.round(weeklyTotal * 100) / 100;
+
                 await SweepLog.create({
                     creatorId: c._id,
-                    amountSwept: amountToSweep
+                    amountSwept: roundedAmount,
+                    sweptAt: cycleEnd,
+                    weekStart: cycleStart,
+                    weekEnd: cycleEnd,
+                    status: 'Processed',
+                    transactionCount: weeklyTxCount
                 });
 
-                // Update ledger status
+                await Creator.updateOne(
+                    { _id: c._id },
+                    {
+                        $set: { availableBalance: 0 },
+                        $inc: { lifetimePaid: roundedAmount }
+                    }
+                );
+
                 try {
-                    const Earning = require('../models/Earning');
                     await Earning.updateMany(
-                        { creatorId: c._id, status: 'accumulating' },
+                        { creatorId: c._id, status: 'accumulating', createdAt: { $lt: cycleEnd } },
                         { $set: { status: 'swept' } }
                     );
-                } catch (earningErr) {
-                    console.error('Failed to update earning status during sweep:', earningErr);
+                } catch (eErr) {
+                    console.error('Error updating earning status:', eErr);
                 }
 
                 sweptCount++;
-                totalSweptAmount += amountToSweep;
+                totalSweptAmount += roundedAmount;
             }
         }
-        
-        console.log(`Weekly sweep complete. Swept ${sweptCount} creators for a total of ${totalSweptAmount} INR.`);
+
+        console.log(`Weekly sweep complete. Swept ${sweptCount} creators for a total of ₹${totalSweptAmount}.`);
     } catch (error) {
         console.error('Error during weekly sweep:', error);
     }
@@ -97,7 +200,7 @@ const initWeeklySweep = () => {
             const dateStr = istDate.toISOString().split('T')[0]; // YYYY-MM-DD
             if (lastRunDate !== dateStr) {
                 lastRunDate = dateStr;
-                runWeeklySweep();
+                runWeeklySweep(false);
             }
         }
     }, 60 * 1000);

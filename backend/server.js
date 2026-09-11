@@ -57,6 +57,7 @@ const sendWhatsAppMessage = async (phone, name) => {
 
 const app = express();
 const server = http.createServer(app);
+// Trigger nodemon restart
 
 const allowedOrigins = [
   "https://www.skriibe.com", 
@@ -82,13 +83,8 @@ const io = new Server(server, {
   }
 });
 
-// Socket.IO Connection Event
-io.on('connection', (socket) => {
-  console.log('A client connected:', socket.id);
-  socket.on('disconnect', () => {
-    console.log('Client disconnected:', socket.id);
-  });
-});
+// Initialize socket event handlers
+require('./utils/socketHandlers')(io);
 
 // Attach io to req so routes can emit events
 app.use((req, res, next) => {
@@ -129,9 +125,16 @@ app.use(passport.session());
 let isConnected = false;
 const connectDB = async () => {
   if (isConnected) return;
-  const conn = await mongoose.connect(process.env.MONGO_URI);
-  isConnected = true;
-  console.log('MongoDB Connected:', conn.connection.host);
+  try {
+    const conn = await mongoose.connect(process.env.MONGO_URI);
+    isConnected = true;
+    console.log('MongoDB Connected:', conn.connection.host);
+    const migrateExpertise = require('./migrate_expertise');
+    migrateExpertise().catch(err => console.error('Auto expertise migration error:', err));
+  } catch (err) {
+    console.error('MongoDB Connection Error:', err.message);
+    console.error('HINT: Your IP address may have changed. Please log into MongoDB Atlas and add your current IP address to the Network Access whitelist.');
+  }
 };
 
 // Validation Schemas
@@ -194,6 +197,15 @@ app.post('/api/waitlist', async (req, res) => {
 app.get('/health', async (req, res) => {
   await connectDB();
   res.json({ status: 'ok', dbConnected: isConnected });
+});
+
+app.get('/api/debug-refs', async (req, res) => {
+  await connectDB();
+  const Referral = require('./models/Referral');
+  const Creator = require('./models/Creator');
+  const refs = await Referral.find({}).lean();
+  const creators = await Creator.find({ handle: '@ok_10' }).lean();
+  res.json({ refs, creators });
 });
 
 // Endpoint for Uptime Robot to trigger SLA monitor
@@ -286,6 +298,10 @@ app.use('/api/creators', require('./routes/creators'));
 app.use('/api/questions', require('./routes/questions'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/email-verification', require('./routes/emailVerification'));
+app.use('/api/chat', require('./routes/chat'));
+app.use('/api/wallet', require('./routes/wallet'));
+app.use('/api/queries', require('./routes/queries'));
+app.use('/api/admin/queries', require('./routes/queries'));
 
 const errorHandler = require('./middleware/errorHandler');
 app.use(errorHandler);
@@ -299,7 +315,7 @@ server.listen(PORT, async () => {
   const { initWeeklySweep } = require('./cron/weeklySweep');
   initWeeklySweep();
   try {
-    const creators = await mongoose.model('Creator').find({}).select('handle name price pricePerQuestion').lean();
+    const creators = await mongoose.model('Creator').find({}).select('handle name price pricePerQuestion avatarUrl profileUrl liveChatPrice isLive').lean();
     fs.writeFileSync('creators_dump.json', JSON.stringify(creators, null, 2));
 
     // One-time sync to fix stats for all creators

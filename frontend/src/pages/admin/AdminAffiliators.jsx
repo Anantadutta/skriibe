@@ -47,6 +47,7 @@ const AdminAffiliators = () => {
             <button onClick={() => navigate('/admin/dashboard')} style={navButtonStyle(false)}>Dashboard</button>
             <button onClick={() => navigate('/admin/creators')} style={navButtonStyle(false)}>Creators</button>
             <button onClick={() => navigate('/admin/disputes')} style={navButtonStyle(false)}>Disputes</button>
+            <button onClick={() => navigate('/admin/queries')} style={navButtonStyle(false)}>Queries</button>
             <button style={navButtonStyle(true)}>Affiliators</button>
           </div>
         </div>

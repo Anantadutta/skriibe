@@ -78,8 +78,9 @@ const CreatorReplyScreen = () => {
 
   const navItems = [
     { label: 'HOME', icon: '🏠', route: '/creator/dashboard' },
-    { label: 'INBOX', icon: '💬', route: '/creator/inbox' },
-    { label: 'PAYOUTS', icon: '💰', route: '/creator/payouts' },
+    { label: 'CHATS', icon: '💬', route: '/creator/inbox' },
+    { label: 'TRANSACTIONS', icon: '💰', route: '/creator/payouts' },
+    { label: 'ANALYTICS', icon: '📊', route: '/creator/analytics' },
     { label: 'SETTINGS', icon: '⚙️', route: '/creator/settings' },
   ];
 
@@ -217,13 +218,7 @@ const CreatorReplyScreen = () => {
               </div>
             </div>
 
-            {/* SLA Warning Banner */}
-            {question.status !== 'satisfied' && (
-              <div style={{ background: '#291E00', border: '1px solid #B45309', borderRadius: '16px', padding: '16px', display: 'flex', alignItems: 'center', gap: '12px', color: '#FBBF24' }}>
-                <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#FBBF24' }} />
-                <span style={{ fontWeight: '800', fontSize: '0.95rem', letterSpacing: '0.01em' }}>SLA: {calculateSLARemaining()}</span>
-              </div>
-            )}
+
 
             {/* Context (Original Question and Answer) */}
             {rootQuestion ? (
@@ -374,31 +369,7 @@ const CreatorReplyScreen = () => {
                   </div>
                 </div>
 
-                {/* Follow Up Allowed Toggle */}
-                {!question.isFollowUp && (
-                  <div style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: '12px', 
-                    padding: '16px', 
-                    marginBottom: '16px',
-                    background: followUpAllowed ? 'rgba(56, 189, 248, 0.1)' : 'rgba(255, 255, 255, 0.03)',
-                    border: followUpAllowed ? '1px solid rgba(56, 189, 248, 0.4)' : '1px solid rgba(255, 255, 255, 0.1)',
-                    borderRadius: '16px',
-                    transition: 'all 0.2s ease'
-                  }}>
-                    <input 
-                      type="checkbox" 
-                      id="followUpAllowed"
-                      checked={followUpAllowed}
-                      onChange={(e) => setFollowUpAllowed(e.target.checked)}
-                      style={{ cursor: 'pointer', width: '20px', height: '20px', accentColor: '#38BDF8' }}
-                    />
-                    <label htmlFor="followUpAllowed" style={{ color: followUpAllowed ? '#38BDF8' : '#e2e8f0', fontSize: '1rem', fontWeight: '600', cursor: 'pointer', flex: 1 }}>
-                      Allow Fan to ask 1 Free Follow-up Messages
-                    </label>
-                  </div>
-                )}
+
 
                 {/* Send Reply Button */}
                 <button
@@ -421,48 +392,7 @@ const CreatorReplyScreen = () => {
                   Send reply →
                 </button>
 
-                {/* Action Button Grid */}
-                <div style={{ display: 'grid', gridTemplateColumns: question.isFollowUp ? '1fr' : '1fr 1fr', gap: '12px', marginTop: '4px', marginBottom: '16px' }}>
-                  {!question.isFollowUp && (
-                    <button
-                      onClick={handleRejectClick}
-                      style={{
-                        background: '#1A1B23',
-                        border: 'none',
-                        color: '#ffffff',
-                        borderRadius: '16px',
-                        padding: '16px',
-                        fontWeight: 800,
-                        fontSize: '0.95rem',
-                        cursor: 'pointer',
-                        textAlign: 'center'
-                      }}
-                    >
-                      Reject & refund
-                    </button>
-                  )}
-                  <button
-                    onClick={handleFlagClick}
-                    style={{
-                      background: 'rgba(239, 68, 68, 0.1)',
-                      border: '1px solid rgba(239, 68, 68, 0.2)',
-                      color: '#ef4444',
-                      borderRadius: '16px',
-                      padding: '16px',
-                      fontWeight: 800,
-                      fontSize: '0.95rem',
-                      cursor: 'pointer',
-                      textAlign: 'center',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '8px'
-                    }}
-                  >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="#ef4444" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg>
-                    Flag abuse
-                  </button>
-                </div>
+
               </>
             )}
           </>
@@ -998,8 +928,7 @@ complete.
               }}
             >
               <span style={{ 
-                fontSize: '20px',
-                filter: isActive ? cyanFilter : grayFilter
+                fontSize: '20px'
               }}>
                 {item.icon}
               </span>

@@ -14,14 +14,12 @@ const CreatorOnboardPricing = () => {
   const location = useLocation();
   const [creatorData, setCreatorData] = useState(location.state?.creator || null);
 
-  const [price, setPrice] = useState(49);
+  const [price, setPrice] = useState(10);
   const [dailyCap, setDailyCap] = useState(50);
   const [weeklyGoal, setWeeklyGoal] = useState(1500);
   const [loading, setLoading] = useState(false);
-  const [isCustom, setIsCustom] = useState(false);
-  const [customPrice, setCustomPrice] = useState('');
   const [showSaveSuccess, setShowSaveSuccess] = useState(false);
-  const [isInputFocused, setIsInputFocused] = useState(false);
+  const [enableAMA, setEnableAMA] = useState(true);
 
   const getCurrencySymbol = (phoneStr) => {
     if (!phoneStr) return '₹';
@@ -58,26 +56,50 @@ const CreatorOnboardPricing = () => {
           navigate('/onboard/profile');
         });
       });
+    } else {
+      if (creatorData.price !== undefined) {
+        if (creatorData.price === 0) {
+          setPrice(0);
+          setEnableAMA(false);
+        } else {
+          setEnableAMA(true);
+          const presets = [10, 20, 30, 40, 50];
+          if (presets.includes(creatorData.price)) {
+            setPrice(creatorData.price);
+          } else {
+            setPrice(10);
+          }
+        }
+      }
     }
   }, [creatorData, navigate]);
 
   const pricingOptions = [
-    { value: 49, label: 'Starter', desc: 'Get more messages' },
-    { value: 99, label: 'Most popular', desc: 'Most creators start here' },
-    { value: 199, label: 'Premium', desc: 'Higher value responses' },
-    { value: 499, label: 'Expert', desc: 'Strong authority' }
+    { value: 10, label: 'Starter', desc: 'Get more messages' },
+    { value: 20, label: 'Most popular', desc: 'Most creators start here' },
+    { value: 30, label: 'Premium', desc: 'Higher value responses' },
+    { value: 40, label: 'Expert', desc: 'Strong authority' },
+    { value: 50, label: 'Master', desc: 'Top tier' }
   ];
 
   const handleActivate = async () => {
     setLoading(true);
     try {
       await savePricing({ price: Number(price), dailyCap, weeklyGoal });
-      navigate('/dashboard/share', {
-        state: {
-          isNewlyLive: true,
-          creator: { ...creatorData, price: Number(price), dailyCap, weeklyGoal, isLive: true }
-        }
-      });
+      if (location.state?.returnTo) {
+        navigate(location.state.returnTo, {
+          state: {
+            creator: { ...creatorData, price: Number(price), dailyCap, weeklyGoal }
+          }
+        });
+      } else {
+        navigate('/dashboard/share', {
+          state: {
+            isNewlyLive: true,
+            creator: { ...creatorData, price: Number(price), dailyCap, weeklyGoal }
+          }
+        });
+      }
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to activate page');
     } finally {
@@ -302,387 +324,71 @@ const CreatorOnboardPricing = () => {
               paddingRight: '4px',
               marginBottom: '24px'
             }}>
-              <span style={{
-                color: '#94a3b8',
-                fontSize: '13px',
-                display: 'block',
-                marginBottom: '16px',
-                fontWeight: 500,
-                textAlign: 'left'
-              }}>
-                Choose your Ask Me Anything price:
-              </span>
+              <div style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.05)', borderRadius: '16px', padding: '20px', marginBottom: '24px' }}>
+                <div style={{ fontSize: '14px', color: '#fff', fontWeight: 600, marginBottom: '16px' }}>
+                  Do you want to set up Ask me anything? <span style={{ color: '#94a3b8', fontWeight: 400 }}>(optional)</span>
+                </div>
+                <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
+                  <button
+                    onClick={() => { setEnableAMA(true); if (price === 0) setPrice(10); }}
+                    style={{
+                      flex: 1, padding: '12px', borderRadius: '12px',
+                      background: enableAMA === true ? 'rgba(6, 182, 212, 0.15)' : 'rgba(255, 255, 255, 0.05)',
+                      border: `1px solid ${enableAMA === true ? '#06b6d4' : 'rgba(255, 255, 255, 0.1)'}`,
+                      color: '#fff', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s'
+                    }}
+                  >Yes</button>
+                  <button
+                    onClick={() => { setEnableAMA(false); setPrice(0); }}
+                    style={{
+                      flex: 1, padding: '12px', borderRadius: '12px',
+                      background: enableAMA === false ? 'rgba(6, 182, 212, 0.15)' : 'rgba(255, 255, 255, 0.05)',
+                      border: `1px solid ${enableAMA === false ? '#06b6d4' : 'rgba(255, 255, 255, 0.1)'}`,
+                      color: '#fff', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s'
+                    }}
+                  >No</button>
+                </div>
 
-              {/* PRICING OPTIONS STACK */}
-              <div style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '12px',
-                marginBottom: '24px'
-              }}>
-                {pricingOptions.map(opt => {
-                  const isSelected = !isCustom && price === opt.value;
-                  return (
-                    <div
-                      key={opt.value}
-                      onClick={() => {
-                        setIsCustom(false);
-                        setPrice(opt.value);
-                      }}
-                      style={{
-                        background: isSelected ? 'rgba(124, 58, 237, 0.06)' : 'rgba(255, 255, 255, 0.04)',
-                        backdropFilter: 'blur(12px)',
-                        border: isSelected ? '2px solid #7c3aed' : '1px solid rgba(255, 255, 255, 0.08)',
-                        borderRadius: '16px',
-                        padding: isSelected ? '19px 19px' : '16px 20px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        cursor: 'pointer',
-                        transform: 'none',
-                        boxShadow: isSelected ? '0 0 20px rgba(124,58,237,0.3)' : 'none',
-                        transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)'
-                      }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                        {/* Radio button indicator */}
-                        <div style={{
-                          width: '18px',
-                          height: '18px',
-                          borderRadius: '50%',
-                          border: isSelected ? '1.5px solid #06b6d4' : '1.5px solid rgba(255, 255, 255, 0.15)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          background: 'transparent',
-                          boxShadow: isSelected ? '0 0 8px rgba(6,182,212,0.25)' : 'none'
-                        }}>
-                          {isSelected && (
-                            <div style={{
-                              width: '10px',
-                              height: '10px',
-                              borderRadius: '50%',
-                              background: '#06b6d4'
-                            }} />
-                          )}
-                        </div>
-
-                        <div style={{ display: 'flex', flexDirection: 'column', textAlign: 'left' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <span style={{
-                              color: '#ffffff',
-                              fontSize: '14px',
-                              fontWeight: 700
-                            }}>
-                              {opt.label}
-                            </span>
-                            {opt.badge && (
-                              <span style={{
-                                background: 'linear-gradient(90deg, #7c3aed 0%, #06b6d4 100%)',
-                                color: '#ffffff',
-                                fontSize: '9px',
-                                fontWeight: 800,
-                                padding: '2px 8px',
-                                borderRadius: '999px',
-                                fontFamily: 'monospace, var(--font-mono)',
-                                textTransform: 'uppercase',
-                                display: 'inline-block'
-                              }}>
-                                {opt.badge}
-                              </span>
-                            )}
-                          </div>
-                          <span style={{
-                            color: '#94a3b8',
-                            fontSize: '11px',
-                            marginTop: '2px'
-                          }}>
-                            {opt.desc}
-                          </span>
-                        </div>
-                      </div>
-                      <span style={{
-                        color: '#06b6d4',
-                        fontSize: '18px',
-                        fontWeight: 800,
-                        fontFamily: 'monospace, var(--font-mono)'
-                      }}>
-                        {currencySymbol}{opt.value}
-                      </span>
+                {enableAMA && (
+                  <div style={{ marginTop: '24px', paddingTop: '24px', borderTop: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                    <div style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 500, marginBottom: '16px', lineHeight: '1.5' }}>
+                      When you are offline, fans see an AMA option on your profile. They pay and submit a question it waits in your queue until you come back online and reply. Optional.
                     </div>
-                  );
-                })}
+                
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '8px' }}>
+                      <span style={{ fontSize: '32px', fontWeight: 800, color: '#fff' }}>{currencySymbol}{price || 0}</span>
+                    </div>
 
-                {/* Custom Price Option */}
-                {(() => {
-                  const isSelected = isCustom;
-                  return (
-                    <div
-                      onClick={() => {
-                        setIsCustom(true);
-                        setPrice(customPrice ? Number(customPrice) : '');
-                      }}
-                      style={{
-                        background: isSelected ? 'rgba(124, 58, 237, 0.06)' : 'rgba(255, 255, 255, 0.04)',
-                        backdropFilter: 'blur(12px)',
-                        border: isSelected ? '2px solid #7c3aed' : '1px solid rgba(255, 255, 255, 0.08)',
-                        borderRadius: '16px',
-                        padding: isSelected ? '19px 19px' : '16px 20px',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: isSelected ? '12px' : '0px',
-                        cursor: 'pointer',
-                        transform: 'none',
-                        boxShadow: isSelected ? '0 0 20px rgba(124,58,237,0.3)' : 'none',
-                        transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)'
-                      }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                          {/* Radio button indicator */}
-                          <div style={{
-                            width: '18px',
-                            height: '18px',
-                            borderRadius: '50%',
-                            border: isSelected ? '1.5px solid #06b6d4' : '1.5px solid rgba(255, 255, 255, 0.15)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            background: 'transparent',
-                            boxShadow: isSelected ? '0 0 8px rgba(6,182,212,0.25)' : 'none'
-                          }}>
-                            {isSelected && (
-                              <div style={{
-                                width: '10px',
-                                height: '10px',
-                                borderRadius: '50%',
-                                background: '#06b6d4'
-                              }} />
-                            )}
-                          </div>
-
-                          <div style={{ display: 'flex', flexDirection: 'column', textAlign: 'left' }}>
-                            <span style={{
-                              color: '#ffffff',
-                              fontSize: '14px',
-                              fontWeight: 700
-                            }}>
-                              Custom Price
-                            </span>
-                            <span style={{
-                              color: '#94a3b8',
-                              fontSize: '11px',
-                              marginTop: '2px'
-                            }}>
-                              Set your own rate
-                            </span>
-                          </div>
-                        </div>
-
-                        {!isSelected && (
-                          <span style={{
-                            color: '#06b6d4',
-                            fontSize: '18px',
-                            fontWeight: 800,
-                            fontFamily: 'monospace, var(--font-mono)'
-                          }}>
-                            {currencySymbol}—
-                          </span>
-                        )}
-                        {isSelected && customPrice && (
-                          <span style={{
-                            color: '#06b6d4',
-                            fontSize: '18px',
-                            fontWeight: 800,
-                            fontFamily: 'monospace, var(--font-mono)'
-                          }}>
-                            {currencySymbol}{customPrice}
-                          </span>
-                        )}
-                      </div>
-
-                      {isSelected && (
-                        <div 
-                          onClick={(e) => e.stopPropagation()}
+                    <div style={{ display: 'flex', gap: '8px', marginTop: '20px', flexWrap: 'wrap' }}>
+                      {pricingOptions.map(opt => (
+                        <button 
+                          key={opt.value} 
+                          onClick={() => setPrice(opt.value)}
                           style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '8px',
-                            paddingLeft: '32px',
-                            width: '100%',
-                            boxSizing: 'border-box',
-                            position: 'relative'
+                            flex: 1,
+                            padding: '12px 0',
+                            background: price === opt.value ? 'rgba(6, 182, 212, 0.15)' : 'rgba(255, 255, 255, 0.05)',
+                            border: `1px solid ${price === opt.value ? '#06b6d4' : 'rgba(255, 255, 255, 0.1)'}`,
+                            borderRadius: '12px',
+                            color: '#fff',
+                            fontWeight: 600,
+                            fontFamily: 'monospace, var(--font-mono)',
+                            fontSize: '14px',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                            boxShadow: price === opt.value ? '0 0 10px rgba(6, 182, 212, 0.3)' : 'none'
                           }}
                         >
-                          <span style={{
-                            color: '#06b6d4',
-                            fontSize: '16px',
-                            fontWeight: 800,
-                            fontFamily: 'monospace, var(--font-mono)'
-                          }}>
-                            {currencySymbol}
-                          </span>
-                          <div style={{ display: 'flex', flexDirection: 'column', width: '100%', maxWidth: '140px' }}>
-                            <input
-                              type="number"
-                              placeholder="Enter amount"
-                              autoFocus
-                              value={customPrice}
-                              onFocus={() => {
-                                setIsInputFocused(true);
-                                setShowSaveSuccess(false);
-                              }}
-                              onBlur={() => setIsInputFocused(false)}
-                              onChange={(e) => {
-                                const val = e.target.value;
-                                if (val === '' || /^\d+$/.test(val)) {
-                                  setCustomPrice(val);
-                                  setPrice(val ? Number(val) : '');
-                                  setShowSaveSuccess(false);
-                                }
-                              }}
-                              style={{
-                                background: 'rgba(255, 255, 255, 0.05)',
-                                border: '1px solid rgba(255, 255, 255, 0.1)',
-                                borderRadius: '8px',
-                                padding: '8px 12px',
-                                color: '#ffffff',
-                                fontSize: '14px',
-                                fontWeight: 700,
-                                outline: 'none',
-                                width: '100%',
-                                boxSizing: 'border-box',
-                                fontFamily: 'monospace, var(--font-mono)'
-                              }}
-                            />
-                            {customPrice !== '' && Number(customPrice) < 10 && (
-                              <span style={{ color: '#ef4444', fontSize: '10px', marginTop: '4px', position: 'absolute', bottom: '-16px' }}>
-                                Minimum {currencySymbol}10 required
-                              </span>
-                            )}
-                          </div>
-                          
-                          <div style={{ marginLeft: 'auto' }}>
-                            {showSaveSuccess && !isInputFocused ? (
-                              <span style={{
-                                color: '#10b981',
-                                fontSize: '12px',
-                                fontWeight: 800,
-                                fontFamily: 'monospace, var(--font-mono)'
-                              }}>
-                                Saved!
-                              </span>
-                            ) : (
-                              <button
-                                onMouseDown={(e) => {
-                                  e.preventDefault(); 
-                                  e.stopPropagation();
-                                  if (customPrice !== '' && Number(customPrice) >= 10) {
-                                    setShowSaveSuccess(true);
-                                    document.activeElement?.blur();
-                                  }
-                                }}
-                                disabled={customPrice === '' || Number(customPrice) < 10}
-                                style={{
-                                  background: (customPrice === '' || Number(customPrice) < 10) ? 'transparent' : 'rgba(6, 182, 212, 0.15)',
-                                  border: (customPrice === '' || Number(customPrice) < 10) ? '1px solid rgba(255,255,255,0.1)' : '1px solid #06b6d4',
-                                  color: (customPrice === '' || Number(customPrice) < 10) ? '#94a3b8' : '#06b6d4',
-                                  borderRadius: '8px',
-                                  padding: '8px 16px',
-                                  fontSize: '12px',
-                                  fontWeight: 800,
-                                  cursor: (customPrice === '' || Number(customPrice) < 10) ? 'not-allowed' : 'pointer',
-                                  fontFamily: 'monospace, var(--font-mono)',
-                                  transition: 'all 0.2s'
-                                }}
-                              >
-                                SAVE
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      )}
+                          {currencySymbol}{opt.value}
+                        </button>
+                      ))}
                     </div>
-                  );
-                })()}
-              </div>
-
-              {/* DAILY QUESTION CAP */}
-              <div style={{ marginBottom: '24px', textAlign: 'left' }}>
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  marginBottom: '10px'
-                }}>
-                  <label style={{
-                    fontFamily: 'monospace, var(--font-mono)',
-                    fontSize: '10px',
-                    color: '#94a3b8',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.1em',
-                    fontWeight: 700
-                  }}>
-                    DAILY MESSAGE CAP
-                  </label>
-                  <span style={{
-                    color: '#ffffff',
-                    fontSize: '14px',
-                    fontWeight: 700,
-                    fontFamily: 'monospace, var(--font-mono)'
-                  }}>
-                    {dailyCap} / day
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min={min}
-                  max={max}
-                  step="5"
-                  value={dailyCap}
-                  onChange={(e) => setDailyCap(Number(e.target.value))}
-                  className="cyan-slider"
-                  style={{ background: `linear-gradient(to right, #7c3aed 0%, #06b6d4 ${((dailyCap - min) / (max - min)) * 100}%, rgba(255,255,255,0.1) ${((dailyCap - min) / (max - min)) * 100}%, rgba(255,255,255,0.1) 100%)` }}
-                />
-              </div>
-
-              {/* WEEKLY GOAL */}
-              <div style={{ marginBottom: '24px', textAlign: 'left' }}>
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  marginBottom: '10px'
-                }}>
-                  <label style={{
-                    fontFamily: 'monospace, var(--font-mono)',
-                    fontSize: '10px',
-                    color: '#94a3b8',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.1em',
-                    fontWeight: 700
-                  }}>
-                    Set your Weekly Earnings Goal 
-                  </label>
-                  <span style={{
-                    color: '#ffffff',
-                    fontSize: '14px',
-                    fontWeight: 700,
-                    fontFamily: 'monospace, var(--font-mono)'
-                  }}>
-                    {currencySymbol}{weeklyGoal}
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min={100}
-                  max={20000}
-                  step="100"
-                  value={weeklyGoal}
-                  onChange={(e) => setWeeklyGoal(Number(e.target.value))}
-                  className="cyan-slider"
-                  style={{ background: `linear-gradient(to right, #7c3aed 0%, #06b6d4 ${((weeklyGoal - 100) / (20000 - 100)) * 100}%, rgba(255,255,255,0.1) ${((weeklyGoal - 100) / (20000 - 100)) * 100}%, rgba(255,255,255,0.1) 100%)` }}
-                />
+                    
+                    <div style={{ fontSize: '11px', color: '#64748b', marginTop: '16px', lineHeight: '1.5' }}>
+                      Most creators start around {currencySymbol}10. You can change this later.
+                    </div>
+                  </div>
+                )}
               </div>
 
 
@@ -690,20 +396,18 @@ const CreatorOnboardPricing = () => {
 
             {/* BOTTOM CTA */}
             <div style={{
-              position: 'absolute',
-              bottom: '40px',
-              left: 0,
-              right: 0,
-              zIndex: 10,
+              marginTop: '8px',
+              marginBottom: '40px',
               padding: '0 20px',
-              boxSizing: 'border-box'
+              boxSizing: 'border-box',
+              zIndex: 10
             }}>
               <button
                 onClick={handleActivate}
-                disabled={loading || (isCustom && (customPrice === '' || Number(customPrice) < 10))}
+                disabled={loading}
                 className="activate-btn"
               >
-                {loading ? 'Activating...' : 'Activate my page →'}
+                {loading ? 'Activating...' : (location.state?.returnTo ? 'Save Changes' : 'Activate my page →')}
               </button>
             </div>
           </div>

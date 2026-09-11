@@ -28,9 +28,17 @@ export const saveProfile = (data) => api.post('/creators/onboarding/profile', da
 
 export const savePricing = (data) => api.post('/creators/onboarding/pricing', data);
 
+export const saveLiveChatPreferences = (data) => api.post('/creators/onboarding/live-chat', data);
+
 export const toggleLive = (isLive) => api.post('/creators/toggle-live', { isLive });
 
+export const toggleLiveChat = (liveChatEnabled) => api.post('/creators/toggle-live-chat', { liveChatEnabled });
+
+export const updateLiveChatPrice = (liveChatPrice) => api.post('/creators/update-live-chat-price', { liveChatPrice });
+
 export const linkBank = (data) => api.post('/creator/verify-bank', data);
+
+export const savePayoutDetails = (data) => api.post('/creator/save-payout-details', data);
 
 export const verifyIfsc = (ifsc) => api.post('/creator/verify-ifsc', { ifsc });
 
