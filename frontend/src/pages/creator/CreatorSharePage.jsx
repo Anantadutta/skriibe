@@ -193,12 +193,6 @@ const CreatorSharePage = () => {
     try {
       const canvas = await generateQRCanvas();
       if (canvas) {
-        const url = canvas.toDataURL('image/png');
-        const link = document.createElement('a');
-        link.download = `${handle}-skriibe-qr.png`;
-        link.href = url;
-        link.click();
-        
         // Also attempt to copy the image to clipboard if supported
         canvas.toBlob((blob) => {
           if (blob && navigator.clipboard && navigator.clipboard.write) {

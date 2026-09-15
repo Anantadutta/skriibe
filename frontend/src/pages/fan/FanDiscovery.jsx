@@ -124,13 +124,28 @@ const FanDiscovery = () => {
     const socketUrl = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : 'http://localhost:5000';
     const socket = io(socketUrl);
     socket.on('creator-status-changed', ({ creatorId, isLive }) => {
-      setCreators(prev => prev.map(c => 
+      setCreators(prev => prev.map(c =>
         c.id === creatorId ? { ...c, isLive } : c
       ));
     });
 
+    const setInSession = (creatorId, inSession) => {
+      setCreators(prev => prev.map(c =>
+        String(c.id) === String(creatorId) ? { ...c, inSession } : c
+      ));
+    };
+    socket.on('creator_joined', ({ creatorId }) => setInSession(creatorId, true));
+    socket.on('chat-session-ended', ({ creatorId }) => setInSession(creatorId, false));
+
+    const handleProfileUpdate = (e) => {
+      const updated = e?.detail?.firstName || localStorage.getItem('skriibe_fan_name') || '';
+      if (updated) setFanName(updated);
+    };
+    window.addEventListener('fanProfileUpdated', handleProfileUpdate);
+
     return () => {
       socket.disconnect();
+      window.removeEventListener('fanProfileUpdated', handleProfileUpdate);
     };
   }, []);
 

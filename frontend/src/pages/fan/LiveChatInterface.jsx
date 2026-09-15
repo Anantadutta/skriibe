@@ -41,9 +41,11 @@ const LiveChatInterface = () => {
   const [showEndConfirm, setShowEndConfirm] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [creatorJoined, setCreatorJoined] = useState(false);
+  const [creatorJoinedAt, setCreatorJoinedAt] = useState(null);
   const [hoveredMessageId, setHoveredMessageId] = useState(null);
   const [chatStartTime, setChatStartTime] = useState(null);
   const [showChatInfo, setShowChatInfo] = useState(false);
+  const [isContinueChat, setIsContinueChat] = useState(false);
 
   const QUICK_REACTIONS = ['❤️', '😂', '😮', '👍', '👎'];
 
@@ -102,11 +104,19 @@ const LiveChatInterface = () => {
   const creatorJoinedRef = useRef(creatorJoined);
   useEffect(() => { creatorJoinedRef.current = creatorJoined; }, [creatorJoined]);
 
+  const creatorRef = useRef(creator);
+  useEffect(() => { creatorRef.current = creator; }, [creator]);
+
+  const sessionRef = useRef(session);
+  useEffect(() => { sessionRef.current = session; }, [session]);
+
   // Helper to start chat
-  const startChat = async (currentCreator) => {
+  const startChat = async (currentCreator, isContinueChatParam = false, prevSessionIdParam = null) => {
     try {
       cancelIntentRef.current = false;
+      setIsContinueChat(!!isContinueChatParam);
       setCreatorJoined(false);
+      setCreatorJoinedAt(null);
       setElapsedSeconds(0);
       setError('');
       setEndStats({ minutes: 0, cost: 0 });
@@ -118,7 +128,13 @@ const LiveChatInterface = () => {
         waitingTimerRef.current = null;
       }
 
-      const sRes = await api.post('/chat/start', { creatorId: currentCreator._id || currentCreator.id });
+      const prevId = prevSessionIdParam || sessionRef.current?.sessionId || sessionRef.current?._id || sessionRef.current?.id || session?.sessionId || session?._id || session?.id;
+
+      const sRes = await api.post('/chat/start', { 
+        creatorId: currentCreator._id || currentCreator.id,
+        isContinueChat: !!isContinueChatParam,
+        previousSessionId: isContinueChatParam ? prevId : undefined
+      });
       
       // If user clicked cancel while this network request was inflight
       if (cancelIntentRef.current) {
@@ -136,48 +152,29 @@ const LiveChatInterface = () => {
         setSession(sRes.data);
         if (sRes.data.rate !== undefined) setRate(sRes.data.rate);
         if (sRes.data.time) setChatStartTime(sRes.data.time);
-        
-        // Assume waiting unless messages indicate otherwise
-        let nextState = 'waiting';
-        if (sRes.data.messages && sRes.data.messages.some(m => (m.sender || m.senderRole) === 'creator')) {
-          nextState = 'active';
-        } else if (sRes.data.messages && sRes.data.messages.some(m => m.sender === 'system' && m.content.includes('has joined'))) {
+        if (isContinueChatParam) {
+          setCreatorJoined(false);
+          setCreatorJoinedAt(null);
+        } else if (sRes.data.creatorJoined || sRes.data.session?.creatorJoined) {
           setCreatorJoined(true);
+          const joinedAt = sRes.data.creatorJoinedAt || sRes.data.session?.creatorJoinedAt || new Date().toISOString();
+          setCreatorJoinedAt(joinedAt);
+        }
+
+        // When starting or continuing a chat, fan always waits until fanAccepted is true
+        let nextState = 'waiting';
+        if (sRes.data.fanAccepted || sRes.data.session?.fanAccepted) {
+          nextState = 'active';
         }
         setViewState(nextState);
         if (sRes.data.messages && sRes.data.messages.length > 0) {
-          setMessages(prev => {
-            if (prev.length === 0) return sRes.data.messages;
-            const merged = [...prev, ...sRes.data.messages];
-            const unique = Array.from(new Map(merged.map(m => [m.messageId || m.tempId, m])).values());
-            return unique.sort((a,b) => new Date(a.sentAt) - new Date(b.sentAt));
-          });
+          setMessages(sRes.data.messages);
         } else {
-          setMessages(prev => {
-            if (prev.length > 0) {
-              return [...prev, {
-                messageId: 'sys_init_' + Date.now(),
-                sender: 'system',
-                content: 'Live chat reconnected. Start typing your message below.',
-                isAutomated: true,
-                sentAt: new Date().toISOString()
-              }];
-            }
-            return [{
-              messageId: 'sys_init',
-              sender: 'system',
-              content: 'Live chat connected. Start typing your message below.',
-              isAutomated: true,
-              sentAt: new Date().toISOString()
-            }];
-          });
+          setMessages([]);
         }
         connectSocket(sRes.data.sessionId);
         
-        // Calculate precisely how much time is left from the backend's chat start time
-        const elapsed = sRes.data.time ? Date.now() - new Date(sRes.data.time).getTime() : 0;
-        const remainingToWait = Math.max(0, 120000 - elapsed);
-        
+        // Give a full 2 minutes (120000ms) for creator to respond
         waitingTimerRef.current = setTimeout(async () => {
           if (creatorJoinedRef.current || viewStateRef.current === 'active' || viewStateRef.current === 'ended') {
             return;
@@ -190,7 +187,7 @@ const LiveChatInterface = () => {
             console.error('Failed to end pending chat', e);
           }
           navigate(`/${currentCreator.handle || handle}`, { state: { showStuckModal: true } });
-        }, remainingToWait);
+        }, 120000);
       }
     } catch (err) {
       if (cancelIntentRef.current) return;
@@ -245,14 +242,17 @@ const LiveChatInterface = () => {
   }, [handle]);
 
   useEffect(() => {
-    if (messages.some(m => (m.sender || m.senderRole) === 'system' && m.content.includes('has joined'))) {
-      if (waitingTimerRef.current) clearTimeout(waitingTimerRef.current);
-      setCreatorJoined(true);
+    if (viewState === 'waiting' && !creatorJoined) {
+      const joinMsg = messages.find(m => (m.sender || m.senderRole) === 'system' && m.content && m.content.includes('has joined'));
+      if (joinMsg) {
+        if (waitingTimerRef.current) clearTimeout(waitingTimerRef.current);
+        setCreatorJoined(true);
+        if (joinMsg.sentAt) {
+          setCreatorJoinedAt(prev => prev || joinMsg.sentAt);
+        }
+      }
     }
-    if (messages.some(m => (m.sender || m.senderRole) === 'creator')) {
-      setViewState('active');
-    }
-  }, [messages]);
+  }, [messages, viewState, creatorJoined]);
 
   useEffect(() => {
     const handleFocus = () => {
@@ -270,12 +270,67 @@ const LiveChatInterface = () => {
     return () => window.removeEventListener('focus', handleFocus);
   }, [messages, session]);
 
+  // Auto-poll while waiting so the Accept button appears automatically in real time without manual refresh,
+  // and immediately removes the waiting screen/Accept button if the session ends or times out
+  useEffect(() => {
+    let pollTimer;
+    const sId = session?.sessionId || session?._id || session?.id;
+    const cId = creator?._id || creator?.id;
+    const pollStart = Date.now();
+    if (viewState === 'waiting' && (sId || cId)) {
+      const checkStatus = async () => {
+        try {
+          if (sId) {
+            const res = await api.get(`/chat/${sId}`);
+            if (res.data?.success && res.data?.session) {
+              const currentSession = res.data.session;
+              if (currentSession.status === 'ended' && (Date.now() - pollStart > 3000)) {
+                if (pollTimer) clearInterval(pollTimer);
+                if (socketRef.current) socketRef.current.disconnect();
+                navigate(`/${handle}`);
+                return;
+              }
+              if (currentSession.creatorJoined) {
+                if (waitingTimerRef.current) clearTimeout(waitingTimerRef.current);
+                setCreatorJoined(true);
+                if (currentSession.creatorJoinedAt) {
+                  setCreatorJoinedAt(currentSession.creatorJoinedAt);
+                }
+                return;
+              }
+            }
+          }
+          if (cId) {
+            const activeRes = await api.get(`/chat/active/${cId}`);
+            if (activeRes.data?.success && activeRes.data?.session) {
+              const activeSession = activeRes.data.session;
+              if (activeSession.creatorJoined) {
+                if (waitingTimerRef.current) clearTimeout(waitingTimerRef.current);
+                setCreatorJoined(true);
+                if (activeSession.creatorJoinedAt) {
+                  setCreatorJoinedAt(activeSession.creatorJoinedAt);
+                }
+              }
+            }
+          }
+        } catch (err) {
+          console.error('Polling error checking chat session:', err);
+        }
+      };
+      checkStatus();
+      pollTimer = setInterval(checkStatus, 1000);
+    }
+    return () => {
+      if (pollTimer) clearInterval(pollTimer);
+    };
+  }, [viewState, session?.sessionId, session?._id, session?.id, creator?._id, creator?.id, handle]);
+
   const connectSocket = (sessionId) => {
     if (socketRef.current) {
       socketRef.current.disconnect();
     }
     const apiUrl = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : 'http://localhost:5000';
-    const newSocket = io(apiUrl);
+    const newSocket = io(apiUrl, { transports: ['websocket', 'polling'] });
     socketRef.current = newSocket;
     
     newSocket.on('connect', () => {
@@ -288,15 +343,38 @@ const LiveChatInterface = () => {
       newSocket.emit('join_chat', { sessionId, role: 'fan', userId: authData?.userId });
     }
 
-    newSocket.on('creator_joined', () => {
+    newSocket.on('creator_joined', (data) => {
+      console.log('Fan received creator_joined event:', data);
+      const currentSessionId = (sessionId || sessionRef.current?.sessionId || sessionRef.current?._id || sessionRef.current?.id || '').toString();
+      const currentCreatorId = (creatorRef.current?._id || creatorRef.current?.id || creator?._id || creator?.id || '').toString();
+
+      const eventSessionId = (data?.sessionId || '').toString();
+      const eventCreatorId = (data?.creatorId || '').toString();
+
+      const isMatchingSession = eventSessionId && currentSessionId && eventSessionId === currentSessionId;
+      const isMatchingCreator = eventCreatorId && currentCreatorId && eventCreatorId === currentCreatorId;
+
+      if (!isMatchingSession && !isMatchingCreator) {
+        console.log('Ignored creator_joined for different chat:', data);
+        return;
+      }
+
+      if (eventSessionId && currentSessionId && eventSessionId !== currentSessionId) {
+        setSession(prev => prev ? { ...prev, sessionId: eventSessionId, _id: eventSessionId } : { sessionId: eventSessionId, _id: eventSessionId });
+      }
+
       if (waitingTimerRef.current) clearTimeout(waitingTimerRef.current);
       setCreatorJoined(true);
+      if (data?.creatorJoinedAt) {
+        setCreatorJoinedAt(data.creatorJoinedAt);
+      }
       setMessages(prev => {
         if (prev.some(m => m.content && m.content.includes('has joined'))) return prev;
         return mergeAndSortMessages(prev, {
           messageId: 'sys_' + Date.now(),
           sender: 'system',
-          content: `Hey, ${creator?.name || 'the creator/expert'} has joined.`,
+          senderRole: 'system',
+          content: `Hey, ${creatorRef.current?.name || creator?.name || 'the creator/expert'} has joined.`,
           isAutomated: false,
           sentAt: new Date().toISOString()
         });
@@ -361,8 +439,14 @@ const LiveChatInterface = () => {
     });
 
     newSocket.on('chat_ended', (data) => {
+      const sid = (data?.sessionId || '').toString();
+      const currentSessionId = (sessionId || sessionRef.current?.sessionId || sessionRef.current?._id || sessionRef.current?.id || '').toString();
+      if (!sid || !currentSessionId || sid !== currentSessionId) {
+        return; // Event is not for this specific chat session
+      }
       if (cancelIntentRef.current || data?.reason === 'USER_CANCEL' || data?.reason === 'TIMEOUT' || viewStateRef.current === 'waiting') {
         newSocket.disconnect();
+        navigate(`/${handle}`);
         return;
       }
       setEndStats({ minutes: data.totalMinutes, cost: data.totalCost });
@@ -392,6 +476,12 @@ const LiveChatInterface = () => {
 
     newSocket.on('low_balance_warning', () => {
       setLowBalanceWarning(true);
+    });
+
+    newSocket.on('creator_declined', () => {
+      alert('The creator is currently unavailable and declined the chat request.');
+      newSocket.disconnect();
+      navigate(`/${handle}`);
     });
 
     setSocket(newSocket);
@@ -441,27 +531,29 @@ const LiveChatInterface = () => {
   };
 
   const handleEndChat = async () => {
-    cancelIntentRef.current = true;
     const isWaiting = viewState === 'waiting';
     if (isWaiting) {
+      cancelIntentRef.current = true;
       if (waitingTimerRef.current) {
         clearTimeout(waitingTimerRef.current);
         waitingTimerRef.current = null;
       }
       const sId = session?.sessionId || session?._id || session?.id;
-      if (socketRef.current) {
-        if (sId) {
-          socketRef.current.emit('fan_cancelled_request', { 
-             sessionId: sId,
-             creatorId: creator?._id || creator?.id 
-          });
-        }
-        socketRef.current.disconnect();
+      if (socketRef.current && sId) {
+        socketRef.current.emit('fan_cancelled_request', { 
+           sessionId: sId,
+           creatorId: creator?._id || creator?.id 
+        });
       }
       if (sId) {
-        api.post('/chat/end', { sessionId: sId, cancelBeforeStart: true, reason: 'USER_CANCEL' }).catch(err => {
+        try {
+          await api.post('/chat/end', { sessionId: sId, cancelBeforeStart: true, reason: 'USER_CANCEL' });
+        } catch (err) {
           console.error('Failed to cancel chat', err);
-        });
+        }
+      }
+      if (socketRef.current) {
+        socketRef.current.disconnect();
       }
       navigate(`/${handle}`);
       return;
@@ -473,27 +565,20 @@ const LiveChatInterface = () => {
         const res = await api.post('/chat/end', { sessionId: sId });
         if (res.data.success) {
           setEndStats({ minutes: res.data.totalMinutes, cost: res.data.totalCost });
-          if (session?.isFreeChat) {
-            setFreeChatEnded(true);
-            setShowRechargeOverlay(true);
-          } else {
-            setViewState('ended');
-            if (socketRef.current) socketRef.current.disconnect();
-          }
+          setViewState('ended');
+          setShowRechargeOverlay(false);
+          if (socketRef.current) socketRef.current.disconnect();
         }
       }
     } catch (err) {
       console.error('Failed to end chat via API, falling back to socket', err);
       const sId = session?.sessionId || session?._id || session?.id;
-      if (socket && sId) {
-        socket.emit('end_chat', { sessionId: sId });
+      if (socketRef.current && sId) {
+        socketRef.current.emit('end_chat', { sessionId: sId });
       }
+      setViewState('ended');
     }
   };
-
-  if (cancelIntentRef.current) {
-    return null;
-  }
 
   if (viewState === 'loading_init') {
     return (
@@ -506,7 +591,6 @@ const LiveChatInterface = () => {
   }
 
   if (viewState === 'ended') {
-    if (cancelIntentRef.current) return null;
     return (
       <div style={{ minHeight: '100vh', background: '#0a0a0f', paddingTop: '40px' }}>
         <ChatEndScreen 
@@ -523,18 +607,28 @@ const LiveChatInterface = () => {
           onDone={() => navigate('/explore')}
           onContinueChat={async () => {
             setError('');
-            await startChat(creator);
+            const currentSessionId = session?.sessionId || session?._id || session?.id;
+            await startChat(creator, true, currentSessionId);
           }}
         />
       </div>
     );
   }
 
-
-
-  const handleAcceptChat = () => {
-    if (socketRef.current && session) {
-      socketRef.current.emit('fan_accepted', { sessionId: session.sessionId || session._id || session.id });
+  const handleAcceptChat = async () => {
+    const sId = session?.sessionId || session?._id || session?.id;
+    if (sId) {
+      const now = new Date().toISOString();
+      setSession(prev => prev ? { ...prev, startTime: now, fanAccepted: true } : prev);
+      setElapsedSeconds(0);
+      try {
+        await api.post('/chat/fan-accept', { sessionId: sId });
+      } catch (e) {
+        console.error('Failed to notify fan-accept via REST', e);
+      }
+      if (socketRef.current) {
+        socketRef.current.emit('fan_accepted', { sessionId: sId });
+      }
       setViewState('active');
     }
   };
@@ -546,8 +640,10 @@ const LiveChatInterface = () => {
           creator={creator} 
           onCancel={handleEndChat} 
           creatorJoined={creatorJoined}
+          creatorJoinedAt={creatorJoinedAt || session?.creatorJoinedAt}
           onAccept={handleAcceptChat}
           chatStartTime={chatStartTime}
+          isContinueChat={isContinueChat || !!session?.isContinueChat}
         />
       </div>
     );

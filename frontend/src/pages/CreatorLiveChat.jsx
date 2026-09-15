@@ -23,6 +23,7 @@ const CreatorLiveChat = () => {
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [fanPaused, setFanPaused] = useState(false);
   const [hoveredMessageId, setHoveredMessageId] = useState(null);
+  const [incomingContinueRequest, setIncomingContinueRequest] = useState(null);
 
   const QUICK_REACTIONS = ['❤️', '😂', '😮', '👍', '👎'];
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
@@ -48,20 +49,48 @@ const CreatorLiveChat = () => {
   useEffect(() => {
     const initChat = async () => {
       try {
+        setLoading(true);
+        setError('');
+        setIncomingContinueRequest(null);
+
+        // Guarantee creator acceptance is recorded in backend and awaited
+        const acceptRes = await api.post('/chat/creator-accept', { sessionId }).catch(err => {
+          console.error('creator-accept error:', err);
+          return null;
+        });
+
+        try {
+          const saved = JSON.parse(localStorage.getItem('skriibe_dismissed_sessions') || '[]');
+          if (!saved.includes(String(sessionId))) {
+            saved.push(String(sessionId));
+            localStorage.setItem('skriibe_dismissed_sessions', JSON.stringify(saved));
+          }
+        } catch (e) {}
+
         const res = await api.get(`/chat/${sessionId}`);
         if (res.data.success) {
-          setSession(res.data.session);
-          if (res.data.session.messages && res.data.session.messages.length > 0) {
-            setMessages(res.data.session.messages);
-            if (res.data.session.status === 'ended' || 
-                res.data.session.messages.some(m => (m.sender || m.senderRole) === 'creator') ||
-                res.data.session.messages.some(m => (m.sender || m.senderRole) === 'system' && m.content.includes('has accepted'))) {
-              setViewState('active');
-            }
+          const currentSession = res.data.session;
+          if (acceptRes?.data?.creatorJoinedAt && !currentSession.creatorJoinedAt) {
+            currentSession.creatorJoined = true;
+            currentSession.creatorJoinedAt = acceptRes.data.creatorJoinedAt;
+          }
+          setSession(currentSession);
+
+          // Calculate synchronized waiting time from creatorJoinedAt
+          const joinedTime = currentSession.creatorJoinedAt || acceptRes?.data?.creatorJoinedAt || currentSession.startTime || new Date().toISOString();
+          const elapsedWait = Math.floor((Date.now() - new Date(joinedTime).getTime()) / 1000);
+          const remainingWait = Math.max(0, 120 - elapsedWait);
+          setWaitingTimeLeft(remainingWait);
+
+          if (currentSession.status === 'ended' || currentSession.fanAccepted) {
+            setViewState('active');
           } else {
-            if (res.data.session.status === 'ended') {
-              setViewState('active');
-            }
+            setViewState('waiting_for_fan');
+          }
+
+          if (currentSession.messages && currentSession.messages.length > 0) {
+            setMessages(currentSession.messages);
+          } else {
             setMessages([{
               messageId: 'sys_init',
               sender: 'system',
@@ -70,7 +99,7 @@ const CreatorLiveChat = () => {
               sentAt: new Date().toISOString()
             }]);
           }
-          const chatId = res.data.session._id || res.data.session.id || sessionId;
+          const chatId = currentSession._id || currentSession.id || sessionId;
           connectSocket(chatId);
         }
       } catch (err) {
@@ -107,20 +136,24 @@ const CreatorLiveChat = () => {
 
   useEffect(() => {
     let timer;
-    if (viewState === 'waiting_for_fan' && !error && !loading) {
-      timer = setInterval(() => {
-        setWaitingTimeLeft((prev) => {
-          if (prev <= 1) {
-            clearInterval(timer);
-            handleEndChat();
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
+    if (viewState === 'waiting_for_fan' && !error && !loading && session) {
+      const joinedTime = session.creatorJoinedAt || session.startTime || new Date().toISOString();
+      const tick = () => {
+        const elapsedWait = Math.floor((Date.now() - new Date(joinedTime).getTime()) / 1000);
+        const remainingWait = Math.max(0, 120 - elapsedWait);
+        setWaitingTimeLeft(remainingWait);
+        if (remainingWait <= 0) {
+          if (timer) clearInterval(timer);
+          handleEndChat();
+        }
+      };
+      tick();
+      timer = setInterval(tick, 1000);
     }
-    return () => clearInterval(timer);
-  }, [viewState, error, loading]);
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [viewState, error, loading, session]);
 
   useEffect(() => {
     const handleFocus = () => {
@@ -143,7 +176,7 @@ const CreatorLiveChat = () => {
       socketRef.current.disconnect();
     }
     const apiUrl = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : 'http://localhost:5000';
-    const newSocket = io(apiUrl);
+    const newSocket = io(apiUrl, { transports: ['websocket', 'polling'] });
     socketRef.current = newSocket;
     
     newSocket.on('connect', () => {
@@ -212,6 +245,25 @@ const CreatorLiveChat = () => {
       setFanPaused(false);
     });
 
+    newSocket.on('fan_profile_updated', (data) => {
+      if (!data || !data.fanId) return;
+      setSession(prev => {
+        if (!prev) return prev;
+        const currentFanId = (prev.fanId?._id || prev.fanId || '').toString();
+        if (currentFanId === String(data.fanId)) {
+          return {
+            ...prev,
+            fanId: {
+              ...(prev.fanId || {}),
+              name: data.name,
+              ...(data.avatarUrl ? { avatarUrl: data.avatarUrl } : {})
+            }
+          };
+        }
+        return prev;
+      });
+    });
+
     newSocket.on('wallet_update', (data) => {
       if (data.balance !== undefined) {
         setSession(prev => {
@@ -230,7 +282,30 @@ const CreatorLiveChat = () => {
       }
     });
 
+    const creatorRoomId = authData?.creatorId || authData?.userId || session?.creatorId?._id || session?.creatorId;
+    if (creatorRoomId) {
+      newSocket.emit('join_creator_room', { creatorId: creatorRoomId });
+    }
+
+    newSocket.on('incoming_chat_request', (data) => {
+      console.log('Creator received incoming_chat_request in live chat view:', data);
+      if (data && data.isContinueChat) {
+        setIncomingContinueRequest(data);
+      }
+    });
+
     newSocket.on('chat_ended', (data) => {
+      const sId = sessionId || data?.sessionId;
+
+      try {
+        if (sId) {
+          const savedSessions = JSON.parse(localStorage.getItem('skriibe_dismissed_sessions') || '[]');
+          if (!savedSessions.includes(String(sId))) {
+            savedSessions.push(String(sId));
+            localStorage.setItem('skriibe_dismissed_sessions', JSON.stringify(savedSessions));
+          }
+        }
+      } catch (e) {}
       if (data.reason === 'INSUFFICIENT_BALANCE') {
         setError(`Chat ended automatically: Fan ran out of balance. Duration: ${Math.round(data.totalMinutes * 100) / 100} mins. Total earned: ₹${Math.round(data.totalCost * 100) / 100}`);
       } else if (data.reason === 'FREE_TRIAL_ENDED') {
@@ -240,7 +315,6 @@ const CreatorLiveChat = () => {
       }
       setSession(prev => prev ? { ...prev, status: 'ended' } : prev);
       setViewState('ended');
-      newSocket.disconnect();
     });
 
     setSocket(newSocket);
@@ -249,10 +323,20 @@ const CreatorLiveChat = () => {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     
-    if (messages.some(m => (m.sender || m.senderRole) === 'system' && m.content.includes('has accepted'))) {
+    if (session?.fanAccepted && viewState !== 'active') {
       setViewState('active');
     }
-  }, [messages]);
+  }, [messages, session?.fanAccepted, viewState]);
+
+  const handleAcceptContinueChat = async (newSessionId) => {
+    if (!newSessionId) return;
+    try {
+      await api.post('/chat/creator-accept', { sessionId: newSessionId });
+    } catch (e) {
+      console.error('Failed to accept continue chat:', e);
+    }
+    navigate(`/creator/dashboard/live-chat/${newSessionId}`);
+  };
 
   const sendMessage = () => {
     if (!input.trim() || !socketRef.current || !session) return;
@@ -290,9 +374,19 @@ const CreatorLiveChat = () => {
     }, 1000);
   };
 
-  const handleEndChat = () => {
-    if (socket && session) {
-      socket.emit('end_chat', { sessionId: session._id || session.id || session.sessionId });
+  const handleEndChat = async () => {
+    const sId = session?._id || session?.id || session?.sessionId || sessionId;
+    if (sId) {
+      try {
+        await api.post('/chat/end', { sessionId: sId, reason: 'CREATOR_ENDED' });
+      } catch (err) {
+        console.error('Failed to end chat via API:', err);
+      }
+      if (socketRef.current) {
+        socketRef.current.emit('end_chat', { sessionId: sId });
+      } else if (socket) {
+        socket.emit('end_chat', { sessionId: sId });
+      }
     }
     navigate('/creator/dashboard');
   };
@@ -312,9 +406,11 @@ const CreatorLiveChat = () => {
               <span style={{ fontSize: '36px', color: '#3BA8D8', fontWeight: 'bold' }}>{(session?.fanId?.name?.charAt(0) || 'F').toUpperCase()}</span>
             )}
           </div>
-          <h2 style={{ fontSize: '24px', margin: '0 0 16px 0', fontWeight: 'bold' }}>Waiting for {session?.fanId?.name || 'Fan'}</h2>
+          <h2 style={{ fontSize: '24px', margin: '0 0 16px 0', fontWeight: 'bold' }}>
+            Waiting for {session?.fanId?.name || 'Fan'} {session?.isContinueChat ? 'to confirm continue chat' : ''}
+          </h2>
           <p style={{ color: '#9ca3af', fontSize: '15px', lineHeight: '1.5', margin: '0 0 32px 0' }}>
-            the fan has been notified and they have 2 minutes to accept
+            {session?.isContinueChat ? 'the fan requested to continue and has 2 minutes to confirm' : 'the fan has been notified and they have 2 minutes to accept'}
           </p>
           <div style={{ fontSize: '64px', fontWeight: 'bold', color: '#f59e0b', textShadow: '0 0 20px rgba(245, 158, 11, 0.3)', margin: '0 0 16px 0', fontFamily: 'monospace' }}>
             {mins}:{secs.toString().padStart(2, '0')}
@@ -365,7 +461,7 @@ const CreatorLiveChat = () => {
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           {session?.status !== 'active' && (
             <button 
-              onClick={() => navigate(-1)}
+              onClick={() => navigate('/creator/dashboard')}
               style={{ background: '#374151', color: '#fff', border: 'none', padding: '6px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px' }}
             >
               BACK
@@ -377,6 +473,63 @@ const CreatorLiveChat = () => {
       {error && (
         <div style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', padding: '12px', textAlign: 'center', borderBottom: '1px solid #ef4444' }}>
           {error}
+        </div>
+      )}
+
+      {incomingContinueRequest && (
+        <div style={{
+          background: '#0B0D13',
+          border: '2px solid #22C55E',
+          borderRadius: '12px',
+          padding: '16px 24px',
+          margin: '12px 24px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '16px',
+          boxShadow: '0 4px 20px rgba(34, 197, 94, 0.25)',
+          zIndex: 50
+        }}>
+          <div>
+            <div style={{ color: '#fff', fontWeight: 'bold', fontSize: '16px' }}>
+              {incomingContinueRequest.fanName || 'Fan'} requested to continue chat!
+            </div>
+            <div style={{ color: '#9ca3af', fontSize: '13px', marginTop: '2px' }}>
+              Click accept to enter the waiting room and continue chatting.
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+            <button
+              onClick={() => handleAcceptContinueChat(incomingContinueRequest.sessionId)}
+              style={{
+                background: '#22C55E',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '8px',
+                padding: '8px 18px',
+                fontWeight: 'bold',
+                fontSize: '14px',
+                cursor: 'pointer'
+              }}
+            >
+              Accept & Join
+            </button>
+            <button
+              onClick={() => navigate('/creator/dashboard')}
+              style={{
+                background: 'transparent',
+                color: '#9ca3af',
+                border: '1px solid #374151',
+                borderRadius: '8px',
+                padding: '8px 12px',
+                fontWeight: '600',
+                fontSize: '13px',
+                cursor: 'pointer'
+              }}
+            >
+              Dashboard
+            </button>
+          </div>
         </div>
       )}
 

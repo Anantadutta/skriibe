@@ -72,7 +72,7 @@ const AffiliateProgram = ({ theme }) => {
           margin: '0 auto 40px',
           lineHeight: '1.6'
         }}>
-          Refer people to Skriibe and earn 25% of our platform fee for life.<br/>
+          Refer people to Skriibe and earn 25% of our platform fee for first 12 months.<br/>
           If somebody signs up from your link, we attribute it to you automatically.
         </p>
 
@@ -214,7 +214,7 @@ const AffiliateProgram = ({ theme }) => {
             </div>
             <h3 style={{ fontSize: '20px', fontWeight: '700', marginBottom: '12px' }}>3. Earn 25% commission</h3>
             <p style={{ color: textSecondary, lineHeight: '1.6' }}>
-              You'll earn 25% of our platform fee from their earnings for life. Automatically tracked and paid out.
+              You'll earn 25% of our platform fee from their earnings for first 12 months. Automatically tracked and paid out.
             </p>
           </div>
 

@@ -3,10 +3,12 @@ import { Link, useLocation } from 'react-router-dom';
 import TransparentLogo from '../../TransparentLogo';
 import { getFanMe } from '../../../services/fanApi';
 import api from '../../../services/api';
+import { useAuth } from '../../../context/AuthContext';
 
 const FanNavbar = () => {
   const location = useLocation();
   const currentPath = location.pathname;
+  const { isAuthenticated } = useAuth();
 
   const navItems = [
     { label: 'Notifications', path: '/fan/notifications', icon: '🔔' }
@@ -15,6 +17,9 @@ const FanNavbar = () => {
   const [fanName, setFanName] = useState(() => {
     return localStorage.getItem('cachedFanName') || 'Fan';
   });
+  const [fanAvatar, setFanAvatar] = useState(() => {
+    return localStorage.getItem('skriibe_fan_avatar') || null;
+  });
   const [unreadCount, setUnreadCount] = useState(0);
   const [walletBalance, setWalletBalance] = useState(0);
 
@@ -22,10 +27,16 @@ const FanNavbar = () => {
     const fetchFanProfile = async () => {
       try {
         const res = await getFanMe();
-        if (res.success && res.fan && res.fan.name) {
-          const firstName = res.fan.name.split(' ')[0];
-          setFanName(firstName);
-          localStorage.setItem('cachedFanName', firstName);
+        if (res.success && res.fan) {
+          if (res.fan.name) {
+            const firstName = res.fan.name.split(' ')[0];
+            setFanName(firstName);
+            localStorage.setItem('cachedFanName', firstName);
+          }
+          if (res.fan.avatarUrl) {
+            setFanAvatar(res.fan.avatarUrl);
+            localStorage.setItem('skriibe_fan_avatar', res.fan.avatarUrl);
+          }
         }
       } catch (err) {
         console.error('Failed to fetch fan profile in navbar', err);
@@ -54,6 +65,8 @@ const FanNavbar = () => {
       } catch (err) {}
     };
 
+    if (!isAuthenticated) return;
+
     fetchFanProfile();
     fetchNotifications();
     fetchWallet();
@@ -63,12 +76,24 @@ const FanNavbar = () => {
       fetchWallet();
     }, 15000);
 
+    const handleProfileUpdate = (e) => {
+      const updatedName = e?.detail?.name || localStorage.getItem('cachedFanName') || 'Fan';
+      const firstName = updatedName.split(' ')[0];
+      setFanName(firstName);
+      const updatedAvatar = e?.detail?.avatarUrl || localStorage.getItem('skriibe_fan_avatar');
+      if (updatedAvatar) setFanAvatar(updatedAvatar);
+    };
+
     window.addEventListener('notificationRead', handleNotificationRead);
+    window.addEventListener('fanProfileUpdated', handleProfileUpdate);
+    window.addEventListener('storage', handleProfileUpdate);
     return () => {
       window.removeEventListener('notificationRead', handleNotificationRead);
+      window.removeEventListener('fanProfileUpdated', handleProfileUpdate);
+      window.removeEventListener('storage', handleProfileUpdate);
       clearInterval(interval);
     };
-  }, [location.pathname]);
+  }, [location.pathname, isAuthenticated]);
 
   return (
     <>
@@ -142,7 +167,7 @@ const FanNavbar = () => {
         }
       `}</style>
       <header className="fan-navbar">
-        <Link to="/discovery" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+        <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
           <span className="fan-navbar-logo" style={{ display: 'flex', alignItems: 'center' }}>
             <TransparentLogo src="/logo.png" alt="skriibe logo" style={{ height: '24px', width: 'auto', transform: 'scale(4)', transformOrigin: 'left center' }} />
           </span>
@@ -150,7 +175,9 @@ const FanNavbar = () => {
         
         {/* Right side: Navigation Links & Profile */}
         <div className="fan-nav-right">
-          <Link to="/fan/wallet" style={{ 
+          {isAuthenticated ? (
+          <>
+          <Link to="/fan/wallet" style={{
             display: 'flex', 
             alignItems: 'center', 
             gap: '8px',
@@ -222,8 +249,68 @@ const FanNavbar = () => {
           })}
           </nav>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          </div>
+          <Link to="/fan/profile" style={{ 
+            textDecoration: 'none', 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '8px',
+            background: 'rgba(255, 255, 255, 0.05)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            borderRadius: '24px',
+            padding: '4px 12px 4px 4px',
+            transition: 'all 0.2s ease'
+          }}
+          onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'}
+          onMouseOut={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'}
+          title="Your Profile"
+          >
+            <div className="fan-avatar" style={{
+              width: '32px',
+              height: '32px',
+              borderRadius: '50%',
+              background: '#F59E0B',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontWeight: 800,
+              fontSize: '14px',
+              color: '#ffffff',
+              overflow: 'hidden',
+              flexShrink: 0
+            }}>
+              {fanAvatar ? (
+                <img src={fanAvatar} alt={fanName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              ) : (
+                (fanName || 'F').charAt(0).toUpperCase()
+              )}
+            </div>
+            <span style={{ 
+              color: '#ffffff', 
+              fontWeight: '700', 
+              fontSize: '13px', 
+              maxWidth: '100px', 
+              overflow: 'hidden', 
+              textOverflow: 'ellipsis', 
+              whiteSpace: 'nowrap' 
+            }}>
+              {fanName}
+            </span>
+          </Link>
+          </>
+          ) : (
+            <Link to="/fan/signup" style={{
+              textDecoration: 'none',
+              background: 'linear-gradient(135deg, #7c3aed 0%, #06b6d4 100%)',
+              color: '#ffffff',
+              fontWeight: 800,
+              fontSize: '13px',
+              borderRadius: '20px',
+              padding: '9px 18px',
+              whiteSpace: 'nowrap'
+            }}>
+              Sign up
+            </Link>
+          )}
         </div>
       </header>
     </>

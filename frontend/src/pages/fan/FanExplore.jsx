@@ -5,7 +5,6 @@ import FanBottomNav from '../../components/fan/layout/FanBottomNav';
 import { getLiveCreators } from '../../services/discoveryApi';
 import { getFanMe } from '../../services/fanApi';
 import { io } from 'socket.io-client';
-import { checkIfLiveNow } from '../../utils/timeUtils';
 const PREDEFINED_CATEGORIES = [
   'Lifestyle', 'Beauty', 'Fitness', 'Finance', 'Tech', 
   'Entrepreneurship', 'Education', 'Motivation', 'Dating', 
@@ -81,10 +80,18 @@ const FanExplore = () => {
     const socketUrl = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : 'http://localhost:5000';
     const socket = io(socketUrl);
     socket.on('creator-status-changed', ({ creatorId, isLive }) => {
-      setCreators(prev => prev.map(c => 
+      setCreators(prev => prev.map(c =>
         c.id === creatorId ? { ...c, isLive } : c
       ));
     });
+
+    const setInSession = (creatorId, inSession) => {
+      setCreators(prev => prev.map(c =>
+        String(c.id) === String(creatorId) ? { ...c, inSession } : c
+      ));
+    };
+    socket.on('creator_joined', ({ creatorId }) => setInSession(creatorId, true));
+    socket.on('chat-session-ended', ({ creatorId }) => setInSession(creatorId, false));
 
     const fetchFanProfile = async () => {
       try {
@@ -133,30 +140,11 @@ const FanExplore = () => {
     return [...new Set(custom)];
   }, [creators, activeCategory]);
 
-  const [creatorFilter, setCreatorFilter] = useState('All');
-
-  const isCreatorOnline = (c) => {
-    if (c.isPaused) return false;
-    if (c.isLive === true) return true;
-    return checkIfLiveNow(c.liveChatTimeSlots);
-  };
-
-  const baseFilteredCreators = creators.filter(c => {
+  const filteredCreators = creators.filter(c => {
     if (fanCreatorHandle && c.handle && c.handle.toLowerCase() === fanCreatorHandle.toLowerCase()) return false;
     if (activeCategory === 'Others' && selectedCustomCategory) {
       return (c.expertise || []).includes(selectedCustomCategory);
     }
-    return true;
-  });
-
-  const onlineCount = baseFilteredCreators.filter(isCreatorOnline).length;
-  const offlineCount = baseFilteredCreators.filter(c => !isCreatorOnline(c)).length;
-  const allCount = baseFilteredCreators.length;
-
-  const filteredCreators = baseFilteredCreators.filter(c => {
-    const online = isCreatorOnline(c);
-    if (creatorFilter === 'Online' && !online) return false;
-    if (creatorFilter === 'Offline' && online) return false;
     return true;
   });
 
@@ -264,26 +252,6 @@ const FanExplore = () => {
           font-weight: 600;
         }
 
-        .fan-explore-filter-pills {
-          display: inline-flex;
-          background: #13161C;
-          border-radius: 14px;
-          padding: 4px;
-          gap: 4px;
-          border: 1px solid #1F2937;
-        }
-
-        .fan-explore-filter-btn {
-          padding: 6px 16px;
-          border-radius: 10px;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          transition: background 0.2s;
-          user-select: none;
-        }
-
         .fan-explore-grid {
           display: grid;
           grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
@@ -355,25 +323,6 @@ const FanExplore = () => {
             border-radius: 20px !important;
           }
 
-          .fan-explore-filter-pills {
-            display: flex !important;
-            width: 100% !important;
-            box-sizing: border-box !important;
-            border-radius: 12px !important;
-          }
-
-          .fan-explore-filter-btn {
-            flex: 1 !important;
-            justify-content: center !important;
-            padding: 8px 4px !important;
-            border-radius: 9px !important;
-            gap: 5px !important;
-          }
-
-          .fan-explore-filter-btn span {
-            font-size: 12.5px !important;
-          }
-
           .fan-explore-grid {
             grid-template-columns: 1fr !important;
             gap: 16px !important;
@@ -383,6 +332,30 @@ const FanExplore = () => {
 
       <FanNavbar />
       <main ref={gridRef} className="fan-explore-main">
+        <div style={{ maxWidth: '768px', margin: '0 0 28px' }}>
+          <h1 style={{
+            fontFamily: "'Bebas Neue', sans-serif",
+            fontSize: 'clamp(32px, 7vw, 56px)',
+            fontWeight: 400,
+            textTransform: 'uppercase',
+            letterSpacing: '-0.02em',
+            lineHeight: 0.92,
+            color: '#ffffff',
+            margin: 0
+          }}>
+            Direct 1-on-1 Access.<br />
+            Zero Subscription Hassle.
+          </h1>
+          <p style={{
+            fontSize: 'clamp(14px, 3.5vw, 18px)',
+            lineHeight: 1.6,
+            color: '#cbd5e1',
+            margin: '16px 0 0'
+          }}>
+            Connect directly with your favourite creators. No DMs left on unread, no expensive long-term plans — just pay-per-minute private conversations.
+          </p>
+        </div>
+
         {/* Search & Filters */}
         <div className="fan-explore-search-section">
           <div className="fan-explore-search-bar">
@@ -454,24 +427,6 @@ const FanExplore = () => {
             <span className="fan-explore-count-badge">
               {filteredCreators.length} found
             </span>
-          </div>
-          
-          <div className="fan-explore-filter-pills">
-            {['All', 'Online', 'Offline'].map(filter => (
-              <div 
-                key={filter}
-                className="fan-explore-filter-btn"
-                onClick={() => { setCreatorFilter(filter); setCurrentPage(1); }}
-                style={{
-                  background: creatorFilter === filter ? 'rgba(255, 255, 255, 0.08)' : 'transparent',
-                }}
-              >
-                <span style={{ fontSize: '13px', fontWeight: creatorFilter === filter ? '700' : '500', color: creatorFilter === filter ? '#ffffff' : '#94a3b8' }}>{filter}</span>
-                <span style={{ fontSize: '12px', fontWeight: '700', color: '#38bdf8' }}>
-                  {filter === 'All' ? allCount : filter === 'Online' ? onlineCount : offlineCount}
-                </span>
-              </div>
-            ))}
           </div>
         </div>
 

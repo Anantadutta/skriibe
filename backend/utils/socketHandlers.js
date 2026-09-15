@@ -18,33 +18,102 @@ module.exports = (io) => {
     });
 
     socket.on('fan_cancelled_request', async ({ sessionId, creatorId }) => {
-      // Direct relay from fan to creator dashboard to bypass REST API latency/issues
-      io.to(`creator_${creatorId}`).emit('chat_cancelled_by_fan', { sessionId });
-      io.emit('chat-session-ended', { creatorId, sessionId });
+      const sidStr = (sessionId || '').toString();
+      const cidStr = (creatorId || '').toString();
+      let fidStr = '';
+      let fanName = '';
       
-      // Failsafe: forcefully update the database via socket in case the HTTP request failed
       try {
-        await ChatSession.updateOne(
-          { _id: sessionId },
-          { $set: { status: 'ended', endTime: new Date(), cancelledByFan: true } }
-        );
+        const session = await ChatSession.findById(sessionId).populate('fanId', 'name');
+        if (session) {
+          fidStr = (session.fanId?._id || session.fanId || '').toString();
+          fanName = session.fanId?.name || '';
+          await ChatSession.updateMany(
+            { creatorId: session.creatorId, fanId: session.fanId, status: 'active' },
+            { $set: { status: 'ended', endTime: new Date(), cancelledByFan: true, creatorJoined: true } }
+          );
+        } else {
+          await ChatSession.updateOne(
+            { _id: sessionId },
+            { $set: { status: 'ended', endTime: new Date(), cancelledByFan: true, creatorJoined: true } }
+          );
+        }
       } catch (err) {
-        console.error('Socket DB update failed', err);
+        console.error('Socket DB update failed on fan cancel', err);
       }
+
+      const payload = { sessionId: sidStr, creatorId: cidStr, fanId: fidStr, fanName };
+      if (cidStr) {
+        io.to(`creator_${cidStr}`).emit('chat_cancelled_by_fan', payload);
+        io.to(`creator_${cidStr}`).emit('chat_ended', payload);
+      }
+      io.emit('chat-session-ended', payload);
+      io.emit('chat_ended', payload);
+    });
+
+    socket.on('creator_declined', async ({ sessionId, creatorId }) => {
+      const sidStr = (sessionId || '').toString();
+      const cidStr = (creatorId || '').toString();
+      let fidStr = '';
+      let fanName = '';
+
+      try {
+        const session = await ChatSession.findById(sessionId).populate('fanId', 'name');
+        if (session) {
+          fidStr = (session.fanId?._id || session.fanId || '').toString();
+          fanName = session.fanId?.name || '';
+          await ChatSession.updateMany(
+            { creatorId: session.creatorId, fanId: session.fanId, status: 'active' },
+            { $set: { status: 'ended', endTime: new Date(), cancelledByFan: true, creatorJoined: true } }
+          );
+        } else {
+          await ChatSession.updateOne(
+            { _id: sessionId },
+            { $set: { status: 'ended', endTime: new Date(), cancelledByFan: true, creatorJoined: true } }
+          );
+        }
+      } catch (err) {
+        console.error('Socket DB update failed on creator decline', err);
+      }
+
+      const payload = { sessionId: sidStr, creatorId: cidStr, fanId: fidStr, fanName, reason: 'CREATOR_DECLINED' };
+      io.to(sidStr).emit('creator_declined', payload);
+      io.to(sidStr).emit('chat_ended', payload);
+      if (cidStr) {
+        io.to(`creator_${cidStr}`).emit('chat_cancelled_by_fan', payload);
+        io.to(`creator_${cidStr}`).emit('chat_ended', payload);
+      }
+      io.emit('chat-session-ended', payload);
+      io.emit('chat_ended', payload);
     });
 
     socket.on('join_chat', async ({ sessionId, role, userId }) => {
       const room = sessionId.toString();
       socket.join(room);
+      if (userId) {
+        socket.join(`fan_${userId.toString()}`);
+        socket.join(`user_${userId.toString()}`);
+      }
       console.log(`${role} ${userId} joined chat session ${room}`);
 
       // Notify fan that creator has joined, but wait for fan to accept before starting billing
       if (role === 'creator') {
-        io.to(room).emit('creator_joined');
-        
+        let joinedAt = new Date();
+        let cidStr = '';
+        let fidStr = '';
         try {
           const session = await ChatSession.findById(sessionId);
           if (session) {
+            cidStr = session.creatorId ? session.creatorId.toString() : '';
+            fidStr = session.fanId ? session.fanId.toString() : '';
+
+            await ChatSession.updateOne(
+              { _id: session._id, status: 'active' },
+              { $set: { creatorJoined: true, creatorJoinedAt: joinedAt } }
+            );
+            session.creatorJoined = true;
+            session.creatorJoinedAt = joinedAt;
+
             const Message = require('../models/Message');
             // Check if we already added a joined message to prevent duplicates
             const existing = await Message.findOne({ sessionId, senderRole: 'system', content: { $regex: 'has joined' } });
@@ -64,8 +133,20 @@ module.exports = (io) => {
             }
           }
         } catch (err) {
-          console.error('Failed to save creator joined message', err);
+          console.error('Failed to update creator joined status/message', err);
         }
+
+        const payload = {
+          sessionId: sessionId.toString(),
+          creatorId: cidStr,
+          fanId: fidStr,
+          creatorJoinedAt: joinedAt
+        };
+
+        io.to(room).emit('creator_joined', payload);
+        if (cidStr) io.to(`creator_${cidStr}`).emit('creator_joined', payload);
+        if (fidStr) io.to(`fan_${fidStr}`).emit('creator_joined', payload);
+        io.emit('creator_joined', payload);
       }
     });
 
@@ -75,8 +156,15 @@ module.exports = (io) => {
       if (session && session.status === 'active' && !activeChatTimers.has(room)) {
         // Reset start time so billing begins from when fan accepted
         session.startTime = new Date();
+        session.fanAccepted = true;
+        session.fanAcceptedAt = new Date();
         await session.save();
-        io.to(room).emit('fan_accepted', { startTime: session.startTime });
+        const payload = { startTime: session.startTime, sessionId: session._id.toString() };
+        io.to(room).emit('fan_accepted', payload);
+        if (session.creatorId) {
+          io.to(`creator_${session.creatorId.toString()}`).emit('fan_accepted', payload);
+        }
+        io.emit('fan_accepted', payload);
         startWalletDeductionTimer(room, io);
         
         try {
@@ -264,22 +352,10 @@ module.exports = (io) => {
 
         if (amountToDeduct > 0) {
           if (fan.walletBalance < amountToDeduct) {
-            console.log(`Insufficient balance for session ${sessionId}, pausing chat for up to 3 mins...`);
-            // Pause chat instead of ending immediately
+            console.log(`Insufficient balance for session ${sessionId}, ending chat immediately...`);
             clearInterval(interval);
             activeChatTimers.delete(sessionId);
-            
-            io.to(sessionId.toString()).emit('fan_recharging_pause');
-
-            // Set 3 minute grace period timeout
-            const pauseTimeout = setTimeout(async () => {
-              if (pausedChatTimers.has(sessionId)) {
-                pausedChatTimers.delete(sessionId);
-                await endChatSession(sessionId, io, 'INSUFFICIENT_BALANCE');
-              }
-            }, 180000); // 3 minutes
-
-            pausedChatTimers.set(sessionId, pauseTimeout);
+            await endChatSession(sessionId, io, 'INSUFFICIENT_BALANCE');
             return;
           }
 
@@ -372,15 +448,50 @@ module.exports = (io) => {
           }
         }
 
+        // Terminate all active sessions between this creator and this fan in DB
+        await ChatSession.updateMany(
+          { creatorId: session.creatorId, fanId: session.fanId, status: 'active' },
+          { 
+            $set: { 
+              status: 'ended', 
+              creatorJoined: true, 
+              cancelledByFan: true, 
+              endTime: new Date(),
+              totalMinutes: session.totalMinutes || 0,
+              totalCost: session.totalCost || 0
+            } 
+          }
+        );
+
         session.status = 'ended';
+        session.creatorJoined = true;
+        session.cancelledByFan = true;
         session.endTime = new Date();
         await session.save();
 
-        io.to(sessionId.toString()).emit('chat_ended', { 
+        const sidStr = session._id.toString();
+        const cidStr = session.creatorId ? session.creatorId.toString() : '';
+        const fidStr = session.fanId ? session.fanId.toString() : '';
+        const fanName = fan?.name || '';
+
+        const endPayload = {
+          sessionId: sidStr,
+          fanId: fidStr,
+          fanName: fanName,
+          creatorId: cidStr,
           totalMinutes: session.totalMinutes,
           totalCost: session.totalCost,
           reason
-        });
+        };
+
+        io.to(sidStr).emit('chat_ended', endPayload);
+
+        if (cidStr) {
+          io.to(`creator_${cidStr}`).emit('chat_ended', endPayload);
+          io.to(`creator_${cidStr}`).emit('chat_cancelled_by_fan', endPayload);
+        }
+        io.emit('chat-session-ended', endPayload);
+        io.emit('chat_ended', endPayload);
 
         // Clear timers
         if (activeChatTimers.has(sessionId)) {

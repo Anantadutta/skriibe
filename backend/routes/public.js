@@ -51,7 +51,7 @@ router.get('/creator/:handle', async (req, res) => {
           totalAnswered: answeredCount
         },
         instagramHandle: creator.instagramHandle || '',
-        followers: creator.instagramFollowers || 0,
+        instagramFollowers: creator.instagramFollowers ?? null,
         price: creator.price || creator.pricePerQuestion,
         pricePerQuestion: creator.price || creator.pricePerQuestion,
         responseTime: creator.responseTime || '48 hours',
@@ -177,6 +177,17 @@ router.get('/creators', async (req, res) => {
     const creators = await Creator.find(query).select(
       'name handle avatarUrl profileUrl bio expertise price pricePerQuestion responseTime stats verified instagramFollowers instagramConnected isLive isPaused liveChatEnabled liveChatPrice liveChatTimeSlots ama_enabled'
     ).lean();
+
+    // Creators currently mid-chat. Mirrors the "live session" shape used elsewhere:
+    // creatorJoined doubles as a dismissal marker, so ended/cancelled ones must be excluded.
+    const ChatSession = require('../models/ChatSession');
+    const busyCreatorIds = await ChatSession.distinct('creatorId', {
+      status: 'active',
+      creatorJoined: true,
+      cancelledByFan: { $ne: true },
+      $or: [{ endTime: null }, { endTime: { $exists: false } }]
+    });
+    const busyCreatorSet = new Set(busyCreatorIds.map(String));
     
     // Sort: Live creators first, then by replyRate descending
     creators.sort((a, b) => {
@@ -209,7 +220,8 @@ router.get('/creators', async (req, res) => {
       liveChatEnabled: c.liveChatEnabled || false,
       liveChatPrice: c.liveChatPrice || 5,
       liveChatTimeSlots: c.liveChatTimeSlots || [],
-      ama_enabled: c.ama_enabled
+      ama_enabled: c.ama_enabled,
+      inSession: busyCreatorSet.has(String(c._id))
     }));
 
     return res.json({

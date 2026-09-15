@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Sparkles, ArrowRight } from 'lucide-react';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import HowItWorksSection from '../components/HowItWorksSection';
@@ -54,17 +54,6 @@ const HowItWorksPage = () => {
 
         {/* Page Hero Header */}
         <div className="max-w-3xl mb-4 sm:mb-8">
-          <div
-            className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border text-xs sm:text-sm font-semibold mb-4 ${
-              isLight
-                ? 'bg-sky-50 border-[#3BA8D8] text-[#0284c7]'
-                : 'bg-[#08131e] border-[#3BA8D8] text-[#3BA8D8] shadow-[0_0_15px_rgba(59,168,216,0.2)]'
-            }`}
-          >
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>How Skriibe Works</span>
-          </div>
-
           <h1
             className={`text-4xl sm:text-6xl md:text-7xl font-normal uppercase tracking-tight leading-[0.92] ${
               isLight ? 'text-black' : 'text-white'

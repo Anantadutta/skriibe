@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { useParams, useLocation, useNavigate } from 'react-router-dom';
+import { useParams, useLocation, useNavigate, Link } from 'react-router-dom';
 import TransparentLogo from '../components/TransparentLogo';
 import { mockCreator, mockQuestions } from '../mock/questions';
 import { getMe, toggleLive, toggleLiveChat, updateLiveChatPrice, getMyReferrals } from '../services/creatorApi';
@@ -12,6 +12,7 @@ import api from '../services/api';
 import { switchRole } from '../services/fanApi';
 import { useAuth } from '../context/AuthContext';
 import { getCurrencySymbol } from '../utils/phoneValidation';
+import { getImageUrl } from '../utils/imageUtils';
 import { io } from 'socket.io-client';
 
 const CreatorDashboard = () => {
@@ -35,10 +36,56 @@ const CreatorDashboard = () => {
   const [abusivePopupQuestion, setAbusivePopupQuestion] = useState(null);
   const [pendingChats, setPendingChats] = useState([]);
   const [missedChats, setMissedChats] = useState([]);
-  const [cancelledSessions, setCancelledSessions] = useState(new Set());
+  const [cancelledSessions, setCancelledSessions] = useState(() => {
+    try {
+      localStorage.removeItem('skriibe_dismissed_fans');
+      const saved = JSON.parse(localStorage.getItem('skriibe_dismissed_sessions') || '[]');
+      return new Set(saved);
+    } catch (e) {
+      return new Set();
+    }
+  });
   const [acceptedChatsCount, setAcceptedChatsCount] = useState(0);
   const [showNotifySuccessModal, setShowNotifySuccessModal] = useState(false);
   const [notifications, setNotifications] = useState([]);
+
+  const dismissSession = (sessionId) => {
+    if (!sessionId) return;
+    const sid = String(sessionId);
+
+    try {
+      const savedSessions = JSON.parse(localStorage.getItem('skriibe_dismissed_sessions') || '[]');
+      if (!savedSessions.includes(sid)) {
+        savedSessions.push(sid);
+        localStorage.setItem('skriibe_dismissed_sessions', JSON.stringify(savedSessions));
+      }
+    } catch (e) {}
+
+    setCancelledSessions(prev => new Set(prev).add(sid));
+    setPendingChats(prev => prev.filter(c => String(c.sessionId) !== sid));
+  };
+
+  // Filter out cancelled, accepted, or expired (> 120s) chats
+  const validPendingChats = pendingChats.filter(chat => {
+    if (!chat || !chat.sessionId) return false;
+    const sid = String(chat.sessionId);
+
+    if (cancelledSessions.has(sid)) return false;
+
+    if (!chat.isContinueChat) {
+      try {
+        const savedSessions = JSON.parse(localStorage.getItem('skriibe_dismissed_sessions') || '[]');
+        if (savedSessions.includes(sid)) return false;
+      } catch (e) {}
+    }
+
+    if (chat.creatorJoined || chat.fanAccepted || chat.status === 'ended') return false;
+    const chatTimeMs = chat.time ? new Date(chat.time).getTime() : 0;
+    if (!chatTimeMs || isNaN(chatTimeMs)) return false;
+    const timeDiff = now - chatTimeMs;
+    if (timeDiff >= 120000) return false;
+    return true;
+  });
   
   // Referrals Modal State
   const [showReferralsModal, setShowReferralsModal] = useState(false);
@@ -116,7 +163,17 @@ const CreatorDashboard = () => {
       try {
         const res = await api.get(`/chat/pending?t=${Date.now()}`);
         if (res.data.success) {
-          setPendingChats(res.data.pendingChats);
+          let savedSessions = [];
+          try {
+            savedSessions = JSON.parse(localStorage.getItem('skriibe_dismissed_sessions') || '[]');
+          } catch (e) {}
+          const filtered = res.data.pendingChats.filter(c => {
+            const sid = String(c.sessionId);
+            if (!c.isContinueChat && savedSessions.includes(sid)) return false;
+            if (c.creatorJoined || c.fanAccepted || c.status === 'ended') return false;
+            return true;
+          });
+          setPendingChats(filtered);
         }
       } catch (err) {
         console.error('Failed to fetch pending chats:', err);
@@ -170,32 +227,117 @@ const CreatorDashboard = () => {
       const currentCreator = location.state?.creator || creator;
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
       const socketUrl = apiUrl.replace('/api', '');
-      newSocket = io(socketUrl, { transports: ['websocket'] });
+      newSocket = io(socketUrl, { transports: ['websocket', 'polling'] });
 
       newSocket.on('connect', () => {
         newSocket.emit('join_creator_room', { creatorId: currentCreator._id || currentCreator.id });
       });
+      if (newSocket.connected) {
+        newSocket.emit('join_creator_room', { creatorId: currentCreator._id || currentCreator.id });
+      }
 
       newSocket.on('incoming_chat_request', (data) => {
+        if (!data || !data.sessionId) return;
+        const sid = String(data.sessionId);
+
+        // A new chat request arrived - un-dismiss this sessionId so it displays!
+        try {
+          const savedSessions = JSON.parse(localStorage.getItem('skriibe_dismissed_sessions') || '[]');
+          if (savedSessions.includes(sid)) {
+            const updated = savedSessions.filter(s => s !== sid);
+            localStorage.setItem('skriibe_dismissed_sessions', JSON.stringify(updated));
+          }
+        } catch (e) {}
+
+        setCancelledSessions(prev => {
+          const next = new Set(prev);
+          next.delete(sid);
+          return next;
+        });
+
         setPendingChats(prev => {
-          // Overwrite existing by removing it first
-          const filtered = prev.filter(c => c.sessionId !== data.sessionId);
+          const filtered = prev.filter(c => String(c.sessionId) !== sid);
           return [data, ...filtered];
         });
       });
 
-      newSocket.on('chat_cancelled_by_fan', (data) => {
-        // Optimistically remove from pending queue immediately
+      newSocket.on('fan_profile_updated', (data) => {
+        if (!data || !data.fanId) return;
+        setPendingChats(prev => prev.map(chat => {
+          const chatFanId = (chat.fanId?._id || chat.fanId || '').toString();
+          if (chatFanId === String(data.fanId)) {
+            return {
+              ...chat,
+              fanName: data.name,
+              ...(data.avatarUrl ? { fanAvatarUrl: data.avatarUrl } : {})
+            };
+          }
+          return chat;
+        }));
+        setTimeout(() => {
+          fetchPendingChats();
+          fetchQuestions();
+        }, 300);
+      });
+
+      newSocket.on('creator_joined', (data) => {
         if (data && data.sessionId) {
-          const sid = String(data.sessionId);
-          setCancelledSessions(prev => new Set(prev).add(sid));
-          setPendingChats(prev => prev.filter(c => String(c.sessionId) !== sid));
+          dismissSession(data.sessionId);
         }
-        // Add a slight delay to allow any pending DB saves to complete before fetching
         setTimeout(() => {
           fetchPendingChats();
           fetchMissedChats();
-        }, 500);
+        }, 300);
+      });
+
+      newSocket.on('fan_accepted', (data) => {
+        if (data && data.sessionId) {
+          dismissSession(data.sessionId);
+        }
+        setTimeout(() => {
+          fetchPendingChats();
+          fetchMissedChats();
+        }, 300);
+      });
+
+      newSocket.on('creator_declined', (data) => {
+        if (data && data.sessionId) {
+          dismissSession(data.sessionId);
+        }
+        setTimeout(() => {
+          fetchPendingChats();
+          fetchMissedChats();
+        }, 300);
+      });
+
+      newSocket.on('chat_cancelled_by_fan', (data) => {
+        if (data && data.sessionId) {
+          dismissSession(data.sessionId);
+        }
+        setTimeout(() => {
+          fetchPendingChats();
+          fetchMissedChats();
+        }, 300);
+      });
+
+      newSocket.on('chat_ended', (data) => {
+        if (data && data.sessionId) {
+          dismissSession(data.sessionId);
+        }
+        setTimeout(() => {
+          fetchPendingChats();
+          fetchMissedChats();
+        }, 300);
+      });
+
+      newSocket.on('chat-session-ended', (data) => {
+        if (data && data.sessionId) {
+          dismissSession(data.sessionId);
+        }
+        setTimeout(() => {
+          fetchPendingChats();
+          fetchMissedChats();
+        }, 300);
       });
     }
 
@@ -256,6 +398,33 @@ const CreatorDashboard = () => {
       setCreator(prev => ({ ...prev, liveChatEnabled: !newStatus }));
       alert('Failed to update live chat status. Please try again.');
     }
+  };
+
+  const handleDeclineChat = async (sessionId) => {
+    if (!sessionId) return;
+    dismissSession(sessionId);
+    try {
+      await api.post('/chat/end', { sessionId, reason: 'CREATOR_DECLINED' });
+    } catch (e) {
+      console.error('Failed to decline chat via API', e);
+    }
+  };
+
+  const handleAcceptChat = async (sessionId) => {
+    if (!sessionId) return;
+    dismissSession(sessionId);
+    try {
+      const res = await api.post('/chat/creator-accept', { sessionId });
+      if (!res.data.success) {
+        alert('This chat request has already ended or expired.');
+        return;
+      }
+    } catch (e) {
+      console.error('Failed to notify creator acceptance', e);
+      alert('This chat request has already ended or expired.');
+      return;
+    }
+    navigate(`/creator/dashboard/live-chat/${sessionId}`);
   };
 
   const handlePriceUpdate = async () => {
@@ -566,7 +735,9 @@ const CreatorDashboard = () => {
             
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center' }}>
-                <TransparentLogo src="/logo.png" alt="skriibe logo" style={{ height: '24px', width: 'auto', transform: 'scale(4)', transformOrigin: 'left center' }} />
+                <Link to="/">
+                  <TransparentLogo src="/logo.png" alt="skriibe logo" style={{ height: '24px', width: 'auto', transform: 'scale(4)', transformOrigin: 'left center' }} />
+                </Link>
               </div>
             </div>
             <div style={{ position: 'relative', zIndex: 1, color: '#94a3b8', fontSize: '0.85rem', display: 'flex', flexDirection: 'column', gap: '2px' }}>
@@ -791,13 +962,13 @@ const CreatorDashboard = () => {
                 width: '40px',
                 height: '40px',
                 borderRadius: '50%',
-                background: pendingChats.filter(chat => !cancelledSessions.has(String(chat.sessionId))).length > 0 ? 'rgba(244, 63, 94, 0.1)' : 'rgba(124, 58, 237, 0.1)',
+                background: validPendingChats.length > 0 ? 'rgba(244, 63, 94, 0.1)' : 'rgba(124, 58, 237, 0.1)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: pendingChats.filter(chat => !cancelledSessions.has(String(chat.sessionId))).length > 0 ? '#F43F5E' : '#A78BFA'
+                color: validPendingChats.length > 0 ? '#F43F5E' : '#A78BFA'
               }}>
-                {pendingChats.filter(chat => !cancelledSessions.has(String(chat.sessionId))).length > 0 ? (
+                {validPendingChats.length > 0 ? (
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M5 22h14"></path>
                     <path d="M5 2h14"></path>
@@ -812,7 +983,7 @@ const CreatorDashboard = () => {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <span style={{ fontSize: '14px', fontWeight: 800, color: '#fff', letterSpacing: '0.5px' }}>PENDING QUEUE</span>
                   {(() => {
-                    const uniquePendingChats = pendingChats.reduce((acc, chat) => {
+                    const uniquePendingChats = validPendingChats.reduce((acc, chat) => {
                       if (!acc.find(c => c.fanName === chat.fanName)) acc.push(chat);
                       return acc;
                     }, []);
@@ -843,22 +1014,32 @@ const CreatorDashboard = () => {
               alignItems: 'center',
               gap: '4px'
             }}>
-              {pendingChats.filter(chat => !cancelledSessions.has(String(chat.sessionId))).length > 0 ? 'View All' : 'View All Queue'} <span style={{ fontSize: '10px' }}>{pendingChats.filter(chat => !cancelledSessions.has(String(chat.sessionId))).length > 0 ? '>' : '→'}</span>
+              {validPendingChats.length > 0 ? 'View All' : 'View All Queue'} <span style={{ fontSize: '10px' }}>{validPendingChats.length > 0 ? '>' : '→'}</span>
             </button>
           </div>
 
           {/* Body */}
-          {pendingChats.filter(chat => !cancelledSessions.has(String(chat.sessionId))).length > 0 ? (
+          {validPendingChats.length > 0 ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '4px' }}>
-              {pendingChats.filter(chat => !cancelledSessions.has(String(chat.sessionId))).reduce((acc, chat) => {
-                if (!acc.find(c => c.fanName === chat.fanName)) acc.push(chat);
+              {validPendingChats.reduce((acc, chat) => {
+                const chatFanId = (chat.fanId?._id || chat.fanId || '').toString();
+                if (!acc.find(c => {
+                  const cFanId = (c.fanId?._id || c.fanId || '').toString();
+                  return (c.sessionId && c.sessionId === chat.sessionId) || (chatFanId && cFanId === chatFanId) || c.fanName === chat.fanName;
+                })) acc.push(chat);
                 return acc;
               }, []).slice(0, 3).map((chat, idx) => {
-                const timeDiff = now - new Date(chat.time).getTime();
+                const timeDiff = Math.max(0, now - new Date(chat.time).getTime());
                 const remainingMs = Math.max(0, 120000 - timeDiff);
                 const remMins = Math.floor(remainingMs / 60000);
                 const remSecs = String(Math.floor((remainingMs % 60000) / 1000)).padStart(2, '0');
                 const isUrgent = remainingMs <= 30000;
+                const fanAvatar = chat.fanAvatarUrl || chat.avatarUrl || chat.fanAvatar || chat.fanId?.avatarUrl;
+                const hasFanAvatar = Boolean(fanAvatar && fanAvatar !== 'null' && fanAvatar !== 'undefined' && !fanAvatar.includes('dicebear'));
+                const fanName = (chat.fanName || 'A Fan').trim();
+                const fanNameLen = fanName.length;
+                const fanNameFontSize = fanNameLen > 22 ? '12.5px' : fanNameLen > 15 ? '14px' : fanNameLen > 10 ? '16px' : '18px';
+
                 return (
                   <div key={chat.sessionId || idx} style={{
                     background: '#0B0D13',
@@ -871,47 +1052,127 @@ const CreatorDashboard = () => {
                     marginBottom: '8px',
                     gap: '12px'
                   }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1, minWidth: 0 }}>
-                      <div style={{ display: 'flex', gap: '8px', alignItems: 'baseline', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        <span style={{ fontSize: '18px', fontWeight: 800, color: '#fff' }}>
-                          {chat.fanName} wants to chat
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, minWidth: 0 }}>
+                      <div style={{
+                        width: '44px',
+                        height: '44px',
+                        minWidth: '44px',
+                        borderRadius: '50%',
+                        overflow: 'hidden',
+                        flexShrink: 0,
+                        background: hasFanAvatar ? '#13161C' : '#F59E0B',
+                        border: hasFanAvatar ? '1.5px solid rgba(59, 168, 216, 0.4)' : '1.5px solid rgba(245, 158, 11, 0.5)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontWeight: 900,
+                        fontSize: '18px',
+                        color: '#ffffff'
+                      }}>
+                        {hasFanAvatar ? (
+                          <img 
+                            src={getImageUrl(fanAvatar)}
+                            alt={fanName}
+                            style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                              if (e.currentTarget.parentElement) {
+                                e.currentTarget.parentElement.style.background = '#F59E0B';
+                                e.currentTarget.parentElement.innerText = (fanName[0] || 'F').toUpperCase();
+                              }
+                            }}
+                          />
+                        ) : (
+                          (fanName[0] || 'F').toUpperCase()
+                        )}
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px 8px', flexWrap: 'wrap', flex: 1, minWidth: 0 }}>
+                        <span 
+                          title={fanName} 
+                          style={{ 
+                            fontSize: fanNameFontSize, 
+                            fontWeight: 800, 
+                            color: '#fff', 
+                            whiteSpace: 'nowrap',
+                            flexShrink: fanNameLen <= 12 ? 0 : 1,
+                            overflow: 'hidden',
+                            textOverflow: fanNameLen > 16 ? 'ellipsis' : 'clip'
+                          }}
+                        >
+                          {fanName}
                         </span>
+                        {chat.isContinueChat && (
+                          <span style={{ background: 'rgba(59, 168, 216, 0.2)', color: '#3BA8D8', border: '1px solid rgba(59, 168, 216, 0.4)', borderRadius: '6px', fontSize: '11px', fontWeight: 800, padding: '2px 8px', textTransform: 'uppercase', flexShrink: 0 }}>
+                            Continue Chat
+                          </span>
+                        )}
                         {chat.rate !== 0 && chat.rate !== '0' && (
-                          <span style={{ fontSize: '14px', color: '#29C5F6', fontWeight: 600 }}>
+                          <span style={{ fontSize: '14px', color: '#29C5F6', fontWeight: 600, flexShrink: 0 }}>
                             {currencySymbol}{chat.rate !== undefined ? chat.rate : (creator.liveChatPrice || 5)}/min
                           </span>
                         )}
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', flexWrap: 'wrap' }}>
-                        <span style={{ color: '#22C55E', fontWeight: 600 }}>{currencySymbol}{Number(chat.walletBalance || 0).toFixed(2)} wallet</span>
-                        <span style={{ color: isUrgent ? '#ef4444' : '#94a3b8', fontWeight: isUrgent ? 800 : 400 }}>Time left: {remMins}:{remSecs}</span>
-                      </div>
-                      <div style={{ fontSize: '13px', color: '#64748b', marginTop: '4px' }}>
-                        Requested at {new Date(chat.time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })} IST
+                        <span style={{ color: '#22C55E', fontSize: '13px', fontWeight: 600, flexShrink: 0 }}>
+                          {currencySymbol}{Number(chat.walletBalance || 0).toFixed(2)} wallet
+                        </span>
+                        <span style={{ color: isUrgent ? '#ef4444' : '#94a3b8', fontSize: '13px', fontWeight: isUrgent ? 800 : 400, flexShrink: 0 }}>
+                          Time left: {remMins}:{remSecs}
+                        </span>
+                        <span style={{ fontSize: '13px', color: '#64748b', flexShrink: 0 }}>
+                          Requested at {new Date(chat.time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })} IST
+                        </span>
+                        
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginLeft: 'auto', paddingLeft: '24px' }}>
+                          {(chat.rate === 0 || chat.rate === '0') && (
+                            <span style={{ color: '#22C55E', fontWeight: 800, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Free Chat</span>
+                          )}
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <button 
+                              onClick={() => handleAcceptChat(chat.sessionId)}
+                              style={{
+                                background: '#22C55E',
+                                color: '#fff',
+                                border: 'none',
+                                borderRadius: '8px',
+                                padding: '8px 16px',
+                                fontSize: '14px',
+                                fontWeight: 800,
+                                cursor: 'pointer',
+                                flexShrink: 0
+                              }}
+                            >
+                              Accept
+                            </button>
+                            {Boolean(chat.isContinueChat) && (
+                              <span style={{
+                                color: '#22C55E',
+                                fontSize: '12px',
+                                fontWeight: 700,
+                                whiteSpace: 'nowrap'
+                              }}>
+                                continue chat request
+                              </span>
+                            )}
+                            <button 
+                              onClick={() => handleDeclineChat(chat.sessionId)}
+                              style={{
+                                background: 'rgba(239, 68, 68, 0.15)',
+                                color: '#ef4444',
+                                border: '1px solid rgba(239, 68, 68, 0.4)',
+                                borderRadius: '8px',
+                                padding: '8px 16px',
+                                fontSize: '14px',
+                                fontWeight: 700,
+                                cursor: 'pointer',
+                                flexShrink: 0
+                              }}
+                            >
+                              Decline
+                            </button>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
-                        {(chat.rate === 0 || chat.rate === '0') && (
-                          <span style={{ color: '#22C55E', fontWeight: 800, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Free Chat</span>
-                        )}
-                        <button 
-                          onClick={() => navigate(`/creator/dashboard/live-chat/${chat.sessionId}`)}
-                          style={{
-                            background: '#22C55E',
-                            color: '#fff',
-                            border: 'none',
-                            borderRadius: '8px',
-                            padding: '10px 20px',
-                            fontSize: '16px',
-                            fontWeight: 800,
-                            cursor: 'pointer',
-                            flexShrink: 0
-                          }}
-                        >
-                          Accept
-                        </button>
-                      </div>
-                    </div>
+                  </div>
                 );
               })}
 
@@ -1116,11 +1377,11 @@ const CreatorDashboard = () => {
           )}
 
           {/* Footer for populated state */}
-          {pendingChats.filter(chat => !cancelledSessions.has(String(chat.sessionId))).length > 0 && (
+          {validPendingChats.length > 0 && (
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid rgba(255, 255, 255, 0.05)', paddingTop: '16px', marginTop: '4px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#94a3b8', fontSize: '11px' }}>
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-                {pendingChats.filter(chat => !cancelledSessions.has(String(chat.sessionId))).length} fans in queue
+                {validPendingChats.length} fans in queue
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#94a3b8', fontSize: '11px' }}>
                 <svg width="10" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
@@ -1585,48 +1846,131 @@ const CreatorDashboard = () => {
             <h2 style={{ color: '#fff', margin: '0 0 20px 0', fontSize: '1.4rem', fontWeight: 800 }}>Pending Queue</h2>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', overflowY: 'auto', paddingRight: '4px' }}>
-              {pendingChats.filter(chat => !cancelledSessions.has(String(chat.sessionId))).reduce((acc, chat) => {
-                if (!acc.find(c => c.fanName === chat.fanName)) acc.push(chat);
+              {validPendingChats.reduce((acc, chat) => {
+                const chatFanId = (chat.fanId?._id || chat.fanId || '').toString();
+                if (!acc.find(c => {
+                  const cFanId = (c.fanId?._id || c.fanId || '').toString();
+                  return (c.sessionId && c.sessionId === chat.sessionId) || (chatFanId && cFanId === chatFanId) || c.fanName === chat.fanName;
+                })) acc.push(chat);
                 return acc;
               }, []).map((chat, idx) => {
-                const timeDiff = now - new Date(chat.time).getTime();
+                const timeDiff = Math.max(0, now - new Date(chat.time).getTime());
                 const remainingMs = Math.max(0, 120000 - timeDiff);
                 const remMins = Math.floor(remainingMs / 60000);
                 const remSecs = String(Math.floor((remainingMs % 60000) / 1000)).padStart(2, '0');
                 const isUrgent = remainingMs <= 30000;
+                const fanAvatar = chat.fanAvatarUrl || chat.avatarUrl || chat.fanAvatar || chat.fanId?.avatarUrl;
+                const hasFanAvatar = Boolean(fanAvatar && fanAvatar !== 'null' && fanAvatar !== 'undefined' && !fanAvatar.includes('dicebear'));
+                const fanName = (chat.fanName || 'A Fan').trim();
+                const fanNameLen = fanName.length;
+                const fanNameFontSize = fanNameLen > 22 ? '12px' : fanNameLen > 15 ? '13.5px' : fanNameLen > 10 ? '14.5px' : '16px';
+
                 return (
                   <div key={chat.sessionId || idx} style={{
                     background: '#13161C', border: '1px solid rgba(255, 255, 255, 0.05)',
                     borderRadius: '12px', padding: '16px', display: 'flex',
                     justifyContent: 'space-between', alignItems: 'center', gap: '12px'
                   }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1, minWidth: 0 }}>
-                      <div style={{ display: 'flex', gap: '8px', alignItems: 'baseline', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        <span style={{ fontSize: '16px', fontWeight: 800, color: '#fff' }}>
-                          {chat.fanName} wants to chat
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, minWidth: 0 }}>
+                      <div style={{
+                        width: '42px',
+                        height: '42px',
+                        minWidth: '42px',
+                        borderRadius: '50%',
+                        overflow: 'hidden',
+                        flexShrink: 0,
+                        background: hasFanAvatar ? '#13161C' : '#F59E0B',
+                        border: hasFanAvatar ? '1.5px solid rgba(59, 168, 216, 0.4)' : '1.5px solid rgba(245, 158, 11, 0.5)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontWeight: 900,
+                        fontSize: '17px',
+                        color: '#ffffff'
+                      }}>
+                        {hasFanAvatar ? (
+                          <img 
+                            src={getImageUrl(fanAvatar)}
+                            alt={fanName}
+                            style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                              if (e.currentTarget.parentElement) {
+                                e.currentTarget.parentElement.style.background = '#F59E0B';
+                                e.currentTarget.parentElement.innerText = (fanName[0] || 'F').toUpperCase();
+                              }
+                            }}
+                          />
+                        ) : (
+                          (fanName[0] || 'F').toUpperCase()
+                        )}
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px 8px', flexWrap: 'wrap', flex: 1, minWidth: 0 }}>
+                        <span 
+                          title={fanName} 
+                          style={{ 
+                            fontSize: fanNameFontSize, 
+                            fontWeight: 800, 
+                            color: '#fff', 
+                            whiteSpace: 'nowrap',
+                            flexShrink: fanNameLen <= 12 ? 0 : 1,
+                            overflow: 'hidden',
+                            textOverflow: fanNameLen > 16 ? 'ellipsis' : 'clip'
+                          }}
+                        >
+                          {fanName}
                         </span>
-                        <span style={{ fontSize: '12px', color: '#29C5F6', fontWeight: 600 }}>
+                        {chat.isContinueChat && (
+                          <span style={{ background: 'rgba(59, 168, 216, 0.2)', color: '#3BA8D8', border: '1px solid rgba(59, 168, 216, 0.4)', borderRadius: '6px', fontSize: '10px', fontWeight: 800, padding: '2px 6px', textTransform: 'uppercase', flexShrink: 0 }}>
+                            Continue Chat
+                          </span>
+                        )}
+                        <span style={{ fontSize: '12px', color: '#29C5F6', fontWeight: 600, flexShrink: 0 }}>
                           {currencySymbol}{creator.liveChatPrice || 5}/min
                         </span>
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', flexWrap: 'wrap' }}>
-                        <span style={{ color: '#22C55E', fontWeight: 600 }}>{currencySymbol}{Number(chat.walletBalance || 0).toFixed(2)} wallet</span>
-                        <span style={{ color: isUrgent ? '#ef4444' : '#94a3b8', fontWeight: isUrgent ? 800 : 400 }}>Time left: {remMins}:{remSecs}</span>
+                        <span style={{ color: '#22C55E', fontSize: '12px', fontWeight: 600, flexShrink: 0 }}>
+                          {currencySymbol}{Number(chat.walletBalance || 0).toFixed(2)} wallet
+                        </span>
+                        <span style={{ color: isUrgent ? '#ef4444' : '#94a3b8', fontSize: '12px', fontWeight: isUrgent ? 800 : 400, flexShrink: 0 }}>
+                          Time left: {remMins}:{remSecs}
+                        </span>
+                        
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0, marginLeft: 'auto', paddingLeft: '24px' }}>
+                          <button 
+                            onClick={() => handleAcceptChat(chat.sessionId)}
+                            style={{
+                              background: '#22C55E', color: '#fff', border: 'none', borderRadius: '8px',
+                              padding: '8px 16px', fontSize: '14px', fontWeight: 800, cursor: 'pointer', flexShrink: 0
+                            }}
+                          >
+                            Accept
+                          </button>
+                          {Boolean(chat.isContinueChat) && (
+                            <span style={{
+                              color: '#22C55E',
+                              fontSize: '11px',
+                              fontWeight: 700,
+                              whiteSpace: 'nowrap'
+                            }}>
+                              continue chat
+                            </span>
+                          )}
+                          <button 
+                            onClick={() => handleDeclineChat(chat.sessionId)}
+                            style={{
+                              background: 'rgba(239, 68, 68, 0.15)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.4)', borderRadius: '8px',
+                              padding: '8px 12px', fontSize: '13px', fontWeight: 700, cursor: 'pointer', flexShrink: 0
+                            }}
+                          >
+                            Decline
+                          </button>
+                        </div>
                       </div>
                     </div>
-                    <button 
-                      onClick={() => navigate(`/creator/dashboard/live-chat/${chat.sessionId}`)}
-                      style={{
-                        background: '#22C55E', color: '#fff', border: 'none', borderRadius: '8px',
-                        padding: '8px 16px', fontSize: '14px', fontWeight: 800, cursor: 'pointer', flexShrink: 0
-                      }}
-                    >
-                      Accept
-                    </button>
                   </div>
                 );
               })}
-              {pendingChats.filter(chat => !cancelledSessions.has(String(chat.sessionId))).length === 0 && (
+              {validPendingChats.length === 0 && (
                 <div style={{ color: '#94a3b8', textAlign: 'center', padding: '20px' }}>No pending chats</div>
               )}
             </div>

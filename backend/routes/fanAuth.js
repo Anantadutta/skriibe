@@ -220,14 +220,22 @@ router.get('/me', verifyFanToken, async (req, res) => {
 
 router.put('/me', verifyFanToken, async (req, res) => {
   try {
-    const { email, phone } = req.body;
-    if (!email && !phone) {
-      return res.status(400).json({ success: false, message: 'Email or phone is required' });
+    const { email, phone, name } = req.body;
+    if (!email && !phone && name === undefined) {
+      return res.status(400).json({ success: false, message: 'Name, email, or phone is required' });
     }
 
     await connectDB();
     
     const updateData = {};
+    if (name !== undefined) {
+      const trimmedName = String(name).trim();
+      if (!trimmedName) {
+        return res.status(400).json({ success: false, message: 'Name cannot be empty' });
+      }
+      updateData.name = trimmedName;
+    }
+
     if (email) {
       const existingFan = await Fan.findOne({ email: email.toLowerCase(), _id: { $ne: req.fan.fanId } });
       if (existingFan) {
@@ -248,6 +256,48 @@ router.put('/me', verifyFanToken, async (req, res) => {
 
     if (!fan) {
       return res.status(404).json({ success: false, message: 'Fan not found' });
+    }
+
+    if (updateData.name) {
+      try {
+        const Creator = require('../models/Creator');
+        await Creator.updateMany(
+          { $or: [{ fanId: fan._id }, { email: fan.email }] },
+          { $set: { name: updateData.name } }
+        );
+      } catch (syncErr) {
+        console.error('Error syncing creator name:', syncErr);
+      }
+
+      try {
+        const Question = require('../models/Question');
+        await Question.updateMany(
+          { $or: [{ fanId: fan._id }, { buyerEmail: fan.email }] },
+          { $set: { buyerName: updateData.name } }
+        );
+
+        const Order = require('../models/Order');
+        const fanQuestions = await Question.find({
+          $or: [{ fanId: fan._id }, { buyerEmail: fan.email }]
+        }).select('_id');
+        if (fanQuestions.length > 0) {
+          const qIds = fanQuestions.map(q => q._id);
+          await Order.updateMany(
+            { questionId: { $in: qIds } },
+            { $set: { fanName: updateData.name } }
+          );
+        }
+      } catch (qErr) {
+        console.error('Error syncing questions/orders name:', qErr);
+      }
+
+      if (req.io) {
+        req.io.emit('fan_profile_updated', {
+          fanId: fan._id.toString(),
+          name: updateData.name,
+          avatarUrl: fan.avatarUrl || null
+        });
+      }
     }
 
     const token = issueToken(fan);

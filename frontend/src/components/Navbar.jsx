@@ -143,7 +143,7 @@ const Navbar = ({ theme, toggleTheme, showBanner = true }) => {
         {/* Right: Nav items, CTAs, and theme toggle */}
         <div className="flex items-center gap-2 sm:gap-4 md:gap-6">
           {/* Desktop Nav Links */}
-          <div className="hidden lg:flex items-center gap-6 xl:gap-8 text-sm font-medium">
+          <div className="hidden lg:flex items-center gap-6 xl:gap-8 text-base lg:text-lg font-semibold">
             <Link
               to="/how-it-works"
               className={`transition-colors ${
@@ -155,6 +155,16 @@ const Navbar = ({ theme, toggleTheme, showBanner = true }) => {
               How it works
             </Link>
             <Link
+              to="/fan/login"
+              className={`transition-colors ${
+                theme === 'light'
+                  ? 'text-gray-600 hover:text-black hover:text-[#3BA8D8]'
+                  : 'text-gray-300 hover:text-white hover:text-[#3BA8D8]'
+              }`}
+            >
+              Login
+            </Link>
+            <Link
               to="/faqs"
               className={`transition-colors ${
                 theme === 'light'
@@ -163,6 +173,16 @@ const Navbar = ({ theme, toggleTheme, showBanner = true }) => {
               }`}
             >
               FAQs
+            </Link>
+            <Link
+              to="/affiliate"
+              className={`transition-colors ${
+                theme === 'light'
+                  ? 'text-gray-600 hover:text-black hover:text-[#3BA8D8]'
+                  : 'text-gray-300 hover:text-white hover:text-[#3BA8D8]'
+              }`}
+            >
+              Affiliate
             </Link>
           </div>
 
@@ -280,7 +300,7 @@ const Navbar = ({ theme, toggleTheme, showBanner = true }) => {
             <Link
               to="/how-it-works"
               onClick={() => setIsMobileMenuOpen(false)}
-              className={`text-base font-medium px-3 py-2.5 rounded-xl transition-colors ${
+              className={`text-lg font-semibold px-3 py-2.5 rounded-xl transition-colors ${
                 theme === 'light'
                   ? 'text-gray-800 hover:bg-gray-100'
                   : 'text-gray-200 hover:bg-white/10'
@@ -289,15 +309,37 @@ const Navbar = ({ theme, toggleTheme, showBanner = true }) => {
               How it works
             </Link>
             <Link
+              to="/fan/login"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className={`text-lg font-semibold px-3 py-2.5 rounded-xl transition-colors ${
+                theme === 'light'
+                  ? 'text-gray-800 hover:bg-gray-100'
+                  : 'text-gray-200 hover:bg-white/10'
+              }`}
+            >
+              Login
+            </Link>
+            <Link
               to="/faqs"
               onClick={() => setIsMobileMenuOpen(false)}
-              className={`text-base font-medium px-3 py-2.5 rounded-xl transition-colors ${
+              className={`text-lg font-semibold px-3 py-2.5 rounded-xl transition-colors ${
                 theme === 'light'
                   ? 'text-gray-800 hover:bg-gray-100'
                 : 'text-gray-200 hover:bg-white/10'
               }`}
             >
               FAQs
+            </Link>
+            <Link
+              to="/affiliate"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className={`text-lg font-semibold px-3 py-2.5 rounded-xl transition-colors ${
+                theme === 'light'
+                  ? 'text-gray-800 hover:bg-gray-100'
+                  : 'text-gray-200 hover:bg-white/10'
+              }`}
+            >
+              Affiliate
             </Link>
             <Link
               to="/#whos-online"

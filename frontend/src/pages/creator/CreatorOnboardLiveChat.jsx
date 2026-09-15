@@ -433,7 +433,7 @@ const CreatorOnboardLiveChat = () => {
                 <div style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
                   <div>
                     <div style={{ fontSize: '14px', color: '#fff', fontWeight: '600' }}>Your first chat free</div>
-                    <div style={{ fontSize: '11px', color: '#64748b', marginTop: '4px' }}>Offer your first fan a free 5-minute live chat to build trust and get your first review.</div>
+                    <div style={{ fontSize: '11px', color: '#64748b', marginTop: '4px' }}>Every new fan gets their first 2 minutes of Live Chat with you free to build trust &amp; get your first review</div>
                   </div>
                 </div>
               </div>
@@ -481,9 +481,6 @@ const CreatorOnboardLiveChat = () => {
                           <option key={time} value={time}>{time}</option>
                         ))}
                       </select>
-                      <div style={{ position: 'absolute', right: '12px', bottom: '12px', pointerEvents: 'none', color: '#94a3b8' }}>
-                        ▼
-                      </div>
                     </div>
                     <div style={{ fontSize: '14px', color: '#94a3b8', marginTop: '16px' }}>to</div>
                     <div style={{ flex: 1, position: 'relative' }}>
@@ -499,9 +496,6 @@ const CreatorOnboardLiveChat = () => {
                           <option key={time} value={time}>{time}</option>
                         ))}
                       </select>
-                      <div style={{ position: 'absolute', right: '12px', bottom: '12px', pointerEvents: 'none', color: '#94a3b8' }}>
-                        ▼
-                      </div>
                     </div>
                   </div>
                 </div>

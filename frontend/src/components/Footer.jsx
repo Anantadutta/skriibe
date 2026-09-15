@@ -50,17 +50,17 @@ const Footer = ({ theme, showTalkDirectly = true }) => {
               <div>
                 <h4 className={`${theme === 'light' ? 'text-black' : 'text-white'} font-semibold mb-2 text-lg`}>For Fans</h4>
                 <p className={`${theme === 'light' ? 'text-gray-600' : 'text-[#94a3b8]'} leading-relaxed text-sm`}>
-                  Choose a creator, submit your message, make payment, and wait for their response.
+                  Tap Start Chat - connect in seconds with the creator or influencers you already follow. First chat free.
                 </p>
               </div>
 
               <div>
                 <h4 className={`${theme === 'light' ? 'text-black' : 'text-white'} font-semibold mb-2 text-lg`}>For Creators</h4>
                 <ul className={`${theme === 'light' ? 'text-gray-600' : 'text-[#94a3b8]'} leading-relaxed text-sm list-disc pl-4 space-y-2`}>
-                  <li>Sign up, set your price, set your terms.</li>
-                  <li>Connect your payout — get paid.</li>
-                  <li>Drop your skriibe link in your Instagram bio.</li>
-                  <li>Followers pay, you answer in 24 hours.</li>
+                  <li>Sign up, set your rate, go live or enable AMA.</li>
+                  <li>Drop your Skriibe link in your Instagram bio.</li>
+                  <li>Fans chat with you live - or leave a paid question for later.</li>
+                  <li>You reply. You earn. Every Tuesday, automatically.</li>
                 </ul>
               </div>
             </div>
@@ -116,7 +116,7 @@ const Footer = ({ theme, showTalkDirectly = true }) => {
         </div>
       )}
 
-      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-5 gap-12 mb-16">
+      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-6 gap-12 mb-16">
         {/* Logo and Description */}
         <div className="col-span-1 md:col-span-2 flex flex-col gap-6">
           <div className="flex items-start">
@@ -189,6 +189,12 @@ const Footer = ({ theme, showTalkDirectly = true }) => {
             >
               Raise a Query
             </a>
+            <a
+              href="mailto:support@skriibe.com"
+              className={`${theme === 'light' ? 'text-gray-600 hover:text-black' : 'text-[#a3a3a3] hover:text-white'} transition-colors text-sm`}
+            >
+              Email : support@skriibe.com
+            </a>
           </div>
         </div>
 
@@ -203,10 +209,33 @@ const Footer = ({ theme, showTalkDirectly = true }) => {
           <h4 className={`${theme === 'light' ? 'text-black' : 'text-white'} font-bold tracking-widest text-xs uppercase mb-2`}>Legal</h4>
           <a href="/terms" className={`${theme === 'light' ? 'text-gray-600 hover:text-black' : 'text-[#a3a3a3] hover:text-white'} transition-colors text-sm`}>Terms of Service</a>
           <a href="/privacy" className={`${theme === 'light' ? 'text-gray-600 hover:text-black' : 'text-[#a3a3a3] hover:text-white'} transition-colors text-sm`}>Privacy Policy</a>
-          <a href="/refunds" className={`${theme === 'light' ? 'text-gray-600 hover:text-black' : 'text-[#a3a3a3] hover:text-white'} transition-colors text-sm`}>Refund Policy</a>
+          <a href="/refunds" className={`${theme === 'light' ? 'text-gray-600 hover:text-black' : 'text-[#a3a3a3] hover:text-white'} transition-colors text-sm`}>Refund And Cancellation Policy</a>
           <a href="/agreement" className={`${theme === 'light' ? 'text-gray-600 hover:text-black' : 'text-[#a3a3a3] hover:text-white'} transition-colors text-sm`}>Creator & Fan Agreement</a>
           <a href="/guidelines" className={`${theme === 'light' ? 'text-gray-600 hover:text-black' : 'text-[#a3a3a3] hover:text-white'} transition-colors text-sm`}>Community Guidelines</a>
           <a href="/cookies" className={`${theme === 'light' ? 'text-gray-600 hover:text-black' : 'text-[#a3a3a3] hover:text-white'} transition-colors text-sm`}>Cookie Policy</a>
+        </div>
+
+        {/* Secure Section */}
+        <div className="col-span-1 flex flex-col gap-5">
+          <h4 className={`${theme === 'light' ? 'text-black' : 'text-white'} font-bold tracking-widest text-xs uppercase mb-2`}>Secure</h4>
+          
+          <div className="flex items-center gap-3">
+            <div className={`p-2 rounded-xl ${theme === 'light' ? 'bg-[#f1f5f9]' : 'bg-[#1a1a1a]'} flex-shrink-0`}>
+              <svg className={`w-5 h-5 ${theme === 'light' ? 'text-gray-700' : 'text-gray-300'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+              </svg>
+            </div>
+            <span className={`${theme === 'light' ? 'text-gray-600' : 'text-[#a3a3a3]'} text-sm font-medium leading-tight`}>Private & Confidential</span>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <div className={`p-2 rounded-xl ${theme === 'light' ? 'bg-[#f1f5f9]' : 'bg-[#1a1a1a]'} flex-shrink-0`}>
+              <svg className={`w-5 h-5 ${theme === 'light' ? 'text-gray-700' : 'text-gray-300'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+              </svg>
+            </div>
+            <span className={`${theme === 'light' ? 'text-gray-600' : 'text-[#a3a3a3]'} text-sm font-medium leading-tight`}>Secure Payments</span>
+          </div>
         </div>
       </div>
 
@@ -214,8 +243,7 @@ const Footer = ({ theme, showTalkDirectly = true }) => {
       <div className={`max-w-7xl mx-auto pt-8 border-t ${theme === 'light' ? 'border-gray-200' : 'border-[#1a1a1a]'} flex flex-col md:flex-row justify-between items-center gap-4 text-sm`}>
         <div className={`${theme === 'light' ? 'text-gray-600' : 'text-[#556987]'}`}>
           © 2026 Skriibe. All rights reserved.<br />
-          A product of EdLern Innovations Private Limited.<br />
-          Made in India
+          A product of EdLern Innovations Private Limited.
         </div>
       </div>
     </footer>

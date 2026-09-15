@@ -58,10 +58,16 @@ const CreatorAnalytics = () => {
     liveChatsComplete: 0,
     liveChatsIncomplete: 0,
     amaCount: 0,
-    tipCount: 0
+    tipCount: 0,
+    creatorSharePercent: 80
   });
 
   const currencySymbol = getCurrencySymbol(creatorInfo?.phone) || '₹';
+
+  const creatorSharePercent = Number.isFinite(payoutStats?.creatorSharePercent)
+    ? payoutStats.creatorSharePercent
+    : 80;
+  const platformSharePercent = 100 - creatorSharePercent;
 
   const fetchPayouts = async () => {
     try {
@@ -882,12 +888,15 @@ const CreatorAnalytics = () => {
             border: '1px solid #1E293B',
             boxShadow: '0 10px 30px rgba(0, 0, 0, 0.4)'
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#38BDF8', fontSize: '11px', fontWeight: '800', letterSpacing: '1.2px', marginBottom: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#38BDF8', fontSize: '11px', fontWeight: '800', letterSpacing: '1.2px', marginBottom: '12px', flexWrap: 'wrap' }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline>
                 <polyline points="16 7 22 7 22 13"></polyline>
               </svg>
               EARNINGS
+              <span style={{ color: '#64748B', fontSize: '10px', fontWeight: '700', letterSpacing: '0.3px' }}>
+                (You keep {creatorSharePercent}% · Skriibe takes {platformSharePercent}%)
+              </span>
             </div>
             <div style={{ fontSize: '42px', fontWeight: '900', letterSpacing: '-1px', color: '#fff', display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '4px', lineHeight: 1 }}>
               <span style={{ color: '#E2E8F0', fontSize: '32px' }}>{currencySymbol}</span>{(payoutStats?.lifetimePaid || 0)}

@@ -60,13 +60,12 @@ const ChatEndScreen = ({ creator, sessionId, totalMinutes, totalCost, error, mes
     try {
       const res = await api.get('/wallet/balance');
       const balance = res.data?.balance ?? initialWalletBalance ?? 0;
-      const hasUsedFree = res.data?.hasUsedFreeChat ?? (!isFreeChat);
 
-      const effectiveRate = Number(rate || creator?.liveChatPrice || creator?.liveChatRate || 5);
+      // Price set by creator
+      const effectiveRate = Number(creator?.liveChatPrice || creator?.liveChatRate || (rate && rate > 0 ? rate : 5));
       const required = effectiveRate * 5;
-      const canFreeChat = !hasUsedFree && !isFreeChat;
 
-      if (canFreeChat || balance >= required) {
+      if (balance >= required) {
         setIsCheckingBalance(false);
         if (onContinueChat) {
           await onContinueChat();

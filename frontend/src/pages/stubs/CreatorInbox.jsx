@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import api from '../../services/api';
+import { getImageUrl } from '../../utils/imageUtils';
+import { io } from 'socket.io-client';
 
 const CreatorInbox = () => {
   const navigate = useNavigate();
@@ -16,8 +18,16 @@ const CreatorInbox = () => {
   const [expandedThreads, setExpandedThreads] = useState({});
   const [now, setNow] = useState(Date.now());
 
+  const validPendingChats = pendingChats.filter(chat => {
+    if (!chat || !chat.sessionId) return false;
+    const chatTimeMs = chat.time ? new Date(chat.time).getTime() : 0;
+    if (!chatTimeMs || isNaN(chatTimeMs)) return false;
+    const timeDiff = now - chatTimeMs;
+    return timeDiff >= 0 && timeDiff < 120000;
+  });
+
   useEffect(() => {
-    const timer = setInterval(() => setNow(Date.now()), 60000);
+    const timer = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(timer);
   }, []);
 
@@ -38,13 +48,15 @@ const CreatorInbox = () => {
   ];
 
   useEffect(() => {
+    let socket = null;
     const fetchQuestions = async (isBackground = false) => {
       if (!isBackground) setLoading(true);
       try {
-        const [qRes, chatRes, pendingRes] = await Promise.all([
+        const [qRes, chatRes, pendingRes, meRes] = await Promise.all([
           api.get(`/creator/questions?t=${Date.now()}`),
           api.get(`/chat/creator-history?t=${Date.now()}`),
-          api.get(`/chat/pending?t=${Date.now()}`)
+          api.get(`/chat/pending?t=${Date.now()}`),
+          api.get(`/creator/me?t=${Date.now()}`).catch(() => ({ data: {} }))
         ]);
         if (qRes.data.success) {
           setQuestions(qRes.data.questions);
@@ -63,6 +75,45 @@ const CreatorInbox = () => {
         if (pendingRes.data.success) {
           setPendingChats(pendingRes.data.pendingChats);
         }
+        const cId = meRes.data?.creator?._id || meRes.data?.creator?.id;
+        if (cId && !socket) {
+          const socketUrl = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : 'http://localhost:5000';
+          socket = io(socketUrl);
+          socket.emit('join_creator_room', { creatorId: cId });
+          socket.on('connect', () => {
+            socket.emit('join_creator_room', { creatorId: cId });
+          });
+          socket.on('incoming_chat_request', (data) => {
+            setPendingChats(prev => {
+              const filtered = prev.filter(c => c.sessionId !== data.sessionId);
+              return [data, ...filtered];
+            });
+          });
+          socket.on('fan_profile_updated', (data) => {
+            if (!data || !data.fanId) return;
+            setPendingChats(prev => prev.map(c => {
+              const chatFanId = (c.fanId?._id || c.fanId || '').toString();
+              if (chatFanId === String(data.fanId)) {
+                return {
+                  ...c,
+                  fanName: data.name,
+                  ...(data.avatarUrl ? { fanAvatarUrl: data.avatarUrl } : {})
+                };
+              }
+              return c;
+            }));
+            fetchQuestions(true);
+          });
+          const removePending = (data) => {
+            if (data?.sessionId) {
+              setPendingChats(prev => prev.filter(c => String(c.sessionId) !== String(data.sessionId)));
+            }
+          };
+          socket.on('chat_cancelled_by_fan', removePending);
+          socket.on('chat_ended', removePending);
+          socket.on('chat-session-ended', removePending);
+          socket.on('creator_joined', removePending);
+        }
       } catch (err) {
         console.error('Error fetching data:', err);
       } finally {
@@ -73,7 +124,10 @@ const CreatorInbox = () => {
     const interval = setInterval(() => {
       fetchQuestions(true);
     }, 15000);
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      if (socket) socket.disconnect();
+    };
   }, []);
 
   const buildThreads = (qs) => {
@@ -541,61 +595,130 @@ const CreatorInbox = () => {
           })()}
         </div>
           </>
-        ) : (pendingChats && pendingChats.length > 0) || (liveChats && liveChats.some(c => c.totalMinutes > 0)) ? (
+        ) : (validPendingChats.length > 0) || (liveChats && liveChats.some(c => c.totalMinutes > 0)) ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', paddingBottom: '100px' }}>
             
-            {pendingChats && pendingChats.length > 0 && (
+            {validPendingChats.length > 0 && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '8px' }}>
                   Live Chat Requests
                   <span style={{ background: '#FACC15', color: '#000', padding: '2px 8px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 800 }}>
-                    {pendingChats.filter(chat => Math.max(0, now - new Date(chat.time).getTime()) <= (8 * 60 * 1000)).length}
+                    {validPendingChats.length}
                   </span>
                 </h3>
                 {Array.from(
                    new Map(
-                     pendingChats
-                       .filter(chat => Math.max(0, now - new Date(chat.time).getTime()) <= (8 * 60 * 1000))
+                     validPendingChats
                        .sort((a, b) => new Date(a.time) - new Date(b.time)) // Oldest first so newest overwrites in Map
-                       .map(chat => [chat.fanName, chat])
+                       .map(chat => [chat.sessionId || (chat.fanId?._id || chat.fanId) || chat.fanName, chat])
                    ).values()
                  )
                  .sort((a, b) => new Date(b.time) - new Date(a.time)) // Sort descending again for display
                  .map((chat) => {
                   const chatTimeMs = new Date(chat.time).getTime();
                   const waitingMs = Math.max(0, now - chatTimeMs);
-                  const waitingMins = Math.floor(waitingMs / 60000);
-                  const waitingSecs = Math.floor((waitingMs % 60000) / 1000);
-                  const isExpired = waitingMs > (3 * 60 * 1000); // 3 minutes expiration
+                  const remainingMs = Math.max(0, 120000 - waitingMs);
+                  const remMins = Math.floor(remainingMs / 60000);
+                  const remSecs = String(Math.floor((remainingMs % 60000) / 1000)).padStart(2, '0');
                   const formattedTime = new Date(chat.time).toLocaleTimeString('en-US', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit' });
 
+                  const fanAvatar = chat.fanAvatarUrl || chat.avatarUrl || chat.fanAvatar || chat.fanId?.avatarUrl;
+                  const hasFanAvatar = Boolean(fanAvatar && fanAvatar !== 'null' && fanAvatar !== 'undefined' && !fanAvatar.includes('dicebear'));
+                  const fanName = (chat.fanName || 'A Fan').trim();
+                  const fanNameLen = fanName.length;
+                  const fanNameFontSize = fanNameLen > 22 ? '0.82rem' : fanNameLen > 15 ? '0.88rem' : fanNameLen > 10 ? '0.95rem' : '1.05rem';
+
                   return (
-                    <div key={chat.sessionId} style={{ background: '#13161C', border: '1px solid #3BA8D8', borderRadius: '16px', padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                        <div style={{ color: '#fff', fontWeight: 800, fontSize: '1.05rem' }}>{chat.fanName} wants to chat</div>
-                        {chat.rate !== 0 && chat.rate !== '0' && (
-                          <div style={{ color: '#3BA8D8', fontSize: '0.85rem', fontWeight: 600 }}>₹{chat.rate}/min</div>
-                        )}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <span style={{ color: '#94a3b8', fontSize: '0.75rem', fontWeight: 600 }}>Waiting: {waitingMins}m {waitingSecs}s</span>
-                        </div>
-                        <div style={{ color: '#94a3b8', fontSize: '0.75rem' }}>Requested at {formattedTime} IST</div>
-                      </div>
-                      {isExpired ? (
-                        <span style={{ color: '#EF4444', fontWeight: 800, fontSize: '0.9rem' }}>Expired</span>
-                      ) : (
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
-                          {(chat.rate === 0 || chat.rate === '0') && (
-                            <span style={{ color: '#22C55E', fontWeight: 800, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Free Chat</span>
+                    <div key={chat.sessionId} style={{ background: '#13161C', border: '1px solid #3BA8D8', borderRadius: '16px', padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, minWidth: 0 }}>
+                        <div style={{
+                          width: '42px',
+                          height: '42px',
+                          minWidth: '42px',
+                          borderRadius: '50%',
+                          overflow: 'hidden',
+                          flexShrink: 0,
+                          background: hasFanAvatar ? '#13161C' : '#F59E0B',
+                          border: hasFanAvatar ? '1.5px solid rgba(59, 168, 216, 0.4)' : '1.5px solid rgba(245, 158, 11, 0.5)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontWeight: 900,
+                          fontSize: '18px',
+                          color: '#ffffff'
+                        }}>
+                          {hasFanAvatar ? (
+                            <img 
+                              src={getImageUrl(fanAvatar)}
+                              alt={fanName}
+                              style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                                if (e.currentTarget.parentElement) {
+                                  e.currentTarget.parentElement.style.background = '#F59E0B';
+                                  e.currentTarget.parentElement.innerText = (fanName[0] || 'F').toUpperCase();
+                                }
+                              }}
+                            />
+                          ) : (
+                            (fanName[0] || 'F').toUpperCase()
                           )}
-                          <button 
-                            onClick={() => navigate(`/creator/dashboard/live-chat/${chat.sessionId}`)}
-                            style={{ background: '#22C55E', color: '#fff', border: 'none', borderRadius: '8px', padding: '8px 16px', fontWeight: 800, cursor: 'pointer' }}
-                          >
-                            Accept
-                          </button>
                         </div>
-                      )}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px 8px', flexWrap: 'wrap', flex: 1, minWidth: 0 }}>
+                          <span 
+                            title={fanName} 
+                            style={{ 
+                              color: '#fff', 
+                              fontWeight: 800, 
+                              fontSize: fanNameFontSize, 
+                              whiteSpace: 'nowrap', 
+                              flexShrink: fanNameLen <= 12 ? 0 : 1,
+                              overflow: 'hidden', 
+                              textOverflow: fanNameLen > 16 ? 'ellipsis' : 'clip' 
+                            }}
+                          >
+                            {fanName}
+                          </span>
+                          {chat.isContinueChat && (
+                            <span style={{ background: 'rgba(59, 168, 216, 0.2)', color: '#3BA8D8', border: '1px solid rgba(59, 168, 216, 0.4)', borderRadius: '6px', fontSize: '10px', fontWeight: 800, padding: '2px 6px', textTransform: 'uppercase', flexShrink: 0 }}>
+                              Continue Chat
+                            </span>
+                          )}
+                          {chat.rate !== 0 && chat.rate !== '0' && (
+                            <span style={{ color: '#3BA8D8', fontSize: '0.85rem', fontWeight: 600, flexShrink: 0 }}>₹{chat.rate}/min</span>
+                          )}
+                          <span style={{ color: remainingMs <= 30000 ? '#EF4444' : '#94a3b8', fontSize: '0.75rem', fontWeight: 600, flexShrink: 0 }}>Time left: {remMins}:{remSecs}</span>
+                          <span style={{ color: '#94a3b8', fontSize: '0.75rem', flexShrink: 0 }}>Requested at {formattedTime} IST</span>
+                          
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0, marginLeft: 'auto', paddingLeft: '24px' }}>
+                            {(chat.rate === 0 || chat.rate === '0') && (
+                              <span style={{ color: '#22C55E', fontWeight: 800, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Free Chat</span>
+                            )}
+                            <button 
+                              onClick={async () => {
+                                try {
+                                  await api.post('/chat/creator-accept', { sessionId: chat.sessionId });
+                                } catch (e) {}
+                                setPendingChats(prev => prev.filter(c => c.sessionId !== chat.sessionId));
+                                navigate(`/creator/dashboard/live-chat/${chat.sessionId}`);
+                              }}
+                              style={{ background: '#22C55E', color: '#fff', border: 'none', borderRadius: '8px', padding: '8px 16px', fontWeight: 800, cursor: 'pointer', flexShrink: 0 }}
+                            >
+                              Accept
+                            </button>
+                            {Boolean(chat.isContinueChat) && (
+                              <span style={{
+                                color: '#22C55E',
+                                fontSize: '11px',
+                                fontWeight: 700,
+                                whiteSpace: 'nowrap'
+                              }}>
+                                continue chat
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   );
                 })}

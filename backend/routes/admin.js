@@ -537,7 +537,17 @@ router.get('/fans', async (req, res) => {
     
     const ChatSession = require('../models/ChatSession');
     const WalletTransaction = require('../models/WalletTransaction');
-    
+
+    // Creators get a shadow Fan record so they can browse the fan side (see verifyFanToken),
+    // so the Creator collection is the only reliable way to tell the two apart.
+    const creators = await Creator.find({}, 'fanId email').lean();
+    const creatorFanIds = new Set();
+    const creatorEmails = new Set();
+    for (const c of creators) {
+      if (c.fanId) creatorFanIds.add(String(c.fanId));
+      if (c.email) creatorEmails.add(c.email.toLowerCase());
+    }
+
     const fansWithStats = await Promise.all(fans.map(async (fan) => {
       // paymentStatus: 'paid' implies it was actually asked, but let's count all questions linked to them
       const totalQuestionsAsked = await Question.countDocuments({ fanId: fan._id });
@@ -549,7 +559,17 @@ router.get('/fans', async (req, res) => {
         description: { $regex: /tip/i }
       });
       
-      return { ...fan, totalQuestionsAsked, totalChatsInitiated, tipsProvided };
+      const isCreatorAccount =
+        creatorFanIds.has(String(fan._id)) ||
+        (fan.email && creatorEmails.has(fan.email.toLowerCase()));
+
+      return {
+        ...fan,
+        totalQuestionsAsked,
+        totalChatsInitiated,
+        tipsProvided,
+        accountType: isCreatorAccount ? 'creator' : 'fan'
+      };
     }));
     
     res.json(fansWithStats);

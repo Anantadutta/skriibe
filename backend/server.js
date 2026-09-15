@@ -57,7 +57,7 @@ const sendWhatsAppMessage = async (phone, name) => {
 
 const app = express();
 const server = http.createServer(app);
-// Trigger nodemon restart
+// Trigger nodemon restart - updated name support
 
 const allowedOrigins = [
   "https://www.skriibe.com", 
@@ -347,4 +347,5 @@ server.listen(PORT, async () => {
     fs.writeFileSync('creators_dump.json', JSON.stringify({ error: err.message }));
   }
 });
+// Profile name sync enabled
 module.exports = { app, server, io };

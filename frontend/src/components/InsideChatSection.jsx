@@ -155,7 +155,7 @@ const InsideChatSection = ({ theme = 'dark' }) => {
                     : 'bg-[#2A1525] text-[#FF85A2] border-[#4A2038]'
                 }`}
               >
-                free to send
+                Ask me Anything
               </span>
             </div>
           </div>

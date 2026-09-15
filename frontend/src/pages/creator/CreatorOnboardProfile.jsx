@@ -626,7 +626,7 @@ const CreatorOnboardProfile = () => {
                       display: 'block',
                       marginBottom: '10px'
                     }}>
-                      CREATE UR USERNAME <span style={{ color: '#ef4444' }}>*</span>
+                      CREATE USERNAME <span style={{ color: '#ef4444' }}>*</span>
                     </label>
                     <div style={{
                       background: 'rgba(255, 255, 255, 0.03)',

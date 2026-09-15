@@ -10,7 +10,7 @@ const FanBottomNav = () => {
   const currentPath = location.pathname;
   const navigate = useNavigate();
   const [unreadCount, setUnreadCount] = useState(0);
-  const { roles, setAuthData } = useAuth();
+  const { roles, setAuthData, isAuthenticated } = useAuth();
 
   useEffect(() => {
     const fetchNotifications = async () => {
@@ -26,26 +26,33 @@ const FanBottomNav = () => {
       fetchNotifications();
     };
 
-    fetchNotifications();
-    
-    const interval = setInterval(() => {
+    // Only fetch if authenticated
+    if (isAuthenticated) {
       fetchNotifications();
-    }, 15000);
+      
+      const interval = setInterval(() => {
+        fetchNotifications();
+      }, 15000);
 
-    window.addEventListener('notificationRead', handleNotificationRead);
-    return () => {
-      window.removeEventListener('notificationRead', handleNotificationRead);
-      clearInterval(interval);
-    };
-  }, []);
+      window.addEventListener('notificationRead', handleNotificationRead);
+      return () => {
+        window.removeEventListener('notificationRead', handleNotificationRead);
+        clearInterval(interval);
+      };
+    }
+  }, [isAuthenticated]);
 
-  const navItems = [
+  const allNavItems = [
     { label: 'Home', path: '/discovery', icon: (active) => <HomeIcon active={active} /> },
     { label: 'Explore', path: '/explore', icon: (active) => <ExploreIcon active={active} /> },
     { label: 'Inbox', path: '/fan/history', icon: (active) => <InboxIcon active={active} />, hasBadge: true },
     { label: 'Wallet', path: '/fan/wallet', icon: (active) => <WalletIcon active={active} /> },
     { label: 'Profile', path: '/fan/profile', icon: (active) => <ProfileIcon active={active} /> }
   ];
+
+  const navItems = isAuthenticated 
+    ? allNavItems 
+    : allNavItems.filter(item => item.label === 'Explore');
 
   return (
     <>

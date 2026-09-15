@@ -14,6 +14,12 @@ const FanProfile = () => {
   const [loading, setLoading] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
   const [switching, setSwitching] = useState(false);
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [newName, setNewName] = useState('');
+  const [savingName, setSavingName] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+
   const [isEditingEmail, setIsEditingEmail] = useState(false);
   const [newEmail, setNewEmail] = useState('');
   const [savingEmail, setSavingEmail] = useState(false);
@@ -21,13 +27,14 @@ const FanProfile = () => {
   const [isEditingPhone, setIsEditingPhone] = useState(false);
   const [newPhone, setNewPhone] = useState('');
   const [savingPhone, setSavingPhone] = useState(false);
-  const [selectedQuestion, setSelectedQuestion] = useState(null);
+  const selectedQuestion = null;
 
   const [cropImageSrc, setCropImageSrc] = useState(null);
   const [showAvatarMenu, setShowAvatarMenu] = useState(false);
   const avatarInputRef = useRef(null);
   const menuRef = useRef(null);
   const menuContainerRef = useRef(null);
+  const nameContainerRef = useRef(null);
   const emailContainerRef = useRef(null);
   const phoneContainerRef = useRef(null);
 
@@ -90,6 +97,11 @@ const FanProfile = () => {
   }, [showAvatarMenu]);
 
   useEffect(() => {
+    const handleNameClickOutside = (event) => {
+      if (nameContainerRef.current && !nameContainerRef.current.contains(event.target)) {
+        setIsEditingName(false);
+      }
+    };
     const handleEmailClickOutside = (event) => {
       if (emailContainerRef.current && !emailContainerRef.current.contains(event.target)) {
         setIsEditingEmail(false);
@@ -100,6 +112,9 @@ const FanProfile = () => {
         setIsEditingPhone(false);
       }
     };
+    if (isEditingName) {
+      document.addEventListener('mousedown', handleNameClickOutside);
+    }
     if (isEditingEmail) {
       document.addEventListener('mousedown', handleEmailClickOutside);
     }
@@ -107,10 +122,59 @@ const FanProfile = () => {
       document.addEventListener('mousedown', handlePhoneClickOutside);
     }
     return () => {
+      document.removeEventListener('mousedown', handleNameClickOutside);
       document.removeEventListener('mousedown', handleEmailClickOutside);
       document.removeEventListener('mousedown', handlePhoneClickOutside);
     };
-  }, [isEditingEmail]);
+  }, [isEditingName, isEditingEmail, isEditingPhone]);
+
+  const handleSaveName = async () => {
+    if (isEditingName) {
+      const trimmed = (newName || '').trim();
+      if (!trimmed) {
+        setIsEditingName(false);
+        return;
+      }
+      if (trimmed === fanProfile?.name) {
+        setIsEditingName(false);
+        return;
+      }
+      setSavingName(true);
+      try {
+        const payload = {
+          name: trimmed,
+          email: fanProfile?.email || undefined,
+          phone: fanProfile?.phone || undefined
+        };
+        const res = await updateFanProfile(payload);
+        if (res.success && res.fan) {
+          setFanProfile(res.fan);
+          setIsEditingName(false);
+
+          // Update localStorage
+          const firstName = res.fan.name ? res.fan.name.split(' ')[0] : trimmed;
+          localStorage.setItem('cachedFanName', firstName);
+          localStorage.setItem('skriibe_fan_name', firstName);
+          localStorage.setItem('fanName', res.fan.name || trimmed);
+
+          // Dispatch events for immediate cross-component sync
+          window.dispatchEvent(new CustomEvent('fanProfileUpdated', {
+            detail: { name: res.fan.name, firstName }
+          }));
+          window.dispatchEvent(new Event('storage'));
+
+          setShowSuccessModal(true);
+        }
+      } catch (err) {
+        setErrorMessage(err.response?.data?.message || 'Failed to update name');
+      } finally {
+        setSavingName(false);
+      }
+    } else {
+      setNewName(fanProfile?.name || '');
+      setIsEditingName(true);
+    }
+  };
 
   const handleAvatarChange = (e) => {
     const file = e.target.files[0];
@@ -246,8 +310,70 @@ const FanProfile = () => {
 
 
                 </div>
-                <div style={{ overflow: 'hidden' }}>
-                  <h2 style={{ margin: '0 0 8px 0', fontSize: '24px', fontWeight: '700' }}>{fanProfile.name || 'Fan'}</h2>
+                <div style={{ overflow: 'hidden', flex: 1, minWidth: 0 }}>
+                  <div ref={nameContainerRef} style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+                    {isEditingName ? (
+                      <input 
+                        type="text"
+                        value={newName}
+                        onChange={(e) => setNewName(e.target.value)}
+                        disabled={savingName}
+                        placeholder="Your name"
+                        onFocus={(e) => {
+                          const target = e.target;
+                          setTimeout(() => target.setSelectionRange(0, 0), 0);
+                        }}
+                        style={{
+                          background: 'rgba(255,255,255,0.05)',
+                          border: '1px solid rgba(255,255,255,0.2)',
+                          color: '#fff',
+                          padding: '6px 12px',
+                          borderRadius: '6px',
+                          fontSize: '18px',
+                          fontWeight: '700',
+                          width: '100%',
+                          outline: 'none',
+                          maxWidth: '250px'
+                        }}
+                        autoFocus
+                        onKeyDown={async (e) => {
+                          if (e.key === 'Enter') {
+                            handleSaveName();
+                          } else if (e.key === 'Escape') {
+                            setIsEditingName(false);
+                          }
+                        }}
+                      />
+                    ) : (
+                      <h2 style={{ margin: 0, fontSize: '24px', fontWeight: '700', color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {fanProfile.name || 'Fan'}
+                      </h2>
+                    )}
+                    <button 
+                      onClick={handleSaveName}
+                      disabled={savingName}
+                      style={{
+                        background: 'transparent',
+                        border: '1px solid rgba(255,255,255,0.2)',
+                        color: '#fff',
+                        padding: '4px 12px',
+                        borderRadius: '6px',
+                        fontWeight: '600',
+                        cursor: savingName ? 'not-allowed' : 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        fontSize: '12px',
+                        opacity: savingName ? 0.6 : 1,
+                        flexShrink: 0
+                      }}
+                    >
+                      {!isEditingName && (
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                      )}
+                      {isEditingName ? (savingName ? 'Saving...' : 'Save') : 'Edit'}
+                    </button>
+                  </div>
                   <div ref={emailContainerRef} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                     {isEditingEmail ? (
                       <input 
@@ -637,6 +763,158 @@ const FanProfile = () => {
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Name Updated Success Modal */}
+      {showSuccessModal && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(0, 0, 0, 0.75)',
+          backdropFilter: 'blur(6px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+          padding: '20px'
+        }}>
+          <div style={{
+            background: '#13161C',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            borderRadius: '20px',
+            padding: '32px 28px',
+            maxWidth: '380px',
+            width: '100%',
+            textAlign: 'center',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.7)',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '16px'
+          }}>
+            <div style={{
+              width: '56px',
+              height: '56px',
+              borderRadius: '50%',
+              background: 'rgba(16, 185, 129, 0.15)',
+              border: '1px solid rgba(16, 185, 129, 0.3)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#10b981',
+              marginBottom: '4px'
+            }}>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+            </div>
+
+            <h3 style={{
+              margin: 0,
+              fontSize: '20px',
+              fontWeight: '700',
+              color: '#ffffff'
+            }}>
+              Name updated successfully
+            </h3>
+
+            <p style={{
+              margin: 0,
+              fontSize: '14px',
+              color: '#94a3b8',
+              lineHeight: '1.5'
+            }}>
+              Your profile name has been updated and reflected across your account.
+            </p>
+
+            <button
+              onClick={() => setShowSuccessModal(false)}
+              style={{
+                marginTop: '8px',
+                width: '100%',
+                padding: '12px',
+                background: '#6366f1',
+                color: '#ffffff',
+                border: 'none',
+                borderRadius: '10px',
+                fontSize: '15px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'background 0.2s'
+              }}
+              onMouseOver={(e) => e.currentTarget.style.background = '#4f46e5'}
+              onMouseOut={(e) => e.currentTarget.style.background = '#6366f1'}
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Error Modal */}
+      {errorMessage && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(0, 0, 0, 0.75)',
+          backdropFilter: 'blur(6px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+          padding: '20px'
+        }}>
+          <div style={{
+            background: '#13161C',
+            border: '1px solid rgba(239, 68, 68, 0.3)',
+            borderRadius: '20px',
+            padding: '32px 28px',
+            maxWidth: '380px',
+            width: '100%',
+            textAlign: 'center',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.7)',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '16px'
+          }}>
+            <div style={{
+              width: '56px',
+              height: '56px',
+              borderRadius: '50%',
+              background: 'rgba(239, 68, 68, 0.15)',
+              border: '1px solid rgba(239, 68, 68, 0.3)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#ef4444'
+            }}>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </div>
+            <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '700', color: '#ffffff' }}>Update Failed</h3>
+            <p style={{ margin: 0, fontSize: '14px', color: '#94a3b8', lineHeight: '1.5' }}>{errorMessage}</p>
+            <button
+              onClick={() => setErrorMessage('')}
+              style={{
+                marginTop: '8px',
+                width: '100%',
+                padding: '12px',
+                background: '#ef4444',
+                color: '#ffffff',
+                border: 'none',
+                borderRadius: '10px',
+                fontSize: '15px',
+                fontWeight: '600',
+                cursor: 'pointer'
+              }}
+            >
+              Close
+            </button>
           </div>
         </div>
       )}

@@ -30,16 +30,6 @@ const queryTypes = [
   "Other"
 ];
 
-const preferredResolutions = [
-  "Full Refund",
-  "Partial Refund",
-  "Response / Resolution from Creator",
-  "Technical Bug Fix",
-  "Account Assistance",
-  "Investigation & Action",
-  "Other"
-];
-
 // Helper to safely extract email from stored JWT token
 const getEmailFromToken = () => {
   try {
@@ -75,9 +65,9 @@ const RaiseQuery = () => {
     queryType: '',
     creatorName: '',
     transactionId: '',
+    chatId: '',
     dateOfIssue: '',
     amountPaid: '',
-    preferredResolution: '',
     whatHappened: '',
     additionalDetails: '',
     email: '',
@@ -262,8 +252,9 @@ const RaiseQuery = () => {
   const validateForm = () => {
     const newErrors = {};
     if (!formData.queryType) newErrors.queryType = 'Please select a query type';
+    if (!formData.creatorName || !formData.creatorName.trim()) newErrors.creatorName = 'Please enter your name';
+    if (!formData.chatId || !formData.chatId.trim()) newErrors.chatId = 'Please enter the Chat ID';
     if (!formData.dateOfIssue) newErrors.dateOfIssue = 'Please select the date of issue';
-    if (!formData.preferredResolution) newErrors.preferredResolution = 'Please select your preferred resolution';
     if (!formData.whatHappened.trim()) newErrors.whatHappened = 'Please describe what happened';
     if (!formData.email.trim()) {
       newErrors.email = 'Please provide your email address';
@@ -305,9 +296,9 @@ const RaiseQuery = () => {
       postData.append('queryType', formData.queryType);
       postData.append('creatorName', formData.creatorName || '');
       postData.append('transactionId', formData.transactionId || '');
+      postData.append('chatId', formData.chatId || '');
       postData.append('dateOfIssue', formData.dateOfIssue || '');
       postData.append('amountPaid', formData.amountPaid || '');
-      postData.append('preferredResolution', formData.preferredResolution || '');
       postData.append('whatHappened', formData.whatHappened || '');
       postData.append('additionalDetails', formData.additionalDetails || '');
       postData.append('email', formData.email || '');
@@ -348,9 +339,9 @@ const RaiseQuery = () => {
       queryType: '',
       creatorName: '',
       transactionId: '',
+      chatId: '',
       dateOfIssue: '',
       amountPaid: '',
-      preferredResolution: '',
       whatHappened: '',
       additionalDetails: '',
       email: tokenEmail || '',
@@ -535,52 +526,60 @@ const RaiseQuery = () => {
                     {errors.queryType && <p className="text-xs text-red-500 mt-1">{errors.queryType}</p>}
                   </div>
 
-                  {/* 2. Creator Name (Optional) */}
-                  <div>
+                  {/* 2. Your Name * */}
+                  <div className={`transition-transform duration-300 ${bouncingField === 'creatorName' ? 'bounce-field' : ''}`}>
                     <label className="block text-xs sm:text-sm font-semibold mb-1.5">
-                      Creator Name <span className="text-xs font-normal text-gray-400">(Optional)</span>
+                      Your Name <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
                       name="creatorName"
                       value={formData.creatorName}
                       onChange={handleInputChange}
-                      placeholder="Enter creator name"
+                      placeholder="Enter your name"
                       className={`w-full px-3.5 py-2.5 rounded-xl border text-sm transition-all outline-none ${
                         theme === 'light'
                           ? 'bg-white border-gray-300 text-gray-800 placeholder-gray-400 focus:border-[#5b45e0] focus:ring-2 focus:ring-[#5b45e0]/20'
                           : 'bg-[#161826] border-[#292d42] text-white placeholder-gray-500 focus:border-[#6366f1] focus:ring-2 focus:ring-[#6366f1]/20'
-                      }`}
+                      } ${errors.creatorName ? 'border-red-500' : ''}`}
                     />
+                    {errors.creatorName && <p className="text-xs text-red-500 mt-1">{errors.creatorName}</p>}
                   </div>
 
-                  {/* 3. Transaction / Chat ID (Optional) */}
+                  {/* 3. Chat ID * */}
+                  <div className={`transition-transform duration-300 ${bouncingField === 'chatId' ? 'bounce-field' : ''}`}>
+                    <label className="block text-xs sm:text-sm font-semibold mb-1.5">
+                      Chat ID <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      name="chatId"
+                      value={formData.chatId}
+                      onChange={handleInputChange}
+                      placeholder="e.g. SKR123456"
+                      className={`w-full px-3.5 py-2.5 rounded-xl border text-sm transition-all outline-none ${
+                        theme === 'light'
+                          ? 'bg-white border-gray-300 text-gray-800 placeholder-gray-400 focus:border-[#5b45e0] focus:ring-2 focus:ring-[#5b45e0]/20'
+                          : 'bg-[#161826] border-[#292d42] text-white placeholder-gray-500 focus:border-[#6366f1] focus:ring-2 focus:ring-[#6366f1]/20'
+                      } ${errors.chatId ? 'border-red-500' : ''}`}
+                    />
+                    <p className={`text-[11px] mt-1 ${theme === 'light' ? 'text-gray-500' : 'text-gray-400'}`}>
+                      You can find this in your chat history.
+                    </p>
+                    {errors.chatId && <p className="text-xs text-red-500 mt-1">{errors.chatId}</p>}
+                  </div>
+
+                  {/* 3.1 Transaction ID (Optional) */}
                   <div>
-                    <div className="flex items-center gap-1.5 mb-1.5 relative">
-                      <label className="text-xs sm:text-sm font-semibold">
-                        Transaction / Chat ID <span className="text-xs font-normal text-gray-400">(Optional)</span>
-                      </label>
-                      <div 
-                        className="relative cursor-pointer"
-                        onMouseEnter={() => setShowInfoTooltip(true)}
-                        onMouseLeave={() => setShowInfoTooltip(false)}
-                      >
-                        <Info className="w-3.5 h-3.5 text-gray-400 hover:text-gray-600" />
-                        {showInfoTooltip && (
-                          <div className={`absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 w-48 p-2 rounded-lg text-[11px] leading-tight z-20 shadow-lg ${
-                            theme === 'light' ? 'bg-gray-900 text-white' : 'bg-gray-800 text-gray-200'
-                          }`}>
-                            Reference ID from your payment receipt or chat window.
-                          </div>
-                        )}
-                      </div>
-                    </div>
+                    <label className="block text-xs sm:text-sm font-semibold mb-1.5">
+                      Transaction ID <span className="text-xs font-normal text-gray-400">(Optional)</span>
+                    </label>
                     <input
                       type="text"
                       name="transactionId"
                       value={formData.transactionId}
                       onChange={handleInputChange}
-                      placeholder="e.g. SKR123456"
+                      placeholder="e.g. TXN123456"
                       className={`w-full px-3.5 py-2.5 rounded-xl border text-sm transition-all outline-none ${
                         theme === 'light'
                           ? 'bg-white border-gray-300 text-gray-800 placeholder-gray-400 focus:border-[#5b45e0] focus:ring-2 focus:ring-[#5b45e0]/20'
@@ -588,7 +587,7 @@ const RaiseQuery = () => {
                       }`}
                     />
                     <p className={`text-[11px] mt-1 ${theme === 'light' ? 'text-gray-500' : 'text-gray-400'}`}>
-                      You can find this in your transaction/chat history.
+                      You can find this in your payment receipt.
                     </p>
                   </div>
 
@@ -646,37 +645,7 @@ const RaiseQuery = () => {
                     </p>
                   </div>
 
-                  {/* 6. Preferred Resolution * */}
-                  <div className={`transition-transform duration-300 ${bouncingField === 'preferredResolution' ? 'bounce-field' : ''}`}>
-                    <label className="block text-xs sm:text-sm font-semibold mb-1.5">
-                      Preferred Resolution <span className="text-red-500">*</span>
-                    </label>
-                    <div className="relative">
-                      <select
-                        name="preferredResolution"
-                        value={formData.preferredResolution}
-                        onChange={handleInputChange}
-                        className={`w-full px-3.5 py-2.5 rounded-xl border text-sm appearance-none transition-all outline-none pr-10 cursor-pointer ${
-                          theme === 'light'
-                            ? 'bg-white border-gray-300 text-gray-800 focus:border-[#5b45e0] focus:ring-2 focus:ring-[#5b45e0]/20'
-                            : 'bg-[#161826] border-[#292d42] text-white focus:border-[#6366f1] focus:ring-2 focus:ring-[#6366f1]/20'
-                        } ${errors.preferredResolution ? 'border-red-500' : ''}`}
-                      >
-                        <option value="" disabled>Select an option</option>
-                        {preferredResolutions.map((res, idx) => (
-                          <option key={idx} value={res} className={theme === 'light' ? 'bg-white text-gray-900' : 'bg-[#161826] text-white'}>
-                            {res}
-                          </option>
-                        ))}
-                      </select>
-                      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-400">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                        </svg>
-                      </div>
-                    </div>
-                    {errors.preferredResolution && <p className="text-xs text-red-500 mt-1">{errors.preferredResolution}</p>}
-                  </div>
+
                 </div>
 
                 {/* 7. What happened? * */}
@@ -700,7 +669,7 @@ const RaiseQuery = () => {
                           : 'bg-[#161826] border-[#292d42] text-white placeholder-gray-500 focus:border-[#6366f1] focus:ring-2 focus:ring-[#6366f1]/20'
                       } ${errors.whatHappened ? 'border-red-500' : ''}`}
                     />
-                    <div className="absolute right-3 bottom-2 text-[11px] text-gray-400 select-none">
+                    <div className="absolute right-4 bottom-3 text-[11px] text-gray-400 select-none">
                       {formData.whatHappened.length}/500
                     </div>
                   </div>
@@ -819,7 +788,7 @@ const RaiseQuery = () => {
                           : 'bg-[#161826] border-[#292d42] text-white placeholder-gray-500 focus:border-[#6366f1] focus:ring-2 focus:ring-[#6366f1]/20'
                       }`}
                     />
-                    <div className="absolute right-3 bottom-2 text-[11px] text-gray-400 select-none">
+                    <div className="absolute right-4 bottom-3 text-[11px] text-gray-400 select-none">
                       {formData.additionalDetails.length}/1000
                     </div>
                   </div>

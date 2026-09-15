@@ -8,6 +8,7 @@ const mongoose = require('mongoose');
 const CreatorSchema = new mongoose.Schema({
   phone: { type: String, unique: true, sparse: true },
   email: { type: String, required: true, unique: true },
+  fanId: { type: mongoose.Schema.Types.ObjectId, ref: 'Fan', default: null },
   isEmailVerified: { type: Boolean, default: false },
   password: { type: String },
   name: { type: String, default: '' },

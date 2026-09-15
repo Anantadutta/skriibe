@@ -294,6 +294,30 @@ const CreatorProfile = () => {
         >
           ← Back
         </button>
+
+        {/* Skriibe wordmark */}
+        <div style={{ width: '100%', display: 'flex', justifyContent: 'center', marginBottom: '28px' }}>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 2000 520.97"
+            style={{ height: '34px', width: 'auto', overflow: 'visible' }}
+            role="img"
+            aria-label="skriibe"
+          >
+            <text
+              x="0"
+              y="457.72"
+              textAnchor="start"
+              fontSize="566.36px"
+              fontFamily="Garet, sans-serif"
+              fontWeight="400"
+              fill="#ffffff"
+            >
+              skr<tspan fill="#3BA8D8">ii</tspan>be
+            </text>
+          </svg>
+        </div>
+
         {success ? (
           <div style={{ width: '100%', maxWidth: '440px', display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '24px' }}>
             
@@ -430,8 +454,52 @@ const CreatorProfile = () => {
                 <h2 style={{ margin: 0, color: '#ffffff', fontSize: '24px', fontWeight: '800', letterSpacing: '-0.5px' }}>
                   {creator.name}
                 </h2>
-                <div style={{ color: '#94a3b8', fontSize: '14px', marginTop: '4px' }}>
-                  {creator.handle}
+                <div style={{ color: '#94a3b8', fontSize: '14px', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{
+                    color: '#F1F5F9',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap'
+                  }}>
+                    <span style={{ color: '#38BDF8', fontWeight: '700', marginRight: '3px' }}>@</span>{creator.handle}
+                  </span>
+                  
+                  {creator.instagramFollowers != null && (
+                    <>
+                      <span style={{ color: 'rgba(255, 255, 255, 0.2)', fontWeight: '300' }}>|</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <svg 
+                          width="15" 
+                          height="15" 
+                          viewBox="0 0 24 24" 
+                          fill="none" 
+                          xmlns="http://www.w3.org/2000/svg"
+                          style={{ borderRadius: '4px', overflow: 'hidden' }}
+                        >
+                          <defs>
+                            <linearGradient id={`igCardIconGrad-${creator.handle || 'creator'}`} x1="0%" y1="100%" x2="100%" y2="0%">
+                              <stop offset="0%" stopColor="#f09433" />
+                              <stop offset="25%" stopColor="#e6683c" />
+                              <stop offset="50%" stopColor="#dc2743" />
+                              <stop offset="75%" stopColor="#cc2366" />
+                              <stop offset="100%" stopColor="#bc1888" />
+                            </linearGradient>
+                          </defs>
+                          <rect width="24" height="24" rx="6" fill={`url(#igCardIconGrad-${creator.handle || 'creator'})`} />
+                          <rect x="4.5" y="4.5" width="15" height="15" rx="4" stroke="#ffffff" strokeWidth="1.8" fill="none" />
+                          <circle cx="12" cy="12" r="3.4" stroke="#ffffff" strokeWidth="1.8" fill="none" />
+                          <circle cx="16" cy="8" r="1.1" fill="#ffffff" />
+                        </svg>
+                        <span style={{ color: '#94A3B8', fontWeight: '500', fontSize: '14px' }}>
+                          {creator.instagramFollowers >= 1000000 
+                            ? (creator.instagramFollowers / 1000000).toFixed(1).replace(/\.0$/, '') + 'M followers' 
+                            : creator.instagramFollowers >= 1000 
+                              ? (creator.instagramFollowers / 1000).toFixed(1).replace(/\.0$/, '') + 'K followers' 
+                              : creator.instagramFollowers + ' followers'}
+                        </span>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
               
@@ -547,6 +615,7 @@ const CreatorProfile = () => {
                       padding: '6px 12px', 
                       borderRadius: '8px', 
                       marginRight: '8px',
+                      marginLeft: '16px',
                       boxShadow: '0 4px 12px rgba(56, 189, 248, 0.3)',
                       letterSpacing: '0.5px',
                       display: 'inline-block'

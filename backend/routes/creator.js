@@ -849,7 +849,7 @@ router.get('/payouts', verifyCreatorToken, async (req, res) => {
     };
 
     const lastBoundary = getTuesday00IST(now);
-    const nextPayoutDate = new Date(lastBoundary.getTime() + 7 * 24 * 60 * 60 * 1000);
+    const nextPayoutDate = new Date(lastBoundary.getTime() + 14 * 24 * 60 * 60 * 1000);
 
     // Track past Tuesday-to-Tuesday weekly cycles
     const pastWeeklyBuckets = {};
@@ -1282,6 +1282,11 @@ router.get('/payouts', verifyCreatorToken, async (req, res) => {
     for (let i = 0; i < numPastWeeksToShow; i++) {
       const cycleEnd = new Date(lastBoundary.getTime() - i * 7 * 24 * 60 * 60 * 1000);
       const cycleStart = new Date(cycleEnd.getTime() - 7 * 24 * 60 * 60 * 1000);
+      
+      if (cycleEnd < createdAtDate) {
+        continue;
+      }
+      
       const key = cycleStart.toISOString();
       if (!pastWeeklyBuckets[key]) {
         pastWeeklyBuckets[key] = {
@@ -1396,6 +1401,7 @@ router.get('/payouts', verifyCreatorToken, async (req, res) => {
       liveChatEarnings: Math.round(liveChatEarnings * 100) / 100,
       amaEarnings:      Math.round(amaEarnings * 100) / 100,
       tipEarnings:      Math.round(tipEarnings * 100) / 100,
+      creatorSharePercent: Math.round(getCreatorShare(now) * 100),
       liveChatsComplete,
       liveChatsIncomplete,
       freeLiveChats,

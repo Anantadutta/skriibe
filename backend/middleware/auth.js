@@ -114,4 +114,30 @@ const verifyFanToken = async (req, res, next) => {
   }
 };
 
-module.exports = { verifyCreatorToken, verifyAdminToken, verifyFanToken };
+const verifyFanOrCreatorToken = async (req, res, next) => {
+  let token = null;
+  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
+    token = req.headers.authorization.split(' ')[1];
+  }
+  if (!token) {
+    token = req.cookies?.creator_token || req.cookies?.fan_token;
+  }
+
+  if (!token) return res.status(401).json({ success: false, message: 'Not authenticated' });
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret');
+    if (decoded.creatorId) {
+      req.creator = decoded;
+    }
+    if (decoded.fanId) {
+      req.fan = decoded;
+    }
+    req.user = decoded;
+    next();
+  } catch {
+    return res.status(401).json({ success: false, message: 'Invalid token' });
+  }
+};
+
+module.exports = { verifyCreatorToken, verifyAdminToken, verifyFanToken, verifyFanOrCreatorToken };
+

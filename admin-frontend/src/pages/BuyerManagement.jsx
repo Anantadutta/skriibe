@@ -6,6 +6,7 @@ import NotificationBell from '../components/NotificationBell';
 const BuyerManagement = () => {
   const navigate = useNavigate();
   const [fans, setFans] = useState([]);
+  const [view, setView] = useState('fan');
 
   useEffect(() => {
     const fetchFans = async () => {
@@ -21,6 +22,10 @@ const BuyerManagement = () => {
     const interval = setInterval(fetchFans, 5000);
     return () => clearInterval(interval);
   }, []);
+
+  const visibleFans = view === 'all'
+    ? fans
+    : fans.filter((f) => (f.accountType || 'fan') === view);
 
   return (
     <div style={{ padding: '32px 24px', maxWidth: '600px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '24px' }}>
@@ -39,15 +44,53 @@ const BuyerManagement = () => {
         <h1 className="font-wide" style={{ margin: 0, fontSize: '1.75rem', letterSpacing: '-0.03em', color: '#ffffff' }}>
           Fan Health
         </h1>
-        <div style={{ fontSize: '0.85rem', color: '#94a3b8', marginTop: '4px' }}>Monitor the health and status of all registered fans</div>
+        <div style={{ fontSize: '0.85rem', color: '#94a3b8', marginTop: '4px' }}>Monitor the health and status of registered fans. Creator accounts are listed separately.</div>
+      </div>
+
+      <div style={{ display: 'flex', gap: '8px' }}>
+        {[
+          { key: 'fan', label: 'Fans' },
+          { key: 'creator', label: 'Creator accounts' },
+          { key: 'all', label: 'All' }
+        ].map((tab) => {
+          const count = tab.key === 'all'
+            ? fans.length
+            : fans.filter((f) => (f.accountType || 'fan') === tab.key).length;
+          const isActive = view === tab.key;
+          return (
+            <button
+              key={tab.key}
+              onClick={() => setView(tab.key)}
+              style={{
+                background: isActive ? 'rgba(56, 189, 248, 0.12)' : '#13131A',
+                border: `1px solid ${isActive ? '#38BDF8' : '#1E1E2D'}`,
+                color: isActive ? '#38BDF8' : '#94a3b8',
+                borderRadius: '10px',
+                padding: '8px 14px',
+                fontSize: '0.8rem',
+                fontWeight: 'bold',
+                cursor: 'pointer'
+              }}
+            >
+              {tab.label} ({count})
+            </button>
+          );
+        })}
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '8px' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          {fans.map((fan) => (
+          {visibleFans.map((fan) => (
             <div key={fan._id} style={{ background: '#13131A', borderRadius: '12px', padding: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid #1E1E2D' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <div style={{ color: '#fff', fontWeight: 'bold', fontSize: '1rem' }}>{fan.name || 'Anonymous User'}</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ color: '#fff', fontWeight: 'bold', fontSize: '1rem' }}>{fan.name || 'Anonymous User'}</div>
+                  {fan.accountType === 'creator' && (
+                    <span style={{ color: '#A855F7', fontSize: '0.65rem', fontWeight: 'bold', letterSpacing: '0.5px', textTransform: 'uppercase', background: 'rgba(168, 85, 247, 0.12)', border: '1px solid rgba(168, 85, 247, 0.35)', padding: '2px 8px', borderRadius: '8px' }}>
+                      Creator
+                    </span>
+                  )}
+                </div>
                 <div style={{ color: '#94a3b8', fontSize: '0.85rem' }}>{fan.isDeleted ? fan.email.split('_deleted_')[0] : fan.email}</div>
                 <div style={{ color: '#64748b', fontSize: '0.75rem' }}>Joined: {new Date(fan.createdAt).toLocaleDateString()}</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', marginTop: '4px' }}>
@@ -74,8 +117,10 @@ const BuyerManagement = () => {
               </div>
             </div>
           ))}
-          {fans.length === 0 && (
-            <div style={{ color: '#94a3b8', textAlign: 'center', padding: '24px' }}>No fans found.</div>
+          {visibleFans.length === 0 && (
+            <div style={{ color: '#94a3b8', textAlign: 'center', padding: '24px' }}>
+              {view === 'creator' ? 'No creator accounts found.' : 'No fans found.'}
+            </div>
           )}
         </div>
       </div>

@@ -18,6 +18,7 @@ api.interceptors.response.use(
     // Automatically save token if it's provided in the response payload
     if (response.data && response.data.token) {
       localStorage.setItem('skriibe_token', response.data.token);
+      window.dispatchEvent(new Event('skriibe:auth'));
     }
     return response;
   },
@@ -26,7 +27,8 @@ api.interceptors.response.use(
       // Clear expired/broken tokens to prevent infinite redirect loops in SmartLoginRedirect
       localStorage.removeItem('skriibe_token');
       localStorage.removeItem('isReturningCreator');
-      
+      window.dispatchEvent(new Event('skriibe:auth'));
+
       // Only redirect if we're not already on a login page to avoid loops
       const path = window.location.pathname;
       if (!path.includes('/login') && !path.includes('/signup')) {

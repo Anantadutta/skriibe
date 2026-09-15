@@ -13,6 +13,22 @@ export const AuthProvider = ({ children }) => {
     return localStorage.getItem('auth_activeRole') || 'fan';
   });
 
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    return !!localStorage.getItem('skriibe_token');
+  });
+
+  // The token is also written/cleared outside this provider (api.js interceptors,
+  // the OAuth hash handler), so mirror localStorage instead of trusting local state.
+  useEffect(() => {
+    const sync = () => setIsAuthenticated(!!localStorage.getItem('skriibe_token'));
+    window.addEventListener('storage', sync);
+    window.addEventListener('skriibe:auth', sync);
+    return () => {
+      window.removeEventListener('storage', sync);
+      window.removeEventListener('skriibe:auth', sync);
+    };
+  }, []);
+
   const setAuthData = (newRoles, newActiveRole, token) => {
     let rolesToSave = newRoles;
     if (!rolesToSave || rolesToSave.length === 0) {
@@ -36,19 +52,21 @@ export const AuthProvider = ({ children }) => {
 
     if (token) {
       localStorage.setItem('skriibe_token', token);
+      setIsAuthenticated(true);
     }
   };
 
   const clearAuthData = () => {
     setRoles(['fan']);
     setActiveRole('fan');
+    setIsAuthenticated(false);
     localStorage.removeItem('auth_roles');
     localStorage.removeItem('auth_activeRole');
     localStorage.removeItem('skriibe_token');
   };
 
   return (
-    <AuthContext.Provider value={{ roles, activeRole, setAuthData, clearAuthData }}>
+    <AuthContext.Provider value={{ roles, activeRole, isAuthenticated, setAuthData, clearAuthData }}>
       {children}
     </AuthContext.Provider>
   );
