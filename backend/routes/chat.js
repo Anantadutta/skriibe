@@ -507,8 +507,7 @@ router.get('/creator-history', verifyCreatorToken, async (req, res) => {
 
     const sessions = await ChatSession.find({
       creatorId: creatorId,
-      status: 'ended',
-      cancelledByFan: { $ne: true }
+      status: 'ended'
     })
     .populate('fanId', 'name avatarUrl handle')
     .sort({ endTime: -1 });

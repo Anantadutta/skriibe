@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useAuth } from '../context/AuthContext';
 
 const creatorFaqs = [
   { q: "How do I start earning on Skriibe?", a: "Create your profile, set your pricing, and start accepting questions." },
@@ -18,6 +19,7 @@ const Footer = ({ theme, showTalkDirectly = true }) => {
   const [showHowItWorks, setShowHowItWorks] = useState(false);
   const [showCreatorFaqs, setShowCreatorFaqs] = useState(false);
   const [openFaqIndex, setOpenFaqIndex] = useState(null);
+  const { isAuthenticated, roles } = useAuth();
 
   return (
     <footer className={`${theme === 'light' ? 'bg-[#f8fafc] text-black border-gray-200' : 'bg-[#0b0b0b] text-white border-[#1a1a1a]'} pt-10 sm:pt-14 pb-8 px-6 md:px-12 font-syne border-t relative`}>
@@ -116,7 +118,7 @@ const Footer = ({ theme, showTalkDirectly = true }) => {
         </div>
       )}
 
-      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-6 gap-12 mb-16">
+      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-7 gap-12 mb-16">
         {/* Logo and Description */}
         <div className="col-span-1 md:col-span-2 flex flex-col gap-6">
           <div className="flex items-start">
@@ -237,6 +239,15 @@ const Footer = ({ theme, showTalkDirectly = true }) => {
             <span className={`${theme === 'light' ? 'text-gray-600' : 'text-[#a3a3a3]'} text-sm font-medium leading-tight`}>Secure Payments</span>
           </div>
         </div>
+
+        {/* Join as a Creator Section */}
+        {(!isAuthenticated || (roles && roles.includes('creator'))) && (
+          <div className="col-span-1 flex flex-col gap-5">
+            <h4 className={`${theme === 'light' ? 'text-black' : 'text-white'} font-bold tracking-widest text-xs uppercase mb-2`}>Join as a Creator</h4>
+            <a href="/creator/login" className={`${theme === 'light' ? 'text-gray-600 hover:text-black' : 'text-[#a3a3a3] hover:text-white'} transition-colors text-sm`}>Creator Login</a>
+            <a href="/creator/signup" className={`${theme === 'light' ? 'text-gray-600 hover:text-black' : 'text-[#a3a3a3] hover:text-white'} transition-colors text-sm`}>Creator Registration</a>
+          </div>
+        )}
       </div>
 
       {/* Bottom Bar */}

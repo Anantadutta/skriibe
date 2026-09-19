@@ -17,14 +17,21 @@ const CreatorSignup = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const urlError = searchParams.get('error');
+
+  const [error, setError] = useState(urlError && urlError !== 'CONFLICT_FAN' ? urlError : '');
   const [focusedEmail, setFocusedEmail] = useState(false);
   const [focusedPassword, setFocusedPassword] = useState(false);
   const [focusedConfirm, setFocusedConfirm] = useState(false);
   const navigate = useNavigate();
-  const location = useLocation();
   const { roles, setAuthData } = useAuth();
   const [showAlreadyCreatorModal, setShowAlreadyCreatorModal] = useState(false);
+
+  const [showRoleConflictModal, setShowRoleConflictModal] = useState(urlError === 'CONFLICT_FAN');
+  const [roleConflictMessage, setRoleConflictMessage] = useState(urlError === 'CONFLICT_FAN' ? 'You are signed in as a fan please sign up with a different account' : '');
+
 
   useEffect(() => {
     if (roles?.includes('creator')) {
@@ -37,9 +44,9 @@ const CreatorSignup = () => {
         return;
       }
     }
-    
-    if (localStorage.getItem('isReturningCreator') === 'true') {
-      navigate('/creator/login', { replace: true });
+    if (roles?.includes('fan')) {
+      setRoleConflictMessage('You are signed in as a fan please sign up with a different account');
+      setShowRoleConflictModal(true);
     }
   }, [navigate, roles, location.search]);
 
@@ -73,18 +80,32 @@ const CreatorSignup = () => {
         localStorage.setItem('isReturningCreator', 'true');
         localStorage.removeItem('bankLinked');
         
-        const nextRoute = (res.data.token && res.data.creator) ? '/onboard/profile' : '/creator/login';
-        const nextState = (res.data.token && res.data.creator) ? { creator: res.data.creator } : { message: 'Registration successful! Please log in.' };
-
+        const isExisting = res.data.isExisting;
+        
         if (res.data.token && res.data.creator) {
           setAuthData(['creator'], 'creator', res.data.token);
         }
         
-        navigate('/verify-email', { state: { email, nextRoute, nextState } });
+        if (isExisting) {
+          if (res.data.creator.handle) {
+            navigate('/creator/dashboard', { state: { creator: res.data.creator }, replace: true });
+          } else {
+            navigate('/onboard/profile', { state: { creator: res.data.creator }, replace: true });
+          }
+        } else {
+          const nextRoute = (res.data.token && res.data.creator) ? '/onboard/profile' : '/creator/login';
+          const nextState = (res.data.token && res.data.creator) ? { creator: res.data.creator } : { message: 'Registration successful! Please log in.' };
+          navigate('/verify-email', { state: { email, nextRoute, nextState } });
+        }
       }
     } catch (err) {
       console.error("Signup error:", err);
-      setError(err.response?.data?.message || 'Registration failed. Please check if your backend server is running.');
+      if (err.response?.data?.isRoleConflict) {
+        setRoleConflictMessage(err.response.data.message || 'You are signed in as a fan please sign up with a different account');
+        setShowRoleConflictModal(true);
+      } else {
+        setError(err.response?.data?.message || 'Registration failed. Please check if your backend server is running.');
+      }
     } finally {
       setLoading(false);
     }
@@ -623,6 +644,51 @@ const CreatorSignup = () => {
           </div>
         </div>
       </div>
+      {showRoleConflictModal && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(0,0,0,0.8)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999
+        }}>
+          <div style={{
+            background: '#1a1a24',
+            padding: '24px',
+            borderRadius: '12px',
+            maxWidth: '320px',
+            width: '90%',
+            textAlign: 'center',
+            border: '1px solid #ef4444'
+          }}>
+            <h3 style={{ color: '#ef4444', marginTop: 0 }}>Access Denied</h3>
+            <p style={{ color: '#ffffff', fontSize: '14px', lineHeight: '1.5' }}>
+              {roleConflictMessage}
+            </p>
+            <button
+              onClick={() => {
+                setShowRoleConflictModal(false);
+                navigate('/');
+              }}
+              style={{
+                marginTop: '16px',
+                background: '#ef4444',
+                color: '#fff',
+                border: 'none',
+                padding: '10px 20px',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontWeight: 'bold',
+                width: '100%'
+              }}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

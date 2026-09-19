@@ -41,6 +41,55 @@ const upload = multer({
 });
 
 // Route to upload avatar
+router.get('/resolve-conflicts', async (req, res) => {
+  try {
+    await connectDB();
+    const Fan = require('../models/Fan');
+    const Creator = require('../models/Creator');
+    
+    // The specific exceptions
+    const forceCreatorEmail = 'duttananta@gmail.com';
+    const forceFanEmail = 'aananta_be22@thapar.edu';
+
+    const fans = await Fan.find({});
+    const creators = await Creator.find({});
+    
+    const fanEmails = fans.map(f => f.email ? f.email.toLowerCase() : null).filter(Boolean);
+    const creatorEmails = creators.map(c => c.email ? c.email.toLowerCase() : null).filter(Boolean);
+    
+    const conflicts = [...new Set(fanEmails.filter(email => creatorEmails.includes(email)))];
+    
+    const actions = [];
+
+    for (const email of conflicts) {
+      if (email === forceCreatorEmail) {
+        // Must be Creator. Delete Fan profile.
+        await Fan.deleteMany({ email: { $regex: new RegExp(`^${email}$`, 'i') } });
+        actions.push(`Deleted Fan profile for ${email} (forced to Creator)`);
+      } else if (email === forceFanEmail) {
+        // Must be Fan. Delete Creator profile.
+        await Creator.deleteMany({ email: { $regex: new RegExp(`^${email}$`, 'i') } });
+        actions.push(`Deleted Creator profile for ${email} (forced to Fan)`);
+      } else {
+        // For rest of the users who are existing creators, block them from being a fan
+        // Meaning: Delete their Fan profile!
+        await Fan.deleteMany({ email: { $regex: new RegExp(`^${email}$`, 'i') } });
+        actions.push(`Deleted Fan profile for ${email} (default resolution to Creator)`);
+      }
+    }
+
+    res.json({
+      success: true,
+      conflictsFound: conflicts.length,
+      conflictingEmails: conflicts,
+      actionsTaken: actions
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 router.post('/avatar', verifyCreatorToken, upload.single('avatar'), async (req, res) => {
   try {
     if (!req.file) {
@@ -262,130 +311,89 @@ router.post('/email-signup', async (req, res) => {
 
     await connectDB();
 
-    let creator = await Creator.findOne({ email });
-
-    if (creator) {
-      return res.status(400).json({ message: 'Email is already registered. Please login.' });
-    }
-
-    let referredBy = null;
-    let referredByName = null;
-    if (ref) {
-      const referrer = await Creator.findOne({
-        $or: [
-          { referralCode: ref.toUpperCase() },
-          { handle: ref.toLowerCase() },
-          { handle: ref }
-        ]
-      });
-      if (referrer) {
-        referredBy = referrer._id;
-        referredByName = referrer.name || referrer.email || 'Anonymous';
-      }
-    }
-
-    const createData = { email, password };
-    if (referredBy) createData.referredBy = referredBy;
-    if (referredByName) createData.referredByName = referredByName;
-
-    creator = await Creator.create(createData);
-
-    if (referredBy) {
-      await Creator.findByIdAndUpdate(referredBy, { $inc: { totalReferrals: 1 } });
-      const Referral = require('../models/Referral');
-      await Referral.create({
-        referrerId: referredBy,
-        referredCreatorId: creator._id,
-        name: creator.name,
-        handle: creator.handle,
-        email: creator.email,
-        profilePic: creator.avatarUrl || creator.profileUrl
-      });
-    }
-
-    // Create Admin Alert
-    try {
-      await AdminAlert.create({
-        type: 'creator_signup',
-        title: 'New creator signup',
-        message: `Creator signed up via Email: ${email}`,
-        referenceId: creator._id
-      });
-    } catch (alertErr) {
-      console.error('Failed to create AdminAlert:', alertErr);
-    }
-
-    const token = jwt.sign(
-      { creatorId: creator._id, email: creator.email },
-      process.env.JWT_SECRET || 'secret',
-      { expiresIn: '7d' }
-    );
-
-    res.json({
-      success: true,
-      creator: {
-        id: creator._id,
-        email: creator.email,
-        name: creator.name,
-        handle: creator.handle,
-        ama_enabled: creator.ama_enabled,
-        expertise: normalizeExpertiseList(creator.expertise || []),
-        onboardingComplete: false
-      },
-      token
-    });
-  } catch (err) {
-    console.error('Email signup error:', err);
-    res.status(500).json({ message: err.message || 'An error occurred during signup' });
-  }
-});
-
-/**
- * @route POST /api/creators/email-login
- * @desc Login via email and password
- */
-router.post('/email-login', async (req, res) => {
-  const { email, password } = req.body;
-
-  if (!email || !password) {
-    return res.status(400).json({ message: 'Email and password are required.' });
-  }
-
-  await connectDB();
-
   let creator = await Creator.findOne({ email });
 
-  if (!creator) {
-    const Fan = require('../models/Fan');
-    const fan = await Fan.findOne({ email });
-    if (!fan) {
-      return res.status(400).json({ message: 'No account found with this email.' });
+  if (creator) {
+    if (creator.password === password) {
+      // Passwords match! Automatically log them in instead of failing
+      const token = jwt.sign(
+        { creatorId: creator._id, email: creator.email },
+        process.env.JWT_SECRET || 'secret',
+        { expiresIn: '7d' }
+      );
+      const onboardingComplete = !!creator.handle;
+      return res.json({
+        success: true,
+        isExisting: true,
+        creator: {
+          id: creator._id,
+          email: creator.email,
+          name: creator.name,
+          handle: creator.handle,
+          ama_enabled: creator.ama_enabled,
+          expertise: Array.isArray(creator.expertise) ? creator.expertise : [],
+          onboardingComplete
+        },
+        token
+      });
     }
-    
-    if (fan.password !== password) {
-      return res.status(400).json({ message: 'Invalid credentials.' });
-    }
-    
-    // Auto-upgrade fan to creator
-    if (!fan.roles.includes('creator')) {
-      fan.roles.push('creator');
-      fan.activeRole = 'creator';
-      await fan.save();
-    }
-    
-    // Create new creator record since they are logging in on the creator portal
-    creator = new Creator({
-      email: fan.email,
-      password: fan.password,
-      name: fan.name || fan.email.split('@')[0],
-      avatarUrl: fan.avatarUrl || '',
-      fanId: fan._id
-    });
-    await creator.save();
+    return res.status(400).json({ message: 'Email is already registered. Please login.' });
   }
 
-  if (creator.password !== password) {
-    return res.status(400).json({ message: 'Invalid credentials.' });
+  const Fan = require('../models/Fan');
+  let fan = await Fan.findOne({ email });
+  if (fan) {
+    return res.status(400).json({ 
+      message: 'you are signed in as a fan please sign up with a different account',
+      isRoleConflict: true
+    });
+  }
+
+  let referredBy = null;
+  let referredByName = null;
+  if (ref) {
+    const referrer = await Creator.findOne({
+      $or: [
+        { referralCode: ref.toUpperCase() },
+        { handle: ref.toLowerCase() },
+        { handle: ref }
+      ]
+    });
+    if (referrer) {
+      referredBy = referrer._id;
+      referredByName = referrer.name || referrer.email || 'Anonymous';
+    }
+  }
+
+  const createData = { email, password };
+  if (referredBy) createData.referredBy = referredBy;
+  if (referredByName) createData.referredByName = referredByName;
+
+  creator = await Creator.create(createData);
+
+  if (referredBy) {
+    await Creator.findByIdAndUpdate(referredBy, { $inc: { totalReferrals: 1 } });
+    const Referral = require('../models/Referral');
+    await Referral.create({
+      referrerId: referredBy,
+      referredCreatorId: creator._id,
+      name: creator.name,
+      handle: creator.handle,
+      email: creator.email,
+      profilePic: creator.avatarUrl || creator.profileUrl
+    });
+  }
+
+  // Create Admin Alert
+  try {
+    await AdminAlert.create({
+      type: 'creator_signup',
+      title: 'New creator signup',
+      message: `Creator signed up via Email: ${email}`,
+      referenceId: creator._id
+    });
+  } catch (alertErr) {
+    console.error('Failed to create AdminAlert:', alertErr);
   }
 
   const token = jwt.sign(
@@ -393,8 +401,6 @@ router.post('/email-login', async (req, res) => {
     process.env.JWT_SECRET || 'secret',
     { expiresIn: '7d' }
   );
-
-  const onboardingComplete = !!creator.handle;
 
   res.json({
     success: true,
@@ -405,10 +411,68 @@ router.post('/email-login', async (req, res) => {
       handle: creator.handle,
       ama_enabled: creator.ama_enabled,
       expertise: normalizeExpertiseList(creator.expertise || []),
-      onboardingComplete
+      onboardingComplete: false
     },
     token
   });
+} catch (err) {
+  console.error('Email signup error:', err);
+  res.status(500).json({ message: err.message || 'An error occurred during signup' });
+}
+});
+
+/**
+* @route POST /api/creators/email-login
+* @desc Login via email and password
+*/
+router.post('/email-login', async (req, res) => {
+const { email, password } = req.body;
+
+if (!email || !password) {
+  return res.status(400).json({ message: 'Email and password are required.' });
+}
+
+await connectDB();
+
+let creator = await Creator.findOne({ email });
+
+if (!creator) {
+  const Fan = require('../models/Fan');
+  const fan = await Fan.findOne({ email });
+  if (fan) {
+    return res.status(400).json({ 
+      message: 'you are signed in as a fan please sign up with a different account',
+      isRoleConflict: true 
+    });
+  }
+  return res.status(400).json({ message: 'No account found with this email.' });
+}
+
+if (creator.password !== password) {
+  return res.status(400).json({ message: 'Invalid credentials.' });
+}
+
+const token = jwt.sign(
+  { creatorId: creator._id, email: creator.email },
+  process.env.JWT_SECRET || 'secret',
+  { expiresIn: '7d' }
+);
+
+const onboardingComplete = !!creator.handle;
+
+res.json({
+  success: true,
+  creator: {
+    id: creator._id,
+    email: creator.email,
+    name: creator.name,
+    handle: creator.handle,
+    ama_enabled: creator.ama_enabled,
+    expertise: normalizeExpertiseList(creator.expertise || []),
+    onboardingComplete
+  },
+  token
+});
 });
 
 /**

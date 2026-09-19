@@ -595,7 +595,7 @@ const CreatorInbox = () => {
           })()}
         </div>
           </>
-        ) : (validPendingChats.length > 0) || (liveChats && liveChats.some(c => c.totalMinutes > 0)) ? (
+        ) : (validPendingChats.length > 0) || (liveChats && liveChats.length > 0) ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', paddingBottom: '100px' }}>
             
             {validPendingChats.length > 0 && (
@@ -856,7 +856,7 @@ const CreatorInbox = () => {
                       </div>
                     </div>
                     <div style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', padding: '6px 12px', borderRadius: '20px', fontSize: '0.85rem', fontWeight: 700 }}>
-                      ₹{Number(chat.totalCost || 0).toFixed(2)}
+                      {chat.isFreeChat || chat.ratePerMinute === 0 ? 'FREE CHAT' : `₹${Number(chat.totalCost || 0).toFixed(2)}`}
                     </div>
                   </div>
                   <div style={{ display: 'flex', gap: '16px', background: '#0E0E0E', padding: '12px', borderRadius: '12px' }}>
@@ -870,7 +870,7 @@ const CreatorInbox = () => {
                     <div style={{ flex: 1 }}>
                       <div style={{ color: '#94a3b8', fontSize: '0.75rem', marginBottom: '4px' }}>RATE</div>
                       <div style={{ color: '#3BA8D8', fontWeight: 700, fontSize: '0.9rem' }}>
-                        ₹{chat.ratePerMinute || 0}/min
+                        {chat.isFreeChat || chat.ratePerMinute === 0 ? 'FREE' : `₹${chat.ratePerMinute || 0}/min`}
                       </div>
                     </div>
                   </div>

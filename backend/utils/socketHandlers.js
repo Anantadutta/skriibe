@@ -232,7 +232,7 @@ module.exports = (io) => {
           { new: true }
         );
         if (msg) {
-          socket.to(sessionId).emit('message_status_update', msg);
+          socket.to(sessionId.toString()).emit('message_status_update', msg);
         }
       } catch (e) {
         console.error(e);
@@ -248,7 +248,7 @@ module.exports = (io) => {
           { new: true }
         );
         if (msg) {
-          socket.to(sessionId).emit('message_status_update', msg);
+          socket.to(sessionId.toString()).emit('message_status_update', msg);
         }
       } catch (e) {
         console.error(e);
@@ -269,7 +269,7 @@ module.exports = (io) => {
             msg.reactions.push({ emoji, senderRole });
           }
           await msg.save();
-          io.to(sessionId).emit('message_reacted', { messageId, emoji, senderRole });
+          io.to(sessionId.toString()).emit('message_reacted', { messageId, emoji, senderRole });
         }
       } catch (e) {
         console.error('Error adding reaction:', e);
@@ -277,15 +277,15 @@ module.exports = (io) => {
     });
 
     socket.on('typing', ({ sessionId, sender }) => {
-      socket.to(sessionId).emit('typing', { sender });
+      socket.to(sessionId.toString()).emit('typing', { sender });
     });
 
     socket.on('stop_typing', ({ sessionId, sender }) => {
-      socket.to(sessionId).emit('stop_typing', { sender });
+      socket.to(sessionId.toString()).emit('stop_typing', { sender });
     });
     
     socket.on('presence_update', ({ sessionId, sender, status }) => {
-      socket.to(sessionId).emit('presence_update', { sender, status });
+      socket.to(sessionId.toString()).emit('presence_update', { sender, status });
     });
 
     socket.on('end_chat', async ({ sessionId }) => {

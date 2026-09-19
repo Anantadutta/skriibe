@@ -297,20 +297,7 @@ const FanNavbar = () => {
             </span>
           </Link>
           </>
-          ) : (
-            <Link to="/fan/signup" style={{
-              textDecoration: 'none',
-              background: 'linear-gradient(135deg, #7c3aed 0%, #06b6d4 100%)',
-              color: '#ffffff',
-              fontWeight: 800,
-              fontSize: '13px',
-              borderRadius: '20px',
-              padding: '9px 18px',
-              whiteSpace: 'nowrap'
-            }}>
-              Sign up
-            </Link>
-          )}
+          ) : null}
         </div>
       </header>
     </>

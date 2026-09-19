@@ -54,6 +54,11 @@ const FanBottomNav = () => {
     ? allNavItems 
     : allNavItems.filter(item => item.label === 'Explore');
 
+  // Do not show the bottom nav if it's a first-time/unauthenticated user and they are already on the explore page.
+  if (!isAuthenticated && currentPath === '/explore') {
+    return null;
+  }
+
   return (
     <>
       <style>{`

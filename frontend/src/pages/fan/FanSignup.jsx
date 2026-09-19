@@ -10,19 +10,27 @@ const FanSignup = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const navigate = useNavigate();
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const urlError = searchParams.get('error');
+
+  const [error, setError] = useState(urlError && urlError !== 'CONFLICT_CREATOR' ? urlError : '');
   const [whatsappConsent, setWhatsappConsent] = useState(false);
   
   const [focusedName, setFocusedName] = useState(false);
   const [focusedEmail, setFocusedEmail] = useState(false);
   const [focusedPassword, setFocusedPassword] = useState(false);
-  const navigate = useNavigate();
+  
   const { setAuthData } = useAuth();
   
   console.log("FanSignup rendered");
 
+  const [showRoleConflictModal, setShowRoleConflictModal] = useState(urlError === 'CONFLICT_CREATOR');
+  const [roleConflictMessage, setRoleConflictMessage] = useState(urlError === 'CONFLICT_CREATOR' ? 'You are signed in as a creator please sign up with a different account to be a fan' : '');
+
   const checkPasswordStrength = (pwd) => {
-    return pwd.length >= 8 && /[0-9\\W]/.test(pwd);
+    return pwd.length >= 8 && /[0-9\W]/.test(pwd);
   };
 
   const handleRegister = async () => {
@@ -49,7 +57,12 @@ const FanSignup = () => {
       }
     } catch (err) {
       console.error("Signup error:", err);
-      setError(err.response?.data?.message || 'Registration failed. Please check if your backend server is running.');
+      if (err.response?.data?.isRoleConflict) {
+        setRoleConflictMessage(err.response.data.message || 'You are signed in as a creator please sign up with a different account to be a fan');
+        setShowRoleConflictModal(true);
+      } else {
+        setError(err.response?.data?.message || 'Registration failed. Please check if your backend server is running.');
+      }
     } finally {
       setLoading(false);
     }
@@ -520,6 +533,97 @@ const FanSignup = () => {
           </div>
         </div>
       </div>
+      {showRoleConflictModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.7)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 99999,
+          padding: '20px'
+        }}>
+          <div
+            style={{
+              background: '#13161c',
+              borderRadius: '24px',
+              padding: '32px',
+              width: '100%',
+              maxWidth: '400px',
+              border: '1px solid #1F2937',
+              boxShadow: '0 20px 40px rgba(0,0,0,0.4)',
+              textAlign: 'center',
+              position: 'relative',
+              overflow: 'hidden'
+            }}
+          >
+            <div style={{
+              position: 'absolute',
+              top: 0, left: 0, right: 0, height: '4px',
+              background: 'linear-gradient(90deg, #F59E0B, #EF4444)'
+            }} />
+            
+            <div style={{
+              width: '64px',
+              height: '64px',
+              borderRadius: '50%',
+              background: 'rgba(239, 68, 68, 0.1)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 20px'
+            }}>
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                <line x1="12" y1="9" x2="12" y2="13"/>
+                <line x1="12" y1="17" x2="12.01" y2="17"/>
+              </svg>
+            </div>
+
+            <h2 style={{ 
+              margin: '0 0 12px', 
+              fontSize: '22px', 
+              fontWeight: '700',
+              color: '#fff' 
+            }}>
+              Access Denied
+            </h2>
+            
+            <p style={{ 
+              margin: '0 0 24px', 
+              color: '#9CA3AF',
+              fontSize: '15px',
+              lineHeight: '1.5'
+            }}>
+              {roleConflictMessage || 'You are signed in as a creator please sign up with a different account to be a fan'}
+            </p>
+
+            <button
+              onClick={() => {
+                setShowRoleConflictModal(false);
+                navigate('/creator/dashboard');
+              }}
+              style={{
+                width: '100%',
+                padding: '14px',
+                background: '#374151',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '12px',
+                fontSize: '15px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'background 0.2s'
+              }}
+              onMouseOver={(e) => e.target.style.background = '#4B5563'}
+              onMouseOut={(e) => e.target.style.background = '#374151'}
+            >
+              Go to Creator Dashboard
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

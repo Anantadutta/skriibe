@@ -345,25 +345,21 @@ const CreatorPublicPage = () => {
 
           <button
             onClick={() => {
-              if (creator.isLive === false) {
-                alert('Creator is offline. Ask when the creator is back live again.');
-                return;
-              }
               setStep(1);
             }}
             style={{
-              background: creator.isLive === false ? '#1A1A1A' : '#29C5F6',
-              color: creator.isLive === false ? '#94a3b8' : '#0E0E0E',
+              background: '#29C5F6',
+              color: '#0E0E0E',
               width: '100%', border: 'none',
               borderRadius: '16px', padding: '18px', fontSize: '1.1rem', fontWeight: '800',
-              cursor: creator.isLive === false ? 'not-allowed' : 'pointer',
+              cursor: 'pointer',
               marginTop: '8px', transition: 'transform 0.2s',
-              opacity: creator.isLive === false ? 0.8 : 1
+              opacity: 1
             }}
-            onMouseEnter={(e) => { if (creator.isLive !== false) e.currentTarget.style.transform = 'scale(0.98)' }}
-            onMouseLeave={(e) => { if (creator.isLive !== false) e.currentTarget.style.transform = 'scale(1)' }}
+            onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(0.98)' }}
+            onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)' }}
           >
-            {creator.isLive === false ? 'Creator Offline' : 'Ask Now →'}
+            Ask Now →
           </button>
         </div>
 

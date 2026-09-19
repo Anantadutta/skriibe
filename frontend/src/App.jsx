@@ -18,7 +18,7 @@ import HeroChatSimulation from './components/HeroChatSimulation';
 
 // Context
 import { CreatorOnboardingProvider } from './context/CreatorOnboardingContext';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import SmartLoginRedirect from './components/SmartLoginRedirect';
 
 // Pages
@@ -92,6 +92,16 @@ import ErrorBoundary from './components/ErrorBoundary';
 import CreatorLiveChat from './pages/CreatorLiveChat';
 
 const CreatorRoute = () => {
+  const { isAuthenticated, roles } = useAuth();
+  
+  if (!isAuthenticated) {
+    return <Navigate to="/creator/login" replace />;
+  }
+  
+  if (roles && !roles.includes('creator')) {
+    return <Navigate to="/explore" replace />;
+  }
+  
   return <Outlet />;
 };
 
@@ -103,10 +113,19 @@ const AdminRoute = () => {
   return <Outlet />;
 };
 
-const TOPICS = ['Fitness', 'Lifestyle', 'Finance', 'Education', 'Tech', 'Dating', 'Entertainment'];
+const BlockFanRoute = ({ children }) => {
+  const { isAuthenticated, roles } = useAuth();
+  if (isAuthenticated && roles && !roles.includes('creator')) {
+    return <Navigate to="/explore" replace />;
+  }
+  return children ? children : <Outlet />;
+};
+
+const TOPICS = ['Fitness', 'Lifestyle', 'Finance', 'Education', 'Tech', 'Dating', 'Travel'];
 
 function LandingPage({ theme, toggleTheme }) {
   const location = useLocation();
+  const { isAuthenticated } = useAuth();
   const [showDeletedToast, setShowDeletedToast] = useState(false);
   const [topicIndex, setTopicIndex] = useState(0);
 
@@ -231,7 +250,7 @@ function LandingPage({ theme, toggleTheme }) {
             {/* Start Free Chat CTA Button (Screenshot 2) */}
             <div className="mt-8 sm:mt-10">
               <Link
-                to="/fan/login"
+                to={isAuthenticated ? "/explore" : "/fan/login"}
                 className="inline-flex items-center justify-center gap-2.5 px-8 sm:px-10 py-3.5 sm:py-4 rounded-full font-bold text-base sm:text-lg text-black bg-[#c8f53c] hover:bg-[#b8e62f] shadow-[0_0_25px_rgba(200,245,60,0.35)] hover:shadow-[0_0_35px_rgba(200,245,60,0.5)] transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 select-none"
               >
                 <span>Start my free chat</span>
@@ -384,7 +403,7 @@ function App() {
             <Route path="/verify-email" element={<EmailVerificationFlow />} />
             <Route path="/affiliate" element={<AffiliateProgram theme={theme} />} />
             
-            {/* Creator Onboarding */}
+            {/* Creator Auth Routes - Kept outside BlockFanRoute so fans can see the conflict modal */}
             <Route path="/creator/signup" element={<CreatorSignup />} />
             <Route path="/creator/login" element={
               <SmartLoginRedirect>
@@ -393,12 +412,15 @@ function App() {
             } />
             <Route path="/creator/forgot-password" element={<CreatorForgotPassword />} />
             <Route path="/creator/reset-password/:token" element={<CreatorResetPassword />} />
-            <Route path="/creator/verify-otp" element={<CreatorVerifyOTP />} />
-            <Route path="/creator/connect-instagram" element={<CreatorConnectInstagram />} />
-            <Route path="/onboard/profile" element={<CreatorOnboardProfile />} />
-            <Route path="/onboard/live-chat" element={<CreatorOnboardLiveChat />} />
-            <Route path="/onboard/pricing" element={<CreatorOnboardPricing />} />
-            {/* <Route path="/onboard/live" element={<CreatorGoLive />} /> */}
+
+            {/* Creator Onboarding */}
+            <Route element={<BlockFanRoute />}>
+              <Route path="/creator/verify-otp" element={<CreatorVerifyOTP />} />
+              <Route path="/creator/connect-instagram" element={<CreatorConnectInstagram />} />
+              <Route path="/onboard/profile" element={<CreatorOnboardProfile />} />
+              <Route path="/onboard/live-chat" element={<CreatorOnboardLiveChat />} />
+              <Route path="/onboard/pricing" element={<CreatorOnboardPricing />} />
+            </Route>
 
             {/* Fan Flow */}
             <Route path="/fan/login" element={<FanLogin />} />

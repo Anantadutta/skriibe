@@ -53,6 +53,11 @@ passport.use(new GoogleStrategy({
       const action = stateObj.action;
 
       if (isFan) {
+        let creatorConflict = await Creator.findOne({ email });
+        if (creatorConflict) {
+          return done(null, false, { message: 'CONFLICT_CREATOR' });
+        }
+
         const Fan = require('../models/Fan');
         let fan = await Fan.findOne({ email });
         if (!fan) {
@@ -70,6 +75,12 @@ passport.use(new GoogleStrategy({
         fan.isFanLogin = true;
         return done(null, fan);
       } else {
+        const Fan = require('../models/Fan');
+        let fanConflict = await Fan.findOne({ email });
+        if (fanConflict) {
+          return done(null, false, { message: 'CONFLICT_FAN' });
+        }
+
         let creator = await Creator.findOne({ email });
         let isNewCreator = false;
         if (!creator) {
@@ -163,6 +174,11 @@ passport.use(new FacebookStrategy({
       const action = stateObj.action;
 
       if (isFan) {
+        let creatorConflict = await Creator.findOne({ email });
+        if (creatorConflict) {
+          return done(null, false, { message: 'CONFLICT_CREATOR' });
+        }
+
         const Fan = require('../models/Fan');
         let fan = await Fan.findOne({ email });
         if (!fan) {
@@ -180,6 +196,12 @@ passport.use(new FacebookStrategy({
         fan.isFanLogin = true;
         return done(null, fan);
       } else {
+        const Fan = require('../models/Fan');
+        let fanConflict = await Fan.findOne({ email });
+        if (fanConflict) {
+          return done(null, false, { message: 'CONFLICT_FAN' });
+        }
+
         let creator = await Creator.findOne({ email });
         let isNewCreator = false;
         if (!creator) {

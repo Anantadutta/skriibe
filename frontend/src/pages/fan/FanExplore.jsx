@@ -5,6 +5,9 @@ import FanBottomNav from '../../components/fan/layout/FanBottomNav';
 import { getLiveCreators } from '../../services/discoveryApi';
 import { getFanMe } from '../../services/fanApi';
 import { io } from 'socket.io-client';
+import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+
 const PREDEFINED_CATEGORIES = [
   'Lifestyle', 'Beauty', 'Fitness', 'Finance', 'Tech', 
   'Entrepreneurship', 'Education', 'Motivation', 'Dating', 
@@ -38,8 +41,9 @@ const FanExplore = () => {
   const [selectedCustomCategory, setSelectedCustomCategory] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isFirstTimeUser, setIsFirstTimeUser] = useState(true);
-  const [currentPage, setCurrentPage] = useState(1);
-  const creatorsPerPage = 12;
+  const [visibleCount, setVisibleCount] = useState(20);
+  const [showRoleConflictModal, setShowRoleConflictModal] = useState(false);
+  const navigate = useNavigate();
 
   // Debounce ref
   const debounceTimeout = useRef(null);
@@ -49,7 +53,7 @@ const FanExplore = () => {
     if (gridRef.current) {
       gridRef.current.scrollTop = 0;
     }
-  }, [currentPage]);
+  }, [searchQuery, activeCategory]);
 
   const fetchCreators = async (query = '', cat = 'All') => {
     setLoading(true);
@@ -106,6 +110,16 @@ const FanExplore = () => {
         }
       } catch (err) {
         setIsFirstTimeUser(true);
+        // If fan fetch fails, they might be a creator trying to access fan pages
+        try {
+          const { default: api } = await import('../../services/api');
+          const cRes = await api.get('/creators/me');
+          if (cRes.data?.creator) {
+            setShowRoleConflictModal(true);
+          }
+        } catch (e) {
+          // not logged in at all
+        }
       }
     };
     fetchFanProfile();
@@ -118,7 +132,7 @@ const FanExplore = () => {
   const handleSearchChange = (e) => {
     const val = e.target.value;
     setSearchQuery(val);
-    setCurrentPage(1);
+    setVisibleCount(20);
     
     if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
     debounceTimeout.current = setTimeout(() => {
@@ -129,7 +143,7 @@ const FanExplore = () => {
   const handleCategoryClick = (cat) => {
     setActiveCategory(cat);
     setSelectedCustomCategory(null);
-    setCurrentPage(1);
+    setVisibleCount(20);
     fetchCreators(searchQuery, cat);
   };
 
@@ -148,8 +162,8 @@ const FanExplore = () => {
     return true;
   });
 
-  const totalPages = Math.ceil(filteredCreators.length / creatorsPerPage);
-  const paginatedCreators = filteredCreators.slice((currentPage - 1) * creatorsPerPage, currentPage * creatorsPerPage);
+  const hasMore = visibleCount < filteredCreators.length;
+  const paginatedCreators = filteredCreators.slice(0, visibleCount);
 
   return (
     <div className="fan-explore-root">
@@ -451,70 +465,132 @@ const FanExplore = () => {
           )}
         </div>
 
-        {/* Pagination Controls at Bottom */}
-        {filteredCreators.length > 0 && (
+        {/* Load More Button at Bottom */}
+        {filteredCreators.length > 0 && hasMore && (
           <div className="fan-explore-pagination">
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <button 
-                onClick={() => {
-                  setCurrentPage(p => Math.max(1, p - 1));
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }}
-                disabled={currentPage === 1}
-                style={{ 
-                  background: 'rgba(255,255,255,0.05)', 
-                  border: 'none', 
-                  color: '#fff', 
-                  fontSize: '18px', 
-                  cursor: currentPage === 1 ? 'not-allowed' : 'pointer', 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  justifyContent: 'center', 
-                  width: '40px', 
-                  height: '40px', 
-                  borderRadius: '50%', 
-                  transition: 'background 0.2s',
-                  opacity: currentPage === 1 ? 0.3 : 1
-                }}
-                onMouseEnter={e => { if(currentPage > 1) e.currentTarget.style.background = 'rgba(255,255,255,0.1)' }}
-                onMouseLeave={e => { if(currentPage > 1) e.currentTarget.style.background = 'rgba(255,255,255,0.05)' }}
-              >
-                &lt;
-              </button>
-              <button 
-                onClick={() => {
-                  setCurrentPage(p => Math.min(totalPages, p + 1));
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }}
-                disabled={currentPage === totalPages || totalPages === 0}
-                style={{ 
-                  background: 'rgba(255,255,255,0.05)', 
-                  border: 'none', 
-                  color: '#fff', 
-                  fontSize: '18px', 
-                  cursor: (currentPage === totalPages || totalPages === 0) ? 'not-allowed' : 'pointer', 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  justifyContent: 'center', 
-                  width: '40px', 
-                  height: '40px', 
-                  borderRadius: '50%', 
-                  transition: 'background 0.2s',
-                  opacity: (currentPage === totalPages || totalPages === 0) ? 0.3 : 1
-                }}
-                onMouseEnter={e => { if(currentPage < totalPages) e.currentTarget.style.background = 'rgba(255,255,255,0.1)' }}
-                onMouseLeave={e => { if(currentPage < totalPages) e.currentTarget.style.background = 'rgba(255,255,255,0.05)' }}
-              >
-                &gt;
-              </button>
-            </div>
-            <div style={{ color: '#94a3b8', fontSize: '14px' }}>
-              Page {currentPage} of {Math.max(1, totalPages)} • {filteredCreators.length} creators
-            </div>
+            <button 
+              onClick={() => setVisibleCount(prev => prev + 10)}
+              style={{
+                background: 'rgba(255,255,255,0.05)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                color: '#fff',
+                padding: '12px 32px',
+                fontSize: '15px',
+                fontWeight: '600',
+                borderRadius: '24px',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+              onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+            >
+              View more +
+            </button>
           </div>
         )}
       </main>
       <FanBottomNav />
+
+      {/* Role Conflict Modal */}
+      <AnimatePresence>
+        {showRoleConflictModal && (
+          <div style={{
+            position: 'fixed',
+            top: 0, left: 0, right: 0, bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 99999,
+            padding: '20px'
+          }}>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              style={{
+                background: '#13161c',
+                borderRadius: '24px',
+                padding: '32px',
+                width: '100%',
+                maxWidth: '400px',
+                border: '1px solid #1F2937',
+                boxShadow: '0 20px 40px rgba(0,0,0,0.4)',
+                textAlign: 'center',
+                position: 'relative',
+                overflow: 'hidden'
+              }}
+            >
+              <div style={{
+                position: 'absolute',
+                top: 0, left: 0, right: 0, height: '4px',
+                background: 'linear-gradient(90deg, #F59E0B, #EF4444)'
+              }} />
+              
+              <div style={{
+                width: '64px',
+                height: '64px',
+                borderRadius: '50%',
+                background: 'rgba(239, 68, 68, 0.1)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 20px'
+              }}>
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                  <line x1="12" y1="9" x2="12" y2="13"/>
+                  <line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+              </div>
+
+              <h2 style={{ 
+                margin: '0 0 12px', 
+                fontSize: '22px', 
+                fontWeight: '700',
+                color: '#fff' 
+              }}>
+                Access Denied
+              </h2>
+              
+              <p style={{ 
+                margin: '0 0 24px', 
+                color: '#9CA3AF',
+                fontSize: '15px',
+                lineHeight: '1.5'
+              }}>
+                You are signed in as a creator please sign up with a different account to be a fan
+              </p>
+
+              <button
+                onClick={() => {
+                  setShowRoleConflictModal(false);
+                  navigate('/creator/dashboard');
+                }}
+                style={{
+                  width: '100%',
+                  padding: '14px',
+                  background: '#374151',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '12px',
+                  fontSize: '15px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'background 0.2s'
+                }}
+                onMouseOver={(e) => e.target.style.background = '#4B5563'}
+                onMouseOut={(e) => e.target.style.background = '#374151'}
+              >
+                Go to Creator Dashboard
+              </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

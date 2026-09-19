@@ -63,6 +63,12 @@ passport.use('google-fan', new GoogleStrategy({
     try {
       await connectDB();
       const email = profile.emails[0].value;
+      const CreatorModel = require('../models/Creator');
+      const creatorConflict = await CreatorModel.findOne({ email });
+      if (creatorConflict) {
+        return done(null, false, { message: 'CONFLICT_CREATOR' });
+      }
+
       let fan = await Fan.findOne({ email });
       if (!fan) {
         fan = new Fan({
@@ -98,6 +104,12 @@ passport.use('facebook-fan', new FacebookStrategy({
     try {
       await connectDB();
       const email = profile.emails?.[0]?.value || `fb_${profile.id}@temp.skriibe.com`;
+      const CreatorModel = require('../models/Creator');
+      const creatorConflict = await CreatorModel.findOne({ email });
+      if (creatorConflict) {
+        return done(null, false, { message: 'CONFLICT_CREATOR' });
+      }
+
       let fan = await Fan.findOne({ email });
       if (!fan) {
         fan = new Fan({
@@ -400,6 +412,15 @@ router.post('/signup', async (req, res) => {
       return res.status(400).json({ message: 'Email already registered' });
     }
 
+    const CreatorModel = require('../models/Creator');
+    const existingCreator = await CreatorModel.findOne({ email: email.toLowerCase() });
+    if (existingCreator) {
+      return res.status(400).json({ 
+        message: 'you are signed in as a creator please sign up with a different account to be a fan',
+        isRoleConflict: true
+      });
+    }
+
     const hashedPassword = hashPassword(password);
     
     const newFan = new Fan({
@@ -439,10 +460,16 @@ router.post('/login', async (req, res) => {
 
     const fan = await Fan.findOne({ email: email.toLowerCase() });
     if (!fan) {
+      const CreatorModel = require('../models/Creator');
+      const creator = await CreatorModel.findOne({ email: email.toLowerCase() });
+      if (creator) {
+        return res.status(400).json({ 
+          message: 'you are signed in as a creator please sign up with a different account to be a fan',
+          isRoleConflict: true
+        });
+      }
       return res.status(401).json({ message: 'Invalid email or password' });
     }
-
-
 
     const isMatch = verifyPassword(password, fan.password);
     if (!isMatch) {

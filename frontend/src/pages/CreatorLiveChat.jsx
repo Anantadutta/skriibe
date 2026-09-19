@@ -24,7 +24,23 @@ const CreatorLiveChat = () => {
   const [fanPaused, setFanPaused] = useState(false);
   const [hoveredMessageId, setHoveredMessageId] = useState(null);
   const [incomingContinueRequest, setIncomingContinueRequest] = useState(null);
+  
+  const isEndingRef = useRef(false);
 
+  // Handle browser refresh/close
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (session?.status === 'active' && !error) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [session?.status, error]);
+
+
+  const [showWarningModal, setShowWarningModal] = useState(false);
   const QUICK_REACTIONS = ['❤️', '😂', '😮', '👍', '👎'];
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
@@ -154,6 +170,42 @@ const CreatorLiveChat = () => {
       if (timer) clearInterval(timer);
     };
   }, [viewState, error, loading, session]);
+
+  // Auto-poll while waiting so the chat automatically starts in real time without manual refresh,
+  // and immediately removes the waiting screen if the session ends or times out
+  useEffect(() => {
+    let pollTimer;
+    const sId = session?._id || session?.id || session?.sessionId || sessionId;
+    const pollStart = Date.now();
+    if (viewState === 'waiting_for_fan' && sId) {
+      const checkStatus = async () => {
+        try {
+          const res = await api.get(`/chat/${sId}`);
+          if (res.data?.success && res.data?.session) {
+            const currentSession = res.data.session;
+            if (currentSession.status === 'ended' && (Date.now() - pollStart > 3000)) {
+              if (pollTimer) clearInterval(pollTimer);
+              if (socketRef.current) socketRef.current.disconnect();
+              navigate('/creator/dashboard');
+              return;
+            }
+            if (currentSession.fanAccepted) {
+              if (pollTimer) clearInterval(pollTimer);
+              setSession(prev => prev ? { ...prev, status: 'active', startTime: currentSession.startTime || prev.startTime } : prev);
+              setViewState('active');
+            }
+          }
+        } catch (err) {
+          console.error('Polling error checking chat session:', err);
+        }
+      };
+      // Initial delay before polling to allow socket events a chance
+      pollTimer = setInterval(checkStatus, 2000);
+    }
+    return () => {
+      if (pollTimer) clearInterval(pollTimer);
+    };
+  }, [viewState, session?._id, session?.id, session?.sessionId, sessionId, navigate]);
 
   useEffect(() => {
     const handleFocus = () => {
@@ -374,7 +426,8 @@ const CreatorLiveChat = () => {
     }, 1000);
   };
 
-  const handleEndChat = async () => {
+  const handleEndChat = async (skipNavigation = false) => {
+    isEndingRef.current = true;
     const sId = session?._id || session?.id || session?.sessionId || sessionId;
     if (sId) {
       try {
@@ -388,7 +441,9 @@ const CreatorLiveChat = () => {
         socket.emit('end_chat', { sessionId: sId });
       }
     }
-    navigate('/creator/dashboard');
+    if (!skipNavigation) {
+      navigate('/creator/dashboard');
+    }
   };
 
   if (loading) return <div style={{ color: '#fff', padding: '40px', textAlign: 'center' }}>Loading chat...</div>;
@@ -426,6 +481,40 @@ const CreatorLiveChat = () => {
   return (
     <div style={{ height: '100vh', width: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column', position: 'relative', backgroundImage: `linear-gradient(${theme.backgroundColor}, ${theme.backgroundColor}), ${theme.background}`, backgroundSize: 'cover, cover', backgroundPosition: `center, ${theme.backgroundPosition || 'center'}`, backgroundRepeat: 'no-repeat, no-repeat' }}>
       
+      {/* Warning Modal */}
+      {showWarningModal && (
+        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(17, 24, 39, 0.8)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ background: '#1F2937', padding: '32px', borderRadius: '16px', textAlign: 'center', maxWidth: '400px', boxShadow: '0 4px 20px rgba(0,0,0,0.5)', border: '1px solid #374151' }}>
+            <div style={{ fontSize: '48px', marginBottom: '16px' }}>⚠️</div>
+            <h2 style={{ margin: '0 0 16px 0', color: '#fff', fontSize: '24px' }}>Leave and End Chat?</h2>
+            <p style={{ color: '#9ca3af', margin: '0 0 24px 0', lineHeight: '1.5', fontSize: '15px' }}>
+              Leaving this page will permanently end your active chat session. The fan will be notified that the chat has been terminated from your end. Are you sure you want to proceed?
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <button
+                onClick={() => {
+                  setShowWarningModal(false);
+                  handleEndChat(false); // end chat and navigate dashboard
+                }}
+                style={{ background: '#ef4444', color: '#fff', border: 'none', padding: '12px 24px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '15px', transition: 'background 0.2s' }}
+                onMouseEnter={e => e.currentTarget.style.background = '#dc2626'}
+                onMouseLeave={e => e.currentTarget.style.background = '#ef4444'}
+              >
+                Yes, I want to end
+              </button>
+              <button
+                onClick={() => setShowWarningModal(false)}
+                style={{ background: '#374151', color: '#fff', border: 'none', padding: '12px 24px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '15px', transition: 'background 0.2s' }}
+                onMouseEnter={e => e.currentTarget.style.background = '#4b5563'}
+                onMouseLeave={e => e.currentTarget.style.background = '#374151'}
+              >
+                Back to chat interface
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Fan Paused Overlay */}
       {fanPaused && !error && (
         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(17, 24, 39, 0.8)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -453,12 +542,28 @@ const CreatorLiveChat = () => {
               {(session?.ratePerMinute > 0 || !session?.isFreeChat) && `Balance: ${session?.fanId?.walletBalance > 0 && session?.ratePerMinute > 0 ? `(${Math.floor(Math.max(0, (session.fanId.walletBalance / session.ratePerMinute) * 60 - elapsedSeconds) / 60)} mins)` : ''}`}
             </div>
             <div style={{ color: '#fff', fontSize: '0.85rem', fontWeight: 'bold' }}>
-              {session?.status === 'active' ? 'Chat in progress.' : 'Chat ended.'} {(session?.chatId || session?._id || session?.sessionId) && <span style={{ opacity: 0.7, marginLeft: '8px', fontWeight: 'normal', background: 'rgba(0,0,0,0.2)', padding: '2px 6px', borderRadius: '4px' }}>Chat ID: {String(session?.chatId || session?._id || session?.sessionId).slice(-5)} <span style={{ fontSize: '12px' }}>ℹ️</span></span>}
+              {session?.status === 'active' ? 'Chat in progress.' : 'Chat ended.'}
             </div>
           </div>
         </div>
         
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          {session?.status === 'active' && !error && (
+            <>
+              <button 
+                onClick={() => setShowWarningModal(true)}
+                style={{ background: '#374151', color: '#fff', border: 'none', padding: '6px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px' }}
+              >
+                BACK
+              </button>
+              <button 
+                onClick={() => setShowWarningModal(true)}
+                style={{ background: '#ef4444', color: '#fff', border: 'none', padding: '6px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px' }}
+              >
+                END CHAT
+              </button>
+            </>
+          )}
           {session?.status !== 'active' && (
             <button 
               onClick={() => navigate('/creator/dashboard')}

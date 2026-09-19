@@ -411,6 +411,7 @@ const CreatorDashboard = () => {
   };
 
   const handleAcceptChat = async (sessionId) => {
+    console.log("Accepting chat with sessionId:", sessionId);
     if (!sessionId) return;
     dismissSession(sessionId);
     try {
@@ -1043,9 +1044,9 @@ const CreatorDashboard = () => {
                 return (
                   <div key={chat.sessionId || idx} style={{
                     background: '#0B0D13',
-                    border: '1px solid #1c4456',
+                    border: '1px solid rgba(255, 255, 255, 0.05)',
                     borderRadius: '12px',
-                    padding: '16px',
+                    padding: '12px',
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
@@ -1054,14 +1055,14 @@ const CreatorDashboard = () => {
                   }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, minWidth: 0 }}>
                       <div style={{
-                        width: '44px',
-                        height: '44px',
-                        minWidth: '44px',
+                        width: '48px',
+                        height: '48px',
+                        minWidth: '48px',
                         borderRadius: '50%',
                         overflow: 'hidden',
                         flexShrink: 0,
                         background: hasFanAvatar ? '#13161C' : '#F59E0B',
-                        border: hasFanAvatar ? '1.5px solid rgba(59, 168, 216, 0.4)' : '1.5px solid rgba(245, 158, 11, 0.5)',
+                        border: hasFanAvatar ? '2px solid rgba(167, 139, 250, 0.5)' : '2px solid rgba(245, 158, 11, 0.5)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -1086,91 +1087,87 @@ const CreatorDashboard = () => {
                           (fanName[0] || 'F').toUpperCase()
                         )}
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px 8px', flexWrap: 'wrap', flex: 1, minWidth: 0 }}>
-                        <span 
-                          title={fanName} 
-                          style={{ 
-                            fontSize: fanNameFontSize, 
-                            fontWeight: 800, 
-                            color: '#fff', 
-                            whiteSpace: 'nowrap',
-                            flexShrink: fanNameLen <= 12 ? 0 : 1,
-                            overflow: 'hidden',
-                            textOverflow: fanNameLen > 16 ? 'ellipsis' : 'clip'
-                          }}
-                        >
-                          {fanName}
-                        </span>
-                        {chat.isContinueChat && (
-                          <span style={{ background: 'rgba(59, 168, 216, 0.2)', color: '#3BA8D8', border: '1px solid rgba(59, 168, 216, 0.4)', borderRadius: '6px', fontSize: '11px', fontWeight: 800, padding: '2px 8px', textTransform: 'uppercase', flexShrink: 0 }}>
-                            Continue Chat
+                      
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: 1, minWidth: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span 
+                            title={fanName} 
+                            style={{ 
+                              fontSize: fanNameFontSize, 
+                              fontWeight: 700, 
+                              color: '#fff', 
+                              whiteSpace: 'nowrap',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis'
+                            }}
+                          >
+                            {fanName}
                           </span>
-                        )}
-                        {chat.rate !== 0 && chat.rate !== '0' && (
-                          <span style={{ fontSize: '14px', color: '#29C5F6', fontWeight: 600, flexShrink: 0 }}>
-                            {currencySymbol}{chat.rate !== undefined ? chat.rate : (creator.liveChatPrice || 5)}/min
-                          </span>
-                        )}
-                        <span style={{ color: '#22C55E', fontSize: '13px', fontWeight: 600, flexShrink: 0 }}>
-                          {currencySymbol}{Number(chat.walletBalance || 0).toFixed(2)} wallet
-                        </span>
-                        <span style={{ color: isUrgent ? '#ef4444' : '#94a3b8', fontSize: '13px', fontWeight: isUrgent ? 800 : 400, flexShrink: 0 }}>
-                          Time left: {remMins}:{remSecs}
-                        </span>
-                        <span style={{ fontSize: '13px', color: '#64748b', flexShrink: 0 }}>
-                          Requested at {new Date(chat.time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })} IST
-                        </span>
-                        
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginLeft: 'auto', paddingLeft: '24px' }}>
                           {(chat.rate === 0 || chat.rate === '0') && (
-                            <span style={{ color: '#22C55E', fontWeight: 800, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Free Chat</span>
+                            <span style={{ background: 'rgba(34, 197, 94, 0.1)', border: '1px solid rgba(34, 197, 94, 0.2)', color: '#4ADE80', fontSize: '9px', fontWeight: 700, padding: '2px 6px', borderRadius: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                              Free Chat
+                            </span>
                           )}
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <button 
-                              onClick={() => handleAcceptChat(chat.sessionId)}
-                              style={{
-                                background: '#22C55E',
-                                color: '#fff',
-                                border: 'none',
-                                borderRadius: '8px',
-                                padding: '8px 16px',
-                                fontSize: '14px',
-                                fontWeight: 800,
-                                cursor: 'pointer',
-                                flexShrink: 0
-                              }}
-                            >
-                              Accept
-                            </button>
-                            {Boolean(chat.isContinueChat) && (
-                              <span style={{
-                                color: '#22C55E',
-                                fontSize: '12px',
-                                fontWeight: 700,
-                                whiteSpace: 'nowrap'
-                              }}>
-                                continue chat request
-                              </span>
-                            )}
-                            <button 
-                              onClick={() => handleDeclineChat(chat.sessionId)}
-                              style={{
-                                background: 'rgba(239, 68, 68, 0.15)',
-                                color: '#ef4444',
-                                border: '1px solid rgba(239, 68, 68, 0.4)',
-                                borderRadius: '8px',
-                                padding: '8px 16px',
-                                fontSize: '14px',
-                                fontWeight: 700,
-                                cursor: 'pointer',
-                                flexShrink: 0
-                              }}
-                            >
-                              Decline
-                            </button>
+                          {chat.isContinueChat && (
+                            <span style={{ background: 'rgba(59, 168, 216, 0.1)', color: '#3BA8D8', border: '1px solid rgba(59, 168, 216, 0.3)', borderRadius: '4px', fontSize: '9px', fontWeight: 700, padding: '2px 6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                              Continue Chat
+                            </span>
+                          )}
+                        </div>
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '11px', flexWrap: 'wrap' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#22C55E', fontWeight: 600 }}>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
+                            {currencySymbol}{Number(chat.walletBalance || 0).toFixed(2)} wallet
+                          </div>
+                          <span style={{ color: '#334155' }}>|</span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: isUrgent ? '#ef4444' : '#94a3b8', fontWeight: isUrgent ? 600 : 500 }}>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                            Respond within {remMins}:{remSecs}
                           </div>
                         </div>
+
+                        <div style={{ fontSize: '10px', color: '#64748b' }}>
+                          Requested at {new Date(chat.time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })} IST
+                        </div>
                       </div>
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flexShrink: 0 }}>
+                      <button 
+                        onClick={() => handleAcceptChat(chat.sessionId)}
+                        style={{
+                          background: '#4ADE80',
+                          color: '#022C22',
+                          border: 'none',
+                          borderRadius: '6px',
+                          padding: '6px 16px',
+                          fontSize: '12px',
+                          fontWeight: 800,
+                          cursor: 'pointer',
+                          width: '84px',
+                          textAlign: 'center'
+                        }}
+                      >
+                        Accept
+                      </button>
+                      <button 
+                        onClick={() => handleDeclineChat(chat.sessionId)}
+                        style={{
+                          background: 'rgba(239, 68, 68, 0.05)',
+                          color: '#ef4444',
+                          border: '1px solid rgba(239, 68, 68, 0.4)',
+                          borderRadius: '6px',
+                          padding: '6px 16px',
+                          fontSize: '12px',
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                          width: '84px',
+                          textAlign: 'center'
+                        }}
+                      >
+                        Decline
+                      </button>
                     </div>
                   </div>
                 );

@@ -129,7 +129,8 @@
   body {
     background-color: var(--bg-main);
     color: var(--text-main);
-    @apply font-dm overflow-x-hidden;
+    @apply font-dm;
+    overflow-x: clip;
     transition: background-color 0.3s, color 0.3s;
     width: 100%;
     position: relative;

@@ -467,14 +467,23 @@ const CreatorOnboardLiveChat = () => {
                   <label style={{ display: 'block', color: '#fff', fontSize: '14px', marginBottom: '12px' }}>
                     Select Time Range
                   </label>
+                  <div style={{ display: 'flex', gap: '16px', marginBottom: '4px' }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: '11px', color: '#94a3b8' }}>FROM</div>
+                    </div>
+                    <div style={{ fontSize: '14px', visibility: 'hidden' }}>to</div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: '11px', color: '#94a3b8' }}>TO</div>
+                    </div>
+                  </div>
                   <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
                     <div style={{ flex: 1, position: 'relative' }}>
-                      <div style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '4px' }}>FROM</div>
                       <select 
                         className="time-select"
                         value={timeFrom}
                         onChange={e => setTimeFrom(e.target.value)}
                         required
+                        style={{ width: '100%' }}
                       >
                         <option value="" disabled>Select</option>
                         {TIME_OPTIONS.map(time => (
@@ -482,14 +491,14 @@ const CreatorOnboardLiveChat = () => {
                         ))}
                       </select>
                     </div>
-                    <div style={{ fontSize: '14px', color: '#94a3b8', marginTop: '16px' }}>to</div>
+                    <div style={{ fontSize: '14px', color: '#94a3b8' }}>to</div>
                     <div style={{ flex: 1, position: 'relative' }}>
-                      <div style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '4px' }}>TO</div>
                       <select 
                         className="time-select"
                         value={timeTo}
                         onChange={e => setTimeTo(e.target.value)}
                         required
+                        style={{ width: '100%' }}
                       >
                         <option value="" disabled>Select</option>
                         {TIME_OPTIONS.map(time => (

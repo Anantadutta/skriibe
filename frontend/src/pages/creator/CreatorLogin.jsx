@@ -20,12 +20,22 @@ const CreatorLogin = () => {
   const searchParams = new URLSearchParams(location.search);
   const urlError = searchParams.get('error');
   
-  const [error, setError] = useState(urlError || '');
+  const [error, setError] = useState(urlError && urlError !== 'CONFLICT_FAN' ? urlError : '');
   const [focusedEmail, setFocusedEmail] = useState(false);
   const [focusedPassword, setFocusedPassword] = useState(false);
   const navigate = useNavigate();
-  const { setAuthData, clearAuthData } = useAuth();
+  const { roles, setAuthData, clearAuthData } = useAuth();
   const successMessage = location.state?.message;
+
+  const [showRoleConflictModal, setShowRoleConflictModal] = useState(urlError === 'CONFLICT_FAN');
+  const [roleConflictMessage, setRoleConflictMessage] = useState(urlError === 'CONFLICT_FAN' ? 'You are signed in as a fan please sign up with a different account' : '');
+
+  React.useEffect(() => {
+    if (roles?.includes('fan')) {
+      setRoleConflictMessage('You are signed in as a fan please sign up with a different account');
+      setShowRoleConflictModal(true);
+    }
+  }, [roles]);
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -55,7 +65,12 @@ const CreatorLogin = () => {
         navigate('/onboard/profile', { state: { creator }, replace: true });
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'Login failed. Try again.');
+      if (err.response?.data?.isRoleConflict) {
+        setRoleConflictMessage(err.response.data.message || 'You are signed in as a fan please sign up with a different account');
+        setShowRoleConflictModal(true);
+      } else {
+        setError(err.response?.data?.message || 'Login failed. Try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -499,6 +514,51 @@ const CreatorLogin = () => {
           </div>
         </div>
       </div>
+      {showRoleConflictModal && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(0,0,0,0.8)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999
+        }}>
+          <div style={{
+            background: '#1a1a24',
+            padding: '24px',
+            borderRadius: '12px',
+            maxWidth: '320px',
+            width: '90%',
+            textAlign: 'center',
+            border: '1px solid #ef4444'
+          }}>
+            <h3 style={{ color: '#ef4444', marginTop: 0 }}>Access Denied</h3>
+            <p style={{ color: '#ffffff', fontSize: '14px', lineHeight: '1.5' }}>
+              {roleConflictMessage}
+            </p>
+            <button
+              onClick={() => {
+                setShowRoleConflictModal(false);
+                navigate('/');
+              }}
+              style={{
+                marginTop: '16px',
+                background: '#ef4444',
+                color: '#fff',
+                border: 'none',
+                padding: '10px 20px',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontWeight: 'bold',
+                width: '100%'
+              }}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

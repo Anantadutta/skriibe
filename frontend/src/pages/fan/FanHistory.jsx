@@ -3,11 +3,13 @@ import { CheckCircle2, ChevronRight, MessageSquare, PlayCircle, Star, PauseCircl
 import { useLocation } from 'react-router-dom';
 import FanBottomNav from '../../components/fan/layout/FanBottomNav';
 import FanNavbar from '../../components/fan/layout/FanNavbar';
-import { getFanHistory, flagQuestion, satisfyQuestion } from '../../services/fanApi';
+import { getFanHistory, getFanChatHistory, flagQuestion, satisfyQuestion } from '../../services/fanApi';
 import api from '../../services/api';
+import { useNavigate } from 'react-router-dom';
 
 const FanHistory = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const flagOptions = [
     { category: "", options: [
       { label: "Irrelevant Answer", desc: "The response was vague and off topic" },
@@ -15,6 +17,8 @@ const FanHistory = () => {
     ]}
   ];
 
+  const [inboxMode, setInboxMode] = useState('messages');
+  const [chats, setChats] = useState([]);
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -38,23 +42,30 @@ const FanHistory = () => {
   useEffect(() => {
     const fetchHistory = async () => {
       try {
-        const data = await getFanHistory();
-        if (data.success) {
-          setQuestions(data.questions || []);
+        const [qData, chatData] = await Promise.all([
+          getFanHistory(),
+          getFanChatHistory().catch(() => ({ success: false }))
+        ]);
+        if (qData.success) {
+          setQuestions(qData.questions || []);
+          if (chatData.success) {
+            setChats(chatData.sessions || []);
+          }
+
           
           const searchParams = new URLSearchParams(location.search);
           const qId = searchParams.get('qId');
-          if (qId && data.questions) {
-            const targetQuestion = data.questions.find(q => q._id === qId);
+          if (qId && qData.questions) {
+            const targetQuestion = qData.questions.find(q => q._id === qId);
             if (targetQuestion) {
               const rootId = targetQuestion.parentQuestionId || targetQuestion._id;
-              const rootQuestion = data.questions.find(q => q._id === rootId);
+              const rootQuestion = qData.questions.find(q => q._id === rootId);
               if (rootQuestion) {
                 setSelectedQuestion(rootQuestion);
                 
                 // Mark unread logic
                 const childrenMap = {};
-                data.questions.forEach(q => {
+                qData.questions.forEach(q => {
                   if (q.isFollowUp && q.parentQuestionId) {
                     if (!childrenMap[q.parentQuestionId]) childrenMap[q.parentQuestionId] = [];
                     childrenMap[q.parentQuestionId].push(q);
@@ -631,6 +642,91 @@ const FanHistory = () => {
     );
   };
 
+  const renderLiveChats = () => {
+    if (!chats || chats.length === 0) {
+      return (
+        <div style={{ 
+          textAlign: 'center', 
+          padding: '64px',
+          background: 'rgba(255,255,255,0.02)',
+          borderRadius: '20px',
+          border: '1px dashed rgba(255,255,255,0.1)'
+        }}>
+          <div style={{ fontSize: '48px', marginBottom: '16px' }}>💬</div>
+          <h3 style={{ fontSize: '20px', margin: '0 0 8px' }}>No live chats yet</h3>
+          <p style={{ color: '#94a3b8', margin: 0 }}>Your live chat history will appear here.</p>
+        </div>
+      );
+    }
+
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        {chats.map(chat => {
+          const chatDate = new Date(chat.createdAt || chat.startTime || chat.time || Date.now());
+          const formattedDate = chatDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+          const isMissed = !chat.totalMinutes || chat.totalMinutes === 0;
+          
+          return (
+            <div 
+              key={chat._id || chat.sessionId}
+              style={{
+                background: 'rgba(255,255,255,0.03)',
+                border: '1px solid rgba(255,255,255,0.05)',
+                borderRadius: '16px',
+                padding: '24px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '16px',
+                transition: 'all 0.5s ease-out',
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: '50%',
+                    background: 'linear-gradient(45deg, #7c3aed, #06b6d4)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontWeight: 'bold',
+                    fontSize: '18px',
+                    overflow: 'hidden'
+                  }}>
+                    {chat.creatorId?.avatarUrl ? (
+                      <img src={chat.creatorId.avatarUrl.startsWith('http') ? chat.creatorId.avatarUrl : `http://localhost:5000${chat.creatorId.avatarUrl}`} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : (
+                      (chat.creatorId?.name || chat.creatorName || 'C').charAt(0).toUpperCase()
+                    )}
+                  </div>
+                  <div>
+                    <div style={{ fontWeight: 'bold', fontSize: '16px' }}>{chat.creatorId?.name || chat.creatorName || 'Creator'}</div>
+                    <div style={{ color: '#94a3b8', fontSize: '13px' }}>
+                      {formattedDate}
+                    </div>
+                  </div>
+                </div>
+                
+                <div style={{
+                  background: isMissed ? 'rgba(239, 68, 68, 0.1)' : 'rgba(16, 185, 129, 0.1)',
+                  color: isMissed ? '#ef4444' : '#10b981',
+                  padding: '4px 12px',
+                  borderRadius: '12px',
+                  fontSize: '12px',
+                  fontWeight: 'bold',
+                  textTransform: 'uppercase'
+                }}>
+                  {isMissed ? 'Missed' : `${Number(chat.totalMinutes).toFixed(2)} MIN`}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
   return (
     <div style={{
       minHeight: '100vh',
@@ -646,7 +742,45 @@ const FanHistory = () => {
         {!selectedQuestion && (
           <>
             <h1 style={{ fontSize: '36px', fontWeight: '800', marginBottom: '8px' }}>Your History</h1>
-            <p style={{ color: '#94a3b8', marginBottom: '40px' }}>Track the messages you've asked and view creator replies.</p>
+            <p style={{ color: '#94a3b8', marginBottom: '24px' }}>Track the messages you've asked and view creator replies.</p>
+
+            {/* Inbox Mode Switcher */}
+            <div style={{ display: 'flex', background: 'rgba(255,255,255,0.03)', borderRadius: '30px', padding: '4px', marginBottom: '32px', border: '1px solid rgba(255,255,255,0.05)' }}>
+              <div 
+                onClick={() => setInboxMode('liveChat')}
+                style={{ 
+                  flex: 1, 
+                  padding: '12px 0', 
+                  textAlign: 'center', 
+                  cursor: 'pointer',
+                  background: inboxMode === 'liveChat' ? 'rgba(255,255,255,0.1)' : 'transparent',
+                  color: inboxMode === 'liveChat' ? '#ffffff' : '#94a3b8',
+                  borderRadius: '30px',
+                  fontWeight: inboxMode === 'liveChat' ? 700 : 600,
+                  fontSize: '0.95rem',
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                Live chat
+              </div>
+              <div 
+                onClick={() => setInboxMode('messages')}
+                style={{ 
+                  flex: 1, 
+                  padding: '12px 0', 
+                  textAlign: 'center', 
+                  cursor: 'pointer',
+                  background: inboxMode === 'messages' ? 'rgba(255,255,255,0.1)' : 'transparent',
+                  color: inboxMode === 'messages' ? '#ffffff' : '#94a3b8',
+                  borderRadius: '30px',
+                  fontWeight: inboxMode === 'messages' ? 700 : 600,
+                  fontSize: '0.95rem',
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                Ask me anything
+              </div>
+            </div>
           </>
         )}
         
@@ -656,6 +790,8 @@ const FanHistory = () => {
           <div style={{ color: '#ef4444', textAlign: 'center', padding: '40px', background: 'rgba(239, 68, 68, 0.1)', borderRadius: '12px' }}>
             {error}
           </div>
+        ) : inboxMode === 'liveChat' ? (
+          renderLiveChats()
         ) : questions.length === 0 ? (
           <div style={{ 
             textAlign: 'center', 

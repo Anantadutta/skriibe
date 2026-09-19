@@ -79,18 +79,31 @@ const LiveChatInterface = () => {
   }, [error, session, viewState]);
 
   useEffect(() => {
-    if (viewState === 'active' && rate > 0 && walletBalance > 0) {
-      const totalSeconds = (walletBalance / rate) * 60;
-      if (elapsedSeconds >= totalSeconds) {
-        setShowRechargeOverlay(true);
-      } else if (totalSeconds - elapsedSeconds <= 60) {
-        // Show low balance warning when 1 minute is left
-        setLowBalanceWarning(true);
-      } else {
-        setLowBalanceWarning(false);
+    if (viewState === 'active') {
+      const isFreeChat = session?.isFreeChat || rate === 0;
+      
+      if (isFreeChat) {
+        if (elapsedSeconds >= 120) {
+          setFreeChatEnded(true);
+          setShowRechargeOverlay(true);
+        } else if (120 - elapsedSeconds <= 30) {
+          setLowBalanceWarning(true);
+        } else {
+          setLowBalanceWarning(false);
+        }
+      } else if (rate > 0 && walletBalance > 0) {
+        const totalSeconds = (walletBalance / rate) * 60;
+        if (elapsedSeconds >= totalSeconds) {
+          setShowRechargeOverlay(true);
+        } else if (totalSeconds - elapsedSeconds <= 60) {
+          // Show low balance warning when 1 minute is left
+          setLowBalanceWarning(true);
+        } else {
+          setLowBalanceWarning(false);
+        }
       }
     }
-  }, [elapsedSeconds, viewState, walletBalance, rate]);
+  }, [elapsedSeconds, viewState, walletBalance, rate, session?.isFreeChat]);
   
   const socketRef = useRef(null);
   const messagesEndRef = useRef(null);
@@ -300,19 +313,6 @@ const LiveChatInterface = () => {
               }
             }
           }
-          if (cId) {
-            const activeRes = await api.get(`/chat/active/${cId}`);
-            if (activeRes.data?.success && activeRes.data?.session) {
-              const activeSession = activeRes.data.session;
-              if (activeSession.creatorJoined) {
-                if (waitingTimerRef.current) clearTimeout(waitingTimerRef.current);
-                setCreatorJoined(true);
-                if (activeSession.creatorJoinedAt) {
-                  setCreatorJoinedAt(activeSession.creatorJoinedAt);
-                }
-              }
-            }
-          }
         } catch (err) {
           console.error('Polling error checking chat session:', err);
         }
@@ -352,15 +352,10 @@ const LiveChatInterface = () => {
       const eventCreatorId = (data?.creatorId || '').toString();
 
       const isMatchingSession = eventSessionId && currentSessionId && eventSessionId === currentSessionId;
-      const isMatchingCreator = eventCreatorId && currentCreatorId && eventCreatorId === currentCreatorId;
 
-      if (!isMatchingSession && !isMatchingCreator) {
-        console.log('Ignored creator_joined for different chat:', data);
+      if (!isMatchingSession) {
+        console.log('Ignored creator_joined for different chat session:', data);
         return;
-      }
-
-      if (eventSessionId && currentSessionId && eventSessionId !== currentSessionId) {
-        setSession(prev => prev ? { ...prev, sessionId: eventSessionId, _id: eventSessionId } : { sessionId: eventSessionId, _id: eventSessionId });
       }
 
       if (waitingTimerRef.current) clearTimeout(waitingTimerRef.current);
@@ -449,7 +444,7 @@ const LiveChatInterface = () => {
         navigate(`/${handle}`);
         return;
       }
-      setEndStats({ minutes: data.totalMinutes, cost: data.totalCost });
+      setEndStats({ minutes: data.totalMinutes, cost: data.totalCost, reason: data.reason });
       if (data.reason === 'INSUFFICIENT_BALANCE') {
         setShowRechargeOverlay(true);
       } else if (data.reason === 'FREE_TRIAL_ENDED') {
@@ -492,6 +487,30 @@ const LiveChatInterface = () => {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages, viewState]);
+
+  useEffect(() => {
+    if (viewState === 'active') {
+      window.history.pushState({ chatActive: true }, '');
+
+      const handlePopState = () => {
+        window.history.pushState({ chatActive: true }, '');
+        setShowEndConfirm(true);
+      };
+
+      const handleBeforeUnload = (e) => {
+        e.preventDefault();
+        e.returnValue = '';
+      };
+
+      window.addEventListener('popstate', handlePopState);
+      window.addEventListener('beforeunload', handleBeforeUnload);
+
+      return () => {
+        window.removeEventListener('popstate', handlePopState);
+        window.removeEventListener('beforeunload', handleBeforeUnload);
+      };
+    }
+  }, [viewState]);
 
   const sendMessage = () => {
     if (!input.trim() || !socketRef.current || !session) return;
@@ -610,6 +629,7 @@ const LiveChatInterface = () => {
             const currentSessionId = session?.sessionId || session?._id || session?.id;
             await startChat(creator, true, currentSessionId);
           }}
+          endedByCreator={endStats?.reason === 'CREATOR_ENDED'}
         />
       </div>
     );
@@ -808,7 +828,7 @@ const LiveChatInterface = () => {
               {(rate > 0 || !session?.isFreeChat) && `Balance: ${walletBalance > 0 && rate > 0 ? `(${Math.floor(Math.max(0, (walletBalance / rate) * 60 - elapsedSeconds) / 60)} mins)` : ''}`}
             </div>
             <div style={{ color: '#fff', fontSize: '0.85rem', fontWeight: 'bold' }}>
-              Chat in progress. {(session?.chatId || session?.sessionId || session?._id) && <span style={{ opacity: 0.7, marginLeft: '8px', fontWeight: 'normal', background: 'rgba(0,0,0,0.2)', padding: '2px 6px', borderRadius: '4px', cursor: 'pointer' }} onClick={() => setShowChatInfo(true)}>Chat ID: {String(session?.chatId || session?.sessionId || session?._id).slice(-5)} <span style={{ fontSize: '12px' }}>ℹ️</span></span>}
+              Chat in progress.
             </div>
           </div>
         </div>

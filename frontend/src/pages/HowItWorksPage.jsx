@@ -5,9 +5,11 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import HowItWorksSection from '../components/HowItWorksSection';
 import InsideChatSection from '../components/InsideChatSection';
+import { useAuth } from '../context/AuthContext';
 
 const HowItWorksPage = () => {
   const navigate = useNavigate();
+  const { isAuthenticated, roles } = useAuth();
   const [theme, setTheme] = useState(() => {
     return localStorage.getItem('theme') || 'dark';
   });
@@ -105,14 +107,14 @@ const HowItWorksPage = () => {
 
           <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4">
             <Link
-              to="/explore"
+              to={isAuthenticated ? "/explore" : "/explore"}
               className="inline-flex items-center gap-2 px-6 py-3 rounded-full font-bold text-sm sm:text-base bg-[#3BA8D8] text-black hover:bg-[#3298c4] transition-all shadow-[0_0_18px_rgba(59,168,216,0.35)]"
             >
               Start Free Chat
               <ArrowRight className="w-4 h-4" />
             </Link>
             <Link
-              to="/creator/signup"
+              to={isAuthenticated ? (roles?.includes('creator') ? "/creator/dashboard" : "/creator/signup?error=CONFLICT_FAN") : "/creator/signup"}
               className={`inline-flex items-center gap-2 px-6 py-3 rounded-full font-semibold text-sm sm:text-base border transition-all ${
                 isLight
                   ? 'border-gray-300 text-gray-800 hover:border-black bg-white'

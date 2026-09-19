@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { Share2 } from 'lucide-react';
 import { getImageUrl } from '../../utils/imageUtils';
 import { checkIfLiveNow } from '../../utils/timeUtils';
 import { getExpertiseIcon } from '../../utils/expertiseIcons';
@@ -9,6 +10,21 @@ const CreatorCard = ({ creator, isFirstTimeUser = false }) => {
   const navigate = useNavigate();
   const [imgError, setImgError] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+
+  const [showShareMenu, setShowShareMenu] = useState(false);
+  const shareMenuRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (shareMenuRef.current && !shareMenuRef.current.contains(event.target)) {
+        setShowShareMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   // Use exact dummy data fields if provided, else use the raw backend object
   const {
@@ -45,6 +61,25 @@ const CreatorCard = ({ creator, isFirstTimeUser = false }) => {
   } else {
     dynamicallyLive = checkIfLiveNow(liveChatTimeSlots);
   }
+
+  const shareUrl = `${window.location.origin}/creator/${handle}`;
+  const shareText = `Check out ${name} on Skriibe!`;
+
+  const handleShare = (platform, e) => {
+    e.stopPropagation();
+    const encodedUrl = encodeURIComponent(shareUrl);
+    const encodedText = encodeURIComponent(shareText);
+    
+    if (platform === 'facebook') {
+      window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`, '_blank');
+    } else if (platform === 'whatsapp') {
+      window.open(`https://api.whatsapp.com/send?text=${encodedText}%20${encodedUrl}`, '_blank');
+    } else if (platform === 'instagram') {
+      navigator.clipboard.writeText(shareUrl);
+      alert('Profile link copied to clipboard! You can now paste it in Instagram.');
+    }
+    setShowShareMenu(false);
+  };
 
   return (
     <div 
@@ -111,11 +146,15 @@ const CreatorCard = ({ creator, isFirstTimeUser = false }) => {
         </div>
       )}
 
-      {/* Top Right: Status Badge (LIVE / AWAY) */}
+      {/* Top Right Actions: Status Badge & Share */}
       <div style={{
         position: 'absolute',
         top: '16px',
-        right: '16px'
+        right: '16px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '8px',
+        zIndex: 10
       }}>
         {dynamicallyLive ? (
           <div style={{
@@ -148,6 +187,112 @@ const CreatorCard = ({ creator, isFirstTimeUser = false }) => {
             AWAY
           </div>
         )}
+
+        {/* Share Button & Menu */}
+        <div ref={shareMenuRef} style={{ position: 'relative' }}>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowShareMenu(!showShareMenu);
+            }}
+            style={{
+              background: 'rgba(255, 255, 255, 0.1)',
+              border: 'none',
+              borderRadius: '50%',
+              width: '28px',
+              height: '28px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              color: '#ffffff',
+              transition: 'background 0.2s'
+            }}
+            onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)'}
+            onMouseOut={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'}
+            title="Share Profile"
+          >
+            <Share2 size={14} color="#4ADE80" />
+          </button>
+          
+          {showShareMenu && (
+            <div style={{
+              position: 'absolute',
+              top: '100%',
+              right: 0,
+              marginTop: '8px',
+              background: '#1E1E28',
+              border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: '12px',
+              padding: '8px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '4px',
+              minWidth: '140px',
+              boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
+              zIndex: 20
+            }}>
+              <div style={{ fontSize: '11px', color: '#94A3B8', padding: '4px 8px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                Share via
+              </div>
+              <button
+                onClick={(e) => handleShare('facebook', e)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '8px',
+                  background: 'transparent', border: 'none', color: '#E2E8F0', fontSize: '13px',
+                  borderRadius: '6px', cursor: 'pointer', textAlign: 'left', fontWeight: 500,
+                  transition: 'background 0.2s'
+                }}
+                onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+                onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="#1877F2"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                Facebook
+              </button>
+              <button
+                onClick={(e) => handleShare('whatsapp', e)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '8px',
+                  background: 'transparent', border: 'none', color: '#E2E8F0', fontSize: '13px',
+                  borderRadius: '6px', cursor: 'pointer', textAlign: 'left', fontWeight: 500,
+                  transition: 'background 0.2s'
+                }}
+                onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+                onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="#25D366"><path d="M12.031 0C5.405 0 .015 5.39.015 12.016c0 2.119.553 4.187 1.6 6.008L.003 24l6.124-1.606c1.748.955 3.738 1.458 5.889 1.458 6.626 0 12.016-5.39 12.016-12.016S18.657 0 12.031 0zm6.155 17.382c-.246.692-1.428 1.318-1.968 1.408-.45.074-1.037.124-2.884-.641-2.227-.923-3.666-3.197-3.775-3.342-.108-.145-.902-1.2-1.002-2.284-.099-1.084.444-1.616.671-1.854.227-.238.491-.297.654-.297.163 0 .327.001.464.007.143.006.335-.055.517.383.185.445.626 1.536.681 1.645.054.108.09.238.018.384-.073.146-.109.238-.218.347-.109.109-.228.238-.328.328-.109.108-.228.228-.109.436.12.208.536.883 1.144 1.427.782.702 1.442.923 1.651 1.032.209.109.336.09.463-.054.127-.145.545-.636.691-.854.145-.218.29-.182.481-.109.19.073 1.2.564 1.4.673.2.109.336.163.382.254.045.091.045.527-.201 1.218z"/></svg>
+                WhatsApp
+              </button>
+              <button
+                onClick={(e) => handleShare('instagram', e)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '8px',
+                  background: 'transparent', border: 'none', color: '#E2E8F0', fontSize: '13px',
+                  borderRadius: '6px', cursor: 'pointer', textAlign: 'left', fontWeight: 500,
+                  transition: 'background 0.2s'
+                }}
+                onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+                onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ stroke: `url(#igGradShare-${handle})` }}>
+                  <defs>
+                    <linearGradient id={`igGradShare-${handle}`} x1="2%" y1="84%" x2="98%" y2="16%">
+                      <stop offset="0%" stopColor="#f09433" />
+                      <stop offset="25%" stopColor="#e6683c" />
+                      <stop offset="50%" stopColor="#dc2743" />
+                      <stop offset="75%" stopColor="#cc2366" />
+                      <stop offset="100%" stopColor="#bc1888" />
+                    </linearGradient>
+                  </defs>
+                  <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                  <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                  <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+                </svg>
+                Instagram
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Center Section: Avatar, Name, Expertise */}

@@ -151,117 +151,131 @@ const WalletRechargeScreen = ({ rate, onCancel, onRechargeSuccess, balance = 0, 
         />
       </div>
 
-      {transactions.length > 0 && (
-        <div style={{ width: '100%', marginTop: '48px' }}>
-          <div style={{ color: '#64748b', fontSize: '12px', fontWeight: '800', letterSpacing: '2px', marginBottom: '16px' }}>
-            TRANSACTIONS
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {(showAllTransactions ? transactions : transactions.slice(0, 3)).map(tx => {
-              const desc = tx.description?.toLowerCase() || '';
-              const isTip = desc.includes('tip');
-              const isChat = desc.includes('chat');
-              const isTopup = desc.includes('top-up');
-              const isAma = desc.includes('ama') || desc.includes('question');
-              
-              let icon = '💳';
-              let title = tx.description || 'Transaction';
-              if (isTip) {
-                icon = '⭐';
-                title = tx.creatorId?.name ? `Tip • ${tx.creatorId.name}` : (tx.description || 'Tip');
-              } else if (isChat || tx.sessionId) {
-                icon = '💬';
-                title = tx.creatorId?.name ? `Live chat • ${tx.creatorId.name}` : (tx.description || 'Live chat');
-              } else if (isAma) {
-                icon = '❓';
-                title = tx.creatorId?.name ? `AMA • ${tx.creatorId.name}` : (tx.description || 'AMA');
-              } else if (isTopup) {
-                icon = '💰';
-                title = 'Wallet Top-up';
-              }
-
-              const amount = tx.amount || tx.totalCost || 0;
-              const isDebit = tx.type === 'debit' || isTip || isChat || isAma || tx.sessionId;
-              const sign = isDebit ? '-' : '+';
-              const amountColor = isDebit ? '#94a3b8' : '#10b981';
-
-              return (
-              <div key={tx._id || tx.sessionId || Math.random()} style={{ 
-                background: '#131313', 
-                borderRadius: '16px', 
-                padding: '16px', 
-                display: 'flex', 
-                alignItems: 'center',
-                justifyContent: 'space-between'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                  <div style={{ 
-                    width: '40px', 
-                    height: '40px', 
-                    borderRadius: '12px', 
-                    background: isDebit ? 'rgba(56, 189, 248, 0.1)' : 'rgba(16, 185, 129, 0.1)', 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: 'center',
-                    fontSize: '18px'
-                  }}>
-                    {icon}
-                  </div>
-                  <div>
-                    <div style={{ color: '#fff', fontSize: '15px', fontWeight: '700' }}>
-                      {title}
-                    </div>
-                    {(tx.createdAt || tx.date || tx.timestamp) && (
-                      <div style={{ color: '#64748b', fontSize: '12px', marginTop: '2px' }}>
-                        {new Date(tx.createdAt || tx.date || tx.timestamp).toLocaleString('en-IN', {
-                          day: 'numeric',
-                          month: 'short',
-                          hour: 'numeric',
-                          minute: '2-digit',
-                          hour12: true
-                        })}
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <div style={{ color: amountColor, fontSize: '15px', fontWeight: '700', fontFamily: 'monospace' }}>
-                  {sign}₹{parseFloat(Number(amount).toFixed(2))}
-                </div>
-              </div>
-              );
-            })}
-          </div>
-          
-          {transactions.length > 3 && (
-            <div style={{ display: 'flex', justifyContent: 'center', marginTop: '16px' }}>
-              <button 
-                onClick={() => setShowAllTransactions(!showAllTransactions)}
-                style={{
-                  background: 'rgba(255,255,255,0.05)',
-                  border: 'none',
-                  color: '#94a3b8',
-                  padding: '8px 16px',
-                  borderRadius: '20px',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  fontSize: '13px',
-                  fontWeight: '700',
-                  transition: 'background 0.2s'
-                }}
-                onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
-                onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
-              >
-                {showAllTransactions ? 'Show Less' : `View ${transactions.length - 3} More`}
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: showAllTransactions ? 'rotate(180deg)' : 'none', transition: 'transform 0.3s' }}>
-                  <polyline points="6 9 12 15 18 9"></polyline>
-                </svg>
-              </button>
-            </div>
-          )}
+      <div style={{ width: '100%', marginTop: '48px' }}>
+        <div style={{ color: '#64748b', fontSize: '12px', fontWeight: '800', letterSpacing: '2px', marginBottom: '16px' }}>
+          TRANSACTIONS
         </div>
-      )}
+        
+        {transactions.length === 0 ? (
+          <div style={{ 
+            background: '#131313', 
+            borderRadius: '16px', 
+            padding: '32px 16px', 
+            textAlign: 'center',
+            color: '#64748b',
+            fontSize: '14px'
+          }}>
+            No transactions yet.
+          </div>
+        ) : (
+          <>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {(showAllTransactions ? transactions : transactions.slice(0, 3)).map(tx => {
+                const desc = tx.description?.toLowerCase() || '';
+                const isTip = desc.includes('tip');
+                const isChat = desc.includes('chat');
+                const isTopup = desc.includes('top-up');
+                const isAma = desc.includes('ama') || desc.includes('question');
+                
+                let icon = '💳';
+                let title = tx.description || 'Transaction';
+                if (isTip) {
+                  icon = '⭐';
+                  title = tx.creatorId?.name ? `Tip • ${tx.creatorId.name}` : (tx.description || 'Tip');
+                } else if (isChat || tx.sessionId) {
+                  icon = '💬';
+                  title = tx.creatorId?.name ? `Live chat • ${tx.creatorId.name}` : (tx.description || 'Live chat');
+                } else if (isAma) {
+                  icon = '❓';
+                  title = tx.creatorId?.name ? `AMA • ${tx.creatorId.name}` : (tx.description || 'AMA');
+                } else if (isTopup) {
+                  icon = '💰';
+                  title = 'Wallet Top-up';
+                }
+
+                const amount = tx.amount || tx.totalCost || 0;
+                const isDebit = tx.type === 'debit' || isTip || isChat || isAma || tx.sessionId;
+                const sign = isDebit ? '-' : '+';
+                const amountColor = isDebit ? '#94a3b8' : '#10b981';
+
+                return (
+                <div key={tx._id || tx.sessionId || Math.random()} style={{ 
+                  background: '#131313', 
+                  borderRadius: '16px', 
+                  padding: '16px', 
+                  display: 'flex', 
+                  alignItems: 'center',
+                  justifyContent: 'space-between'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                    <div style={{ 
+                      width: '40px', 
+                      height: '40px', 
+                      borderRadius: '12px', 
+                      background: isDebit ? 'rgba(56, 189, 248, 0.1)' : 'rgba(16, 185, 129, 0.1)', 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'center',
+                      fontSize: '18px'
+                    }}>
+                      {icon}
+                    </div>
+                    <div>
+                      <div style={{ color: '#fff', fontSize: '15px', fontWeight: '700' }}>
+                        {title}
+                      </div>
+                      {(tx.createdAt || tx.date || tx.timestamp) && (
+                        <div style={{ color: '#64748b', fontSize: '12px', marginTop: '2px' }}>
+                          {new Date(tx.createdAt || tx.date || tx.timestamp).toLocaleString('en-IN', {
+                            day: 'numeric',
+                            month: 'short',
+                            hour: 'numeric',
+                            minute: '2-digit',
+                            hour12: true
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div style={{ color: amountColor, fontSize: '15px', fontWeight: '700', fontFamily: 'monospace' }}>
+                    {sign}₹{parseFloat(Number(amount).toFixed(2))}
+                  </div>
+                </div>
+                );
+              })}
+            </div>
+            
+            {transactions.length > 3 && (
+              <div style={{ display: 'flex', justifyContent: 'center', marginTop: '16px' }}>
+                <button 
+                  onClick={() => setShowAllTransactions(!showAllTransactions)}
+                  style={{
+                    background: 'rgba(255,255,255,0.05)',
+                    border: 'none',
+                    color: '#94a3b8',
+                    padding: '8px 16px',
+                    borderRadius: '20px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    fontSize: '13px',
+                    fontWeight: '700',
+                    transition: 'background 0.2s'
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+                >
+                  {showAllTransactions ? 'Show Less' : `View ${transactions.length - 3} More`}
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: showAllTransactions ? 'rotate(180deg)' : 'none', transition: 'transform 0.3s' }}>
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                </button>
+              </div>
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 };

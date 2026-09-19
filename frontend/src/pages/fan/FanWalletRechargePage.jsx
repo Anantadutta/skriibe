@@ -10,6 +10,7 @@ const FanWalletRechargePage = () => {
   const [loading, setLoading] = useState(true);
   const [rate, setRate] = useState(10);
   const [balance, setBalance] = useState(0);
+  const [transactions, setTransactions] = useState([]);
 
   useEffect(() => {
     const checkBalance = async () => {
@@ -19,10 +20,18 @@ const FanWalletRechargePage = () => {
         const creatorPrice = cRes?.creator?.liveChatPrice || 5;
         setRate(creatorPrice);
 
-        // Fetch wallet balance
-        const wRes = await api.get('/wallet/balance');
+        // Fetch wallet balance and transactions
+        const [wRes, txRes] = await Promise.all([
+          api.get('/wallet/balance'),
+          api.get('/wallet/transactions').catch(() => ({ data: { success: false, transactions: [] } }))
+        ]);
+        
         const userBalance = wRes.data.balance || 0;
         setBalance(userBalance);
+        
+        if (txRes.data?.success) {
+          setTransactions(txRes.data.transactions || []);
+        }
 
         if (userBalance >= creatorPrice * 5) {
           // Has enough balance for at least 5 minutes, skip recharge
@@ -58,6 +67,7 @@ const FanWalletRechargePage = () => {
       <WalletRechargeScreen 
         rate={rate}
         balance={balance}
+        transactions={transactions}
         onCancel={() => navigate(`/${handle}`)}
         onRechargeSuccess={() => {
           navigate(`/${handle}/live-chat`, { replace: true });

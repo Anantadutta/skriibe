@@ -1,19 +1,37 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Sun, Moon, Menu, X } from 'lucide-react';
+import { Sun, Moon, Menu, X, User } from 'lucide-react';
 import { io } from 'socket.io-client';
 import { getLiveCreators } from '../services/discoveryApi';
 import { checkIfLiveNow } from '../utils/timeUtils';
+import { useAuth } from '../context/AuthContext';
 
 const Navbar = ({ theme, toggleTheme, showBanner = true }) => {
   const [liveCount, setLiveCount] = useState(0);
   const [loadingLive, setLoadingLive] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isCreatorDropdownOpen, setIsCreatorDropdownOpen] = useState(false);
   const location = useLocation();
+  const { isAuthenticated, roles, logout } = useAuth();
 
   useEffect(() => {
     setIsMobileMenuOpen(false);
+    setIsCreatorDropdownOpen(false);
   }, [location.pathname]);
+
+  const dropdownRef = React.useRef(null);
+  
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsCreatorDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   // Helper to determine if a creator is currently live at the current viewing time
   const isCreatorLiveNow = (creator) => {
@@ -93,7 +111,7 @@ const Navbar = ({ theme, toggleTheme, showBanner = true }) => {
   };
 
   return (
-    <header className="sticky top-0 z-50 transition-colors">
+    <header className="sticky top-0 z-50 w-full transition-colors">
       {/* Top Announcement Banner */}
       {showBanner && (
         <div
@@ -155,16 +173,6 @@ const Navbar = ({ theme, toggleTheme, showBanner = true }) => {
               How it works
             </Link>
             <Link
-              to="/fan/login"
-              className={`transition-colors ${
-                theme === 'light'
-                  ? 'text-gray-600 hover:text-black hover:text-[#3BA8D8]'
-                  : 'text-gray-300 hover:text-white hover:text-[#3BA8D8]'
-              }`}
-            >
-              Login
-            </Link>
-            <Link
               to="/faqs"
               className={`transition-colors ${
                 theme === 'light'
@@ -216,18 +224,83 @@ const Navbar = ({ theme, toggleTheme, showBanner = true }) => {
               <span>{loadingLive ? '... live' : `${liveCount.toLocaleString()} live`}</span>
             </Link>
 
-            <Link
-              to="/explore"
-              className="text-xs sm:text-sm font-bold px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-[#3BA8D8] text-black hover:bg-[#3298c4] transition-all whitespace-nowrap shadow-[0_0_12px_rgba(59,168,216,0.3)] hover:shadow-[0_0_18px_rgba(59,168,216,0.5)]"
-            >
-              Start free chat
-            </Link>
-            <Link
-              to="/creator/signup"
-              className="text-xs sm:text-sm font-bold px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-[#3BA8D8] text-black hover:bg-[#3298c4] transition-all whitespace-nowrap shadow-[0_0_12px_rgba(59,168,216,0.3)] hover:shadow-[0_0_18px_rgba(59,168,216,0.5)]"
-            >
-              Join as a creator
-            </Link>
+            {!isAuthenticated ? (
+              <>
+                <Link
+                  to="/explore"
+                  className="text-xs sm:text-sm font-bold px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-[#3BA8D8] text-black hover:bg-[#3298c4] transition-all whitespace-nowrap shadow-[0_0_12px_rgba(59,168,216,0.3)] hover:shadow-[0_0_18px_rgba(59,168,216,0.5)]"
+                >
+                  Start free chat
+                </Link>
+                <Link
+                  to="/creator/signup"
+                  className="text-xs sm:text-sm font-bold px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-[#3BA8D8] text-black hover:bg-[#3298c4] transition-all whitespace-nowrap shadow-[0_0_12px_rgba(59,168,216,0.3)] hover:shadow-[0_0_18px_rgba(59,168,216,0.5)]"
+                >
+                  Join as a creator
+                </Link>
+              </>
+            ) : roles?.includes('creator') ? (
+              <>
+                <Link
+                  to="/explore"
+                  className="text-xs sm:text-sm font-bold px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-[#3BA8D8] text-black hover:bg-[#3298c4] transition-all whitespace-nowrap shadow-[0_0_12px_rgba(59,168,216,0.3)] hover:shadow-[0_0_18px_rgba(59,168,216,0.5)]"
+                >
+                  Start free chat
+                </Link>
+                <div className="relative" ref={dropdownRef}>
+                  <button
+                    onClick={() => setIsCreatorDropdownOpen(!isCreatorDropdownOpen)}
+                    className={`p-2 sm:px-3 sm:py-2 rounded-full transition-all flex items-center justify-center border ${
+                      theme === 'light'
+                        ? 'border-gray-200 hover:bg-gray-100 text-gray-700'
+                        : 'border-white/10 hover:bg-white/10 text-gray-200'
+                    }`}
+                    title="Creator Menu"
+                  >
+                    <User size={20} />
+                  </button>
+                  {isCreatorDropdownOpen && (
+                    <div className={`absolute right-0 mt-2 w-48 rounded-xl shadow-lg border overflow-hidden z-50 ${
+                      theme === 'light'
+                        ? 'bg-white border-gray-200 text-gray-800'
+                        : 'bg-[#12121a] border-white/10 text-gray-200'
+                    }`}>
+                      <div className="flex flex-col py-1">
+                        <Link to="/creator/dashboard" className={`px-4 py-2 text-sm font-semibold transition-colors ${theme === 'light' ? 'hover:bg-gray-100' : 'hover:bg-white/10'}`}>
+                          Dashboard
+                        </Link>
+                        <Link to="/creator/inbox" className={`px-4 py-2 text-sm font-semibold transition-colors ${theme === 'light' ? 'hover:bg-gray-100' : 'hover:bg-white/10'}`}>
+                          Chats
+                        </Link>
+                        <Link to="/creator/settings" className={`px-4 py-2 text-sm font-semibold transition-colors ${theme === 'light' ? 'hover:bg-gray-100' : 'hover:bg-white/10'}`}>
+                          Settings
+                        </Link>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </>
+            ) : (
+              <>
+                <Link
+                  to="/explore"
+                  className={`p-2 sm:px-3 sm:py-2 rounded-full transition-all flex items-center justify-center border ${
+                    theme === 'light'
+                      ? 'border-gray-200 hover:bg-gray-100 text-gray-700'
+                      : 'border-white/10 hover:bg-white/10 text-gray-200'
+                  }`}
+                  title="Fan Discovery"
+                >
+                  <User size={20} />
+                </Link>
+                <Link
+                  to="/creator/signup?error=CONFLICT_FAN"
+                  className="text-xs sm:text-sm font-bold px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-[#3BA8D8] text-black hover:bg-[#3298c4] transition-all whitespace-nowrap shadow-[0_0_12px_rgba(59,168,216,0.3)] hover:shadow-[0_0_18px_rgba(59,168,216,0.5)]"
+                >
+                  Join as a creator
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile Live Badge */}
@@ -309,17 +382,6 @@ const Navbar = ({ theme, toggleTheme, showBanner = true }) => {
               How it works
             </Link>
             <Link
-              to="/fan/login"
-              onClick={() => setIsMobileMenuOpen(false)}
-              className={`text-lg font-semibold px-3 py-2.5 rounded-xl transition-colors ${
-                theme === 'light'
-                  ? 'text-gray-800 hover:bg-gray-100'
-                  : 'text-gray-200 hover:bg-white/10'
-              }`}
-            >
-              Login
-            </Link>
-            <Link
               to="/faqs"
               onClick={() => setIsMobileMenuOpen(false)}
               className={`text-lg font-semibold px-3 py-2.5 rounded-xl transition-colors ${
@@ -363,20 +425,82 @@ const Navbar = ({ theme, toggleTheme, showBanner = true }) => {
 
           {/* Action Buttons */}
           <div className="flex flex-col gap-3 pt-4">
-            <Link
-              to="/explore"
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="w-full py-3 px-4 rounded-full bg-[#3BA8D8] text-black font-bold text-center text-sm hover:bg-[#3298c4] transition-all shadow-[0_0_12px_rgba(59,168,216,0.3)]"
-            >
-              Start free chat
-            </Link>
-            <Link
-              to="/creator/signup"
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="w-full py-3 px-4 rounded-full bg-[#3BA8D8] text-black font-bold text-center text-sm hover:bg-[#3298c4] transition-all shadow-[0_0_12px_rgba(59,168,216,0.3)]"
-            >
-              Join as a creator
-            </Link>
+            {!isAuthenticated ? (
+              <>
+                <Link
+                  to="/explore"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="w-full py-3 px-4 rounded-full bg-[#3BA8D8] text-black font-bold text-center text-sm hover:bg-[#3298c4] transition-all shadow-[0_0_12px_rgba(59,168,216,0.3)]"
+                >
+                  Start free chat
+                </Link>
+                <Link
+                  to="/creator/signup"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="w-full py-3 px-4 rounded-full bg-[#3BA8D8] text-black font-bold text-center text-sm hover:bg-[#3298c4] transition-all shadow-[0_0_12px_rgba(59,168,216,0.3)]"
+                >
+                  Join as a creator
+                </Link>
+              </>
+            ) : roles?.includes('creator') ? (
+              <>
+                <Link
+                  to="/explore"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="w-full py-3 px-4 rounded-full bg-[#3BA8D8] text-black font-bold text-center text-sm hover:bg-[#3298c4] transition-all shadow-[0_0_12px_rgba(59,168,216,0.3)]"
+                >
+                  Start free chat
+                </Link>
+                <div className={`w-full rounded-2xl overflow-hidden border ${theme === 'light' ? 'border-gray-200 bg-gray-50' : 'border-white/10 bg-white/5'}`}>
+                  <div className="w-full py-3 px-4 font-bold text-center text-sm flex items-center justify-center gap-2 text-gray-400 uppercase tracking-wider text-xs">
+                    <User size={16} /> Creator Menu
+                  </div>
+                  <div className={`h-px w-full ${theme === 'light' ? 'bg-gray-200' : 'bg-white/10'}`}></div>
+                  <Link
+                    to="/creator/dashboard"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={`block w-full py-3 px-4 font-bold text-center text-sm transition-colors ${theme === 'light' ? 'hover:bg-gray-100 text-gray-800' : 'hover:bg-white/5 text-gray-200'}`}
+                  >
+                    Dashboard
+                  </Link>
+                  <Link
+                    to="/creator/inbox"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={`block w-full py-3 px-4 font-bold text-center text-sm transition-colors ${theme === 'light' ? 'hover:bg-gray-100 text-gray-800' : 'hover:bg-white/5 text-gray-200'}`}
+                  >
+                    Chats
+                  </Link>
+                  <Link
+                    to="/creator/settings"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={`block w-full py-3 px-4 font-bold text-center text-sm transition-colors ${theme === 'light' ? 'hover:bg-gray-100 text-gray-800' : 'hover:bg-white/5 text-gray-200'}`}
+                  >
+                    Settings
+                  </Link>
+                </div>
+              </>
+            ) : (
+              <>
+                <Link
+                  to="/explore"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className={`w-full py-3 px-4 rounded-full font-bold text-center text-sm transition-all flex items-center justify-center gap-2 border ${
+                    theme === 'light'
+                      ? 'border-gray-200 bg-gray-50 text-gray-800'
+                      : 'border-white/10 bg-white/5 text-gray-200'
+                  }`}
+                >
+                  <User size={18} /> Discovery
+                </Link>
+                <Link
+                  to="/creator/signup?error=CONFLICT_FAN"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="w-full py-3 px-4 rounded-full bg-[#3BA8D8] text-black font-bold text-center text-sm hover:bg-[#3298c4] transition-all shadow-[0_0_12px_rgba(59,168,216,0.3)]"
+                >
+                  Join as a creator
+                </Link>
+              </>
+            )}
           </div>
         </div>
       )}

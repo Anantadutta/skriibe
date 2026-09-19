@@ -27,6 +27,9 @@ const SmartLoginRedirect = ({ children }) => {
           } else {
             navigate('/creator/dashboard', { replace: true });
           }
+        } else if (data.authenticated && !data.isCreator) {
+          // Logged in but not a creator (so a fan)
+          navigate('/explore', { replace: true });
         } else {
           setLoading(false);
         }

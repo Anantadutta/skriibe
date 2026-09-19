@@ -83,21 +83,7 @@ const verifyFanToken = async (req, res, next) => {
         fan = await Fan.findOne({ email: decoded.email.toLowerCase() });
       }
 
-      if (!fan && creator && creatorEmail) {
-        fan = new Fan({
-          email: creatorEmail,
-          password: 'auto-generated',
-          name: creator.name || 'User',
-          roles: ['fan', 'creator'],
-          activeRole: 'fan',
-          authProvider: creator.authProvider || 'local'
-        });
-        await fan.save();
-        creator.fanId = fan._id;
-        if (!creator.email) creator.email = creatorEmail;
-        await creator.save();
-      }
-
+      // Do not auto-create Fan account to enforce strict separation
       if (fan) {
         decoded.fanId = fan._id;
         if (!decoded.roles) decoded.roles = fan.roles;

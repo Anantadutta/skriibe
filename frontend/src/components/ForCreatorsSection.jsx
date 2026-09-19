@@ -1,32 +1,35 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { X, CheckCircle2, DollarSign, Calendar, ShieldCheck, ArrowRight } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
-const ForCreatorsSection = ({ theme = 'dark' }) => {
+const ForCreatorsSection = ({ theme }) => {
   const isLight = theme === 'light';
   const navigate = useNavigate();
   const [showPayoutModal, setShowPayoutModal] = useState(false);
+  const { isAuthenticated, roles } = useAuth();
 
   return (
     <>
-      <section className="w-full mt-4 sm:mt-5 md:mt-6 mb-3 sm:mb-4 md:mb-5">
-        <div
-          className={`relative overflow-hidden rounded-[28px] sm:rounded-[36px] p-6 sm:p-8 lg:p-10 border transition-all duration-300 ${
-            isLight
-              ? 'bg-gradient-to-br from-sky-50/70 via-white to-sky-100/40 border-sky-200/80 shadow-[0_8px_30px_rgba(59,168,216,0.08)]'
-              : 'bg-gradient-to-br from-[#0c1622] via-[#0f141d] to-[#0a0d13] border-[#3BA8D8]/20 shadow-[0_8px_40px_rgba(59,168,216,0.1)]'
-          }`}
-        >
-          {/* Subtle Ambient Background Glows */}
-          <div
-            className={`absolute top-0 right-0 w-80 sm:w-96 h-80 sm:h-96 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20 ${
-              isLight ? 'bg-sky-200/30' : 'bg-[#3BA8D8]/10'
-            }`}
+      <section className="w-full my-12 sm:my-16 md:my-24 overflow-visible px-4 sm:px-6 md:px-12 !w-[calc(100%+2rem)] sm:!w-[calc(100%+3rem)] md:!w-[calc(100%+6rem)] -mx-4 sm:-mx-6 md:-mx-12">
+        <div className={`relative w-full rounded-[32px] sm:rounded-[40px] md:rounded-[48px] py-16 sm:py-20 md:py-24 px-6 sm:px-8 md:px-12 overflow-visible border shadow-2xl ${
+          isLight
+            ? 'bg-gradient-to-br from-gray-50 to-white border-gray-200'
+            : 'bg-[#0f141e] border-white/10 shadow-[0_0_50px_rgba(255,94,98,0.15)]'
+        }`}>
+          
+          <img
+            src="/images/forcreators.png"
+            alt="Creator earning mockups"
+            className="absolute inset-0 w-full h-full object-cover object-[50%_15%] opacity-50 select-none pointer-events-none rounded-[32px] sm:rounded-[40px] md:rounded-[48px]"
           />
-          <div
-            className={`absolute bottom-0 left-0 w-72 sm:w-80 h-72 sm:h-80 rounded-full blur-3xl pointer-events-none -ml-20 -mb-20 ${
-              isLight ? 'bg-blue-100/30' : 'bg-purple-900/10'
-            }`}
+          <div 
+            className="absolute inset-0 z-0 rounded-[32px] sm:rounded-[40px] md:rounded-[48px]"
+            style={{
+              background: isLight 
+                ? 'linear-gradient(to top, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.7) 100%)'
+                : 'linear-gradient(to top, rgba(15,20,30,0.95) 0%, rgba(15,20,30,0.8) 100%)'
+            }}
           />
 
           <div className="relative z-10 flex flex-col items-center text-center max-w-3xl mx-auto">
@@ -58,7 +61,7 @@ const ForCreatorsSection = ({ theme = 'dark' }) => {
             {/* Join as a creator Button */}
             <div className="mt-6 sm:mt-8 w-full sm:w-auto flex justify-center">
               <Link
-                to="/creator/signup"
+                to={isAuthenticated ? (roles?.includes('creator') ? "/creator/dashboard" : "/creator/signup?error=CONFLICT_FAN") : "/creator/signup"}
                 className={`inline-flex items-center justify-center w-full sm:w-auto px-8 sm:px-10 py-3.5 sm:py-4 rounded-full font-bold text-base sm:text-lg transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 shadow-sm ${
                   isLight
                     ? 'bg-[#3BA8D8] hover:bg-[#2d8ab8] text-white shadow-md hover:shadow-lg'
@@ -98,52 +101,38 @@ const ForCreatorsSection = ({ theme = 'dark' }) => {
 
             {/* Modal Header */}
             <div className="flex items-center gap-3 mb-5">
-              <div className="w-10 h-10 rounded-2xl bg-[#3BA8D8]/15 text-[#3BA8D8] border border-[#3BA8D8]/30 flex items-center justify-center font-bold">
-                <DollarSign className="w-5 h-5" />
+              <div className="w-10 h-10 rounded-full bg-[#3BA8D8]/20 flex items-center justify-center border border-[#3BA8D8]/40">
+                <DollarSign className="w-5 h-5 text-[#3BA8D8]" />
               </div>
               <div>
-                <h3 className="text-xl sm:text-2xl font-bold">How payouts work</h3>
-                <p className={`text-xs sm:text-sm ${isLight ? 'text-gray-500' : 'text-gray-400'}`}>
-                  Simple, transparent, and direct to your account.
-                </p>
+                <h3 className="text-xl font-bold">How You Get Paid</h3>
+                <p className={`text-sm ${isLight ? 'text-gray-500' : 'text-gray-400'}`}>Simple, transparent, weekly.</p>
               </div>
             </div>
 
-            {/* Payout Features */}
-            <div className="space-y-3.5 my-6">
-              <div className={`p-3.5 rounded-2xl border flex items-start gap-3.5 ${
-                isLight ? 'bg-gray-50/80 border-gray-100' : 'bg-white/[0.03] border-white/5'
-              }`}>
+            {/* Content List */}
+            <div className="space-y-4 mb-6">
+              <div className={`flex gap-3 p-3.5 rounded-xl border ${isLight ? 'bg-gray-50 border-gray-100' : 'bg-white/5 border-white/10'}`}>
+                <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold text-sm">Keep 80% of what you earn</p>
+                  <p className={`text-xs mt-0.5 ${isLight ? 'text-gray-600' : 'text-gray-400'}`}>You set your price per minute. We only take 20% to cover servers and credit card fees.</p>
+                </div>
+              </div>
+
+              <div className={`flex gap-3 p-3.5 rounded-xl border ${isLight ? 'bg-gray-50 border-gray-100' : 'bg-white/5 border-white/10'}`}>
                 <Calendar className="w-5 h-5 text-[#3BA8D8] shrink-0 mt-0.5" />
                 <div>
-                  <h4 className="text-sm font-bold">Weekly Scheduled Payouts</h4>
-                  <p className={`text-xs sm:text-sm mt-0.5 ${isLight ? 'text-gray-600' : 'text-gray-400'}`}>
-                    Earnings are processed every Tuesday directly to your registered bank account or UPI.
-                  </p>
+                  <p className="font-semibold text-sm">Paid out every Tuesday</p>
+                  <p className={`text-xs mt-0.5 ${isLight ? 'text-gray-600' : 'text-gray-400'}`}>All earnings clear instantly and are deposited straight into your bank account automatically every week.</p>
                 </div>
               </div>
 
-              <div className={`p-3.5 rounded-2xl border flex items-start gap-3.5 ${
-                isLight ? 'bg-gray-50/80 border-gray-100' : 'bg-white/[0.03] border-white/5'
-              }`}>
-                <ShieldCheck className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
+              <div className={`flex gap-3 p-3.5 rounded-xl border ${isLight ? 'bg-gray-50 border-gray-100' : 'bg-white/5 border-white/10'}`}>
+                <ShieldCheck className="w-5 h-5 text-purple-500 shrink-0 mt-0.5" />
                 <div>
-                  <h4 className="text-sm font-bold">Direct Bank & UPI Transfers</h4>
-                  <p className={`text-xs sm:text-sm mt-0.5 ${isLight ? 'text-gray-600' : 'text-gray-400'}`}>
-                    Link your UPI ID or IFSC bank account in your creator settings with zero hassle.
-                  </p>
-                </div>
-              </div>
-
-              <div className={`p-3.5 rounded-2xl border flex items-start gap-3.5 ${
-                isLight ? 'bg-gray-50/80 border-gray-100' : 'bg-white/[0.03] border-white/5'
-              }`}>
-                <CheckCircle2 className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
-                <div>
-                  <h4 className="text-sm font-bold">Live Dashboard Tracking</h4>
-                  <p className={`text-xs sm:text-sm mt-0.5 ${isLight ? 'text-gray-600' : 'text-gray-400'}`}>
-                    See your minute-by-minute earnings, session history, and pending payouts in real time.
-                  </p>
+                  <p className="font-semibold text-sm">No chargebacks, ever</p>
+                  <p className={`text-xs mt-0.5 ${isLight ? 'text-gray-600' : 'text-gray-400'}`}>Fans pay upfront. You are guaranteed the money for every minute you chat.</p>
                 </div>
               </div>
             </div>
@@ -166,7 +155,7 @@ const ForCreatorsSection = ({ theme = 'dark' }) => {
               </button>
 
               <Link
-                to="/creator/signup"
+                to={isAuthenticated ? "/creator/dashboard" : "/creator/signup"}
                 onClick={() => setShowPayoutModal(false)}
                 className={`flex-1 py-3 px-4 rounded-full text-center text-sm font-bold transition-all ${
                   isLight
