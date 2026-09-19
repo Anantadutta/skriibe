@@ -24,18 +24,18 @@ const CreatorLogin = () => {
   const [focusedEmail, setFocusedEmail] = useState(false);
   const [focusedPassword, setFocusedPassword] = useState(false);
   const navigate = useNavigate();
-  const { roles, setAuthData, clearAuthData } = useAuth();
+  const { roles, setAuthData, clearAuthData, isAuthenticated } = useAuth();
   const successMessage = location.state?.message;
 
   const [showRoleConflictModal, setShowRoleConflictModal] = useState(urlError === 'CONFLICT_FAN');
   const [roleConflictMessage, setRoleConflictMessage] = useState(urlError === 'CONFLICT_FAN' ? 'You are signed in as a fan please sign up with a different account' : '');
 
   React.useEffect(() => {
-    if (roles?.includes('fan')) {
+    if (roles?.includes('fan') && isAuthenticated) {
       setRoleConflictMessage('You are signed in as a fan please sign up with a different account');
       setShowRoleConflictModal(true);
     }
-  }, [roles]);
+  }, [roles, isAuthenticated]);
 
   const handleLogin = async () => {
     if (!email || !password) {

@@ -4,6 +4,7 @@ import { io } from 'socket.io-client';
 import { getLiveCreators } from '../services/discoveryApi';
 import { checkIfLiveNow } from '../utils/timeUtils';
 import { getImageUrl } from '../utils/imageUtils';
+import { useAuth } from '../context/AuthContext';
 
 const FALLBACK_ONLINE_CREATORS = [
   { id: '1', name: 'AAkshaye', handle: 'aakshaye', avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&auto=format&fit=crop&q=80', rate: 5 },
@@ -22,8 +23,17 @@ const FALLBACK_ONLINE_CREATORS = [
 const StopTypingSection = ({ theme = 'dark' }) => {
   const isLight = theme === 'light';
   const navigate = useNavigate();
+  const { roles, activeRole, isAuthenticated } = useAuth();
+  const [showRoleConflictModal, setShowRoleConflictModal] = useState(false);
   const [creators, setCreators] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const handleClaimClick = (e) => {
+    if (isAuthenticated && (activeRole === 'creator' || (roles && roles.includes('creator')))) {
+      e.preventDefault();
+      setShowRoleConflictModal(true);
+    }
+  };
 
   // Helper to determine if a creator is currently live
   const isCreatorLiveNow = (creator) => {
@@ -106,8 +116,8 @@ const StopTypingSection = ({ theme = 'dark' }) => {
       navigate('/fan/explore');
     }
   };
-
   return (
+    <>
     <section className="w-full mt-3 sm:mt-4 md:mt-5 mb-12 sm:mb-16 md:mb-20">
       <div
         className={`relative overflow-hidden rounded-[28px] sm:rounded-[36px] px-6 py-8 sm:px-10 sm:py-12 md:py-14 lg:py-16 border text-center transition-all duration-300 flex flex-col items-center justify-center ${
@@ -166,6 +176,7 @@ const StopTypingSection = ({ theme = 'dark' }) => {
             {/* Start my free chat */}
             <Link
               to="/fan/login"
+              onClick={handleClaimClick}
               className={`w-full sm:w-auto px-7 sm:px-9 py-3.5 sm:py-4 rounded-full font-bold text-base sm:text-lg transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 text-center ${
                 isLight
                   ? 'bg-[#3BA8D8] hover:bg-[#2d8ab8] text-white shadow-md hover:shadow-lg'
@@ -318,6 +329,105 @@ const StopTypingSection = ({ theme = 'dark' }) => {
         }
       `}</style>
     </section>
+
+    {/* Role Conflict Modal */}
+    {showRoleConflictModal && (
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.75)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 9999,
+        backdropFilter: 'blur(4px)'
+      }}>
+        <div style={{
+          background: '#1F2937',
+          borderRadius: '24px',
+          padding: '40px',
+          maxWidth: '400px',
+          width: '90%',
+          textAlign: 'center',
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          position: 'relative',
+          overflow: 'hidden'
+        }}>
+          {/* Gradient border top */}
+          <div style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: '4px',
+            background: 'linear-gradient(90deg, #F59E0B, #EF4444)'
+          }} />
+          
+          <div style={{
+            width: '64px',
+            height: '64px',
+            borderRadius: '50%',
+            background: 'rgba(239, 68, 68, 0.1)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            margin: '0 auto 20px'
+          }}>
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+              <line x1="12" y1="9" x2="12" y2="13"/>
+              <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+          </div>
+
+          <h2 style={{ 
+            margin: '0 0 12px', 
+            fontSize: '22px', 
+            fontWeight: '700',
+            color: '#fff' 
+          }}>
+            Access Denied
+          </h2>
+          
+          <p style={{ 
+            margin: '0 0 24px', 
+            color: '#9CA3AF',
+            fontSize: '15px',
+            lineHeight: '1.5'
+          }}>
+            You are signed in as a creator please sign up with a different account to be a fan
+          </p>
+
+          <button
+            onClick={() => {
+              setShowRoleConflictModal(false);
+              navigate('/creator/dashboard');
+            }}
+            style={{
+              width: '100%',
+              padding: '14px',
+              background: '#4B5563',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '12px',
+              fontSize: '16px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              transition: 'background 0.2s'
+            }}
+            onMouseOver={(e) => e.target.style.background = '#374151'}
+            onMouseOut={(e) => e.target.style.background = '#4B5563'}
+          >
+            Go to Creator Dashboard
+          </button>
+        </div>
+      </div>
+    )}
+    </>
   );
 };
 

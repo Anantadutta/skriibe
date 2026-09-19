@@ -26,7 +26,7 @@ const CreatorSignup = () => {
   const [focusedPassword, setFocusedPassword] = useState(false);
   const [focusedConfirm, setFocusedConfirm] = useState(false);
   const navigate = useNavigate();
-  const { roles, setAuthData } = useAuth();
+  const { roles, setAuthData, isAuthenticated } = useAuth();
   const [showAlreadyCreatorModal, setShowAlreadyCreatorModal] = useState(false);
 
   const [showRoleConflictModal, setShowRoleConflictModal] = useState(urlError === 'CONFLICT_FAN');
@@ -34,7 +34,7 @@ const CreatorSignup = () => {
 
 
   useEffect(() => {
-    if (roles?.includes('creator')) {
+    if (roles?.includes('creator') && isAuthenticated) {
       const urlParams = new URLSearchParams(location.search);
       if (urlParams.get('ref')) {
         setShowAlreadyCreatorModal(true);
@@ -44,11 +44,11 @@ const CreatorSignup = () => {
         return;
       }
     }
-    if (roles?.includes('fan')) {
+    if (roles?.includes('fan') && isAuthenticated) {
       setRoleConflictMessage('You are signed in as a fan please sign up with a different account');
       setShowRoleConflictModal(true);
     }
-  }, [navigate, roles, location.search]);
+  }, [navigate, roles, location.search, isAuthenticated]);
 
   const checkPasswordStrength = (pwd) => {
     return pwd.length >= 8 && /[0-9\W]/.test(pwd);
