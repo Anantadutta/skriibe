@@ -161,7 +161,7 @@ const HeroChatSimulation = ({ theme = 'dark' }) => {
           <div className="absolute -right-[5px] top-28 w-[3px] h-14 bg-neutral-600 rounded-r-sm" />
 
           {/* Inner Phone Screen */}
-          <div className="w-full h-full rounded-[34px] bg-[#0d0c14] text-white flex flex-col overflow-hidden relative border border-white/10 shadow-inner">
+          <div className="dark-box w-full h-full rounded-[34px] bg-[#0d0c14] text-white flex flex-col overflow-hidden relative border border-white/10 shadow-inner">
             
             {/* Top Dynamic Island / Notch */}
             <div className="w-full pt-1.5 pb-0.5 flex justify-center items-center shrink-0 z-30">

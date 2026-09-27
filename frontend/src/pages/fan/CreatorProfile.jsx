@@ -137,7 +137,7 @@ const CreatorProfile = () => {
             }
             setBuyerPhone(fetchedPhone);
             
-            setIsLoggedIn(true);
+            setIsLoggedIn(false);
             setIsLoggedInAsCreatorOnly(true);
           }
         } catch (e) {
@@ -148,12 +148,6 @@ const CreatorProfile = () => {
     };
     fetchUser();
   }, []); // Only run once on mount
-
-  useEffect(() => {
-    if (isLoggedInAsCreatorOnly && !isOwner) {
-      setShowRoleConflictModal(true);
-    }
-  }, [isLoggedInAsCreatorOnly, isOwner]);
 
 
   useEffect(() => {
@@ -655,10 +649,7 @@ const CreatorProfile = () => {
                     }
                     if (isBanned || effectiveIsPreview) return;
                     
-                    if (isLoggedInAsCreatorOnly) {
-                      setShowRoleConflictModal(true);
-                      return;
-                    }
+
 
                     if (!isLoggedIn && !effectiveIsPreview) {
                       navigate(`/fan/login?redirect=/${handle}/live-chat`);
@@ -728,10 +719,7 @@ const CreatorProfile = () => {
                             onClick={() => {
                               if (isBanned || effectiveIsPreview) return;
                               
-                              if (isLoggedInAsCreatorOnly) {
-                                setShowRoleConflictModal(true);
-                                return;
-                              }
+
 
                               if (!isLoggedIn && !effectiveIsPreview) {
                                 navigate(`/fan/login?redirect=/${handle}?autoAsk=true`);
@@ -1187,6 +1175,33 @@ const CreatorProfile = () => {
             justifyContent: 'center'
           }}
         >
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsAvatarModalOpen(false);
+            }}
+            style={{
+              position: 'absolute',
+              top: '24px',
+              right: '24px',
+              background: 'rgba(0, 0, 0, 0.5)',
+              border: 'none',
+              borderRadius: '50%',
+              width: '40px',
+              height: '40px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              color: '#fff',
+              fontSize: '28px',
+              zIndex: 10000,
+              padding: 0,
+              lineHeight: 1
+            }}
+          >
+            ×
+          </button>
           <img 
             src={getImageUrl(creator.avatarUrl)} 
             alt={creator.name} 
@@ -1199,97 +1214,7 @@ const CreatorProfile = () => {
           />
         </div>
       )}
-      {showRoleConflictModal && (
-        <div style={{
-          position: 'fixed',
-          top: 0, left: 0, right: 0, bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.7)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 99999,
-          padding: '20px'
-        }}>
-          <div
-            style={{
-              background: '#13161c',
-              borderRadius: '24px',
-              padding: '32px',
-              width: '100%',
-              maxWidth: '400px',
-              border: '1px solid #1F2937',
-              boxShadow: '0 20px 40px rgba(0,0,0,0.4)',
-              textAlign: 'center',
-              position: 'relative',
-              overflow: 'hidden'
-            }}
-          >
-            <div style={{
-              position: 'absolute',
-              top: 0, left: 0, right: 0, height: '4px',
-              background: 'linear-gradient(90deg, #F59E0B, #EF4444)'
-            }} />
-            
-            <div style={{
-              width: '64px',
-              height: '64px',
-              borderRadius: '50%',
-              background: 'rgba(239, 68, 68, 0.1)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              margin: '0 auto 20px'
-            }}>
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-                <line x1="12" y1="9" x2="12" y2="13"/>
-                <line x1="12" y1="17" x2="12.01" y2="17"/>
-              </svg>
-            </div>
 
-            <h2 style={{ 
-              margin: '0 0 12px', 
-              fontSize: '22px', 
-              fontWeight: '700',
-              color: '#fff' 
-            }}>
-              Access Denied
-            </h2>
-            
-            <p style={{ 
-              margin: '0 0 24px', 
-              color: '#9CA3AF',
-              fontSize: '15px',
-              lineHeight: '1.5'
-            }}>
-              {roleConflictMessage || 'You are signed in as a creator please sign up with a different account to be a fan'}
-            </p>
-
-            <button
-              onClick={() => {
-                setShowRoleConflictModal(false);
-                navigate('/creator/dashboard');
-              }}
-              style={{
-                width: '100%',
-                padding: '14px',
-                background: '#374151',
-                color: '#fff',
-                border: 'none',
-                borderRadius: '12px',
-                fontSize: '15px',
-                fontWeight: '600',
-                cursor: 'pointer',
-                transition: 'background 0.2s'
-              }}
-              onMouseOver={(e) => e.target.style.background = '#4B5563'}
-              onMouseOut={(e) => e.target.style.background = '#374151'}
-            >
-              Go to Creator Dashboard
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

@@ -27,6 +27,19 @@ const FanProfile = () => {
   const [isEditingPhone, setIsEditingPhone] = useState(false);
   const [newPhone, setNewPhone] = useState('');
   const [savingPhone, setSavingPhone] = useState(false);
+
+  const [isEditingDob, setIsEditingDob] = useState(false);
+  const [newDob, setNewDob] = useState('');
+  const [savingDob, setSavingDob] = useState(false);
+
+  const [isEditingGender, setIsEditingGender] = useState(false);
+  const [newGender, setNewGender] = useState('');
+  const [savingGender, setSavingGender] = useState(false);
+
+  const [isEditingCity, setIsEditingCity] = useState(false);
+  const [newCity, setNewCity] = useState('');
+  const [savingCity, setSavingCity] = useState(false);
+
   const selectedQuestion = null;
 
   const [cropImageSrc, setCropImageSrc] = useState(null);
@@ -591,11 +604,204 @@ const FanProfile = () => {
               
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%' }}>
 
+                {/* NAME FIELD */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <label style={{ fontSize: '12px', fontWeight: '700', color: '#94a3b8', textTransform: 'uppercase' }}>Name</label>
+                  <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                    {isEditingName ? (
+                      <input 
+                        type="text"
+                        value={newName}
+                        onChange={(e) => setNewName(e.target.value)}
+                        disabled={savingName}
+                        placeholder="Your name"
+                        style={{
+                          background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.2)',
+                          color: '#fff', padding: '10px 12px', borderRadius: '8px', fontSize: '14px', flex: 1, outline: 'none'
+                        }}
+                      />
+                    ) : (
+                      <div style={{ flex: 1, color: '#fff', fontSize: '16px', fontWeight: '500', padding: '10px 12px', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', border: '1px solid transparent' }}>
+                        {fanProfile?.name || 'Not set'}
+                      </div>
+                    )}
+                    <button 
+                      onClick={handleSaveName}
+                      disabled={savingName}
+                      style={{
+                        background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: '#fff',
+                        padding: '10px 16px', borderRadius: '8px', fontWeight: '600', cursor: savingName ? 'not-allowed' : 'pointer',
+                        fontSize: '14px', opacity: savingName ? 0.6 : 1
+                      }}
+                    >
+                      {isEditingName ? (savingName ? 'Saving...' : 'Save') : 'Edit'}
+                    </button>
+                  </div>
+                </div>
 
+                {/* DOB FIELD */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <label style={{ fontSize: '12px', fontWeight: '700', color: '#94a3b8', textTransform: 'uppercase' }}>Date of Birth</label>
+                  <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                    {isEditingDob ? (
+                      <input 
+                        type="date"
+                        value={newDob}
+                        onChange={(e) => setNewDob(e.target.value)}
+                        disabled={savingDob}
+                        style={{
+                          background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.2)',
+                          color: '#fff', padding: '10px 12px', borderRadius: '8px', fontSize: '14px', flex: 1, outline: 'none'
+                        }}
+                      />
+                    ) : (
+                      <div style={{ flex: 1, color: '#fff', fontSize: '16px', fontWeight: '500', padding: '10px 12px', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', border: '1px solid transparent' }}>
+                        {fanProfile?.dob || 'Not set'}
+                      </div>
+                    )}
+                    <button 
+                      onClick={async () => {
+                        if (isEditingDob) {
+                          setSavingDob(true);
+                          try {
+                            const res = await updateFanProfile({ dob: newDob });
+                            if (res.success) {
+                              setFanProfile(res.fan);
+                              setIsEditingDob(false);
+                            }
+                          } catch (err) {
+                            alert('Failed to update DOB');
+                          } finally {
+                            setSavingDob(false);
+                          }
+                        } else {
+                          setNewDob(fanProfile?.dob || '');
+                          setIsEditingDob(true);
+                        }
+                      }}
+                      disabled={savingDob}
+                      style={{
+                        background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: '#fff',
+                        padding: '10px 16px', borderRadius: '8px', fontWeight: '600', cursor: savingDob ? 'not-allowed' : 'pointer',
+                        fontSize: '14px', opacity: savingDob ? 0.6 : 1
+                      }}
+                    >
+                      {isEditingDob ? (savingDob ? 'Saving...' : 'Save') : 'Edit'}
+                    </button>
+                  </div>
+                </div>
 
+                {/* GENDER FIELD */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <label style={{ fontSize: '12px', fontWeight: '700', color: '#94a3b8', textTransform: 'uppercase' }}>Gender</label>
+                  <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                    {isEditingGender ? (
+                      <select 
+                        value={newGender}
+                        onChange={(e) => setNewGender(e.target.value)}
+                        disabled={savingGender}
+                        style={{
+                          background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.2)',
+                          color: '#fff', padding: '10px 12px', borderRadius: '8px', fontSize: '14px', flex: 1, outline: 'none'
+                        }}
+                      >
+                        <option value="" style={{ color: '#000' }}>Select Gender</option>
+                        <option value="Male" style={{ color: '#000' }}>Male</option>
+                        <option value="Female" style={{ color: '#000' }}>Female</option>
+                        <option value="Other" style={{ color: '#000' }}>Other</option>
+                        <option value="Prefer not to say" style={{ color: '#000' }}>Prefer not to say</option>
+                      </select>
+                    ) : (
+                      <div style={{ flex: 1, color: '#fff', fontSize: '16px', fontWeight: '500', padding: '10px 12px', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', border: '1px solid transparent' }}>
+                        {fanProfile?.gender || 'Not set'}
+                      </div>
+                    )}
+                    <button 
+                      onClick={async () => {
+                        if (isEditingGender) {
+                          setSavingGender(true);
+                          try {
+                            const res = await updateFanProfile({ gender: newGender });
+                            if (res.success) {
+                              setFanProfile(res.fan);
+                              setIsEditingGender(false);
+                            }
+                          } catch (err) {
+                            alert('Failed to update Gender');
+                          } finally {
+                            setSavingGender(false);
+                          }
+                        } else {
+                          setNewGender(fanProfile?.gender || '');
+                          setIsEditingGender(true);
+                        }
+                      }}
+                      disabled={savingGender}
+                      style={{
+                        background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: '#fff',
+                        padding: '10px 16px', borderRadius: '8px', fontWeight: '600', cursor: savingGender ? 'not-allowed' : 'pointer',
+                        fontSize: '14px', opacity: savingGender ? 0.6 : 1
+                      }}
+                    >
+                      {isEditingGender ? (savingGender ? 'Saving...' : 'Save') : 'Edit'}
+                    </button>
+                  </div>
+                </div>
 
+                {/* CITY FIELD */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <label style={{ fontSize: '12px', fontWeight: '700', color: '#94a3b8', textTransform: 'uppercase' }}>City</label>
+                  <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                    {isEditingCity ? (
+                      <input 
+                        type="text"
+                        value={newCity}
+                        onChange={(e) => setNewCity(e.target.value)}
+                        disabled={savingCity}
+                        placeholder="e.g. Mumbai, New York"
+                        style={{
+                          background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.2)',
+                          color: '#fff', padding: '10px 12px', borderRadius: '8px', fontSize: '14px', flex: 1, outline: 'none'
+                        }}
+                      />
+                    ) : (
+                      <div style={{ flex: 1, color: '#fff', fontSize: '16px', fontWeight: '500', padding: '10px 12px', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', border: '1px solid transparent' }}>
+                        {fanProfile?.city || 'Not set'}
+                      </div>
+                    )}
+                    <button 
+                      onClick={async () => {
+                        if (isEditingCity) {
+                          setSavingCity(true);
+                          try {
+                            const res = await updateFanProfile({ city: newCity });
+                            if (res.success) {
+                              setFanProfile(res.fan);
+                              setIsEditingCity(false);
+                            }
+                          } catch (err) {
+                            alert('Failed to update City');
+                          } finally {
+                            setSavingCity(false);
+                          }
+                        } else {
+                          setNewCity(fanProfile?.city || '');
+                          setIsEditingCity(true);
+                        }
+                      }}
+                      disabled={savingCity}
+                      style={{
+                        background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: '#fff',
+                        padding: '10px 16px', borderRadius: '8px', fontWeight: '600', cursor: savingCity ? 'not-allowed' : 'pointer',
+                        fontSize: '14px', opacity: savingCity ? 0.6 : 1
+                      }}
+                    >
+                      {isEditingCity ? (savingCity ? 'Saving...' : 'Save') : 'Edit'}
+                    </button>
+                  </div>
+                </div>
 
-                <button 
+                <div style={{ height: '16px' }} />                <button 
                   onClick={() => {
                     localStorage.clear();
                     window.location.href = '/fan/login';

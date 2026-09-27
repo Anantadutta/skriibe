@@ -23,10 +23,16 @@ const FanLogin = () => {
   const message = location.state?.message;
   const { setAuthData, clearAuthData } = useAuth();
   
-  console.log("FanLogin rendered");
+  const [showRoleConflictModal, setShowRoleConflictModal] = useState(false);
+  const [roleConflictMessage, setRoleConflictMessage] = useState('');
 
-  const [showRoleConflictModal, setShowRoleConflictModal] = useState(urlError === 'CONFLICT_CREATOR');
-  const [roleConflictMessage, setRoleConflictMessage] = useState(urlError === 'CONFLICT_CREATOR' ? 'You are signed in as a creator please sign up with a different account to be a fan' : '');
+  React.useEffect(() => {
+    if (urlError === 'CONFLICT_CREATOR') {
+      setShowRoleConflictModal(true);
+    }
+  }, [urlError]);
+  
+  console.log("FanLogin rendered");
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -550,7 +556,7 @@ const FanLogin = () => {
             <button
               onClick={() => {
                 setShowRoleConflictModal(false);
-                navigate('/creator/dashboard');
+                navigate('/');
               }}
               style={{
                 width: '100%',
@@ -567,7 +573,7 @@ const FanLogin = () => {
               onMouseOver={(e) => e.target.style.background = '#4B5563'}
               onMouseOut={(e) => e.target.style.background = '#374151'}
             >
-              Go to Creator Dashboard
+              Close
             </button>
           </div>
         </div>

@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import WalletPaymentButton from './WalletPaymentButton';
 
 const ChatEndScreen = ({ creator, sessionId, totalMinutes, totalCost, error, messages = [], isFreeChat, rate, walletBalance: initialWalletBalance, onBack, onContinueChat, onDone, endedByCreator }) => {
-  const [rating, setRating] = useState(0);
+  const [rating, setRating] = useState(5);
   const [hoverRating, setHoverRating] = useState(0);
   const [selectedTags, setSelectedTags] = useState([]);
   const [feedback, setFeedback] = useState('');
@@ -271,9 +271,14 @@ const ChatEndScreen = ({ creator, sessionId, totalMinutes, totalCost, error, mes
           </div>
 
           {endedByCreator ? (
-            <h2 style={{ margin: '0 0 24px 0', color: '#fff', fontSize: '1.25rem', fontWeight: '600', lineHeight: '1.4' }}>
-              The creator has ended the chat! Hope you have enjoyed the conversation with {creator?.name}.
-            </h2>
+            <>
+              <h2 style={{ margin: '0 0 4px 0', color: '#fff', fontSize: '1.5rem', fontWeight: '600' }}>
+                Chat ended by the creator, hope you have enjoyed the conversation
+              </h2>
+              <p style={{ color: '#94a3b8', margin: '0 0 24px 0', fontSize: '0.95rem' }}>
+                with {creator?.name}
+              </p>
+            </>
           ) : (
             <>
               <h2 style={{ margin: '0 0 4px 0', color: '#fff', fontSize: '1.5rem', fontWeight: '600' }}>

@@ -344,7 +344,7 @@ router.post('/email-signup', async (req, res) => {
   let fan = await Fan.findOne({ email });
   if (fan) {
     return res.status(400).json({ 
-      message: 'you are signed in as a fan please sign up with a different account',
+      message: 'Access Denied',
       isRoleConflict: true
     });
   }

@@ -241,13 +241,11 @@ const Footer = ({ theme, showTalkDirectly = true }) => {
         </div>
 
         {/* Join as a Creator Section */}
-        {(!isAuthenticated || (roles && roles.includes('creator'))) && (
-          <div className="col-span-1 flex flex-col gap-5">
-            <h4 className={`${theme === 'light' ? 'text-black' : 'text-white'} font-bold tracking-widest text-xs uppercase mb-2`}>Join as a Creator</h4>
-            <a href="/creator/login" className={`${theme === 'light' ? 'text-gray-600 hover:text-black' : 'text-[#a3a3a3] hover:text-white'} transition-colors text-sm`}>Creator Login</a>
-            <a href="/creator/signup" className={`${theme === 'light' ? 'text-gray-600 hover:text-black' : 'text-[#a3a3a3] hover:text-white'} transition-colors text-sm`}>Creator Registration</a>
-          </div>
-        )}
+        <div className="col-span-1 flex flex-col gap-5">
+          <h4 className={`${theme === 'light' ? 'text-black' : 'text-white'} font-bold tracking-widest text-xs uppercase mb-2`}>Join as a Creator</h4>
+          <a href="/creator/login" className={`${theme === 'light' ? 'text-gray-600 hover:text-black' : 'text-[#a3a3a3] hover:text-white'} transition-colors text-sm`}>Creator Login</a>
+          <a href="/creator/signup" className={`${theme === 'light' ? 'text-gray-600 hover:text-black' : 'text-[#a3a3a3] hover:text-white'} transition-colors text-sm`}>Creator Registration</a>
+        </div>
       </div>
 
       {/* Bottom Bar */}

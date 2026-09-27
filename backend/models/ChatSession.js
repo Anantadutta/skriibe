@@ -20,6 +20,7 @@ const ChatSessionSchema = new mongoose.Schema({
   fanAccepted: { type: Boolean, default: false },
   fanAcceptedAt: { type: Date },
   chatId: { type: String, unique: true, sparse: true },
+  endReason: { type: String },
   review: {
     rating: { type: Number },
     tags: [{ type: String }],

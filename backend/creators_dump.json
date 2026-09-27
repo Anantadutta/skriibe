@@ -237,12 +237,12 @@
     "_id": "6a95a275af8f208b91ee4b79",
     "name": "Anaaya P",
     "profileUrl": "skriibe.com/theanaayaroy.10",
-    "avatarUrl": "https://res.cloudinary.com/x4tw73kr/image/upload/v1788608548/avatars/eu7v3b3m64xian7oqfoj.png",
-    "price": 49,
-    "pricePerQuestion": 49,
+    "avatarUrl": "https://res.cloudinary.com/x4tw73kr/image/upload/v1789906772/avatars/xp6rgljbxen11qwphzx7.png",
+    "price": 50,
+    "pricePerQuestion": 50,
     "isLive": true,
     "handle": "theanaayaroy.10",
-    "liveChatPrice": 5
+    "liveChatPrice": 15
   },
   {
     "_id": "6a97a476af8f208b91ee4ee4",
@@ -357,5 +357,27 @@
     "isLive": true,
     "liveChatPrice": 5,
     "handle": "tarungujral"
+  },
+  {
+    "_id": "6aaebe90534b0d6482091e47",
+    "name": "Tarundeep Singh",
+    "profileUrl": "skriibe.com/Tarun.Gujral5",
+    "avatarUrl": "https://res.cloudinary.com/x4tw73kr/image/upload/v1789837082/avatars/kfaakxjpzzgb479o29sg.webp",
+    "price": 10,
+    "pricePerQuestion": 10,
+    "isLive": true,
+    "liveChatPrice": 5,
+    "handle": "tarun.gujral5"
+  },
+  {
+    "_id": "6aaec456534b0d6482091e74",
+    "name": "Winters Magic",
+    "profileUrl": "skriibe.com/winters",
+    "avatarUrl": "",
+    "price": 0,
+    "pricePerQuestion": 0,
+    "isLive": false,
+    "liveChatPrice": 5,
+    "handle": "winters"
   }
 ]

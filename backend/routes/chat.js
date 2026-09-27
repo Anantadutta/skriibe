@@ -46,10 +46,33 @@ router.post('/start', verifyFanToken, async (req, res) => {
     }
 
     // Cleanly terminate any prior active sessions between this creator and fan
-    await ChatSession.updateMany(
-      { creatorId: creator._id, fanId: fan._id, status: 'active' },
-      { $set: { status: 'ended', endTime: new Date(), cancelledByFan: true } }
-    );
+    const priorSessions = await ChatSession.find({ creatorId: creator._id, fanId: fan._id, status: 'active' });
+    if (priorSessions.length > 0) {
+      await ChatSession.updateMany(
+        { creatorId: creator._id, fanId: fan._id, status: 'active' },
+        { $set: { status: 'ended', endTime: new Date(), cancelledByFan: true, endReason: 'USER_CANCEL' } }
+      );
+
+      if (req.io) {
+        priorSessions.forEach(prior => {
+          const endPayload = {
+            sessionId: prior._id.toString(),
+            fanId: prior.fanId.toString(),
+            fanName: fan.name || '',
+            creatorId: prior.creatorId.toString(),
+            totalMinutes: prior.totalMinutes || 0,
+            totalCost: prior.totalCost || 0,
+            reason: 'USER_CANCEL'
+          };
+          
+          req.io.to(`creator_${prior.creatorId.toString()}`).emit('chat_cancelled_by_fan', endPayload);
+          req.io.to(`creator_${prior.creatorId.toString()}`).emit('chat_ended', endPayload);
+          req.io.to(prior._id.toString()).emit('chat_ended', endPayload);
+          req.io.emit('chat-session-ended', endPayload);
+          req.io.emit('chat_ended', endPayload);
+        });
+      }
+    }
 
     const counter = await Counter.findOneAndUpdate(
       { _id: 'chatId' },
@@ -246,7 +269,8 @@ router.post('/end', async (req, res) => {
             status: 'ended', 
             creatorJoined: true, 
             cancelledByFan: true, 
-            endTime: session.endTime || new Date() 
+            endTime: session.endTime || new Date(),
+            endReason: reason || 'USER_ENDED'
           } 
         }
       );
@@ -325,7 +349,8 @@ router.post('/end', async (req, res) => {
       creatorJoined: true, // Guarantees this session is permanently excluded from active pending query
       cancelledByFan: true,
       totalMinutes: session.totalMinutes,
-      totalCost: session.totalCost
+      totalCost: session.totalCost,
+      endReason: reason || 'USER_ENDED'
     };
 
     // Terminate all active sessions between this creator and this fan
@@ -336,6 +361,7 @@ router.post('/end', async (req, res) => {
     session.status = 'ended';
     session.creatorJoined = true;
     session.cancelledByFan = true;
+    session.endReason = reason || 'USER_ENDED';
 
     const fanName = fan?.name || '';
 

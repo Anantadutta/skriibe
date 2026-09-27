@@ -187,10 +187,24 @@ const CreatorDashboard = () => {
           const nowMs = Date.now();
           const missed = res.data.sessions.filter(s => {
             if (s.totalMinutes !== 0 || s.notifiedMissed) return false;
+            // Only show as missed if it was a TIMEOUT, or legacy chats without endReason
+            if (s.endReason && s.endReason !== 'TIMEOUT') return false;
             const chatTime = new Date(s.endTime || s.startTime || s.createdAt).getTime();
             return (nowMs - chatTime) <= 24 * 60 * 60 * 1000;
           });
-          setMissedChats(missed);
+          
+          // Deduplicate by fanId so we only show one missed request per fan
+          const uniqueMissed = [];
+          const fanIds = new Set();
+          for (const s of missed) {
+            const fanIdStr = String(s.fanId?._id || s.fanId);
+            if (!fanIds.has(fanIdStr)) {
+              fanIds.add(fanIdStr);
+              uniqueMissed.push(s);
+            }
+          }
+          
+          setMissedChats(uniqueMissed);
           
           // Calculate accepted chats this week (totalMinutes > 0 and within last 7 days)
           const now = new Date();
@@ -637,42 +651,6 @@ const CreatorDashboard = () => {
           0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
           100% { box-shadow: 0 0 0 14px rgba(34, 197, 94, 0); }
         }
-        .toggle-switch {
-          position: relative;
-          display: inline-block;
-          width: 44px;
-          height: 24px;
-        }
-        .toggle-switch input {
-          opacity: 0;
-          width: 0;
-          height: 0;
-        }
-        .slider {
-          position: absolute;
-          cursor: pointer;
-          top: 0; left: 0; right: 0; bottom: 0;
-          background-color: #4b5563;
-          transition: .4s;
-          border-radius: 24px;
-        }
-        .slider:before {
-          position: absolute;
-          content: "";
-          height: 18px;
-          width: 18px;
-          left: 3px;
-          bottom: 3px;
-          background-color: white;
-          transition: .4s;
-          border-radius: 50%;
-        }
-        input:checked + .slider {
-          background-color: #22C55E;
-        }
-        input:checked + .slider:before {
-          transform: translateX(20px);
-        }
       `}} />
 
 
@@ -925,25 +903,41 @@ const CreatorDashboard = () => {
 
         {/* LIVE TOGGLE */}
         <div style={{
-          background: 'rgba(255, 255, 255, 0.02)',
-          border: '1px solid rgba(255, 255, 255, 0.05)',
-          borderRadius: '16px',
-          padding: '20px',
+          background: '#0B0D13',
+          border: '1px solid #1F2937',
+          borderRadius: '999px',
+          padding: '8px 8px 8px 20px',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center'
         }}>
-          <div>
-            <div style={{ color: '#fff', fontWeight: 700, fontSize: '1rem' }}>Accept Live Chats Now</div>
-            <div style={{ color: '#94a3b8', fontSize: '0.8rem', marginTop: '4px' }}>
-              Available Now? Go Live!<br />
-              You don’t have to wait for your scheduled slot.
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{
+              width: '14px',
+              height: '14px',
+              borderRadius: '50%',
+              background: isLive ? '#10B981' : '#6B7280'
+            }}></div>
+            <div style={{ color: '#fff', fontWeight: 700, fontSize: '1.05rem' }}>
+              {isLive ? 'Accepting Live Chats' : 'Status: Offline'}
             </div>
           </div>
-          <label className="toggle-switch">
-            <input type="checkbox" checked={isLive} onChange={handleToggle} />
-            <span className="slider"></span>
-          </label>
+          <button 
+            onClick={handleToggle}
+            style={{
+              background: isLive ? 'rgba(16, 185, 129, 0.15)' : 'rgba(255, 255, 255, 0.1)',
+              color: isLive ? '#10B981' : '#E5E7EB',
+              border: 'none',
+              borderRadius: '999px',
+              padding: '12px 24px',
+              fontWeight: 600,
+              fontSize: '0.95rem',
+              cursor: 'pointer',
+              transition: 'all 0.2s'
+            }}
+          >
+            {isLive ? 'Go Offline' : 'Go Online'}
+          </button>
         </div>
 
         {/* 3. PENDING QUEUE */}
@@ -1103,16 +1097,6 @@ const CreatorDashboard = () => {
                           >
                             {fanName}
                           </span>
-                          {(chat.rate === 0 || chat.rate === '0') && (
-                            <span style={{ background: 'rgba(34, 197, 94, 0.1)', border: '1px solid rgba(34, 197, 94, 0.2)', color: '#4ADE80', fontSize: '9px', fontWeight: 700, padding: '2px 6px', borderRadius: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                              Free Chat
-                            </span>
-                          )}
-                          {chat.isContinueChat && (
-                            <span style={{ background: 'rgba(59, 168, 216, 0.1)', color: '#3BA8D8', border: '1px solid rgba(59, 168, 216, 0.3)', borderRadius: '4px', fontSize: '9px', fontWeight: 700, padding: '2px 6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                              Continue Chat
-                            </span>
-                          )}
                         </div>
 
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '11px', flexWrap: 'wrap' }}>
@@ -1133,7 +1117,17 @@ const CreatorDashboard = () => {
                       </div>
                     </div>
 
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flexShrink: 0 }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flexShrink: 0, alignItems: 'center' }}>
+                      {(chat.rate === 0 || chat.rate === '0') && (
+                        <span style={{ background: 'rgba(34, 197, 94, 0.1)', border: '1px solid rgba(34, 197, 94, 0.2)', color: '#4ADE80', fontSize: '9px', fontWeight: 700, padding: '2px 6px', borderRadius: '4px', textTransform: 'uppercase', letterSpacing: '0.5px', textAlign: 'center', width: '100%', boxSizing: 'border-box' }}>
+                          Free Chat
+                        </span>
+                      )}
+                      {chat.isContinueChat && (
+                        <span style={{ background: 'rgba(59, 168, 216, 0.1)', color: '#3BA8D8', border: '1px solid rgba(59, 168, 216, 0.3)', borderRadius: '4px', fontSize: '9px', fontWeight: 700, padding: '2px 6px', textTransform: 'uppercase', letterSpacing: '0.5px', textAlign: 'center', width: '100%', boxSizing: 'border-box' }}>
+                          Continue Chat
+                        </span>
+                      )}
                       <button 
                         onClick={() => handleAcceptChat(chat.sessionId)}
                         style={{
@@ -1917,11 +1911,6 @@ const CreatorDashboard = () => {
                         >
                           {fanName}
                         </span>
-                        {chat.isContinueChat && (
-                          <span style={{ background: 'rgba(59, 168, 216, 0.2)', color: '#3BA8D8', border: '1px solid rgba(59, 168, 216, 0.4)', borderRadius: '6px', fontSize: '10px', fontWeight: 800, padding: '2px 6px', textTransform: 'uppercase', flexShrink: 0 }}>
-                            Continue Chat
-                          </span>
-                        )}
                         <span style={{ fontSize: '12px', color: '#29C5F6', fontWeight: 600, flexShrink: 0 }}>
                           {currencySymbol}{creator.liveChatPrice || 5}/min
                         </span>

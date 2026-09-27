@@ -232,9 +232,9 @@ router.get('/me', verifyFanToken, async (req, res) => {
 
 router.put('/me', verifyFanToken, async (req, res) => {
   try {
-    const { email, phone, name } = req.body;
-    if (!email && !phone && name === undefined) {
-      return res.status(400).json({ success: false, message: 'Name, email, or phone is required' });
+    const { email, phone, name, dob, gender, city } = req.body;
+    if (!email && !phone && name === undefined && dob === undefined && gender === undefined && city === undefined) {
+      return res.status(400).json({ success: false, message: 'No valid fields provided for update' });
     }
 
     await connectDB();
@@ -247,6 +247,10 @@ router.put('/me', verifyFanToken, async (req, res) => {
       }
       updateData.name = trimmedName;
     }
+    
+    if (dob !== undefined) updateData.dob = dob;
+    if (gender !== undefined) updateData.gender = gender;
+    if (city !== undefined) updateData.city = city;
 
     if (email) {
       const existingFan = await Fan.findOne({ email: email.toLowerCase(), _id: { $ne: req.fan.fanId } });

@@ -12,9 +12,9 @@ import WhosOnline from './components/WhosOnline';
 import HowItWorksSection from './components/HowItWorksSection';
 import InsideChatSection from './components/InsideChatSection';
 import NewFansOnly from './components/NewFansOnly';
-import ForCreatorsSection from './components/ForCreatorsSection';
 import StopTypingSection from './components/StopTypingSection';
 import HeroChatSimulation from './components/HeroChatSimulation';
+import ForCreatorsSection from './components/ForCreatorsSection';
 
 // Context
 import { CreatorOnboardingProvider } from './context/CreatorOnboardingContext';
@@ -36,8 +36,7 @@ import FAQPage from './pages/FAQPage';
 import HowItWorksPage from './pages/HowItWorksPage';
 import ContactUs from './pages/ContactUs';
 import RaiseQuery from './pages/RaiseQuery';
-import CreatorSignup from './pages/creator/CreatorSignup';
-import CreatorLogin from './pages/creator/CreatorLogin';
+import CreatorAuth from './pages/creator/CreatorAuth';
 import CreatorForgotPassword from './pages/creator/CreatorForgotPassword';
 import CreatorResetPassword from './pages/creator/CreatorResetPassword';
 import CreatorVerifyOTP from './pages/creator/CreatorVerifyOTP';
@@ -403,13 +402,11 @@ function App() {
             <Route path="/verify-email" element={<EmailVerificationFlow />} />
             <Route path="/affiliate" element={<AffiliateProgram theme={theme} />} />
             
-            {/* Creator Auth Routes - Kept outside BlockFanRoute so fans can see the conflict modal */}
-            <Route path="/creator/signup" element={<CreatorSignup />} />
-            <Route path="/creator/login" element={
-              <SmartLoginRedirect>
-                <CreatorLogin />
-              </SmartLoginRedirect>
-            } />
+            {/* Creator Auth Routes - Consolidated */}
+            <Route path="/creator" element={<CreatorAuth />} />
+            <Route path="/creator/auth" element={<CreatorAuth />} />
+            <Route path="/creator/signup" element={<CreatorAuth />} />
+            <Route path="/creator/login" element={<CreatorAuth />} />
             <Route path="/creator/forgot-password" element={<CreatorForgotPassword />} />
             <Route path="/creator/reset-password/:token" element={<CreatorResetPassword />} />
 

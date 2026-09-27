@@ -207,8 +207,9 @@ const CreatorLiveChat = () => {
     };
   }, [viewState, session?._id, session?.id, session?.sessionId, sessionId, navigate]);
 
+  // Auto-mark messages as read if window is focused
   useEffect(() => {
-    const handleFocus = () => {
+    const markUnread = () => {
       if (!socketRef.current || !session) return;
       messages.forEach(m => {
         if ((m.sender || m.senderRole) !== 'creator' && !m.readAt) {
@@ -219,9 +220,35 @@ const CreatorLiveChat = () => {
         }
       });
     };
-    window.addEventListener('focus', handleFocus);
-    return () => window.removeEventListener('focus', handleFocus);
+
+    if (document.hasFocus()) {
+      markUnread();
+    }
+    
+    window.addEventListener('focus', markUnread);
+    return () => window.removeEventListener('focus', markUnread);
   }, [messages, session]);
+
+  // Robust polling fallback for production environments (Vercel/Serverless/Multi-instance)
+  useEffect(() => {
+    let pollTimer;
+    const sId = session?._id || session?.id || session?.sessionId;
+    if (viewState === 'active' && sId && !error) {
+      pollTimer = setInterval(async () => {
+        try {
+          const res = await api.get(`/chat/${sId}`);
+          if (res.data?.success) {
+            if (res.data.messages && res.data.messages.length > 0) {
+              setMessages(prev => mergeAndSortMessages(prev, res.data.messages));
+            }
+          }
+        } catch (e) {
+          console.error("Polling fallback error", e);
+        }
+      }, 2500);
+    }
+    return () => clearInterval(pollTimer);
+  }, [viewState, session?._id, session?.id, session?.sessionId, error]);
 
   const connectSocket = (id) => {
     if (socketRef.current) {

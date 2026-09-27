@@ -1,46 +1,111 @@
-import React, { useState } from 'react';
-import TransparentLogo from '../../components/TransparentLogo';
-import { useNavigate, Link, useLocation } from 'react-router-dom';
-import { fanSignup } from '../../services/fanApi';
-import { useAuth } from '../../context/AuthContext';
+/**
+ * @file CreatorAuth.jsx
+ * @description Consolidated Creator authentication screen via email and password (supports both Login and Signup).
+ */
 
-const FanSignup = () => {
-  const [name, setName] = useState('');
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
+import TransparentLogo from '../../components/TransparentLogo';
+import { useAuth } from '../../context/AuthContext';
+import { emailSignup, emailLogin } from '../../services/creatorApi';
+
+const CreatorAuth = () => {
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const initialMode = location.pathname.includes('login') ? 'login' : 'signup';
+  const urlError = searchParams.get('error');
+
+  const [isLogin, setIsLogin] = useState(initialMode === 'login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
-  const location = useLocation();
-  const searchParams = new URLSearchParams(location.search);
-  const urlError = searchParams.get('error');
 
-  const [error, setError] = useState(urlError && urlError !== 'CONFLICT_CREATOR' ? urlError : '');
-  const [whatsappConsent, setWhatsappConsent] = useState(false);
-  
-  const [focusedName, setFocusedName] = useState(false);
+  const [error, setError] = useState(urlError === 'CONFLICT_FAN' ? '' : (urlError || ''));
   const [focusedEmail, setFocusedEmail] = useState(false);
   const [focusedPassword, setFocusedPassword] = useState(false);
+  const [focusedConfirm, setFocusedConfirm] = useState(false);
   const [showRoleConflictModal, setShowRoleConflictModal] = useState(false);
   const [roleConflictMessage, setRoleConflictMessage] = useState('');
+  
+  const navigate = useNavigate();
+  const { roles, setAuthData, isAuthenticated } = useAuth();
+  const [showAlreadyCreatorModal, setShowAlreadyCreatorModal] = useState(false);
+  
+  const successMessage = location.state?.message;
 
-  React.useEffect(() => {
-    if (urlError === 'CONFLICT_CREATOR') {
+  useEffect(() => {
+    if (roles?.includes('creator') && isAuthenticated) {
+      const urlParams = new URLSearchParams(location.search);
+      if (urlParams.get('ref')) {
+        setShowAlreadyCreatorModal(true);
+        return;
+      } else {
+        navigate('/creator/dashboard', { replace: true });
+        return;
+      }
+    }
+  }, [navigate, roles, location.search, isAuthenticated]);
+
+  useEffect(() => {
+    if (urlError === 'CONFLICT_FAN') {
+      setRoleConflictMessage('Access Denied');
       setShowRoleConflictModal(true);
     }
   }, [urlError]);
-  
-  const { setAuthData } = useAuth();
-  
-  console.log("FanSignup rendered");
 
   const checkPasswordStrength = (pwd) => {
     return pwd.length >= 8 && /[0-9\W]/.test(pwd);
   };
 
-  const handleRegister = async () => {
-    if (!name || !email || !password) {
+  const handleSubmit = async () => {
+    if (isLogin) {
+      if (!email || !password) {
+        setError('Please enter both email and password');
+        return;
+      }
+      
+      localStorage.removeItem('bankLinked');
+      setLoading(true);
+      setError('');
+      try {
+        const res = await emailLogin(email, password);
+        const { creator, token } = res.data;
+        
+        localStorage.setItem('isReturningCreator', 'true');
+        
+        if (token) {
+          setAuthData(['creator'], 'creator', token);
+        }
+        
+        if (creator.handle) {
+          navigate('/creator/dashboard', { state: { creator }, replace: true });
+        } else {
+          navigate('/onboard/profile', { state: { creator }, replace: true });
+        }
+      } catch (err) {
+        if (err.response?.data?.isRoleConflict) {
+          setRoleConflictMessage('Access Denied');
+          setShowRoleConflictModal(true);
+        } else {
+          setError(err.response?.data?.message || 'Login failed. Try again.');
+        }
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
+    // SIGNUP LOGIC
+    if (!email || !password || !confirmPassword) {
       setError('Please fill out all fields');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
       return;
     }
 
@@ -52,28 +117,52 @@ const FanSignup = () => {
     setLoading(true);
     setError('');
     try {
-      const res = await fanSignup(name, email, password, '', whatsappConsent);
+      const urlParams = new URLSearchParams(location.search);
+      const ref = urlParams.get('ref');
+      const res = await emailSignup(email, password, ref);
       if (res.data.success) {
-        setAuthData(['fan'], 'fan', res.data.token);
-        // Redirect to email verification and let it redirect to explore/next path
-        const queryParams = new URLSearchParams(window.location.search);
-        const nextRoute = queryParams.get('redirect') || '/discovery';
-        navigate('/verify-email', { state: { email, nextRoute, nextState: {} } });
+        localStorage.setItem('isReturningCreator', 'true');
+        localStorage.removeItem('bankLinked');
+        
+        const isExisting = res.data.isExisting;
+        
+        if (res.data.token && res.data.creator) {
+          setAuthData(['creator'], 'creator', res.data.token);
+        }
+        
+        if (isExisting) {
+          if (res.data.creator.handle) {
+            navigate('/creator/dashboard', { state: { creator: res.data.creator }, replace: true });
+          } else {
+            navigate('/onboard/profile', { state: { creator: res.data.creator }, replace: true });
+          }
+        } else {
+          const nextRoute = (res.data.token && res.data.creator) ? '/onboard/profile' : '/creator/login';
+          const nextState = (res.data.token && res.data.creator) ? { creator: res.data.creator } : { message: 'Registration successful! Please log in.' };
+          navigate('/verify-email', { state: { email, nextRoute, nextState } });
+        }
       }
     } catch (err) {
       console.error("Signup error:", err);
       if (err.response?.data?.isRoleConflict) {
-        setRoleConflictMessage(err.response.data.message || 'You are signed in as a creator please sign up with a different account to be a fan');
+        setRoleConflictMessage('Access Denied');
         setShowRoleConflictModal(true);
       } else {
-        setError(err.response?.data?.message || 'Signup failed. Try again.');
+        setError(err.response?.data?.message || 'Registration failed. Please check if your backend server is running.');
       }
     } finally {
       setLoading(false);
     }
   };
 
-  const isInvalid = !name || !email || !password || !checkPasswordStrength(password);
+  const isInvalid = isLogin ? (!email || !password) : (!email || !password || !confirmPassword || password !== confirmPassword || !checkPasswordStrength(password));
+
+  const toggleMode = () => {
+    setIsLogin(!isLogin);
+    setError('');
+    setPassword('');
+    setConfirmPassword('');
+  };
 
   return (
     <div style={{
@@ -113,6 +202,13 @@ const FanSignup = () => {
           mixBlendMode: 'overlay',
           pointerEvents: 'none'
         }} />
+        <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
+          <div className="sparkle" style={{ top: '12%', left: '18%', animationDelay: '0s' }} />
+          <div className="sparkle" style={{ top: '35%', left: '80%', animationDelay: '1.2s' }} />
+          <div className="sparkle" style={{ top: '58%', left: '6%', animationDelay: '2.8s' }} />
+          <div className="sparkle" style={{ top: '82%', left: '84%', animationDelay: '0.5s' }} />
+          <div className="sparkle" style={{ top: '92%', left: '22%', animationDelay: '2s' }} />
+        </div>
       </div>
 
       <style dangerouslySetInnerHTML={{ __html: `
@@ -122,6 +218,19 @@ const FanSignup = () => {
           66% { transform: translate(-15px, 15px) rotate(240deg) scale(0.98); }
           100% { transform: translate(0px, 0px) rotate(360deg) scale(1); }
         }
+        @keyframes sparkle-pulse {
+          0%, 100% { opacity: 0.2; transform: scale(0.8); }
+          50% { opacity: 1; transform: scale(1.2) rotate(45deg); }
+        }
+        .sparkle {
+          position: absolute;
+          width: 3px;
+          height: 3px;
+          background: #ffffff;
+          border-radius: 50%;
+          box-shadow: 0 0 6px #06b6d4, 0 0 10px #7c3aed;
+          animation: sparkle-pulse 4s infinite ease-in-out;
+        }
         .gradient-action-btn:hover:not(:disabled) {
           transform: translateY(-2px);
           box-shadow: 0 0 20px rgba(124, 58, 237, 0.6), 0 0 30px rgba(6, 182, 212, 0.4) !important;
@@ -129,18 +238,48 @@ const FanSignup = () => {
         .gradient-action-btn:active:not(:disabled) {
           transform: translateY(0);
         }
-        input {
-          transition: background-color 5000s ease-in-out 0s;
-        }
-        input:-webkit-autofill,
-        input:-webkit-autofill:hover, 
-        input:-webkit-autofill:focus, 
-        input:-webkit-autofill:active {
-          -webkit-text-fill-color: #ffffff !important;
-          -webkit-background-clip: text !important;
-          background-clip: text !important;
+        .social-btn:hover {
+          background: rgba(255, 255, 255, 0.08) !important;
+          border-color: rgba(255, 255, 255, 0.2) !important;
+          transform: translateY(-1.5px);
+          box-shadow: 0 4px 15px rgba(6, 182, 212, 0.15) !important;
         }
       `}} />
+
+      {/* Already Creator Modal */}
+      {showAlreadyCreatorModal && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 1000,
+          background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px'
+        }}>
+          <div style={{
+            background: '#0E0E0E', border: '1px solid #1F2937', borderRadius: '16px',
+            padding: '32px', width: '100%', maxWidth: '400px', textAlign: 'center',
+            boxShadow: '0 20px 40px rgba(0,0,0,0.5)'
+          }}>
+            <div style={{ fontSize: '3rem', marginBottom: '16px' }}>👋</div>
+            <h3 style={{ margin: '0 0 12px 0', fontSize: '1.4rem', color: '#fff', fontWeight: 800 }}>
+              You're already a Creator!
+            </h3>
+            <p style={{ color: '#94a3b8', fontSize: '0.95rem', marginBottom: '24px', lineHeight: 1.5 }}>
+              You are currently logged into your Skriibe account. You cannot refer yourself or create a new account while logged in.
+            </p>
+            <button
+              onClick={() => navigate('/creator/dashboard')}
+              style={{
+                width: '100%', padding: '12px', background: '#38BDF8', color: '#0E0E0E',
+                border: 'none', borderRadius: '12px', fontWeight: 800, fontSize: '1rem',
+                cursor: 'pointer', transition: 'all 0.2s'
+              }}
+              onMouseOver={(e) => e.target.style.background = '#0EA5E9'}
+              onMouseOut={(e) => e.target.style.background = '#38BDF8'}
+            >
+              Go to Dashboard
+            </button>
+          </div>
+        </div>
+      )}
 
       <div style={{
         width: '100%',
@@ -198,7 +337,7 @@ const FanSignup = () => {
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <div style={{ textAlign: 'center', marginTop: '10px' }}>
+            <div style={{ textAlign: 'center', marginTop: '0px' }}>
               <div style={{
                 width: '120px',
                 margin: '0 auto -28px',
@@ -206,69 +345,28 @@ const FanSignup = () => {
               }}>
                 <TransparentLogo src="/logo.png" alt="skriibe logo" style={{ width: '100%', height: 'auto', transform: 'scale(1.8)' }} />
               </div>
-              <div style={{ color: '#ffffff', fontSize: '18px', fontFamily: 'var(--font-body)', fontWeight: '400', marginBottom: '8px' }}>
-                Join as a Fan. Connect with creators.
-              </div>
-              <div style={{ color: '#94a3b8', fontSize: '14px', fontFamily: 'var(--font-body)', fontWeight: '400' }}>
-                Ask questions. Get personal replies.
+              <div style={{ color: '#94a3b8', fontSize: '14px', fontFamily: 'var(--font-body)', fontWeight: '500' }}>
+                {isLogin ? 'Welcome back. Log in to your account.' : 'Join the platform. Get paid to reply.'}
               </div>
             </div>
 
             <div style={{ marginTop: '20px' }}>
-              <label style={{
-                fontFamily: 'var(--font-mono)',
-                fontSize: '9px',
-                color: '#06b6d4',
-                textTransform: 'uppercase',
-                display: 'block',
-                marginBottom: '6px',
-                letterSpacing: '1.5px',
-                fontWeight: '600'
-              }}>
-                NAME
-              </label>
-
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                background: 'rgba(255, 255, 255, 0.03)',
-                border: focusedName ? '1px solid #7c3aed' : '1px solid rgba(255, 255, 255, 0.08)',
-                borderRadius: '12px',
-                boxShadow: focusedName ? '0 0 15px rgba(124, 58, 237, 0.3)' : 'none',
-                transition: 'all 0.25s ease',
-                overflow: 'hidden',
-                marginBottom: '12px'
-              }}>
-                <div style={{ padding: '0 0 0 16px', display: 'flex', alignItems: 'center', color: '#94a3b8' }}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                    <circle cx="12" cy="7" r="4"></circle>
-                  </svg>
+              {isLogin && successMessage && (
+                <div style={{
+                  color: '#22c55e',
+                  background: 'rgba(34, 197, 94, 0.1)',
+                  border: '1px solid rgba(34, 197, 94, 0.2)',
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: '12px',
+                  padding: '12px',
+                  borderRadius: '12px',
+                  marginBottom: '20px',
+                  textAlign: 'center'
+                }}>
+                  ✅ {successMessage}
                 </div>
-                <input
-                  type="text"
-                  placeholder="Name"
-                  value={name}
-                  onChange={(e) => {
-                    setName(e.target.value);
-                    if (error) setError('');
-                  }}
-                  onFocus={() => setFocusedName(true)}
-                  onBlur={() => setFocusedName(false)}
-                  style={{
-                    flex: 1,
-                    background: 'transparent',
-                    border: 'none',
-                    outline: 'none',
-                    padding: '12px 16px 12px 12px',
-                    fontSize: '16px',
-                    color: '#ffffff',
-                    fontFamily: 'var(--font-mono)',
-                    letterSpacing: '1px'
-                  }}
-                />
-              </div>
-
+              )}
+            
               <label style={{
                 fontFamily: 'var(--font-mono)',
                 fontSize: '9px',
@@ -293,12 +391,6 @@ const FanSignup = () => {
                 overflow: 'hidden',
                 marginBottom: '12px'
               }}>
-                <div style={{ padding: '0 0 0 16px', display: 'flex', alignItems: 'center', color: '#94a3b8' }}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-                    <polyline points="22,6 12,13 2,6"></polyline>
-                  </svg>
-                </div>
                 <input
                   type="email"
                   placeholder="your@gmail.com"
@@ -314,7 +406,7 @@ const FanSignup = () => {
                     background: 'transparent',
                     border: 'none',
                     outline: 'none',
-                    padding: '12px 16px 12px 12px',
+                    padding: '10px 14px',
                     fontSize: '16px',
                     color: '#ffffff',
                     fontFamily: 'var(--font-mono)',
@@ -333,7 +425,7 @@ const FanSignup = () => {
                 letterSpacing: '1.5px',
                 fontWeight: '600'
               }}>
-                CREATE PASSWORD
+                {isLogin ? 'PASSWORD' : 'CREATE PASSWORD'}
               </label>
 
               <div style={{
@@ -345,14 +437,8 @@ const FanSignup = () => {
                 boxShadow: focusedPassword ? '0 0 15px rgba(124, 58, 237, 0.3)' : 'none',
                 transition: 'all 0.25s ease',
                 overflow: 'hidden',
-                marginBottom: '12px'
+                marginBottom: isLogin ? '0px' : '12px'
               }}>
-                <div style={{ padding: '0 0 0 16px', display: 'flex', alignItems: 'center', color: '#94a3b8' }}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                  </svg>
-                </div>
                 <input
                   type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
@@ -368,7 +454,7 @@ const FanSignup = () => {
                     background: 'transparent',
                     border: 'none',
                     outline: 'none',
-                    padding: '12px 16px 12px 12px',
+                    padding: '10px 14px',
                     fontSize: '16px',
                     color: '#ffffff',
                     fontFamily: 'var(--font-mono)',
@@ -407,11 +493,107 @@ const FanSignup = () => {
                 </button>
               </div>
 
-              <div style={{ color: '#94a3b8', fontSize: '11px', fontFamily: 'var(--font-mono)', marginBottom: '24px', marginTop: '-4px' }}>
-                Use 8+ characters with a mix of letters, numbers & symbols.
-              </div>
+              {!isLogin && password && !checkPasswordStrength(password) && (
+                <div style={{ color: '#ef4444', fontSize: '10px', fontFamily: 'var(--font-mono)', marginBottom: '16px', marginTop: '-8px' }}>
+                  Must be at least 8 chars with 1 number/special char.
+                </div>
+              )}
 
+              {!isLogin && (
+                <>
+                  <label style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '9px',
+                    color: '#06b6d4',
+                    textTransform: 'uppercase',
+                    display: 'block',
+                    marginBottom: '6px',
+                    letterSpacing: '1.5px',
+                    fontWeight: '600'
+                  }}>
+                    CONFIRM PASSWORD
+                  </label>
 
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    background: 'rgba(255, 255, 255, 0.03)',
+                    border: focusedConfirm ? '1px solid #7c3aed' : '1px solid rgba(255, 255, 255, 0.08)',
+                    borderRadius: '12px',
+                    boxShadow: focusedConfirm ? '0 0 15px rgba(124, 58, 237, 0.3)' : 'none',
+                    transition: 'all 0.25s ease',
+                    overflow: 'hidden',
+                    marginBottom: '12px'
+                  }}>
+                    <input
+                      type={showConfirmPassword ? "text" : "password"}
+                      placeholder="••••••••"
+                      value={confirmPassword}
+                      onChange={(e) => {
+                        setConfirmPassword(e.target.value);
+                        if (error) setError('');
+                      }}
+                      onFocus={() => setFocusedConfirm(true)}
+                      onBlur={() => setFocusedConfirm(false)}
+                      style={{
+                        flex: 1,
+                        background: 'transparent',
+                        border: 'none',
+                        outline: 'none',
+                        padding: '10px 14px',
+                        fontSize: '16px',
+                        color: '#ffffff',
+                        fontFamily: 'var(--font-mono)',
+                        letterSpacing: '1px'
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      style={{
+                        background: 'transparent',
+                        border: 'none',
+                        outline: 'none',
+                        padding: '0 16px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: '#94a3b8',
+                        transition: 'color 0.2s'
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.color = '#ffffff'}
+                      onMouseLeave={(e) => e.currentTarget.style.color = '#94a3b8'}
+                    >
+                      {showConfirmPassword ? (
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                          <line x1="1" y1="1" x2="23" y2="23"></line>
+                        </svg>
+                      ) : (
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                          <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                      )}
+                    </button>
+                  </div>
+
+                  {password && confirmPassword && password !== confirmPassword && (
+                    <div style={{ color: '#ef4444', fontSize: '10px', fontFamily: 'var(--font-mono)', marginBottom: '16px', marginTop: '-8px' }}>
+                      Passwords do not match
+                    </div>
+                  )}
+                </>
+              )}
+
+              {isLogin && (
+                <div style={{ textAlign: 'right', marginTop: '12px', paddingRight: '4px' }}>
+                  <Link to="/creator/forgot-password" style={{ color: '#06b6d4', textDecoration: 'none', fontSize: '13px', fontWeight: '500' }}>
+                    Forgot Password?
+                  </Link>
+                </div>
+              )}
 
               {error && (
                 <div style={{
@@ -427,44 +609,54 @@ const FanSignup = () => {
 
               <button
                 disabled={isInvalid || loading}
-                onClick={handleRegister}
+                onClick={handleSubmit}
                 className="gradient-action-btn"
                 style={{
                   width: '100%',
                   maxWidth: '280px',
-                  padding: '14px 28px',
+                  padding: '12px 24px',
                   borderRadius: '9999px',
                   background: 'linear-gradient(90deg, #7c3aed 0%, #06b6d4 100%)',
                   color: '#ffffff',
-                  fontWeight: '600',
-                  fontSize: '15px',
+                  fontWeight: '700',
+                  fontSize: '14px',
                   border: 'none',
                   cursor: 'pointer',
                   transition: 'all 0.25s ease',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  margin: '8px auto 0',
+                  margin: '12px auto 0',
                   boxShadow: '0 4px 12px rgba(124, 58, 237, 0.2)'
                 }}
               >
-                {loading ? 'Registering...' : 'Join as a Fan →'}
+                {loading ? (isLogin ? 'Logging in...' : 'Registering...') : (isLogin ? 'Login →' : 'Register →')}
               </button>
+
+              <div style={{ textAlign: 'center', marginTop: '12px', fontSize: '13px' }}>
+                <span style={{ color: '#94a3b8' }}>{isLogin ? "Don't have an account? " : "Already have an account? "}</span>
+                <span 
+                  onClick={toggleMode}
+                  style={{ color: '#06b6d4', textDecoration: 'none', fontWeight: '600', cursor: 'pointer' }}
+                >
+                  {isLogin ? "Register here" : "Log in here"}
+                </span>
+              </div>
             </div>
 
-            <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
               <div style={{ textAlign: 'center', color: '#94a3b8', fontSize: '12px', marginBottom: '8px' }}>
-                or sign up with
+                or {isLogin ? 'continue' : 'sign up'} with
               </div>
               
-              <a href={`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/auth/google?role=fan`}
+              <a href={`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/auth/google${new URLSearchParams(location.search).get('ref') ? `?ref=${new URLSearchParams(location.search).get('ref')}` : ''}`}
                  className="social-btn"
                  style={{
                    display: 'flex',
                    alignItems: 'center',
                    justifyContent: 'center',
                    gap: '10px',
-                   padding: '12px 24px',
+                   padding: '10px 20px',
                    background: 'rgba(255, 255, 255, 0.03)',
                    border: '1px solid rgba(255, 255, 255, 0.08)',
                    borderRadius: '9999px',
@@ -487,14 +679,14 @@ const FanSignup = () => {
                 Continue with Google
               </a>
 
-              <a href={`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/auth/facebook?role=fan`}
+              <a href={`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/auth/facebook${new URLSearchParams(location.search).get('ref') ? `?ref=${new URLSearchParams(location.search).get('ref')}` : ''}`}
                  className="social-btn"
                  style={{
                    display: 'flex',
                    alignItems: 'center',
                    justifyContent: 'center',
                    gap: '10px',
-                   padding: '12px 24px',
+                   padding: '10px 20px',
                    background: 'rgba(24, 119, 242, 0.1)',
                    border: '1px solid rgba(24, 119, 242, 0.2)',
                    borderRadius: '9999px',
@@ -514,115 +706,64 @@ const FanSignup = () => {
                 Continue with Meta
               </a>
             </div>
-
-            {/* LINK TO LOGIN */}
-            <div style={{ textAlign: 'center', marginTop: '20px', fontSize: '13px', paddingBottom: '0' }}>
-              <span style={{ color: '#94a3b8' }}>Already have an account? </span>
-              <Link to="/fan/login" style={{ color: '#06b6d4', textDecoration: 'none', fontWeight: '500' }}>Log in</Link>
-            </div>
           </div>
 
           <div style={{
             textAlign: 'center',
-            marginTop: '8px',
+            marginTop: '16px',
             color: '#94a3b8',
-            fontSize: '13px',
+            fontSize: '11px',
             fontFamily: 'var(--font-mono)',
             lineHeight: '1.6'
           }}>
-            By signing up and using Skriibe, you agree to our<br />
+            By logging in and using Skriibe, you agree to our<br />
             <Link to="/terms" style={{ color: '#06b6d4', textDecoration: 'none' }}>Terms of Service</Link> and <Link to="/privacy" style={{ color: '#06b6d4', textDecoration: 'none' }}>Privacy Policy</Link>.
-            <div style={{ marginTop: '16px', opacity: 0.5, fontSize: '9px', textTransform: 'uppercase', letterSpacing: '1px' }}>
-              Made with 🤍 from Skriibe
+            <div style={{ marginTop: '8px', opacity: 0.5, fontSize: '9px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+              Made with 🤍 From Skriibe
             </div>
           </div>
         </div>
       </div>
+      
       {showRoleConflictModal && (
         <div style={{
           position: 'fixed',
-          top: 0, left: 0, right: 0, bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.7)',
+          inset: 0,
+          background: 'rgba(0,0,0,0.8)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          zIndex: 99999,
-          padding: '20px'
+          zIndex: 9999
         }}>
-          <div
-            style={{
-              background: '#13161c',
-              borderRadius: '24px',
-              padding: '32px',
-              width: '100%',
-              maxWidth: '400px',
-              border: '1px solid #1F2937',
-              boxShadow: '0 20px 40px rgba(0,0,0,0.4)',
-              textAlign: 'center',
-              position: 'relative',
-              overflow: 'hidden'
-            }}
-          >
-            <div style={{
-              position: 'absolute',
-              top: 0, left: 0, right: 0, height: '4px',
-              background: 'linear-gradient(90deg, #F59E0B, #EF4444)'
-            }} />
-            
-            <div style={{
-              width: '64px',
-              height: '64px',
-              borderRadius: '50%',
-              background: 'rgba(239, 68, 68, 0.1)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              margin: '0 auto 20px'
-            }}>
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-                <line x1="12" y1="9" x2="12" y2="13"/>
-                <line x1="12" y1="17" x2="12.01" y2="17"/>
-              </svg>
-            </div>
-
-            <h2 style={{ 
-              margin: '0 0 12px', 
-              fontSize: '22px', 
-              fontWeight: '700',
-              color: '#fff' 
-            }}>
-              Access Denied
-            </h2>
-            
-            <p style={{ 
-              margin: '0 0 24px', 
-              color: '#9CA3AF',
-              fontSize: '15px',
-              lineHeight: '1.5'
-            }}>
-              {roleConflictMessage || 'You are signed in as a creator please sign up with a different account to be a fan'}
+          <div style={{
+            background: '#1a1a24',
+            padding: '24px',
+            borderRadius: '12px',
+            maxWidth: '320px',
+            width: '90%',
+            textAlign: 'center',
+            border: '1px solid #ef4444'
+          }}>
+            <h3 style={{ color: '#ef4444', marginTop: 0 }}>Access Denied</h3>
+            <p style={{ color: '#ffffff', fontSize: '14px', lineHeight: '1.5' }}>
+              {roleConflictMessage}
             </p>
-
             <button
               onClick={() => {
                 setShowRoleConflictModal(false);
                 navigate('/');
               }}
               style={{
-                width: '100%',
-                padding: '14px',
-                background: '#374151',
+                marginTop: '16px',
+                background: '#ef4444',
                 color: '#fff',
                 border: 'none',
-                borderRadius: '12px',
-                fontSize: '15px',
-                fontWeight: '600',
+                padding: '10px 20px',
+                borderRadius: '8px',
                 cursor: 'pointer',
-                transition: 'background 0.2s'
+                fontWeight: 'bold',
+                width: '100%'
               }}
-              onMouseOver={(e) => e.target.style.background = '#4B5563'}
-              onMouseOut={(e) => e.target.style.background = '#374151'}
             >
               Close
             </button>
@@ -633,4 +774,4 @@ const FanSignup = () => {
   );
 };
 
-export default FanSignup;
+export default CreatorAuth;

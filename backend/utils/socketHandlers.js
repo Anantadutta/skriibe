@@ -30,12 +30,12 @@ module.exports = (io) => {
           fanName = session.fanId?.name || '';
           await ChatSession.updateMany(
             { creatorId: session.creatorId, fanId: session.fanId, status: 'active' },
-            { $set: { status: 'ended', endTime: new Date(), cancelledByFan: true, creatorJoined: true } }
+            { $set: { status: 'ended', endTime: new Date(), cancelledByFan: true, creatorJoined: true, endReason: 'USER_CANCEL' } }
           );
         } else {
           await ChatSession.updateOne(
             { _id: sessionId },
-            { $set: { status: 'ended', endTime: new Date(), cancelledByFan: true, creatorJoined: true } }
+            { $set: { status: 'ended', endTime: new Date(), cancelledByFan: true, creatorJoined: true, endReason: 'USER_CANCEL' } }
           );
         }
       } catch (err) {
@@ -64,12 +64,12 @@ module.exports = (io) => {
           fanName = session.fanId?.name || '';
           await ChatSession.updateMany(
             { creatorId: session.creatorId, fanId: session.fanId, status: 'active' },
-            { $set: { status: 'ended', endTime: new Date(), cancelledByFan: true, creatorJoined: true } }
+            { $set: { status: 'ended', endTime: new Date(), cancelledByFan: true, creatorJoined: true, endReason: 'CREATOR_DECLINED' } }
           );
         } else {
           await ChatSession.updateOne(
             { _id: sessionId },
-            { $set: { status: 'ended', endTime: new Date(), cancelledByFan: true, creatorJoined: true } }
+            { $set: { status: 'ended', endTime: new Date(), cancelledByFan: true, creatorJoined: true, endReason: 'CREATOR_DECLINED' } }
           );
         }
       } catch (err) {
@@ -458,7 +458,8 @@ module.exports = (io) => {
               cancelledByFan: true, 
               endTime: new Date(),
               totalMinutes: session.totalMinutes || 0,
-              totalCost: session.totalCost || 0
+              totalCost: session.totalCost || 0,
+              endReason: reason || 'SYSTEM_END'
             } 
           }
         );
@@ -467,6 +468,7 @@ module.exports = (io) => {
         session.creatorJoined = true;
         session.cancelledByFan = true;
         session.endTime = new Date();
+        session.endReason = reason || 'SYSTEM_END';
         await session.save();
 
         const sidStr = session._id.toString();

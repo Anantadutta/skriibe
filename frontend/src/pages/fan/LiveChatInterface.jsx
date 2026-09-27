@@ -267,8 +267,9 @@ const LiveChatInterface = () => {
     }
   }, [messages, viewState, creatorJoined]);
 
+  // Auto-mark messages as read if window is focused
   useEffect(() => {
-    const handleFocus = () => {
+    const markUnread = () => {
       if (!socketRef.current || !session) return;
       messages.forEach(m => {
         if ((m.sender || m.senderRole) !== 'fan' && !m.readAt) {
@@ -279,31 +280,44 @@ const LiveChatInterface = () => {
         }
       });
     };
-    window.addEventListener('focus', handleFocus);
-    return () => window.removeEventListener('focus', handleFocus);
+
+    if (document.hasFocus()) {
+      markUnread();
+    }
+    
+    window.addEventListener('focus', markUnread);
+    return () => window.removeEventListener('focus', markUnread);
   }, [messages, session]);
 
-  // Auto-poll while waiting so the Accept button appears automatically in real time without manual refresh,
-  // and immediately removes the waiting screen/Accept button if the session ends or times out
+  // Robust auto-poll for fallback messaging and waiting state
   useEffect(() => {
     let pollTimer;
     const sId = session?.sessionId || session?._id || session?.id;
     const cId = creator?._id || creator?.id;
     const pollStart = Date.now();
-    if (viewState === 'waiting' && (sId || cId)) {
+    
+    if ((viewState === 'waiting' || viewState === 'active') && (sId || cId)) {
       const checkStatus = async () => {
         try {
           if (sId) {
             const res = await api.get(`/chat/${sId}`);
             if (res.data?.success && res.data?.session) {
               const currentSession = res.data.session;
+              
+              if (viewState === 'active' && res.data.messages && res.data.messages.length > 0) {
+                setMessages(prev => mergeAndSortMessages(prev, res.data.messages));
+              }
+              
               if (currentSession.status === 'ended' && (Date.now() - pollStart > 3000)) {
                 if (pollTimer) clearInterval(pollTimer);
                 if (socketRef.current) socketRef.current.disconnect();
-                navigate(`/${handle}`);
+                if (viewState === 'waiting') {
+                  navigate(`/${handle}`);
+                }
                 return;
               }
-              if (currentSession.creatorJoined) {
+              
+              if (viewState === 'waiting' && currentSession.creatorJoined) {
                 if (waitingTimerRef.current) clearTimeout(waitingTimerRef.current);
                 setCreatorJoined(true);
                 if (currentSession.creatorJoinedAt) {
@@ -317,9 +331,11 @@ const LiveChatInterface = () => {
           console.error('Polling error checking chat session:', err);
         }
       };
+      
       checkStatus();
-      pollTimer = setInterval(checkStatus, 1000);
+      pollTimer = setInterval(checkStatus, viewState === 'active' ? 2500 : 1000);
     }
+    
     return () => {
       if (pollTimer) clearInterval(pollTimer);
     };

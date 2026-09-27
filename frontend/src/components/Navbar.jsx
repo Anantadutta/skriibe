@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Sun, Moon, Menu, X, User } from 'lucide-react';
+import { Sun, Moon, Menu, X } from 'lucide-react';
 import { io } from 'socket.io-client';
 import { getLiveCreators } from '../services/discoveryApi';
+import { getFanMe } from '../services/fanApi';
 import { checkIfLiveNow } from '../utils/timeUtils';
 import { useAuth } from '../context/AuthContext';
 
@@ -10,21 +11,63 @@ const Navbar = ({ theme, toggleTheme, showBanner = true }) => {
   const [liveCount, setLiveCount] = useState(0);
   const [loadingLive, setLoadingLive] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isCreatorDropdownOpen, setIsCreatorDropdownOpen] = useState(false);
+  const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const location = useLocation();
-  const { isAuthenticated, roles, logout } = useAuth();
+  const { isAuthenticated, roles, clearAuthData } = useAuth();
+
+  const [fanName, setFanName] = useState(() => localStorage.getItem('cachedFanName') || 'Fan');
+  const [fanAvatar, setFanAvatar] = useState(() => localStorage.getItem('skriibe_fan_avatar') || null);
 
   useEffect(() => {
     setIsMobileMenuOpen(false);
-    setIsCreatorDropdownOpen(false);
+    setIsProfileDropdownOpen(false);
   }, [location.pathname]);
+
+  useEffect(() => {
+    if (!isAuthenticated || (roles && roles.includes('creator'))) return;
+
+    const fetchFanProfile = async () => {
+      try {
+        const res = await getFanMe();
+        if (res.success && res.fan) {
+          if (res.fan.name) {
+            const firstName = res.fan.name.split(' ')[0];
+            setFanName(firstName);
+            localStorage.setItem('cachedFanName', firstName);
+          }
+          if (res.fan.avatarUrl) {
+            setFanAvatar(res.fan.avatarUrl);
+            localStorage.setItem('skriibe_fan_avatar', res.fan.avatarUrl);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch fan profile in navbar', err);
+      }
+    };
+    fetchFanProfile();
+
+    const handleProfileUpdate = (e) => {
+      const updatedName = e?.detail?.name || localStorage.getItem('cachedFanName') || 'Fan';
+      const firstName = updatedName.split(' ')[0];
+      setFanName(firstName);
+      const updatedAvatar = e?.detail?.avatarUrl || localStorage.getItem('skriibe_fan_avatar');
+      if (updatedAvatar) setFanAvatar(updatedAvatar);
+    };
+
+    window.addEventListener('fanProfileUpdated', handleProfileUpdate);
+    window.addEventListener('storage', handleProfileUpdate);
+    return () => {
+      window.removeEventListener('fanProfileUpdated', handleProfileUpdate);
+      window.removeEventListener('storage', handleProfileUpdate);
+    };
+  }, [isAuthenticated, roles]);
 
   const dropdownRef = React.useRef(null);
   
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsCreatorDropdownOpen(false);
+        setIsProfileDropdownOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -247,58 +290,59 @@ const Navbar = ({ theme, toggleTheme, showBanner = true }) => {
                 >
                   Start free chat
                 </Link>
+                <Link
+                  to="/creator/signup"
+                  className="text-xs sm:text-sm font-bold px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-[#3BA8D8] text-black hover:bg-[#3298c4] transition-all whitespace-nowrap shadow-[0_0_12px_rgba(59,168,216,0.3)] hover:shadow-[0_0_18px_rgba(59,168,216,0.5)]"
+                >
+                  Join as a creator
+                </Link>
+              </>
+            ) : (
+              <>
                 <div className="relative" ref={dropdownRef}>
                   <button
-                    onClick={() => setIsCreatorDropdownOpen(!isCreatorDropdownOpen)}
-                    className={`p-2 sm:px-3 sm:py-2 rounded-full transition-all flex items-center justify-center border ${
+                    onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
+                    className={`p-2 sm:px-3 sm:py-2 rounded-full transition-all flex items-center justify-center border gap-2 ${
                       theme === 'light'
                         ? 'border-gray-200 hover:bg-gray-100 text-gray-700'
                         : 'border-white/10 hover:bg-white/10 text-gray-200'
                     }`}
-                    title="Creator Menu"
+                    title="Fan Menu"
                   >
-                    <User size={20} />
+                    <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center text-white font-bold text-xs overflow-hidden shrink-0">
+                      {fanAvatar ? <img src={fanAvatar} alt={fanName} className="w-full h-full object-cover" /> : (fanName || 'F').charAt(0).toUpperCase()}
+                    </div>
+                    <span className="font-semibold text-sm hidden sm:block max-w-[80px] truncate">{fanName}</span>
                   </button>
-                  {isCreatorDropdownOpen && (
+                  {isProfileDropdownOpen && (
                     <div className={`absolute right-0 mt-2 w-48 rounded-xl shadow-lg border overflow-hidden z-50 ${
                       theme === 'light'
                         ? 'bg-white border-gray-200 text-gray-800'
                         : 'bg-[#12121a] border-white/10 text-gray-200'
                     }`}>
                       <div className="flex flex-col py-1">
-                        <Link to="/creator/dashboard" className={`px-4 py-2 text-sm font-semibold transition-colors ${theme === 'light' ? 'hover:bg-gray-100' : 'hover:bg-white/10'}`}>
-                          Dashboard
+                        <Link to="/" className={`px-4 py-2 text-sm font-semibold transition-colors ${theme === 'light' ? 'hover:bg-gray-100' : 'hover:bg-white/10'}`}>
+                          Home
                         </Link>
-                        <Link to="/creator/inbox" className={`px-4 py-2 text-sm font-semibold transition-colors ${theme === 'light' ? 'hover:bg-gray-100' : 'hover:bg-white/10'}`}>
-                          Chats
+                        <Link to="/fan/history" className={`px-4 py-2 text-sm font-semibold transition-colors ${theme === 'light' ? 'hover:bg-gray-100' : 'hover:bg-white/10'}`}>
+                          Inbox
                         </Link>
-                        <Link to="/creator/settings" className={`px-4 py-2 text-sm font-semibold transition-colors ${theme === 'light' ? 'hover:bg-gray-100' : 'hover:bg-white/10'}`}>
+                        <Link to="/fan/wallet" className={`px-4 py-2 text-sm font-semibold transition-colors ${theme === 'light' ? 'hover:bg-gray-100' : 'hover:bg-white/10'}`}>
+                          Wallet
+                        </Link>
+                        <Link to="/fan/wallet" className={`px-4 py-2 text-sm font-semibold transition-colors ${theme === 'light' ? 'hover:bg-gray-100' : 'hover:bg-white/10'}`}>
+                          Transactions
+                        </Link>
+                        <Link to="/fan/profile" className={`px-4 py-2 text-sm font-semibold transition-colors ${theme === 'light' ? 'hover:bg-gray-100' : 'hover:bg-white/10'}`}>
                           Settings
                         </Link>
+                        <button onClick={() => { clearAuthData(); window.location.href = '/'; }} className={`w-full text-left px-4 py-2 text-sm font-semibold text-red-500 transition-colors ${theme === 'light' ? 'hover:bg-gray-100' : 'hover:bg-white/10'}`}>
+                          Logout
+                        </button>
                       </div>
                     </div>
                   )}
                 </div>
-              </>
-            ) : (
-              <>
-                <Link
-                  to="/explore"
-                  className={`p-2 sm:px-3 sm:py-2 rounded-full transition-all flex items-center justify-center border ${
-                    theme === 'light'
-                      ? 'border-gray-200 hover:bg-gray-100 text-gray-700'
-                      : 'border-white/10 hover:bg-white/10 text-gray-200'
-                  }`}
-                  title="Fan Discovery"
-                >
-                  <User size={20} />
-                </Link>
-                <Link
-                  to="/creator/signup?error=CONFLICT_FAN"
-                  className="text-xs sm:text-sm font-bold px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-[#3BA8D8] text-black hover:bg-[#3298c4] transition-all whitespace-nowrap shadow-[0_0_12px_rgba(59,168,216,0.3)] hover:shadow-[0_0_18px_rgba(59,168,216,0.5)]"
-                >
-                  Join as a creator
-                </Link>
               </>
             )}
           </div>
@@ -451,54 +495,66 @@ const Navbar = ({ theme, toggleTheme, showBanner = true }) => {
                 >
                   Start free chat
                 </Link>
-                <div className={`w-full rounded-2xl overflow-hidden border ${theme === 'light' ? 'border-gray-200 bg-gray-50' : 'border-white/10 bg-white/5'}`}>
-                  <div className="w-full py-3 px-4 font-bold text-center text-sm flex items-center justify-center gap-2 text-gray-400 uppercase tracking-wider text-xs">
-                    <User size={16} /> Creator Menu
-                  </div>
-                  <div className={`h-px w-full ${theme === 'light' ? 'bg-gray-200' : 'bg-white/10'}`}></div>
-                  <Link
-                    to="/creator/dashboard"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className={`block w-full py-3 px-4 font-bold text-center text-sm transition-colors ${theme === 'light' ? 'hover:bg-gray-100 text-gray-800' : 'hover:bg-white/5 text-gray-200'}`}
-                  >
-                    Dashboard
-                  </Link>
-                  <Link
-                    to="/creator/inbox"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className={`block w-full py-3 px-4 font-bold text-center text-sm transition-colors ${theme === 'light' ? 'hover:bg-gray-100 text-gray-800' : 'hover:bg-white/5 text-gray-200'}`}
-                  >
-                    Chats
-                  </Link>
-                  <Link
-                    to="/creator/settings"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className={`block w-full py-3 px-4 font-bold text-center text-sm transition-colors ${theme === 'light' ? 'hover:bg-gray-100 text-gray-800' : 'hover:bg-white/5 text-gray-200'}`}
-                  >
-                    Settings
-                  </Link>
-                </div>
-              </>
-            ) : (
-              <>
                 <Link
-                  to="/explore"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className={`w-full py-3 px-4 rounded-full font-bold text-center text-sm transition-all flex items-center justify-center gap-2 border ${
-                    theme === 'light'
-                      ? 'border-gray-200 bg-gray-50 text-gray-800'
-                      : 'border-white/10 bg-white/5 text-gray-200'
-                  }`}
-                >
-                  <User size={18} /> Discovery
-                </Link>
-                <Link
-                  to="/creator/signup?error=CONFLICT_FAN"
+                  to="/creator/signup"
                   onClick={() => setIsMobileMenuOpen(false)}
                   className="w-full py-3 px-4 rounded-full bg-[#3BA8D8] text-black font-bold text-center text-sm hover:bg-[#3298c4] transition-all shadow-[0_0_12px_rgba(59,168,216,0.3)]"
                 >
                   Join as a creator
                 </Link>
+              </>
+            ) : (
+              <>
+                <div className={`w-full rounded-2xl overflow-hidden border ${theme === 'light' ? 'border-gray-200 bg-gray-50' : 'border-white/10 bg-white/5'}`}>
+                  <div className="w-full py-3 px-4 font-bold text-center text-sm flex items-center justify-center gap-2 text-gray-400 uppercase tracking-wider text-xs">
+                    <div className="w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center text-white font-bold text-[10px] overflow-hidden shrink-0">
+                      {fanAvatar ? <img src={fanAvatar} alt={fanName} className="w-full h-full object-cover" /> : (fanName || 'F').charAt(0).toUpperCase()}
+                    </div>
+                    {fanName}
+                  </div>
+                  <div className={`h-px w-full ${theme === 'light' ? 'bg-gray-200' : 'bg-white/10'}`}></div>
+                  <Link
+                    to="/"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={`block w-full py-3 px-4 font-bold text-center text-sm transition-colors ${theme === 'light' ? 'hover:bg-gray-100 text-gray-800' : 'hover:bg-white/5 text-gray-200'}`}
+                  >
+                    Home
+                  </Link>
+                  <Link
+                    to="/fan/history"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={`block w-full py-3 px-4 font-bold text-center text-sm transition-colors ${theme === 'light' ? 'hover:bg-gray-100 text-gray-800' : 'hover:bg-white/5 text-gray-200'}`}
+                  >
+                    Inbox
+                  </Link>
+                  <Link
+                    to="/fan/wallet"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={`block w-full py-3 px-4 font-bold text-center text-sm transition-colors ${theme === 'light' ? 'hover:bg-gray-100 text-gray-800' : 'hover:bg-white/5 text-gray-200'}`}
+                  >
+                    Wallet
+                  </Link>
+                  <Link
+                    to="/fan/wallet"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={`block w-full py-3 px-4 font-bold text-center text-sm transition-colors ${theme === 'light' ? 'hover:bg-gray-100 text-gray-800' : 'hover:bg-white/5 text-gray-200'}`}
+                  >
+                    Transactions
+                  </Link>
+                  <Link
+                    to="/fan/profile"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={`block w-full py-3 px-4 font-bold text-center text-sm transition-colors ${theme === 'light' ? 'hover:bg-gray-100 text-gray-800' : 'hover:bg-white/5 text-gray-200'}`}
+                  >
+                    Settings
+                  </Link>
+                  <button
+                    onClick={() => { clearAuthData(); window.location.href = '/'; }}
+                    className={`block w-full py-3 px-4 font-bold text-center text-sm text-red-500 transition-colors ${theme === 'light' ? 'hover:bg-gray-100' : 'hover:bg-white/5'}`}
+                  >
+                    Logout
+                  </button>
+                </div>
               </>
             )}
           </div>
