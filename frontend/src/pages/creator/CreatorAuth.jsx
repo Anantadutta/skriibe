@@ -64,7 +64,7 @@ const CreatorAuth = () => {
 
   useEffect(() => {
     if (urlError === 'CONFLICT_FAN') {
-      setRoleConflictMessage('Access Denied');
+      setRoleConflictMessage('This Google/Meta account is already registered as a Fan. Please use the Fan login page, or use a different account to sign up as a Creator.');
       setShowRoleConflictModal(true);
     }
   }, [urlError]);
@@ -100,7 +100,7 @@ const CreatorAuth = () => {
         }
       } catch (err) {
         if (err.response?.data?.isRoleConflict) {
-          setRoleConflictMessage('Access Denied');
+          setRoleConflictMessage('This email is already registered as a Fan. Please use the Fan login page, or use a different email to sign up as a Creator.');
           setShowRoleConflictModal(true);
         } else {
           setError(err.response?.data?.message || 'Login failed. Try again.');
@@ -158,7 +158,7 @@ const CreatorAuth = () => {
     } catch (err) {
       console.error("Signup error:", err);
       if (err.response?.data?.isRoleConflict) {
-        setRoleConflictMessage('Access Denied');
+        setRoleConflictMessage('This email is already registered as a Fan. Please use the Fan login page, or use a different email to sign up as a Creator.');
         setShowRoleConflictModal(true);
       } else {
         setError(err.response?.data?.message || 'Registration failed. Please check if your backend server is running.');
@@ -764,7 +764,7 @@ const CreatorAuth = () => {
             <button
               onClick={() => {
                 setShowRoleConflictModal(false);
-                navigate('/');
+                navigate('/creator/login', { replace: true });
               }}
               style={{
                 marginTop: '16px',

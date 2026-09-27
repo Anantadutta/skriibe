@@ -26,6 +26,7 @@ const FanSignup = () => {
 
   React.useEffect(() => {
     if (urlError === 'CONFLICT_CREATOR') {
+      setRoleConflictMessage('This Google/Meta account is already registered as a Creator. Please use the Creator login page, or use a different account to sign up as a Fan.');
       setShowRoleConflictModal(true);
     }
   }, [urlError]);
@@ -607,7 +608,7 @@ const FanSignup = () => {
             <button
               onClick={() => {
                 setShowRoleConflictModal(false);
-                navigate('/');
+                navigate('/fan/signup', { replace: true });
               }}
               style={{
                 width: '100%',
