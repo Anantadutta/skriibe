@@ -1,16 +1,5 @@
 [
   {
-    "_id": "6a451c838cf66d5022e8c403",
-    "name": "Vasundhara Keshan",
-    "profileUrl": "skriibe.com/Vasundhara",
-    "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocLdYVh9Pjq38_z0bTklCxd3VewtfP40NyAxl7o55ah3VlcnNK3vXA=s96-c",
-    "price": 11,
-    "pricePerQuestion": 11,
-    "isLive": true,
-    "handle": "vasundhara",
-    "liveChatPrice": 5
-  },
-  {
     "_id": "6a4626a2324a155fd084e736",
     "name": "shrijee bhartia",
     "profileUrl": "skriibe.com/bhartiya_shrijee",
@@ -315,28 +304,6 @@
     "liveChatPrice": 5
   },
   {
-    "_id": "6aa4e7330eecad831098ea4e",
-    "name": "Tarundeep Singh",
-    "profileUrl": "skriibe.com/tarun.gujral",
-    "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocKs1ghwlsKjCkMfn-H9CTompnVwbhAE7mXvfynWSuqupEwVfKQ=s96-c",
-    "price": 0,
-    "pricePerQuestion": 0,
-    "isLive": true,
-    "liveChatPrice": 5,
-    "handle": "tarun.gujral_deleted_1789488261822"
-  },
-  {
-    "_id": "6aa96c9838c092c955cc6e47",
-    "name": "Tarundeep Singh",
-    "profileUrl": "skriibe.com/tarun.gujral",
-    "avatarUrl": "https://res.cloudinary.com/x4tw73kr/image/upload/v1789488425/avatars/iyimiqauxpbolukqwv3m.webp",
-    "price": 0,
-    "pricePerQuestion": 0,
-    "isLive": true,
-    "liveChatPrice": 5,
-    "handle": "tarun.gujral_deleted_1789578308733"
-  },
-  {
     "_id": "6aa976ce38c092c955cc6e95",
     "name": "Ira",
     "profileUrl": "skriibe.com/oneminuteaway",
@@ -346,38 +313,5 @@
     "isLive": true,
     "liveChatPrice": 5,
     "handle": "oneminuteaway_deleted_1789548237469"
-  },
-  {
-    "_id": "6aaacf4038c092c955cc77fe",
-    "name": "Tarundeep Singh",
-    "profileUrl": "skriibe.com/tarungujral",
-    "avatarUrl": "https://res.cloudinary.com/x4tw73kr/image/upload/v1789579138/avatars/jkuhb9fsqw4unqi8ccwr.webp",
-    "price": 0,
-    "pricePerQuestion": 0,
-    "isLive": true,
-    "liveChatPrice": 5,
-    "handle": "tarungujral"
-  },
-  {
-    "_id": "6aaebe90534b0d6482091e47",
-    "name": "Tarundeep Singh",
-    "profileUrl": "skriibe.com/Tarun.Gujral5",
-    "avatarUrl": "https://res.cloudinary.com/x4tw73kr/image/upload/v1789837082/avatars/kfaakxjpzzgb479o29sg.webp",
-    "price": 10,
-    "pricePerQuestion": 10,
-    "isLive": true,
-    "liveChatPrice": 5,
-    "handle": "tarun.gujral5"
-  },
-  {
-    "_id": "6aaec456534b0d6482091e74",
-    "name": "Winters Magic",
-    "profileUrl": "skriibe.com/winters",
-    "avatarUrl": "",
-    "price": 0,
-    "pricePerQuestion": 0,
-    "isLive": false,
-    "liveChatPrice": 5,
-    "handle": "winters"
   }
 ]

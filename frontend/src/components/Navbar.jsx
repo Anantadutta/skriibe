@@ -34,10 +34,16 @@ const Navbar = ({ theme, toggleTheme, showBanner = true }) => {
             const firstName = res.fan.name.split(' ')[0];
             setFanName(firstName);
             localStorage.setItem('cachedFanName', firstName);
+          } else {
+            setFanName('Fan');
+            localStorage.setItem('cachedFanName', 'Fan');
           }
           if (res.fan.avatarUrl) {
             setFanAvatar(res.fan.avatarUrl);
             localStorage.setItem('skriibe_fan_avatar', res.fan.avatarUrl);
+          } else {
+            setFanAvatar(null);
+            localStorage.removeItem('skriibe_fan_avatar');
           }
         }
       } catch (err) {

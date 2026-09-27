@@ -104,13 +104,21 @@ const FanDiscovery = () => {
     const fetchFanProfile = async () => {
       try {
         const res = await getFanMe();
-        if (res.success && res.fan && res.fan.name) {
-          const firstName = res.fan.name.split(' ')[0];
-          setFanName(firstName);
-          localStorage.setItem('skriibe_fan_name', firstName);
+        if (res.success && res.fan) {
+          if (res.fan.name) {
+            const firstName = res.fan.name.split(' ')[0];
+            setFanName(firstName);
+            localStorage.setItem('skriibe_fan_name', firstName);
+          } else {
+            setFanName('Fan');
+            localStorage.setItem('skriibe_fan_name', 'Fan');
+          }
           if (res.fan.avatarUrl) {
             setFanAvatar(res.fan.avatarUrl);
             localStorage.setItem('skriibe_fan_avatar', res.fan.avatarUrl);
+          } else {
+            setFanAvatar(null);
+            localStorage.removeItem('skriibe_fan_avatar');
           }
           if (res.fan.creatorHandle) {
             setFanCreatorHandle(res.fan.creatorHandle);

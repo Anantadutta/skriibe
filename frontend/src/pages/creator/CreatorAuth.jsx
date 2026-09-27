@@ -31,7 +31,7 @@ const CreatorAuth = () => {
   const [roleConflictMessage, setRoleConflictMessage] = useState('');
   
   const navigate = useNavigate();
-  const { roles, setAuthData, isAuthenticated } = useAuth();
+  const { roles, setAuthData, isAuthenticated, clearAuthData } = useAuth();
   const [showAlreadyCreatorModal, setShowAlreadyCreatorModal] = useState(false);
   
   const successMessage = location.state?.message;
@@ -46,8 +46,21 @@ const CreatorAuth = () => {
         navigate('/creator/dashboard', { replace: true });
         return;
       }
+    } else if (isAuthenticated && roles && !roles.includes('creator')) {
+      // User is logged in as a Fan, but trying to access Creator signup/login.
+      // Clear their token so they can sign up/login as a Creator properly.
+      if (typeof clearAuthData === 'function') {
+        clearAuthData();
+      } else {
+        localStorage.removeItem('skriibe_token');
+        localStorage.removeItem('auth_roles');
+        localStorage.removeItem('auth_activeRole');
+      }
+      document.cookie = 'skriibe_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+      document.cookie = 'creator_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+      document.cookie = 'fan_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
     }
-  }, [navigate, roles, location.search, isAuthenticated]);
+  }, [navigate, roles, location.search, isAuthenticated, clearAuthData]);
 
   useEffect(() => {
     if (urlError === 'CONFLICT_FAN') {

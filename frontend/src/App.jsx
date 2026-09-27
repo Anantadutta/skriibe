@@ -351,6 +351,16 @@ function App() {
     const token = hashParams.get('token');
     if (token) {
       localStorage.setItem('skriibe_token', token);
+      
+      const path = window.location.pathname;
+      if (path.includes('/creator') || path.includes('/onboard') || path.includes('/dashboard') || path.includes('/settings')) {
+        localStorage.setItem('auth_roles', JSON.stringify(['creator']));
+        localStorage.setItem('auth_activeRole', 'creator');
+      } else if (path.includes('/discovery') || path.includes('/explore') || path.includes('/fan')) {
+        localStorage.setItem('auth_roles', JSON.stringify(['fan']));
+        localStorage.setItem('auth_activeRole', 'fan');
+      }
+      
       window.dispatchEvent(new Event('skriibe:auth'));
       // Clean up the URL
       window.history.replaceState(null, '', window.location.pathname + window.location.search);
