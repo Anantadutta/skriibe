@@ -83,20 +83,7 @@ const verifyFanToken = async (req, res, next) => {
         fan = await Fan.findOne({ email: decoded.email.toLowerCase() });
       }
 
-      // Auto-create Fan account to allow creators to chat with other creators
-      if (!fan && creator) {
-        fan = new Fan({
-          email: creatorEmail || decoded.email.toLowerCase(),
-          password: Math.random().toString(36).slice(-10) + 'Aa1!', // Auto-generated password
-          name: creator.name || 'User',
-          phone: creator.phone
-        });
-        await fan.save();
-        
-        creator.fanId = fan._id;
-        await creator.save();
-      }
-
+      // Do not auto-create Fan account to enforce strict separation
       if (fan) {
         decoded.fanId = fan._id;
         if (!decoded.roles) decoded.roles = fan.roles;

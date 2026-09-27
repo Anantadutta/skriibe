@@ -647,11 +647,9 @@ const CreatorProfile = () => {
                       alert('Creator is offline. Try again later.');
                       return;
                     }
-                    if (isBanned || effectiveIsPreview) return;
+                    if (isBanned) return;
                     
-
-
-                    if (!isLoggedIn && !effectiveIsPreview) {
+                    if (!isLoggedIn) {
                       navigate(`/fan/login?redirect=/${handle}/live-chat`);
                     } else {
                       if (isFirstTimeUser) {
@@ -662,15 +660,15 @@ const CreatorProfile = () => {
                     }
                   }}
                   style={{
-                    background: (isBanned || effectiveIsPreview || dynamicallyLive === false) ? '#333' : '#3BA8D8',
-                    color: (isBanned || effectiveIsPreview || dynamicallyLive === false) ? '#888' : '#fff',
+                    background: (isBanned || dynamicallyLive === false) ? '#333' : '#3BA8D8',
+                    color: (isBanned || dynamicallyLive === false) ? '#888' : '#fff',
                     border: 'none',
                     borderRadius: '100px',
                     padding: '12px 24px',
                     fontWeight: '700',
                     fontSize: '14px',
-                    cursor: (isBanned || effectiveIsPreview || dynamicallyLive === false) ? 'not-allowed' : 'pointer',
-                    boxShadow: (isBanned || effectiveIsPreview || dynamicallyLive === false) ? 'none' : '0 4px 14px rgba(59, 168, 216, 0.3)'
+                    cursor: (isBanned || dynamicallyLive === false) ? 'not-allowed' : 'pointer',
+                    boxShadow: (isBanned || dynamicallyLive === false) ? 'none' : '0 4px 14px rgba(59, 168, 216, 0.3)'
                   }}
                 >
                   {isFirstTimeUser ? 'Start Free Chat' : 'Start Chat'}
