@@ -576,12 +576,15 @@ const LiveChatInterface = () => {
     }
 
     try {
-      await api.post('/chat/send-message', {
+      const res = await api.post('/chat/send-message', {
         sessionId: sId,
         sender: 'fan',
         content: currentInput,
         tempId
       });
+      if (res.data?.success && res.data.message) {
+        setMessages(prev => mergeAndSortMessages(prev, res.data.message));
+      }
     } catch (e) {
       console.error('Failed to send message via REST', e);
       // Fallback to socket if REST fails (e.g. locally)

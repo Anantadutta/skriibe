@@ -396,7 +396,11 @@ const CreatorDashboard = () => {
       // Revert on failure
       setIsLive(!newStatus);
       setCreator(prev => ({ ...prev, isLive: !newStatus }));
-      alert('Failed to update live status. Please try again.');
+      if (err.response?.status === 403) {
+        alert(err.response.data.message);
+      } else {
+        alert('Failed to update live status. Please try again.');
+      }
     }
   };
 
@@ -410,7 +414,11 @@ const CreatorDashboard = () => {
       console.error('Failed to toggle live chat status:', err);
       setIsLiveChatEnabled(!newStatus);
       setCreator(prev => ({ ...prev, liveChatEnabled: !newStatus }));
-      alert('Failed to update live chat status. Please try again.');
+      if (err.response?.status === 403) {
+        alert(err.response.data.message);
+      } else {
+        alert('Failed to update live chat status. Please try again.');
+      }
     }
   };
 

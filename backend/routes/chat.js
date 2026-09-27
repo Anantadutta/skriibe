@@ -656,7 +656,7 @@ router.get('/:sessionId', async (req, res) => {
     const sessionObj = session.toObject();
     sessionObj.messages = messages;
     
-    res.json({ success: true, session: sessionObj });
+    res.json({ success: true, session: sessionObj, messages });
   } catch (error) {
     console.error('Error fetching chat session:', error);
     res.status(500).json({ success: false, message: 'Internal server error' });
