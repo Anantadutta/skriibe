@@ -752,4 +752,75 @@ router.post('/review', verifyFanToken, async (req, res) => {
   }
 });
 
+// POST /api/chat/send-message
+router.post('/send-message', verifyFanOrCreatorToken, async (req, res) => {
+  try {
+    const { sessionId, sender, content, tempId } = req.body;
+    const session = await ChatSession.findById(sessionId);
+    if (!session || session.status !== 'active') {
+      return res.status(400).json({ success: false, message: 'Chat session is not active' });
+    }
+
+    const Message = require('../models/Message');
+    const sentAt = new Date();
+    
+    const message = new Message({
+      messageId: tempId || Date.now().toString(),
+      sessionId,
+      creatorId: session.creatorId,
+      fanId: session.fanId,
+      senderRole: sender,
+      content,
+      sentAt,
+      deliveredAt: null,
+      readAt: null
+    });
+    await message.save();
+
+    if (req.io) {
+      const messageData = JSON.parse(JSON.stringify(message.toObject()));
+      req.io.to(sessionId.toString()).emit('receive_message', messageData);
+    }
+
+    res.json({ success: true, message });
+  } catch (err) {
+    console.error('Error sending message:', err);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+// POST /api/chat/status
+router.post('/status', verifyFanOrCreatorToken, async (req, res) => {
+  try {
+    const { sessionId, messageIds, status } = req.body;
+    if (!messageIds || messageIds.length === 0) return res.json({ success: true });
+    
+    const Message = require('../models/Message');
+    const update = {};
+    if (status === 'delivered') update.deliveredAt = new Date();
+    if (status === 'read') {
+      update.readAt = new Date();
+      update.deliveredAt = new Date();
+    }
+    
+    await Message.updateMany(
+      { messageId: { $in: messageIds }, sessionId: sessionId },
+      { $set: update }
+    );
+    
+    if (req.io) {
+      // Fetch one to trigger the emit properly for all
+      const msgs = await Message.find({ messageId: { $in: messageIds }, sessionId: sessionId });
+      msgs.forEach(msg => {
+        req.io.to(sessionId.toString()).emit('message_status_update', msg);
+      });
+    }
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Error updating message status:', err);
+    res.status(500).json({ success: false });
+  }
+});
+
 module.exports = router;

@@ -311,10 +311,35 @@ const LiveChatInterface = () => {
               if (currentSession.status === 'ended' && (Date.now() - pollStart > 3000)) {
                 if (pollTimer) clearInterval(pollTimer);
                 if (socketRef.current) socketRef.current.disconnect();
+                
                 if (viewState === 'waiting') {
                   navigate(`/${handle}`);
+                } else if (viewState === 'active') {
+                  setEndStats({ minutes: currentSession.totalMinutes, cost: currentSession.totalCost, reason: currentSession.endReason });
+                  if (currentSession.endReason === 'INSUFFICIENT_BALANCE') {
+                    setShowRechargeOverlay(true);
+                  } else if (currentSession.endReason === 'FREE_TRIAL_ENDED') {
+                    setFreeChatEnded(true);
+                    setShowRechargeOverlay(true);
+                  } else {
+                    setViewState('ended');
+                  }
                 }
                 return;
+              }
+              
+              if (viewState === 'active' && res.data.messages) {
+                // Determine unread messages from creator
+                const unreadCreatorMsgs = res.data.messages.filter(m => (m.sender || m.senderRole) !== 'fan' && !m.readAt);
+                if (unreadCreatorMsgs.length > 0) {
+                  const messageIds = unreadCreatorMsgs.map(m => m.messageId);
+                  const isFocused = document.hasFocus();
+                  api.post('/chat/status', {
+                    sessionId: sId,
+                    messageIds,
+                    status: isFocused ? 'read' : 'delivered'
+                  }).catch(() => {});
+                }
               }
               
               if (viewState === 'waiting' && currentSession.creatorJoined) {
@@ -528,8 +553,8 @@ const LiveChatInterface = () => {
     }
   }, [viewState]);
 
-  const sendMessage = () => {
-    if (!input.trim() || !socketRef.current || !session) return;
+  const sendMessage = async () => {
+    if (!input.trim() || !session) return;
     const tempId = Date.now().toString() + Math.random().toString();
     
     // Optimistic UI
@@ -542,15 +567,33 @@ const LiveChatInterface = () => {
     };
     setMessages(prev => mergeAndSortMessages(prev, optimisticMsg));
 
-    socketRef.current.emit('send_message', {
-      sessionId: session.sessionId || session._id || session.id,
-      sender: 'fan',
-      content: input,
-      tempId
-    });
-    
-    socketRef.current.emit('stop_typing', { sessionId: session.sessionId || session._id || session.id, sender: 'fan' });
+    const sId = session.sessionId || session._id || session.id;
+    const currentInput = input;
     setInput('');
+
+    if (socketRef.current) {
+      socketRef.current.emit('stop_typing', { sessionId: sId, sender: 'fan' });
+    }
+
+    try {
+      await api.post('/chat/send-message', {
+        sessionId: sId,
+        sender: 'fan',
+        content: currentInput,
+        tempId
+      });
+    } catch (e) {
+      console.error('Failed to send message via REST', e);
+      // Fallback to socket if REST fails (e.g. locally)
+      if (socketRef.current) {
+        socketRef.current.emit('send_message', {
+          sessionId: sId,
+          sender: 'fan',
+          content: currentInput,
+          tempId
+        });
+      }
+    }
   };
 
   const handleInputChange = (e) => {
