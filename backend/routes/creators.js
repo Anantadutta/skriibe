@@ -16,6 +16,7 @@ const otpStore = require('../utils/otpStore');
 const { verifyCreatorToken } = require('../middleware/auth');
 const { sendWelcomeEmail, sendProfileSubmittedEmail, sendPasswordResetEmail } = require('../utils/emailService');
 const { normalizeExpertiseList } = require('../utils/expertiseConstants');
+const { calculateLiveStatus } = require('../utils/liveStatus');
 const crypto = require('crypto');
 
 const cloudinary = require('cloudinary').v2;
@@ -332,7 +333,8 @@ router.post('/email-signup', async (req, res) => {
           handle: creator.handle,
           ama_enabled: creator.ama_enabled,
           expertise: Array.isArray(creator.expertise) ? creator.expertise : [],
-          onboardingComplete
+          onboardingComplete,
+          isEmailVerified: creator.isEmailVerified || false
         },
         token
       });
@@ -411,7 +413,8 @@ router.post('/email-signup', async (req, res) => {
       handle: creator.handle,
       ama_enabled: creator.ama_enabled,
       expertise: normalizeExpertiseList(creator.expertise || []),
-      onboardingComplete: false
+      onboardingComplete: false,
+      isEmailVerified: creator.isEmailVerified || false
     },
     token
   });
@@ -469,7 +472,8 @@ res.json({
     handle: creator.handle,
     ama_enabled: creator.ama_enabled,
     expertise: normalizeExpertiseList(creator.expertise || []),
-    onboardingComplete
+    onboardingComplete,
+    isEmailVerified: creator.isEmailVerified || false
   },
   token
 });
@@ -608,6 +612,7 @@ router.get('/me', verifyCreatorToken, async (req, res) => {
       success: true, 
       creator: { 
         ...creator.toObject(), 
+        isLive: calculateLiveStatus(creator),
         expertise: normalizeExpertiseList(creator.expertise || []),
         activeStrikesCount 
       } 
@@ -913,7 +918,11 @@ router.post('/toggle-live', verifyCreatorToken, async (req, res) => {
 
     const updatedCreator = await Creator.findByIdAndUpdate(
       req.creator.creatorId,
-      { isLive },
+      { 
+        isLive, 
+        manualLiveOverride: isLive ? 'online' : 'offline',
+        manualLiveOverrideUpdatedAt: new Date()
+      },
       { new: true }
     );
 
@@ -922,8 +931,12 @@ router.post('/toggle-live', verifyCreatorToken, async (req, res) => {
       return res.status(401).json({ message: 'Session expired or user deleted. Please log in again.' });
     }
 
-    req.io.emit('creator-status-changed', { creatorId: updatedCreator._id.toString(), isLive });
-    res.json({ success: true, creator: updatedCreator });
+    const calculatedLive = calculateLiveStatus(updatedCreator);
+    const creatorObj = updatedCreator.toObject();
+    creatorObj.isLive = calculatedLive;
+
+    req.io.emit('creator-status-changed', { creatorId: updatedCreator._id.toString(), isLive: calculatedLive });
+    res.json({ success: true, creator: creatorObj });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });

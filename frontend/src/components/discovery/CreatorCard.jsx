@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Share2 } from 'lucide-react';
+import { Share2, Copy } from 'lucide-react';
 import { getImageUrl } from '../../utils/imageUtils';
 import { checkIfLiveNow } from '../../utils/timeUtils';
 import { getExpertiseIcon } from '../../utils/expertiseIcons';
@@ -77,6 +77,9 @@ const CreatorCard = ({ creator, isFirstTimeUser = false }) => {
     } else if (platform === 'instagram') {
       navigator.clipboard.writeText(shareUrl);
       alert('Profile link copied to clipboard! You can now paste it in Instagram.');
+    } else if (platform === 'clipboard') {
+      navigator.clipboard.writeText(shareUrl);
+      alert('Profile link copied to clipboard!');
     }
     setShowShareMenu(false);
   };
@@ -260,7 +263,17 @@ const CreatorCard = ({ creator, isFirstTimeUser = false }) => {
                 onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
                 onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="#25D366"><path d="M12.031 0C5.405 0 .015 5.39.015 12.016c0 2.119.553 4.187 1.6 6.008L.003 24l6.124-1.606c1.748.955 3.738 1.458 5.889 1.458 6.626 0 12.016-5.39 12.016-12.016S18.657 0 12.031 0zm6.155 17.382c-.246.692-1.428 1.318-1.968 1.408-.45.074-1.037.124-2.884-.641-2.227-.923-3.666-3.197-3.775-3.342-.108-.145-.902-1.2-1.002-2.284-.099-1.084.444-1.616.671-1.854.227-.238.491-.297.654-.297.163 0 .327.001.464.007.143.006.335-.055.517.383.185.445.626 1.536.681 1.645.054.108.09.238.018.384-.073.146-.109.238-.218.347-.109.109-.228.238-.328.328-.109.108-.228.228-.109.436.12.208.536.883 1.144 1.427.782.702 1.442.923 1.651 1.032.209.109.336.09.463-.054.127-.145.545-.636.691-.854.145-.218.29-.182.481-.109.19.073 1.2.564 1.4.673.2.109.336.163.382.254.045.091.045.527-.201 1.218z"/></svg>
+                <svg 
+                  width="16" 
+                  height="16" 
+                  viewBox="0 0 24 24" 
+                  fill="none" 
+                  xmlns="http://www.w3.org/2000/svg"
+                  style={{ borderRadius: '4px', overflow: 'hidden' }}
+                >
+                  <rect x="0" y="0" width="24" height="24" rx="5.4" fill="#25D366" />
+                  <path fillRule="evenodd" clipRule="evenodd" d="M18.4 5.6A8.9 8.9 0 0 0 12 3a8.9 8.9 0 0 0-7.7 13.5l-1.3 4.5 4.6-1.2A8.9 8.9 0 0 0 12 21a8.9 8.9 0 0 0 6.4-15.4zM12 19.5c-1.4 0-2.8-.4-4-1.1l-.3-.2-3 .8.8-2.9-.2-.3A7.4 7.4 0 0 1 12 4.5 7.4 7.4 0 0 1 12 19.5zm4.1-5.6c-.2-.1-1.3-.6-1.5-.7-.2-.1-.4-.2-.5.1-.2.2-.6.7-.7.9-.2.2-.3.2-.5.1-.2-.1-1-.4-1.8-1.1-.7-.6-1.1-1.3-1.2-1.5-.1-.2 0-.3.1-.4l.3-.3c.1-.1.2-.2.2-.4.1-.1 0-.3-.1-.4-.2-.5-.7-1.8-.9-2.5-.2-.7-.5-.6-.7-.6h-.6c-.2 0-.6.1-.8.3-.3.3-1 .9-1 2.2s1 2.5 1.1 2.7c.2.2 1.8 2.8 4.4 3.9.6.2 1.1.4 1.5.5.6.2 1.1.2 1.5.1.5-.1 1.4-.6 1.6-1.2.2-.6.2-1 .1-1.2z" fill="#ffffff" />
+                </svg>
                 WhatsApp
               </button>
               <button
@@ -274,9 +287,16 @@ const CreatorCard = ({ creator, isFirstTimeUser = false }) => {
                 onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
                 onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ stroke: `url(#igGradShare-${handle})` }}>
+                <svg 
+                  width="16" 
+                  height="16" 
+                  viewBox="0 0 24 24" 
+                  fill="none" 
+                  xmlns="http://www.w3.org/2000/svg"
+                  style={{ borderRadius: '4px', overflow: 'hidden' }}
+                >
                   <defs>
-                    <linearGradient id={`igGradShare-${handle}`} x1="2%" y1="84%" x2="98%" y2="16%">
+                    <linearGradient id={`igShareMenuGrad-${handle || 'creator'}`} x1="0%" y1="100%" x2="100%" y2="0%">
                       <stop offset="0%" stopColor="#f09433" />
                       <stop offset="25%" stopColor="#e6683c" />
                       <stop offset="50%" stopColor="#dc2743" />
@@ -284,11 +304,26 @@ const CreatorCard = ({ creator, isFirstTimeUser = false }) => {
                       <stop offset="100%" stopColor="#bc1888" />
                     </linearGradient>
                   </defs>
-                  <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
-                  <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
-                  <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+                  <rect width="24" height="24" rx="6" fill={`url(#igShareMenuGrad-${handle || 'creator'})`} />
+                  <rect x="4.5" y="4.5" width="15" height="15" rx="4" stroke="#ffffff" strokeWidth="1.8" fill="none" />
+                  <circle cx="12" cy="12" r="3.4" stroke="#ffffff" strokeWidth="1.8" fill="none" />
+                  <circle cx="16" cy="8" r="1.1" fill="#ffffff" />
                 </svg>
                 Instagram
+              </button>
+              <button
+                onClick={(e) => handleShare('clipboard', e)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '8px',
+                  background: 'transparent', border: 'none', color: '#E2E8F0', fontSize: '13px',
+                  borderRadius: '6px', cursor: 'pointer', textAlign: 'left', fontWeight: 500,
+                  transition: 'background 0.2s'
+                }}
+                onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+                onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
+              >
+                <Copy size={16} color="#E2E8F0" />
+                Copy to clipboard
               </button>
             </div>
           )}
@@ -449,15 +484,23 @@ const CreatorCard = ({ creator, isFirstTimeUser = false }) => {
               }}>
                 {(() => {
                   const raw = String(instagramFollowers || '').trim();
+                  
+                  // If it already looks like a formatted string with k/m/b, or includes 'follower', return it
+                  if (/[a-zA-Z]/i.test(raw) && !raw.toLowerCase().includes('follower')) {
+                    return `${raw} followers`;
+                  }
+                  
                   const num = typeof instagramFollowers === 'number'
                     ? instagramFollowers
                     : parseFloat(raw.replace(/[^0-9.]/g, ''));
-                  if (!isNaN(num)) {
+                    
+                  if (!isNaN(num) && raw === String(num)) {
                     const countStr = num >= 1000000
                       ? (num / 1000000).toFixed(1).replace('.0', '') + 'M'
                       : (num >= 1000 ? (num / 1000).toFixed(1).replace('.0', '') + 'k' : num.toLocaleString());
                     return `${countStr} followers`;
                   }
+                  
                   return raw.toLowerCase().includes('follower') ? raw : `${raw} followers`;
                 })()}
               </span>

@@ -46,6 +46,7 @@ const LiveChatInterface = () => {
   const [chatStartTime, setChatStartTime] = useState(null);
   const [showChatInfo, setShowChatInfo] = useState(false);
   const [isContinueChat, setIsContinueChat] = useState(false);
+  const [showCreatorEndedEarlyModal, setShowCreatorEndedEarlyModal] = useState(false);
 
   const QUICK_REACTIONS = ['❤️', '😂', '😮', '👍', '👎'];
 
@@ -322,6 +323,9 @@ const LiveChatInterface = () => {
                     setFreeChatEnded(true);
                     setShowRechargeOverlay(true);
                   } else {
+                    if (currentSession.endReason === 'CREATOR_ENDED' && currentSession.isFreeChat && (currentSession.totalMinutes * 60) < 60) {
+                      setShowCreatorEndedEarlyModal(true);
+                    }
                     setViewState('ended');
                   }
                 }
@@ -492,6 +496,9 @@ const LiveChatInterface = () => {
         setFreeChatEnded(true);
         setShowRechargeOverlay(true);
       } else {
+        if (data.creatorEndedUnderOneMinute) {
+          setShowCreatorEndedEarlyModal(true);
+        }
         setViewState('ended');
       }
       // Only disconnect if it's not a pausable state
@@ -674,6 +681,23 @@ const LiveChatInterface = () => {
   if (viewState === 'ended') {
     return (
       <div style={{ minHeight: '100vh', background: '#0a0a0f', paddingTop: '40px' }}>
+        {showCreatorEndedEarlyModal && (
+          <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ background: '#13161C', borderRadius: '16px', border: '1px solid #3BA8D8', padding: '32px', maxWidth: '400px', width: '90%', textAlign: 'center', boxShadow: '0 10px 40px rgba(59, 168, 216, 0.2)' }}>
+              <div style={{ fontSize: '48px', marginBottom: '16px' }}>🎁</div>
+              <h3 style={{ color: '#fff', margin: '0 0 16px 0', fontSize: '1.25rem' }}>Free Chat Retained</h3>
+              <p style={{ color: '#94a3b8', margin: '0 0 24px 0', fontSize: '0.95rem', lineHeight: '1.5' }}>
+                The creator has ended the chat under 1 minute, you are still eligible for another free chat with any creator of your choice.
+              </p>
+              <button 
+                onClick={() => setShowCreatorEndedEarlyModal(false)}
+                style={{ background: '#3BA8D8', color: '#fff', border: 'none', borderRadius: '12px', padding: '12px 24px', cursor: 'pointer', fontWeight: 'bold', width: '100%' }}
+              >
+                Awesome!
+              </button>
+            </div>
+          </div>
+        )}
         <ChatEndScreen 
           creator={creator} 
           sessionId={session?.sessionId || session?._id || session?.id}
@@ -692,6 +716,7 @@ const LiveChatInterface = () => {
             await startChat(creator, true, currentSessionId);
           }}
           endedByCreator={endStats?.reason === 'CREATOR_ENDED'}
+          endReason={endStats?.reason}
         />
       </div>
     );
@@ -1005,6 +1030,7 @@ const LiveChatInterface = () => {
             key={i} 
             onMouseEnter={() => setHoveredMessageId(m.messageId)}
             onMouseLeave={() => setHoveredMessageId(null)}
+            onClick={() => setHoveredMessageId(hoveredMessageId === m.messageId ? null : m.messageId)}
             style={{ display: 'flex', justifyContent: (m.sender || m.senderRole) === 'fan' ? 'flex-end' : ((m.sender || m.senderRole) === 'system' ? 'center' : 'flex-start'), position: 'relative' }}
           >
             {(m.sender || m.senderRole) === 'system' ? (
@@ -1049,10 +1075,12 @@ const LiveChatInterface = () => {
                     {QUICK_REACTIONS.map(emoji => (
                       <span 
                         key={emoji}
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.stopPropagation();
                           if (socketRef.current && session) {
                             socketRef.current.emit('react_message', { messageId: m.messageId, sessionId: session.sessionId || session._id || session.id, emoji, senderRole: 'fan' });
                           }
+                          setHoveredMessageId(null);
                         }}
                         style={{ cursor: 'pointer', fontSize: '18px', padding: '2px 4px', transition: 'transform 0.1s' }}
                         onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.2)'}

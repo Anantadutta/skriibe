@@ -19,7 +19,7 @@ const CreatorDashboard = () => {
   const { username } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
-  const { roles, setAuthData } = useAuth();
+  const { roles, setAuthData, clearAuthData } = useAuth();
 
   const [creator, setCreator] = useState(location.state?.creator || null);
   const [loadingInitial, setLoadingInitial] = useState(!location.state?.creator);
@@ -504,7 +504,15 @@ const CreatorDashboard = () => {
     return (
       <div style={{ background: '#0a0a0f', minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', color: '#fff' }}>
         <h2>Error Loading Creator</h2>
-        <button onClick={() => navigate('/creator/login')} style={{ marginTop: '16px', padding: '10px 20px', background: '#38bdf8', color: '#0f172a', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>Return to Login</button>
+        <button onClick={() => {
+          if (typeof clearAuthData === 'function') clearAuthData();
+          else {
+            localStorage.removeItem('skriibe_token');
+            localStorage.removeItem('auth_roles');
+            localStorage.removeItem('auth_activeRole');
+          }
+          navigate('/creator/login');
+        }} style={{ marginTop: '16px', padding: '10px 20px', background: '#38bdf8', color: '#0f172a', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>Return to Login</button>
       </div>
     );
   }
@@ -722,7 +730,7 @@ const CreatorDashboard = () => {
             
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center' }}>
-                <Link to="/">
+                <Link to="/creator/dashboard">
                   <TransparentLogo src="/logo.png" alt="skriibe logo" style={{ height: '24px', width: 'auto', transform: 'scale(4)', transformOrigin: 'left center' }} />
                 </Link>
               </div>

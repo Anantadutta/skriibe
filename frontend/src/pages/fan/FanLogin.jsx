@@ -8,7 +8,6 @@ const FanLogin = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -33,8 +32,6 @@ const FanLogin = () => {
     }
   }, [urlError]);
   
-  console.log("FanLogin rendered");
-
   const handleLogin = async () => {
     if (!email || !password) {
       setError('Please fill out all fields');
@@ -63,62 +60,21 @@ const FanLogin = () => {
     }
   };
 
-  const isInvalid = !email || !password;
-
   return (
     <div style={{
       minHeight: '100vh',
-      background: '#0a0a0f',
+      background: '#18172e',
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
       padding: '40px 0',
       position: 'relative',
-      overflowX: 'hidden'
+      overflowX: 'hidden',
+      color: '#ffffff',
+      fontFamily: 'system-ui, -apple-system, sans-serif'
     }}>
-      {/* Background Shader & Noise */}
-      <div style={{
-        position: 'fixed',
-        inset: 0,
-        zIndex: 0,
-        background: '#0a0a0f',
-        overflow: 'hidden',
-        pointerEvents: 'none'
-      }}>
-        <div style={{
-          position: 'absolute',
-          width: '180%',
-          height: '180%',
-          top: '-40%',
-          left: '-40%',
-          background: 'radial-gradient(circle at 30% 20%, rgba(124, 58, 237, 0.18) 0%, transparent 40%), radial-gradient(circle at 70% 80%, rgba(6, 182, 212, 0.18) 0%, transparent 40%), radial-gradient(circle at 50% 50%, rgba(147, 51, 234, 0.15) 0%, transparent 50%), radial-gradient(circle at 10% 80%, rgba(59, 130, 246, 0.15) 0%, transparent 45%)',
-          filter: 'blur(90px)',
-          animation: 'aurora-flow 25s infinite alternate ease-in-out'
-        }} />
-        <div style={{
-          position: 'absolute',
-          inset: 0,
-          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
-          opacity: 0.035,
-          mixBlendMode: 'overlay',
-          pointerEvents: 'none'
-        }} />
-      </div>
 
       <style dangerouslySetInnerHTML={{ __html: `
-        @keyframes aurora-flow {
-          0% { transform: translate(0px, 0px) rotate(0deg) scale(1); }
-          33% { transform: translate(20px, -30px) rotate(120deg) scale(1.05); }
-          66% { transform: translate(-15px, 15px) rotate(240deg) scale(0.98); }
-          100% { transform: translate(0px, 0px) rotate(360deg) scale(1); }
-        }
-        .gradient-action-btn:hover:not(:disabled) {
-          transform: translateY(-2px);
-          box-shadow: 0 0 20px rgba(124, 58, 237, 0.6), 0 0 30px rgba(6, 182, 212, 0.4) !important;
-        }
-        .gradient-action-btn:active:not(:disabled) {
-          transform: translateY(0);
-        }
         input {
           transition: background-color 5000s ease-in-out 0s;
         }
@@ -130,364 +86,308 @@ const FanLogin = () => {
           -webkit-background-clip: text !important;
           background-clip: text !important;
         }
+        ::placeholder {
+          color: #64748b;
+          opacity: 1;
+        }
       `}} />
 
       <div style={{
         width: '100%',
-        maxWidth: '480px',
-        padding: '0 16px',
+        maxWidth: '400px',
+        padding: '0 20px',
         margin: 'auto 0',
         boxSizing: 'border-box',
         zIndex: 1,
-        position: 'relative'
+        position: 'relative',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center'
       }}>
+        
         <div style={{
-          background: 'rgba(255, 255, 255, 0.05)',
-          backdropFilter: 'blur(12px)',
-          border: '1px solid rgba(255, 255, 255, 0.08)',
-          borderRadius: '16px',
-          padding: '20px',
-          display: 'flex',
-          flexDirection: 'column',
-          boxSizing: 'border-box'
+          width: '120px',
+          marginBottom: '20px'
         }}>
+          <TransparentLogo src="/logo.png" alt="skriibe logo" style={{ width: '100%', height: 'auto', transform: 'scale(1.8)' }} />
+        </div>
+        
+        <h1 style={{
+          fontSize: '24px',
+          fontWeight: '600',
+          margin: '0 0 8px 0',
+          color: '#ffffff'
+        }}>
+          Welcome back
+        </h1>
+        <p style={{
+          color: '#94a3b8',
+          fontSize: '15px',
+          margin: '0 0 32px 0'
+        }}>
+          Log in to your fan account
+        </p>
+
+        {/* Social Buttons */}
+        <div style={{
+          display: 'flex',
+          gap: '12px',
+          width: '100%',
+          marginBottom: '28px'
+        }}>
+          <a href={`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/auth/google?role=fan`}
+             style={{
+               flex: 1,
+               display: 'flex',
+               alignItems: 'center',
+               justifyContent: 'center',
+               gap: '8px',
+               padding: '12px',
+               background: 'rgba(255, 255, 255, 0.04)',
+               border: '1px solid rgba(255, 255, 255, 0.08)',
+               borderRadius: '9999px',
+               color: '#e2e8f0',
+               textDecoration: 'none',
+               fontSize: '14px',
+               fontWeight: '500',
+               transition: 'all 0.2s ease'
+             }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.16v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.16C1.43 8.55 1 10.22 1 12s.43 3.45 1.16 4.93l3.68-2.84z" fill="#FBBC05"/>
+              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.16 7.07l3.68 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+            </svg>
+            Google
+          </a>
+          <a href={`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/auth/facebook?role=fan`}
+             style={{
+               flex: 1,
+               display: 'flex',
+               alignItems: 'center',
+               justifyContent: 'center',
+               gap: '8px',
+               padding: '12px',
+               background: 'rgba(255, 255, 255, 0.04)',
+               border: '1px solid rgba(255, 255, 255, 0.08)',
+               borderRadius: '9999px',
+               color: '#e2e8f0',
+               textDecoration: 'none',
+               fontSize: '14px',
+               fontWeight: '500',
+               transition: 'all 0.2s ease'
+             }}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="#06b6d4">
+              <path d="M11.996 11.986h.008c2.812-1.94 4.576-3.153 6.447-3.153 1.957 0 3.549 1.583 3.549 3.535 0 1.95-1.592 3.53-3.549 3.53-1.87 0-3.635-1.21-6.447-3.149l-.008-.005.008-.005c-2.812-1.94-4.576-3.153-6.447-3.153-1.957 0-3.549 1.583-3.549 3.535 0 1.95 1.592 3.53 3.549 3.53 1.87 0 3.635-1.21 6.447-3.149zm9.996-5.535c-2.766 0-5.185 1.574-8.084 3.57-2.9-1.996-5.318-3.57-8.084-3.57C2.613 6.451 0 9.049 0 12.368c0 3.321 2.613 5.918 5.824 5.918 2.766 0 5.185-1.574 8.084-3.57 2.9 1.996 5.318 3.57 8.084 3.57 3.211 0 5.824-2.597 5.824-5.918 0-3.319-2.613-5.917-5.824-5.917z"/>
+            </svg>
+            Meta
+          </a>
+        </div>
+
+        {/* Divider */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          width: '100%',
+          marginBottom: '28px'
+        }}>
+          <div style={{ flex: 1, height: '1px', background: 'rgba(255, 255, 255, 0.1)' }}></div>
+          <span style={{ padding: '0 16px', color: '#64748b', fontSize: '13px' }}>or</span>
+          <div style={{ flex: 1, height: '1px', background: 'rgba(255, 255, 255, 0.1)' }}></div>
+        </div>
+
+        {message && (
           <div style={{
-            height: '40px',
+            background: 'rgba(16, 185, 129, 0.1)',
+            border: '1px solid rgba(16, 185, 129, 0.2)',
+            color: '#10b981',
+            padding: '12px',
+            borderRadius: '8px',
+            marginBottom: '16px',
+            width: '100%',
+            textAlign: 'center',
+            fontSize: '13px'
+          }}>
+            {message}
+          </div>
+        )}
+
+        <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {/* Email Input */}
+          <div style={{
             display: 'flex',
             alignItems: 'center',
-            position: 'relative',
-            marginBottom: '12px'
+            background: 'rgba(255, 255, 255, 0.03)',
+            border: focusedEmail ? '1px solid rgba(255, 255, 255, 0.2)' : '1px solid rgba(255, 255, 255, 0.08)',
+            borderRadius: '9999px',
+            transition: 'all 0.2s ease',
+            padding: '4px 20px'
           }}>
-            <Link to="/" style={{
-              position: 'absolute',
-              left: 0,
-              color: '#94a3b8',
-              textDecoration: 'none',
-              fontSize: '22px',
-              transition: 'color 0.2s',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: '32px',
-              height: '32px',
-              borderRadius: '50%',
-              background: 'rgba(255, 255, 255, 0.03)',
-              border: '1px solid rgba(255, 255, 255, 0.08)'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.color = '#06b6d4';
-              e.currentTarget.style.borderColor = 'rgba(6, 182, 212, 0.3)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.color = '#94a3b8';
-              e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.08)';
-            }}
-            >
-              ←
-            </Link>
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <div style={{ textAlign: 'center', marginTop: '10px' }}>
-              <div style={{
-                width: '120px',
-                margin: '0 auto -28px',
-                display: 'block'
-              }}>
-                <TransparentLogo src="/logo.png" alt="skriibe logo" style={{ width: '100%', height: 'auto', transform: 'scale(1.8)' }} />
-              </div>
-              <div style={{ color: '#94a3b8', fontSize: '14px', fontFamily: 'var(--font-body)', fontWeight: '500' }}>
-                Welcome back. Log in to your account.
-              </div>
-            </div>
-
-            {message && (
-              <div style={{
-                background: 'rgba(16, 185, 129, 0.1)',
-                border: '1px solid rgba(16, 185, 129, 0.2)',
-                color: '#10b981',
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+              <polyline points="22,6 12,13 2,6"></polyline>
+            </svg>
+            <input
+              type="email"
+              placeholder="Email address"
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                if (error) setError('');
+              }}
+              onFocus={() => setFocusedEmail(true)}
+              onBlur={() => setFocusedEmail(false)}
+              style={{
+                flex: 1,
+                background: 'transparent',
+                border: 'none',
+                outline: 'none',
                 padding: '12px',
-                borderRadius: '8px',
-                marginTop: '20px',
-                textAlign: 'center',
-                fontSize: '13px',
-                fontFamily: 'var(--font-mono)'
-              }}>
-                {message}
-              </div>
-            )}
-
-            <div style={{ marginTop: '20px' }}>
-              <label style={{
-                fontFamily: 'var(--font-mono)',
-                fontSize: '9px',
-                color: '#06b6d4',
-                textTransform: 'uppercase',
-                display: 'block',
-                marginBottom: '6px',
-                letterSpacing: '1.5px',
-                fontWeight: '600'
-              }}>
-                EMAIL ID
-              </label>
-
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                background: 'rgba(255, 255, 255, 0.03)',
-                border: focusedEmail ? '1px solid #7c3aed' : '1px solid rgba(255, 255, 255, 0.08)',
-                borderRadius: '12px',
-                boxShadow: focusedEmail ? '0 0 15px rgba(124, 58, 237, 0.3)' : 'none',
-                transition: 'all 0.25s ease',
-                overflow: 'hidden',
-                marginBottom: '12px'
-              }}>
-                <div style={{ padding: '0 0 0 16px', display: 'flex', alignItems: 'center', color: '#94a3b8' }}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-                    <polyline points="22,6 12,13 2,6"></polyline>
-                  </svg>
-                </div>
-                <input
-                  type="email"
-                  placeholder="your@gmail.com"
-                  value={email}
-                  onChange={(e) => {
-                    setEmail(e.target.value);
-                    if (error) setError('');
-                  }}
-                  onFocus={() => setFocusedEmail(true)}
-                  onBlur={() => setFocusedEmail(false)}
-                  style={{
-                    flex: 1,
-                    background: 'transparent',
-                    border: 'none',
-                    outline: 'none',
-                    padding: '12px 16px 12px 12px',
-                    fontSize: '16px',
-                    color: '#ffffff',
-                    fontFamily: 'var(--font-mono)',
-                    letterSpacing: '1px'
-                  }}
-                />
-              </div>
-
-              <label style={{
-                fontFamily: 'var(--font-mono)',
-                fontSize: '9px',
-                color: '#06b6d4',
-                textTransform: 'uppercase',
-                display: 'block',
-                marginBottom: '6px',
-                letterSpacing: '1.5px',
-                fontWeight: '600'
-              }}>
-                PASSWORD
-              </label>
-
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                background: 'rgba(255, 255, 255, 0.03)',
-                border: focusedPassword ? '1px solid #7c3aed' : '1px solid rgba(255, 255, 255, 0.08)',
-                borderRadius: '12px',
-                boxShadow: focusedPassword ? '0 0 15px rgba(124, 58, 237, 0.3)' : 'none',
-                transition: 'all 0.25s ease',
-                overflow: 'hidden',
-                marginBottom: '12px'
-              }}>
-                <div style={{ padding: '0 0 0 16px', display: 'flex', alignItems: 'center', color: '#94a3b8' }}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                  </svg>
-                </div>
-                <input
-                  type={showPassword ? "text" : "password"}
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => {
-                    setPassword(e.target.value);
-                    if (error) setError('');
-                  }}
-                  onFocus={() => setFocusedPassword(true)}
-                  onBlur={() => setFocusedPassword(false)}
-                  style={{
-                    flex: 1,
-                    background: 'transparent',
-                    border: 'none',
-                    outline: 'none',
-                    padding: '12px 16px 12px 12px',
-                    fontSize: '16px',
-                    color: '#ffffff',
-                    fontFamily: 'var(--font-mono)',
-                    letterSpacing: '1px'
-                  }}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  style={{
-                    background: 'transparent',
-                    border: 'none',
-                    outline: 'none',
-                    padding: '0 16px',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: '#94a3b8',
-                    transition: 'color 0.2s'
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.color = '#ffffff'}
-                  onMouseLeave={(e) => e.currentTarget.style.color = '#94a3b8'}
-                >
-                  {showPassword ? (
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
-                      <line x1="1" y1="1" x2="23" y2="23"></line>
-                    </svg>
-                  ) : (
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                      <circle cx="12" cy="12" r="3"></circle>
-                    </svg>
-                  )}
-                </button>
-              </div>
-
-              {/* Forgot Password Link */}
-              <div style={{ textAlign: 'right', marginTop: '12px', paddingRight: '4px' }}>
-                <Link to="/fan/forgot-password" style={{ color: '#06b6d4', textDecoration: 'none', fontSize: '13px', fontWeight: '500' }}>
-                  Forgot Password?
-                </Link>
-              </div>
-
-              {error && (
-                <div style={{
-                  color: '#ef4444',
-                  fontFamily: 'var(--font-mono)',
-                  fontSize: '11px',
-                  marginTop: '16px',
-                  textAlign: 'center'
-                }}>
-                  ⚠️ {error}
-                </div>
-              )}
-
-              <button
-                disabled={!email || !password || loading}
-                onClick={handleLogin}
-                className="gradient-action-btn"
-                style={{
-                  width: '100%',
-                  maxWidth: '280px',
-                  padding: '14px 28px',
-                  borderRadius: '9999px',
-                  background: 'linear-gradient(90deg, #7c3aed 0%, #06b6d4 100%)',
-                  color: '#ffffff',
-                  fontWeight: '700',
-                  fontSize: '14px',
-                  border: 'none',
-                  cursor: 'pointer',
-                  transition: 'all 0.25s ease',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  margin: '24px auto 0',
-                  boxShadow: '0 4px 12px rgba(124, 58, 237, 0.2)'
-                }}
-              >
-                {loading ? 'Logging in...' : 'Log In →'}
-              </button>
-
-              {/* LINK TO SIGNUP */}
-              <div style={{ textAlign: 'center', marginTop: '16px', fontSize: '13px', paddingBottom: '0' }}>
-                <span style={{ color: '#94a3b8' }}>Don't have an account? </span>
-                <Link to={`/fan/signup${location.search || ''}`} onClick={() => { if (clearAuthData) clearAuthData(); }} style={{ color: '#06b6d4', textDecoration: 'none', fontWeight: '500' }}>Register here</Link>
-              </div>
-            </div>
-
-            <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <div style={{ textAlign: 'center', color: '#94a3b8', fontSize: '12px', marginBottom: '8px' }}>
-                or continue with
-              </div>
-              
-              <a href={`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/auth/google?role=fan`}
-                 className="social-btn"
-                 style={{
-                   display: 'flex',
-                   alignItems: 'center',
-                   justifyContent: 'center',
-                   gap: '10px',
-                   padding: '12px 24px',
-                   background: 'rgba(255, 255, 255, 0.03)',
-                   border: '1px solid rgba(255, 255, 255, 0.08)',
-                   borderRadius: '9999px',
-                   color: '#ffffff',
-                   textDecoration: 'none',
-                   fontSize: '14px',
-                   fontWeight: '600',
-                   maxWidth: '280px',
-                   width: '100%',
-                   margin: '0 auto',
-                   transition: 'all 0.25s ease'
-                 }}
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                  <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.16v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                  <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.16C1.43 8.55 1 10.22 1 12s.43 3.45 1.16 4.93l3.68-2.84z" fill="#FBBC05"/>
-                  <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.16 7.07l3.68 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-                </svg>
-                Continue with Google
-              </a>
-
-              <a href={`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/auth/facebook?role=fan`}
-                 className="social-btn"
-                 style={{
-                   display: 'flex',
-                   alignItems: 'center',
-                   justifyContent: 'center',
-                   gap: '10px',
-                   padding: '12px 24px',
-                   background: 'rgba(24, 119, 242, 0.1)',
-                   border: '1px solid rgba(24, 119, 242, 0.2)',
-                   borderRadius: '9999px',
-                   color: '#ffffff',
-                   textDecoration: 'none',
-                   fontSize: '14px',
-                   fontWeight: '600',
-                   maxWidth: '280px',
-                   width: '100%',
-                   margin: '0 auto',
-                   transition: 'all 0.25s ease'
-                 }}
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047v-2.66c0-3.025 1.792-4.697 4.533-4.697 1.312 0 2.686.236 2.686.236v2.98h-1.514c-1.49 0-1.956.935-1.956 1.895v2.246h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z" fill="white"/>
-                </svg>
-                Continue with Meta
-              </a>
-            </div>
+                fontSize: '15px',
+                color: '#ffffff'
+              }}
+            />
           </div>
 
+          {/* Password Input */}
           <div style={{
-            textAlign: 'center',
-            marginTop: '8px',
-            color: '#94a3b8',
-            fontSize: '13px',
-            fontFamily: 'var(--font-mono)',
-            lineHeight: '1.6'
+            display: 'flex',
+            alignItems: 'center',
+            background: 'rgba(255, 255, 255, 0.03)',
+            border: focusedPassword ? '1px solid rgba(255, 255, 255, 0.2)' : '1px solid rgba(255, 255, 255, 0.08)',
+            borderRadius: '9999px',
+            transition: 'all 0.2s ease',
+            padding: '4px 20px'
           }}>
-            By logging in and using Skriibe, you agree to our<br />
-            <Link to="/terms" style={{ color: '#06b6d4', textDecoration: 'none' }}>Terms of Service</Link> and <Link to="/privacy" style={{ color: '#06b6d4', textDecoration: 'none' }}>Privacy Policy</Link>.
-            <div style={{ marginTop: '16px', opacity: 0.5, fontSize: '9px', textTransform: 'uppercase', letterSpacing: '1px' }}>
-              Made with 🤍 from skriibe
-            </div>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+            <input
+              type={showPassword ? "text" : "password"}
+              placeholder="Password"
+              value={password}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                if (error) setError('');
+              }}
+              onFocus={() => setFocusedPassword(true)}
+              onBlur={() => setFocusedPassword(false)}
+              style={{
+                flex: 1,
+                background: 'transparent',
+                border: 'none',
+                outline: 'none',
+                padding: '12px',
+                fontSize: '15px',
+                color: '#ffffff'
+              }}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                outline: 'none',
+                padding: '8px 0 8px 8px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#64748b'
+              }}
+            >
+              {showPassword ? (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                  <line x1="1" y1="1" x2="23" y2="23"></line>
+                </svg>
+              ) : (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                  <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* Forgot Password Link */}
+        <div style={{ width: '100%', textAlign: 'right', marginTop: '12px' }}>
+          <Link to="/fan/forgot-password" style={{ color: '#06b6d4', textDecoration: 'none', fontSize: '13px', fontWeight: '500' }}>
+            Forgot password?
+          </Link>
+        </div>
+
+        {error && (
+          <div style={{
+            color: '#ef4444',
+            fontSize: '13px',
+            marginTop: '16px',
+            textAlign: 'center',
+            width: '100%'
+          }}>
+            {error}
+          </div>
+        )}
+
+        <button
+          disabled={!email || !password || loading}
+          onClick={handleLogin}
+          style={{
+            width: '100%',
+            padding: '14px',
+            borderRadius: '9999px',
+            background: 'linear-gradient(90deg, #7c3aed 0%, #06b6d4 100%)',
+            color: '#ffffff',
+            fontWeight: '600',
+            fontSize: '15px',
+            border: 'none',
+            cursor: (!email || !password || loading) ? 'not-allowed' : 'pointer',
+            transition: 'all 0.2s ease',
+            marginTop: '24px',
+            opacity: (!email || !password || loading) ? 0.7 : 1,
+            boxShadow: '0 4px 15px rgba(124, 58, 237, 0.3)'
+          }}
+        >
+          {loading ? 'Logging in...' : 'Log In'}
+        </button>
+
+        {/* LINK TO SIGNUP */}
+        <div style={{ textAlign: 'center', marginTop: '32px', fontSize: '14px' }}>
+          <span style={{ color: '#64748b' }}>Don't have an account? </span>
+          <Link to={`/fan/signup${location.search || ''}`} onClick={() => { if (clearAuthData) clearAuthData(); }} style={{ color: '#06b6d4', textDecoration: 'none', fontWeight: '500' }}>
+            Sign up
+          </Link>
+        </div>
+
+        {/* Terms and Privacy */}
+        <div style={{
+          textAlign: 'center',
+          marginTop: '32px',
+          color: '#94a3b8',
+          fontSize: '12px',
+          lineHeight: '1.6'
+        }}>
+          By logging in and using Skriibe, you agree to our<br />
+          <Link to="/terms" style={{ color: '#06b6d4', textDecoration: 'none', fontWeight: '500' }}>Terms of Service</Link> and <Link to="/privacy" style={{ color: '#06b6d4', textDecoration: 'none', fontWeight: '500' }}>Privacy Policy</Link>.
+          
+          <div style={{ 
+            marginTop: '16px', 
+            color: '#64748b', 
+            fontSize: '10px', 
+            textTransform: 'uppercase', 
+            letterSpacing: '1px',
+            fontWeight: '600'
+          }}>
+            Made with 🤍 from skriibe
           </div>
         </div>
       </div>
+
       {showRoleConflictModal && (
         <div style={{
           position: 'fixed',

@@ -25,6 +25,8 @@ const CreatorLiveChat = () => {
   const [hoveredMessageId, setHoveredMessageId] = useState(null);
   const [incomingContinueRequest, setIncomingContinueRequest] = useState(null);
   
+  const isFreeChatOver = (session?.isFreeChat || session?.ratePerMinute === 0) && elapsedSeconds >= 120;
+  
   const isEndingRef = useRef(false);
 
   // Handle browser refresh/close
@@ -243,12 +245,18 @@ const CreatorLiveChat = () => {
               if (pollTimer) clearInterval(pollTimer);
               if (socketRef.current) socketRef.current.disconnect();
               
+              const formatMins = (total) => {
+                let m = Math.floor(total || 0);
+                let s = Math.round(((total || 0) - m) * 60);
+                if (s === 60) { m += 1; s = 0; }
+                return `${m} min ${s} s`;
+              };
               if (currentSession.endReason === 'INSUFFICIENT_BALANCE') {
-                setError(`Chat ended automatically: Fan ran out of balance. Duration: ${Math.round(currentSession.totalMinutes * 100) / 100} mins. Total earned: ₹${Math.round(currentSession.totalCost * 100) / 100}`);
-              } else if (currentSession.endReason === 'FREE_TRIAL_ENDED') {
+                setError(`Chat ended automatically: Fan ran out of balance. Duration: ${formatMins(currentSession.totalMinutes)}. Total earned: ₹${Math.round(currentSession.totalCost * 100) / 100}`);
+              } else if (currentSession.endReason === 'FREE_TRIAL_ENDED' || ((currentSession.isFreeChat || currentSession.rate === 0 || currentSession.ratePerMinute === 0) && currentSession.totalMinutes >= 2)) {
                 setError(`Free chat time limit reached (2 minutes). Chat ended automatically.`);
               } else {
-                setError(`Chat ended by user. Duration: ${Math.round(currentSession.totalMinutes * 100) / 100} mins. Total earned: ₹${Math.round(currentSession.totalCost * 100) / 100}`);
+                setError(`Chat ended by user. Duration: ${formatMins(currentSession.totalMinutes)}. Total earned: ₹${Math.round(currentSession.totalCost * 100) / 100}`);
               }
               setSession(prev => prev ? { ...prev, status: 'ended' } : prev);
               setViewState('ended');
@@ -413,12 +421,18 @@ const CreatorLiveChat = () => {
           }
         }
       } catch (e) {}
+      const formatMins = (total) => {
+        let m = Math.floor(total || 0);
+        let s = Math.round(((total || 0) - m) * 60);
+        if (s === 60) { m += 1; s = 0; }
+        return `${m} min ${s} s`;
+      };
       if (data.reason === 'INSUFFICIENT_BALANCE') {
-        setError(`Chat ended automatically: Fan ran out of balance. Duration: ${Math.round(data.totalMinutes * 100) / 100} mins. Total earned: ₹${Math.round(data.totalCost * 100) / 100}`);
-      } else if (data.reason === 'FREE_TRIAL_ENDED') {
+        setError(`Chat ended automatically: Fan ran out of balance. Duration: ${formatMins(data.totalMinutes)}. Total earned: ₹${Math.round(data.totalCost * 100) / 100}`);
+      } else if (data.reason === 'FREE_TRIAL_ENDED' || ((session?.isFreeChat || session?.rate === 0 || session?.ratePerMinute === 0) && data.totalMinutes >= 2)) {
         setError(`Free chat time limit reached (2 minutes). Chat ended automatically.`);
       } else {
-        setError(`Chat ended by user. Duration: ${Math.round(data.totalMinutes * 100) / 100} mins. Total earned: ₹${Math.round(data.totalCost * 100) / 100}`);
+        setError(`Chat ended by user. Duration: ${formatMins(data.totalMinutes)}. Total earned: ₹${Math.round(data.totalCost * 100) / 100}`);
       }
       setSession(prev => prev ? { ...prev, status: 'ended' } : prev);
       setViewState('ended');
@@ -631,12 +645,14 @@ const CreatorLiveChat = () => {
               >
                 BACK
               </button>
-              <button 
-                onClick={() => setShowWarningModal(true)}
-                style={{ background: '#ef4444', color: '#fff', border: 'none', padding: '6px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px' }}
-              >
-                END CHAT
-              </button>
+              {!(session?.isFreeChat || session?.ratePerMinute === 0) && (
+                <button 
+                  onClick={() => setShowWarningModal(true)}
+                  style={{ background: '#ef4444', color: '#fff', border: 'none', padding: '6px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px' }}
+                >
+                  END CHAT
+                </button>
+              )}
             </>
           )}
           {session?.status !== 'active' && (
@@ -718,6 +734,7 @@ const CreatorLiveChat = () => {
         const rate = session?.ratePerMinute || 0;
         const bal = session?.fanId?.walletBalance || 0;
         const isFreeChat = session?.isFreeChat || rate === 0;
+        const isFreeChatOver = isFreeChat && elapsedSeconds >= 120;
         
         let remainingSeconds, isWarning, barBg, innerBg, progressWidth;
         
@@ -727,6 +744,27 @@ const CreatorLiveChat = () => {
           barBg = isWarning ? '#ef4444' : '#3BA8D8';
           innerBg = isWarning ? '#b91c1c' : '#0284c7';
           progressWidth = `${Math.max(0, Math.min(100, (remainingSeconds / 120) * 100))}%`;
+
+          if (isFreeChatOver) {
+            return (
+              <div style={{ background: '#ef4444', padding: '12px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', transition: 'background 0.3s' }}>
+                <span style={{ color: '#fff', fontWeight: 'bold', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  Duration ended
+                </span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <button 
+                    onClick={() => navigate('/creator/dashboard')}
+                    style={{ background: '#fff', color: '#ef4444', border: 'none', padding: '6px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px' }}
+                  >
+                    BACK
+                  </button>
+                  <span style={{ color: '#000', fontWeight: 'bold', fontSize: '1rem', background: 'rgba(255,255,255,0.2)', padding: '4px 12px', borderRadius: '12px' }}>
+                    Free Chat
+                  </span>
+                </div>
+              </div>
+            );
+          }
         } else {
           remainingSeconds = Math.max(0, (bal / rate) * 60 - elapsedSeconds);
           isWarning = remainingSeconds / 60 <= 2; // warning at 2 minutes
@@ -786,6 +824,7 @@ const CreatorLiveChat = () => {
             key={i} 
             onMouseEnter={() => setHoveredMessageId(m.messageId)}
             onMouseLeave={() => setHoveredMessageId(null)}
+            onClick={() => setHoveredMessageId(hoveredMessageId === m.messageId ? null : m.messageId)}
             style={{ display: 'flex', justifyContent: (m.sender || m.senderRole) === 'creator' ? 'flex-end' : ((m.sender || m.senderRole) === 'system' ? 'center' : 'flex-start'), position: 'relative' }}
           >
             {(m.sender || m.senderRole) === 'system' ? (
@@ -830,10 +869,12 @@ const CreatorLiveChat = () => {
                     {QUICK_REACTIONS.map(emoji => (
                       <span 
                         key={emoji}
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.stopPropagation();
                           if (socketRef.current && session) {
                             socketRef.current.emit('react_message', { messageId: m.messageId, sessionId: session._id || session.id || session.sessionId, emoji, senderRole: 'creator' });
                           }
+                          setHoveredMessageId(null);
                         }}
                         style={{ cursor: 'pointer', fontSize: '18px', padding: '2px 4px', transition: 'transform 0.1s' }}
                         onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.2)'}
@@ -902,8 +943,8 @@ const CreatorLiveChat = () => {
         <div style={{ padding: '12px 16px', display: 'flex', gap: '12px', alignItems: 'center' }}>
           <div style={{ position: 'relative', flex: 1 }}>
             <button
-              onClick={() => !error && session?.status !== 'ended' && setShowEmojiPicker(!showEmojiPicker)}
-              disabled={!!error || session?.status === 'ended'}
+              onClick={() => !error && session?.status !== 'ended' && !isFreeChatOver && setShowEmojiPicker(!showEmojiPicker)}
+              disabled={!!error || session?.status === 'ended' || isFreeChatOver}
               style={{
                 position: 'absolute',
                 left: '12px',
@@ -911,7 +952,7 @@ const CreatorLiveChat = () => {
                 transform: 'translateY(-50%)',
                 background: 'transparent',
                 border: 'none',
-                cursor: (error || session?.status === 'ended') ? 'not-allowed' : 'pointer',
+                cursor: (error || session?.status === 'ended' || isFreeChatOver) ? 'not-allowed' : 'pointer',
                 fontSize: '20px',
                 color: '#9ca3af',
                 padding: '0',
@@ -919,7 +960,7 @@ const CreatorLiveChat = () => {
                 alignItems: 'center',
                 justifyContent: 'center',
                 zIndex: 10,
-                opacity: (error || session?.status === 'ended') ? 0.5 : 1
+                opacity: (error || session?.status === 'ended' || isFreeChatOver) ? 0.5 : 1
               }}
             >
               😀
@@ -930,16 +971,16 @@ const CreatorLiveChat = () => {
               onChange={handleInputChange}
               onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
               onFocus={() => setShowEmojiPicker(false)}
-              placeholder={session?.status === 'ended' ? "Chat ended" : "Type a message..."}
-              disabled={!!error || session?.status === 'ended'}
-              style={{ width: '100%', background: '#1F2937', border: '1px solid #374151', padding: '14px 20px 14px 44px', borderRadius: '24px', color: '#fff', outline: 'none', fontSize: '15px', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.1)', opacity: (error || session?.status === 'ended') ? 0.5 : 1, boxSizing: 'border-box' }}
+              placeholder={session?.status === 'ended' || isFreeChatOver ? "Chat ended" : "Type a message..."}
+              disabled={!!error || session?.status === 'ended' || isFreeChatOver}
+              style={{ width: '100%', background: '#1F2937', border: '1px solid #374151', padding: '14px 20px 14px 44px', borderRadius: '24px', color: '#fff', outline: 'none', fontSize: '15px', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.1)', opacity: (error || session?.status === 'ended' || isFreeChatOver) ? 0.5 : 1, boxSizing: 'border-box' }}
             />
           </div>
 
           <button 
             onClick={sendMessage}
-            disabled={!!error || session?.status === 'ended'}
-            style={{ background: '#3BA8D8', color: '#fff', border: 'none', borderRadius: '50%', width: '48px', height: '48px', cursor: (error || session?.status === 'ended') ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: (error || session?.status === 'ended') ? 0.5 : 1, boxShadow: '0 4px 10px rgba(59, 168, 216, 0.4)' }}
+            disabled={!!error || session?.status === 'ended' || isFreeChatOver}
+            style={{ background: '#3BA8D8', color: '#fff', border: 'none', borderRadius: '50%', width: '48px', height: '48px', cursor: (error || session?.status === 'ended' || isFreeChatOver) ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: (error || session?.status === 'ended' || isFreeChatOver) ? 0.5 : 1, boxShadow: '0 4px 10px rgba(59, 168, 216, 0.4)' }}
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ transform: 'translateX(-2px)' }}>
               <line x1="22" y1="2" x2="11" y2="13"></line>
@@ -948,7 +989,7 @@ const CreatorLiveChat = () => {
           </button>
         </div>
         
-        {showEmojiPicker && !error && (
+        {showEmojiPicker && !error && !isFreeChatOver && (
           <div style={{
             background: '#202020',
             padding: '12px 16px',

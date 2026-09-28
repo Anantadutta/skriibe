@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import WalletPaymentButton from './WalletPaymentButton';
 
 const InChatRechargeModal = ({ creatorName, statsMinutes, onCancel, onClose, isManual, isFreeChatEnded, onRechargeSuccess }) => {
-  const presets = [1, 50, 100, 200, 500];
+  const presets = [50, 100, 200, 500];
   const [selectedAmount, setSelectedAmount] = useState(100);
 
   return (

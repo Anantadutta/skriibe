@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import WalletPaymentButton from './WalletPaymentButton';
 
 const WalletRechargeScreen = ({ rate, onCancel, onRechargeSuccess, balance = 0, transactions = [] }) => {
-  const presets = [1, 50, 100, 200, 500, 1000, 2000];
+  const presets = [50, 100, 200, 500, 1000, 2000];
   const [selectedAmount, setSelectedAmount] = useState(100);
   const [showAllTransactions, setShowAllTransactions] = useState(false);
 

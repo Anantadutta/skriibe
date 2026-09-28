@@ -10,6 +10,8 @@ import { useNavigate } from 'react-router-dom';
 const FanHistory = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const searchParams = new URLSearchParams(location.search);
+  const initialMode = searchParams.get('qId') ? 'messages' : 'liveChat';
   const flagOptions = [
     { category: "", options: [
       { label: "Irrelevant Answer", desc: "The response was vague and off topic" },
@@ -17,7 +19,7 @@ const FanHistory = () => {
     ]}
   ];
 
-  const [inboxMode, setInboxMode] = useState('messages');
+  const [inboxMode, setInboxMode] = useState(initialMode);
   const [chats, setChats] = useState([]);
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -669,6 +671,7 @@ const FanHistory = () => {
           return (
             <div 
               key={chat._id || chat.sessionId}
+              onClick={() => navigate(`/fan/history/chat/${chat.sessionId || chat._id}`)}
               style={{
                 background: 'rgba(255,255,255,0.03)',
                 border: '1px solid rgba(255,255,255,0.05)',
@@ -678,6 +681,7 @@ const FanHistory = () => {
                 flexDirection: 'column',
                 gap: '16px',
                 transition: 'all 0.5s ease-out',
+                cursor: 'pointer'
               }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -717,7 +721,21 @@ const FanHistory = () => {
                   fontWeight: 'bold',
                   textTransform: 'uppercase'
                 }}>
-                  {isMissed ? 'Missed' : `${Number(chat.totalMinutes).toFixed(2)} MIN`}
+                  {(() => {
+                    if (isMissed) return 'Missed';
+                    let mins = Math.floor(chat.totalMinutes || 0);
+                    let secs = Math.round(((chat.totalMinutes || 0) - mins) * 60);
+                    if (secs === 60) {
+                      mins += 1;
+                      secs = 0;
+                    }
+                    let durationText = `${mins} min ${secs} s`;
+                    const isFreeChat = chat.rate === 0 || chat.isFreeChat || chat.ratePerMinute === 0;
+                    if (isFreeChat && ((chat.endReason && chat.endReason === 'FREE_TRIAL_ENDED') || (chat.totalMinutes || 0) >= 2)) {
+                      durationText = '2 minutes';
+                    }
+                    return durationText;
+                  })()}
                 </div>
               </div>
             </div>

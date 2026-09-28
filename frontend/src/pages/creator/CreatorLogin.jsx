@@ -66,7 +66,7 @@ const CreatorLogin = () => {
   return (
     <div style={{
       minHeight: '100vh',
-      background: '#0a0a0f',
+      background: '#18172e',
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
@@ -74,49 +74,8 @@ const CreatorLogin = () => {
       position: 'relative',
       overflowX: 'hidden'
     }}>
-      {/* Background Shader & Noise */}
-      <div style={{
-        position: 'fixed',
-        inset: 0,
-        zIndex: 0,
-        background: '#0a0a0f',
-        overflow: 'hidden',
-        pointerEvents: 'none'
-      }}>
-        <div style={{
-          position: 'absolute',
-          width: '180%',
-          height: '180%',
-          top: '-40%',
-          left: '-40%',
-          background: 'radial-gradient(circle at 30% 20%, rgba(124, 58, 237, 0.18) 0%, transparent 40%), radial-gradient(circle at 70% 80%, rgba(6, 182, 212, 0.18) 0%, transparent 40%), radial-gradient(circle at 50% 50%, rgba(147, 51, 234, 0.15) 0%, transparent 50%), radial-gradient(circle at 10% 80%, rgba(59, 130, 246, 0.15) 0%, transparent 45%)',
-          filter: 'blur(90px)',
-          animation: 'aurora-flow 25s infinite alternate ease-in-out'
-        }} />
-        <div style={{
-          position: 'absolute',
-          inset: 0,
-          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
-          opacity: 0.035,
-          mixBlendMode: 'overlay',
-          pointerEvents: 'none'
-        }} />
-        <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
-          <div className="sparkle" style={{ top: '12%', left: '18%', animationDelay: '0s' }} />
-          <div className="sparkle" style={{ top: '35%', left: '80%', animationDelay: '1.2s' }} />
-          <div className="sparkle" style={{ top: '58%', left: '6%', animationDelay: '2.8s' }} />
-          <div className="sparkle" style={{ top: '82%', left: '84%', animationDelay: '0.5s' }} />
-          <div className="sparkle" style={{ top: '92%', left: '22%', animationDelay: '2s' }} />
-        </div>
-      </div>
 
       <style dangerouslySetInnerHTML={{ __html: `
-        @keyframes aurora-flow {
-          0% { transform: translate(0px, 0px) rotate(0deg) scale(1); }
-          33% { transform: translate(20px, -30px) rotate(120deg) scale(1.05); }
-          66% { transform: translate(-15px, 15px) rotate(240deg) scale(0.98); }
-          100% { transform: translate(0px, 0px) rotate(360deg) scale(1); }
-        }
         @keyframes sparkle-pulse {
           0%, 100% { opacity: 0.2; transform: scale(0.8); }
           50% { opacity: 1; transform: scale(1.2) rotate(45deg); }
@@ -201,20 +160,84 @@ const CreatorLogin = () => {
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <div style={{ textAlign: 'center', marginTop: '0px' }}>
+            <div style={{ textAlign: 'center', marginBottom: '32px' }}>
               <div style={{
                 width: '120px',
-                margin: '0 auto -28px',
+                margin: '0 auto',
                 display: 'block'
               }}>
                 <TransparentLogo src="/logo.png" alt="skriibe logo" style={{ width: '100%', height: 'auto', transform: 'scale(1.8)' }} />
               </div>
-              <div style={{ color: '#94a3b8', fontSize: '14px', fontFamily: 'var(--font-body)', fontWeight: '500' }}>
-                Welcome back. Log in to your account.
+              <h1 style={{ color: '#ffffff', fontSize: '24px', fontWeight: '500', margin: '24px 0 8px 0', fontFamily: 'var(--font-heading)' }}>
+                Welcome back
+              </h1>
+              <div style={{ color: '#94a3b8', fontSize: '14px', fontFamily: 'var(--font-body)' }}>
+                Log in to your Creator account
               </div>
             </div>
 
-            <div style={{ marginTop: '20px' }}>
+            <div style={{ display: 'flex', gap: '12px', marginBottom: '24px' }}>
+              <a href={`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/auth/google`}
+                 className="social-btn"
+                 style={{
+                   flex: 1,
+                   display: 'flex',
+                   alignItems: 'center',
+                   justifyContent: 'center',
+                   gap: '10px',
+                   padding: '12px',
+                   background: 'rgba(255, 255, 255, 0.03)',
+                   border: '1px solid rgba(255, 255, 255, 0.08)',
+                   borderRadius: '9999px',
+                   color: '#ffffff',
+                   textDecoration: 'none',
+                   fontSize: '14px',
+                   fontWeight: '600',
+                   transition: 'all 0.25s ease'
+                 }}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                  <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.16v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                  <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.16C1.43 8.55 1 10.22 1 12s.43 3.45 1.16 4.93l3.68-2.84z" fill="#FBBC05"/>
+                  <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.16 7.07l3.68 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                </svg>
+                Google
+              </a>
+
+              <a href={`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/auth/facebook`}
+                 className="social-btn"
+                 style={{
+                   flex: 1,
+                   display: 'flex',
+                   alignItems: 'center',
+                   justifyContent: 'center',
+                   gap: '10px',
+                   padding: '12px',
+                   background: 'rgba(255, 255, 255, 0.03)',
+                   border: '1px solid rgba(255, 255, 255, 0.08)',
+                   borderRadius: '9999px',
+                   color: '#ffffff',
+                   textDecoration: 'none',
+                   fontSize: '14px',
+                   fontWeight: '600',
+                   transition: 'all 0.25s ease'
+                 }}
+              >
+                <svg width="20" height="20" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M28.094 11.25c-2.313 0-4.469 1.094-5.875 3.031L22.188 14.344l-2.75 3.844-3.031-4.25c-1.406-1.938-3.563-3.031-5.875-3.031-4.125 0-7.5 3.375-7.5 7.5s3.375 7.5 7.5 7.5c2.313 0 4.469-1.094 5.875-3.031l.031-.031 2.75-3.844 3.031 4.25c1.406 1.938 3.563 3.031 5.875 3.031 4.125 0 7.5-3.375 7.5-7.5s-3.375-7.5-7.5-7.5zm0 11.25c-1.344 0-2.594-.656-3.375-1.781l-3.313-4.656 3.313-4.656c.781-1.125 2.031-1.781 3.375-1.781 2.469 0 4.5 2.031 4.5 4.5s-2.031 4.5-4.5 4.5zm-17.563 0c-2.469 0-4.5-2.031-4.5-4.5s2.031-4.5 4.5-4.5c1.344 0 2.594.656 3.375 1.781l3.313 4.656-3.313 4.656c-.781 1.125-2.031 1.781-3.375 1.781z" fill="#0668E1"/>
+                </svg>
+                Meta
+              </a>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '24px' }}>
+              <div style={{ flex: 1, height: '1px', background: 'rgba(255, 255, 255, 0.1)' }}></div>
+              <span style={{ padding: '0 16px', color: '#64748b', fontSize: '13px' }}>or</span>
+              <div style={{ flex: 1, height: '1px', background: 'rgba(255, 255, 255, 0.1)' }}></div>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
               {successMessage && (
                 <div style={{
                   color: '#22c55e',
@@ -230,18 +253,6 @@ const CreatorLogin = () => {
                   ✅ {successMessage}
                 </div>
               )}
-              <label style={{
-                fontFamily: 'var(--font-mono)',
-                fontSize: '9px',
-                color: '#06b6d4',
-                textTransform: 'uppercase',
-                display: 'block',
-                marginBottom: '6px',
-                letterSpacing: '1.5px',
-                fontWeight: '600'
-              }}>
-                EMAIL ID
-              </label>
 
               <div style={{
                 display: 'flex',
@@ -252,7 +263,7 @@ const CreatorLogin = () => {
                 boxShadow: focusedEmail ? '0 0 15px rgba(124, 58, 237, 0.3)' : 'none',
                 transition: 'all 0.25s ease',
                 overflow: 'hidden',
-                marginBottom: '12px'
+                marginBottom: '16px'
               }}>
                 <div style={{ padding: '0 0 0 16px', display: 'flex', alignItems: 'center', color: '#94a3b8' }}>
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -262,7 +273,7 @@ const CreatorLogin = () => {
                 </div>
                 <input
                   type="email"
-                  placeholder="your@gmail.com"
+                  placeholder="Email address"
                   value={email}
                   onChange={(e) => {
                     setEmail(e.target.value);
@@ -275,27 +286,13 @@ const CreatorLogin = () => {
                     background: 'transparent',
                     border: 'none',
                     outline: 'none',
-                    padding: '12px 16px 12px 12px',
-                    fontSize: '16px',
+                    padding: '16px 16px 16px 12px',
+                    fontSize: '15px',
                     color: '#ffffff',
-                    fontFamily: 'var(--font-mono)',
-                    letterSpacing: '1px'
+                    fontFamily: 'var(--font-body)'
                   }}
                 />
               </div>
-
-              <label style={{
-                fontFamily: 'var(--font-mono)',
-                fontSize: '9px',
-                color: '#06b6d4',
-                textTransform: 'uppercase',
-                display: 'block',
-                marginBottom: '6px',
-                letterSpacing: '1.5px',
-                fontWeight: '600'
-              }}>
-                 PASSWORD
-              </label>
 
               <div style={{
                 display: 'flex',
@@ -315,7 +312,7 @@ const CreatorLogin = () => {
                 </div>
                 <input
                   type={showPassword ? "text" : "password"}
-                  placeholder="••••••••"
+                  placeholder="Password"
                   value={password}
                   onChange={(e) => {
                     setPassword(e.target.value);
@@ -328,11 +325,10 @@ const CreatorLogin = () => {
                     background: 'transparent',
                     border: 'none',
                     outline: 'none',
-                    padding: '12px 16px 12px 12px',
-                    fontSize: '16px',
+                    padding: '16px 16px 16px 12px',
+                    fontSize: '15px',
                     color: '#ffffff',
-                    fontFamily: 'var(--font-mono)',
-                    letterSpacing: '1px'
+                    fontFamily: 'var(--font-body)'
                   }}
                 />
                 <button
@@ -354,12 +350,12 @@ const CreatorLogin = () => {
                   onMouseLeave={(e) => e.currentTarget.style.color = '#94a3b8'}
                 >
                   {showPassword ? (
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
                       <line x1="1" y1="1" x2="23" y2="23"></line>
                     </svg>
                   ) : (
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                       <circle cx="12" cy="12" r="3"></circle>
                     </svg>
@@ -367,10 +363,9 @@ const CreatorLogin = () => {
                 </button>
               </div>
 
-              {/* Forgot Password Link */}
               <div style={{ textAlign: 'right', marginTop: '12px', paddingRight: '4px' }}>
                 <Link to="/creator/forgot-password" style={{ color: '#06b6d4', textDecoration: 'none', fontSize: '13px', fontWeight: '500' }}>
-                  Forgot Password?
+                  Forgot password?
                 </Link>
               </div>
 
@@ -392,109 +387,44 @@ const CreatorLogin = () => {
                 className="gradient-action-btn"
                 style={{
                   width: '100%',
-                  maxWidth: '280px',
-                  padding: '12px 24px',
+                  padding: '14px 24px',
                   borderRadius: '9999px',
                   background: 'linear-gradient(90deg, #7c3aed 0%, #06b6d4 100%)',
                   color: '#ffffff',
-                  fontWeight: '700',
-                  fontSize: '14px',
+                  fontWeight: '600',
+                  fontSize: '15px',
                   border: 'none',
                   cursor: 'pointer',
                   transition: 'all 0.25s ease',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  margin: '12px auto 0',
+                  marginTop: '24px',
                   boxShadow: '0 4px 12px rgba(124, 58, 237, 0.2)'
                 }}
               >
-                {loading ? 'Logging in...' : 'Login →'}
+                {loading ? 'Logging in...' : 'Log In'}
               </button>
 
-              {/* LINK TO SIGNUP */}
-              <div style={{ textAlign: 'center', marginTop: '12px', fontSize: '13px' }}>
+              <div style={{ textAlign: 'center', marginTop: '24px', fontSize: '14px' }}>
                 <span style={{ color: '#94a3b8' }}>Don't have an account? </span>
-                <Link to="/creator/signup" onClick={() => { localStorage.removeItem('isReturningCreator'); if (clearAuthData) clearAuthData(); }} style={{ color: '#06b6d4', textDecoration: 'none', fontWeight: '600' }}>Register here</Link>
+                <Link to="/creator/signup" onClick={() => { localStorage.removeItem('isReturningCreator'); if (clearAuthData) clearAuthData(); }} style={{ color: '#06b6d4', textDecoration: 'none', fontWeight: '500' }}>Sign up</Link>
               </div>
-            </div>
-
-            <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <div style={{ textAlign: 'center', color: '#94a3b8', fontSize: '12px', marginBottom: '8px' }}>
-                or continue with
-              </div>
-              
-              <a href={`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/auth/google`}
-                 className="social-btn"
-                 style={{
-                   display: 'flex',
-                   alignItems: 'center',
-                   justifyContent: 'center',
-                   gap: '10px',
-                   padding: '10px 20px',
-                   background: 'rgba(255, 255, 255, 0.03)',
-                   border: '1px solid rgba(255, 255, 255, 0.08)',
-                   borderRadius: '9999px',
-                   color: '#ffffff',
-                   textDecoration: 'none',
-                   fontSize: '14px',
-                   fontWeight: '600',
-                   maxWidth: '280px',
-                   width: '100%',
-                   margin: '0 auto',
-                   transition: 'all 0.25s ease'
-                 }}
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                  <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.16v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                  <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.16C1.43 8.55 1 10.22 1 12s.43 3.45 1.16 4.93l3.68-2.84z" fill="#FBBC05"/>
-                  <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.16 7.07l3.68 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-                </svg>
-                Continue with Google
-              </a>
-
-              <a href={`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/auth/facebook`}
-                 className="social-btn"
-                 style={{
-                   display: 'flex',
-                   alignItems: 'center',
-                   justifyContent: 'center',
-                   gap: '10px',
-                   padding: '10px 20px',
-                   background: 'rgba(24, 119, 242, 0.1)',
-                   border: '1px solid rgba(24, 119, 242, 0.2)',
-                   borderRadius: '9999px',
-                   color: '#ffffff',
-                   textDecoration: 'none',
-                   fontSize: '14px',
-                   fontWeight: '600',
-                   maxWidth: '280px',
-                   width: '100%',
-                   margin: '0 auto',
-                   transition: 'all 0.25s ease'
-                 }}
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047v-2.66c0-3.025 1.792-4.697 4.533-4.697 1.312 0 2.686.236 2.686.236v2.98h-1.514c-1.49 0-1.956.935-1.956 1.895v2.246h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z" fill="white"/>
-                </svg>
-                Continue with Meta
-              </a>
             </div>
           </div>
 
           <div style={{
             textAlign: 'center',
-            marginTop: '16px',
+            marginTop: '24px',
             color: '#94a3b8',
             fontSize: '11px',
             fontFamily: 'var(--font-mono)',
             lineHeight: '1.6'
           }}>
-            By logging in and using Skriibe, you agree to our<br />
-            <Link to="/terms" style={{ color: '#06b6d4', textDecoration: 'none' }}>Terms of Service</Link> and <Link to="/privacy" style={{ color: '#06b6d4', textDecoration: 'none' }}>Privacy Policy</Link>.
-            <div style={{ marginTop: '8px', opacity: 0.5, fontSize: '9px', textTransform: 'uppercase', letterSpacing: '1px' }}>
-              Made with 🤍 from Skriibe
+            by logging and using skriibe, you agree to our <br />
+            <Link to="/terms" style={{ color: '#06b6d4', textDecoration: 'none' }}>Terms of Service</Link> and <Link to="/privacy" style={{ color: '#06b6d4', textDecoration: 'none' }}>Privacy policy</Link>
+            <div style={{ marginTop: '12px', opacity: 0.6, fontSize: '10px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+              MADE WITH 🤍 FROM SKRIIBE
             </div>
           </div>
         </div>

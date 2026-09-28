@@ -505,11 +505,26 @@ const CreatorProfile = () => {
                           <circle cx="16" cy="8" r="1.1" fill="#ffffff" />
                         </svg>
                         <span style={{ color: '#94A3B8', fontWeight: '500', fontSize: '14px' }}>
-                          {creator.instagramFollowers >= 1000000 
-                            ? (creator.instagramFollowers / 1000000).toFixed(1).replace(/\.0$/, '') + 'M followers' 
-                            : creator.instagramFollowers >= 1000 
-                              ? (creator.instagramFollowers / 1000).toFixed(1).replace(/\.0$/, '') + 'K followers' 
-                              : creator.instagramFollowers + ' followers'}
+                          {(() => {
+                            const raw = String(creator.instagramFollowers || '').trim();
+                            
+                            if (/[a-zA-Z]/i.test(raw) && !raw.toLowerCase().includes('follower')) {
+                              return `${raw} followers`;
+                            }
+                            
+                            const num = typeof creator.instagramFollowers === 'number'
+                              ? creator.instagramFollowers
+                              : parseFloat(raw.replace(/[^0-9.]/g, ''));
+                              
+                            if (!isNaN(num) && raw === String(num)) {
+                              const countStr = num >= 1000000
+                                ? (num / 1000000).toFixed(1).replace('.0', '') + 'M'
+                                : (num >= 1000 ? (num / 1000).toFixed(1).replace('.0', '') + 'K' : num.toLocaleString());
+                              return `${countStr} followers`;
+                            }
+                            
+                            return raw.toLowerCase().includes('follower') ? raw : `${raw} followers`;
+                          })()}
                         </span>
                       </div>
                     </>
@@ -650,7 +665,7 @@ const CreatorProfile = () => {
                     if (isBanned) return;
                     
                     if (!isLoggedIn) {
-                      navigate(`/fan/login?redirect=/${handle}/live-chat`);
+                      navigate(`/fan/login?redirect=/${handle}`);
                     } else {
                       if (isFirstTimeUser) {
                         navigate(`/${handle}/live-chat`);

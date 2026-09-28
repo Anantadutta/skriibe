@@ -59,7 +59,9 @@ router.get('/dashboard', async (req, res) => {
     const slaBreachesCount = breachedQuestions.length;
 
     // Active creators
-    const activeCreatorsCount = await Creator.countDocuments({ isLive: true });
+    const allCreatorsForLiveCheck = await Creator.find({}).lean();
+    const { calculateLiveStatus } = require('../utils/liveStatus');
+    const activeCreatorsCount = allCreatorsForLiveCheck.filter(c => calculateLiveStatus(c)).length;
 
     // Financials: Count all questions that have been paid within the date range
     const todayQuestions = await Question.find({

@@ -249,7 +249,7 @@ function LandingPage({ theme, toggleTheme }) {
             {/* Start Free Chat CTA Button (Screenshot 2) */}
             <div className="mt-8 sm:mt-10">
               <Link
-                to={isAuthenticated ? "/explore" : "/fan/login"}
+                to="/explore"
                 className="inline-flex items-center justify-center gap-2.5 px-8 sm:px-10 py-3.5 sm:py-4 rounded-full font-bold text-base sm:text-lg text-black bg-[#c8f53c] hover:bg-[#b8e62f] shadow-[0_0_25px_rgba(200,245,60,0.35)] hover:shadow-[0_0_35px_rgba(200,245,60,0.5)] transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 select-none"
               >
                 <span>Start my free chat</span>
@@ -410,7 +410,7 @@ function App() {
             <Route path="/guidelines" element={<Guidelines />} />
             <Route path="/cookies" element={<Cookies />} />
             <Route path="/verify-email" element={<EmailVerificationFlow />} />
-            <Route path="/affiliate" element={<AffiliateProgram theme={theme} />} />
+            <Route path="/affiliate" element={<AffiliateProgram theme={theme} toggleTheme={toggleTheme} />} />
             
             {/* Creator Auth Routes - Consolidated */}
             <Route path="/creator" element={<CreatorAuth />} />

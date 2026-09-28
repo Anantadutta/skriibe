@@ -1,8 +1,3 @@
-/**
- * @file CreatorAuth.jsx
- * @description Consolidated Creator authentication screen via email and password (supports both Login and Signup).
- */
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import TransparentLogo from '../../components/TransparentLogo';
@@ -16,17 +11,17 @@ const CreatorAuth = () => {
   const urlError = searchParams.get('error');
 
   const [isLogin, setIsLogin] = useState(initialMode === 'login');
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const [error, setError] = useState(urlError === 'CONFLICT_FAN' ? '' : (urlError || ''));
+  const [focusedName, setFocusedName] = useState(false);
   const [focusedEmail, setFocusedEmail] = useState(false);
   const [focusedPassword, setFocusedPassword] = useState(false);
-  const [focusedConfirm, setFocusedConfirm] = useState(false);
+  
   const [showRoleConflictModal, setShowRoleConflictModal] = useState(false);
   const [roleConflictMessage, setRoleConflictMessage] = useState('');
   
@@ -36,7 +31,10 @@ const CreatorAuth = () => {
   
   const successMessage = location.state?.message;
 
+  const isSubmittingRef = React.useRef(false);
+
   useEffect(() => {
+    if (isSubmittingRef.current) return;
     if (roles?.includes('creator') && isAuthenticated) {
       const urlParams = new URLSearchParams(location.search);
       if (urlParams.get('ref')) {
@@ -47,8 +45,6 @@ const CreatorAuth = () => {
         return;
       }
     } else if (isAuthenticated && roles && !roles.includes('creator')) {
-      // User is logged in as a Fan, but trying to access Creator signup/login.
-      // Clear their token so they can sign up/login as a Creator properly.
       if (typeof clearAuthData === 'function') {
         clearAuthData();
       } else {
@@ -74,9 +70,11 @@ const CreatorAuth = () => {
   };
 
   const handleSubmit = async () => {
+    isSubmittingRef.current = true;
     if (isLogin) {
       if (!email || !password) {
         setError('Please enter both email and password');
+        isSubmittingRef.current = false;
         return;
       }
       
@@ -99,6 +97,7 @@ const CreatorAuth = () => {
           navigate('/onboard/profile', { state: { creator }, replace: true });
         }
       } catch (err) {
+        isSubmittingRef.current = false;
         if (err.response?.data?.isRoleConflict) {
           setRoleConflictMessage('This email is already registered as a Fan. Please use the Fan login page, or use a different email to sign up as a Creator.');
           setShowRoleConflictModal(true);
@@ -112,18 +111,15 @@ const CreatorAuth = () => {
     }
 
     // SIGNUP LOGIC
-    if (!email || !password || !confirmPassword) {
+    if (!name || !email || !password) {
       setError('Please fill out all fields');
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      setError('Passwords do not match');
+      isSubmittingRef.current = false;
       return;
     }
 
     if (!checkPasswordStrength(password)) {
       setError('Password must be at least 8 chars and contain a number/special char');
+      isSubmittingRef.current = false;
       return;
     }
 
@@ -157,6 +153,7 @@ const CreatorAuth = () => {
       }
     } catch (err) {
       console.error("Signup error:", err);
+      isSubmittingRef.current = false;
       if (err.response?.data?.isRoleConflict) {
         setRoleConflictMessage('This email is already registered as a Fan. Please use the Fan login page, or use a different email to sign up as a Creator.');
         setShowRoleConflictModal(true);
@@ -168,13 +165,12 @@ const CreatorAuth = () => {
     }
   };
 
-  const isInvalid = isLogin ? (!email || !password) : (!email || !password || !confirmPassword || password !== confirmPassword || !checkPasswordStrength(password));
+  const isInvalid = isLogin ? (!email || !password) : (!name || !email || !password || !checkPasswordStrength(password));
 
   const toggleMode = () => {
     setIsLogin(!isLogin);
     setError('');
     setPassword('');
-    setConfirmPassword('');
   };
 
   return (
@@ -186,7 +182,9 @@ const CreatorAuth = () => {
       alignItems: 'center',
       padding: '40px 0',
       position: 'relative',
-      overflowX: 'hidden'
+      overflowX: 'hidden',
+      color: '#ffffff',
+      fontFamily: 'system-ui, -apple-system, sans-serif'
     }}>
       {/* Background Shader & Noise */}
       <div style={{
@@ -244,18 +242,20 @@ const CreatorAuth = () => {
           box-shadow: 0 0 6px #06b6d4, 0 0 10px #7c3aed;
           animation: sparkle-pulse 4s infinite ease-in-out;
         }
-        .gradient-action-btn:hover:not(:disabled) {
-          transform: translateY(-2px);
-          box-shadow: 0 0 20px rgba(124, 58, 237, 0.6), 0 0 30px rgba(6, 182, 212, 0.4) !important;
+        input {
+          transition: background-color 5000s ease-in-out 0s;
         }
-        .gradient-action-btn:active:not(:disabled) {
-          transform: translateY(0);
+        input:-webkit-autofill,
+        input:-webkit-autofill:hover, 
+        input:-webkit-autofill:focus, 
+        input:-webkit-autofill:active {
+          -webkit-text-fill-color: #ffffff !important;
+          -webkit-background-clip: text !important;
+          background-clip: text !important;
         }
-        .social-btn:hover {
-          background: rgba(255, 255, 255, 0.08) !important;
-          border-color: rgba(255, 255, 255, 0.2) !important;
-          transform: translateY(-1.5px);
-          box-shadow: 0 4px 15px rgba(6, 182, 212, 0.15) !important;
+        ::placeholder {
+          color: #64748b;
+          opacity: 1;
         }
       `}} />
 
@@ -304,10 +304,6 @@ const CreatorAuth = () => {
         position: 'relative'
       }}>
         <div style={{
-          background: 'rgba(255, 255, 255, 0.05)',
-          backdropFilter: 'blur(12px)',
-          border: '1px solid rgba(255, 255, 255, 0.08)',
-          borderRadius: '16px',
           padding: '20px',
           display: 'flex',
           flexDirection: 'column',
@@ -350,21 +346,96 @@ const CreatorAuth = () => {
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <div style={{ textAlign: 'center', marginTop: '0px' }}>
+            <div style={{ textAlign: 'center', marginBottom: '32px' }}>
               <div style={{
                 width: '120px',
-                margin: '0 auto -28px',
+                margin: '0 auto',
                 display: 'block'
               }}>
                 <TransparentLogo src="/logo.png" alt="skriibe logo" style={{ width: '100%', height: 'auto', transform: 'scale(1.8)' }} />
               </div>
-              <div style={{ color: '#94a3b8', fontSize: '14px', fontFamily: 'var(--font-body)', fontWeight: '500' }}>
-                {isLogin ? 'Welcome back. Log in to your account.' : 'Join the platform. Get paid to reply.'}
-              </div>
+              
+              {isLogin ? (
+                <>
+                  <h1 style={{ color: '#ffffff', fontSize: '24px', fontWeight: '500', margin: '24px 0 8px 0', fontFamily: 'var(--font-heading)' }}>
+                    Welcome back
+                  </h1>
+                  <div style={{ color: '#94a3b8', fontSize: '14px', fontFamily: 'var(--font-body)' }}>
+                    Log into your Creator account
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div style={{ color: '#ffffff', fontSize: '18px', fontFamily: 'var(--font-body)', fontWeight: '600', marginBottom: '8px' }}>
+                    Join as a <span style={{ color: '#3b82f6' }}>Creator.</span> Connect with <span style={{ color: '#3b82f6' }}>fans</span>.
+                  </div>
+                </>
+              )}
             </div>
 
-            <div style={{ marginTop: '20px' }}>
-              {isLogin && successMessage && (
+            <div style={{ display: 'flex', gap: '12px', marginBottom: '24px' }}>
+              <a href={`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/auth/google${new URLSearchParams(location.search).get('ref') ? `?ref=${new URLSearchParams(location.search).get('ref')}` : ''}`}
+                 className="social-btn"
+                 style={{
+                   flex: 1,
+                   display: 'flex',
+                   alignItems: 'center',
+                   justifyContent: 'center',
+                   gap: '10px',
+                   padding: '12px',
+                   background: 'rgba(255, 255, 255, 0.03)',
+                   border: '1px solid rgba(255, 255, 255, 0.08)',
+                   borderRadius: '9999px',
+                   color: '#ffffff',
+                   textDecoration: 'none',
+                   fontSize: '14px',
+                   fontWeight: '600',
+                   transition: 'all 0.25s ease'
+                 }}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                  <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.16v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                  <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.16C1.43 8.55 1 10.22 1 12s.43 3.45 1.16 4.93l3.68-2.84z" fill="#FBBC05"/>
+                  <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.16 7.07l3.68 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                </svg>
+                Google
+              </a>
+
+              <a href={`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/auth/facebook${new URLSearchParams(location.search).get('ref') ? `?ref=${new URLSearchParams(location.search).get('ref')}` : ''}`}
+                 className="social-btn"
+                 style={{
+                   flex: 1,
+                   display: 'flex',
+                   alignItems: 'center',
+                   justifyContent: 'center',
+                   gap: '10px',
+                   padding: '12px',
+                   background: 'rgba(255, 255, 255, 0.03)',
+                   border: '1px solid rgba(255, 255, 255, 0.08)',
+                   borderRadius: '9999px',
+                   color: '#ffffff',
+                   textDecoration: 'none',
+                   fontSize: '14px',
+                   fontWeight: '600',
+                   transition: 'all 0.25s ease'
+                 }}
+              >
+                <svg width="20" height="20" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M28.094 11.25c-2.313 0-4.469 1.094-5.875 3.031L22.188 14.344l-2.75 3.844-3.031-4.25c-1.406-1.938-3.563-3.031-5.875-3.031-4.125 0-7.5 3.375-7.5 7.5s3.375 7.5 7.5 7.5c2.313 0 4.469-1.094 5.875-3.031l.031-.031 2.75-3.844 3.031 4.25c1.406 1.938 3.563 3.031 5.875 3.031 4.125 0 7.5-3.375 7.5-7.5s-3.375-7.5-7.5-7.5zm0 11.25c-1.344 0-2.594-.656-3.375-1.781l-3.313-4.656 3.313-4.656c.781-1.125 2.031-1.781 3.375-1.781 2.469 0 4.5 2.031 4.5 4.5s-2.031 4.5-4.5 4.5zm-17.563 0c-2.469 0-4.5-2.031-4.5-4.5s2.031-4.5 4.5-4.5c1.344 0 2.594.656 3.375 1.781l3.313 4.656-3.313 4.656c-.781 1.125-2.031 1.781-3.375 1.781z" fill="#0668E1"/>
+                </svg>
+                Meta
+              </a>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '24px' }}>
+              <div style={{ flex: 1, height: '1px', background: 'rgba(255, 255, 255, 0.1)' }}></div>
+              <span style={{ padding: '0 16px', color: '#64748b', fontSize: '13px' }}>or</span>
+              <div style={{ flex: 1, height: '1px', background: 'rgba(255, 255, 255, 0.1)' }}></div>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              {successMessage && isLogin && (
                 <div style={{
                   color: '#22c55e',
                   background: 'rgba(34, 197, 94, 0.1)',
@@ -379,19 +450,48 @@ const CreatorAuth = () => {
                   ✅ {successMessage}
                 </div>
               )}
-            
-              <label style={{
-                fontFamily: 'var(--font-mono)',
-                fontSize: '9px',
-                color: '#06b6d4',
-                textTransform: 'uppercase',
-                display: 'block',
-                marginBottom: '6px',
-                letterSpacing: '1.5px',
-                fontWeight: '600'
-              }}>
-                EMAIL ID
-              </label>
+
+              {!isLogin && (
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  background: 'rgba(255, 255, 255, 0.03)',
+                  border: focusedName ? '1px solid #7c3aed' : '1px solid rgba(255, 255, 255, 0.08)',
+                  borderRadius: '12px',
+                  boxShadow: focusedName ? '0 0 15px rgba(124, 58, 237, 0.3)' : 'none',
+                  transition: 'all 0.25s ease',
+                  overflow: 'hidden',
+                  marginBottom: '16px'
+                }}>
+                  <div style={{ padding: '0 0 0 16px', display: 'flex', alignItems: 'center', color: '#94a3b8' }}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                      <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="Full name"
+                    value={name}
+                    onChange={(e) => {
+                      setName(e.target.value);
+                      if (error) setError('');
+                    }}
+                    onFocus={() => setFocusedName(true)}
+                    onBlur={() => setFocusedName(false)}
+                    style={{
+                      flex: 1,
+                      background: 'transparent',
+                      border: 'none',
+                      outline: 'none',
+                      padding: '16px 16px 16px 12px',
+                      fontSize: '15px',
+                      color: '#ffffff',
+                      fontFamily: 'var(--font-body)'
+                    }}
+                  />
+                </div>
+              )}
 
               <div style={{
                 display: 'flex',
@@ -402,11 +502,17 @@ const CreatorAuth = () => {
                 boxShadow: focusedEmail ? '0 0 15px rgba(124, 58, 237, 0.3)' : 'none',
                 transition: 'all 0.25s ease',
                 overflow: 'hidden',
-                marginBottom: '12px'
+                marginBottom: '16px'
               }}>
+                <div style={{ padding: '0 0 0 16px', display: 'flex', alignItems: 'center', color: '#94a3b8' }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                    <polyline points="22,6 12,13 2,6"></polyline>
+                  </svg>
+                </div>
                 <input
                   type="email"
-                  placeholder="your@gmail.com"
+                  placeholder="Email address"
                   value={email}
                   onChange={(e) => {
                     setEmail(e.target.value);
@@ -419,27 +525,13 @@ const CreatorAuth = () => {
                     background: 'transparent',
                     border: 'none',
                     outline: 'none',
-                    padding: '10px 14px',
-                    fontSize: '16px',
+                    padding: '16px 16px 16px 12px',
+                    fontSize: '15px',
                     color: '#ffffff',
-                    fontFamily: 'var(--font-mono)',
-                    letterSpacing: '1px'
+                    fontFamily: 'var(--font-body)'
                   }}
                 />
               </div>
-
-              <label style={{
-                fontFamily: 'var(--font-mono)',
-                fontSize: '9px',
-                color: '#06b6d4',
-                textTransform: 'uppercase',
-                display: 'block',
-                marginBottom: '6px',
-                letterSpacing: '1.5px',
-                fontWeight: '600'
-              }}>
-                {isLogin ? 'PASSWORD' : 'CREATE PASSWORD'}
-              </label>
 
               <div style={{
                 display: 'flex',
@@ -449,12 +541,17 @@ const CreatorAuth = () => {
                 borderRadius: '12px',
                 boxShadow: focusedPassword ? '0 0 15px rgba(124, 58, 237, 0.3)' : 'none',
                 transition: 'all 0.25s ease',
-                overflow: 'hidden',
-                marginBottom: isLogin ? '0px' : '12px'
+                overflow: 'hidden'
               }}>
+                <div style={{ padding: '0 0 0 16px', display: 'flex', alignItems: 'center', color: '#94a3b8' }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                  </svg>
+                </div>
                 <input
                   type={showPassword ? "text" : "password"}
-                  placeholder="••••••••"
+                  placeholder={isLogin ? "Password" : "Create a password"}
                   value={password}
                   onChange={(e) => {
                     setPassword(e.target.value);
@@ -467,11 +564,10 @@ const CreatorAuth = () => {
                     background: 'transparent',
                     border: 'none',
                     outline: 'none',
-                    padding: '10px 14px',
-                    fontSize: '16px',
+                    padding: '16px 16px 16px 12px',
+                    fontSize: '15px',
                     color: '#ffffff',
-                    fontFamily: 'var(--font-mono)',
-                    letterSpacing: '1px'
+                    fontFamily: 'var(--font-body)'
                   }}
                 />
                 <button
@@ -493,12 +589,12 @@ const CreatorAuth = () => {
                   onMouseLeave={(e) => e.currentTarget.style.color = '#94a3b8'}
                 >
                   {showPassword ? (
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
                       <line x1="1" y1="1" x2="23" y2="23"></line>
                     </svg>
                   ) : (
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                       <circle cx="12" cy="12" r="3"></circle>
                     </svg>
@@ -506,104 +602,10 @@ const CreatorAuth = () => {
                 </button>
               </div>
 
-              {!isLogin && password && !checkPasswordStrength(password) && (
-                <div style={{ color: '#ef4444', fontSize: '10px', fontFamily: 'var(--font-mono)', marginBottom: '16px', marginTop: '-8px' }}>
-                  Must be at least 8 chars with 1 number/special char.
-                </div>
-              )}
-
-              {!isLogin && (
-                <>
-                  <label style={{
-                    fontFamily: 'var(--font-mono)',
-                    fontSize: '9px',
-                    color: '#06b6d4',
-                    textTransform: 'uppercase',
-                    display: 'block',
-                    marginBottom: '6px',
-                    letterSpacing: '1.5px',
-                    fontWeight: '600'
-                  }}>
-                    CONFIRM PASSWORD
-                  </label>
-
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    background: 'rgba(255, 255, 255, 0.03)',
-                    border: focusedConfirm ? '1px solid #7c3aed' : '1px solid rgba(255, 255, 255, 0.08)',
-                    borderRadius: '12px',
-                    boxShadow: focusedConfirm ? '0 0 15px rgba(124, 58, 237, 0.3)' : 'none',
-                    transition: 'all 0.25s ease',
-                    overflow: 'hidden',
-                    marginBottom: '12px'
-                  }}>
-                    <input
-                      type={showConfirmPassword ? "text" : "password"}
-                      placeholder="••••••••"
-                      value={confirmPassword}
-                      onChange={(e) => {
-                        setConfirmPassword(e.target.value);
-                        if (error) setError('');
-                      }}
-                      onFocus={() => setFocusedConfirm(true)}
-                      onBlur={() => setFocusedConfirm(false)}
-                      style={{
-                        flex: 1,
-                        background: 'transparent',
-                        border: 'none',
-                        outline: 'none',
-                        padding: '10px 14px',
-                        fontSize: '16px',
-                        color: '#ffffff',
-                        fontFamily: 'var(--font-mono)',
-                        letterSpacing: '1px'
-                      }}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      style={{
-                        background: 'transparent',
-                        border: 'none',
-                        outline: 'none',
-                        padding: '0 16px',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: '#94a3b8',
-                        transition: 'color 0.2s'
-                      }}
-                      onMouseEnter={(e) => e.currentTarget.style.color = '#ffffff'}
-                      onMouseLeave={(e) => e.currentTarget.style.color = '#94a3b8'}
-                    >
-                      {showConfirmPassword ? (
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
-                          <line x1="1" y1="1" x2="23" y2="23"></line>
-                        </svg>
-                      ) : (
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                          <circle cx="12" cy="12" r="3"></circle>
-                        </svg>
-                      )}
-                    </button>
-                  </div>
-
-                  {password && confirmPassword && password !== confirmPassword && (
-                    <div style={{ color: '#ef4444', fontSize: '10px', fontFamily: 'var(--font-mono)', marginBottom: '16px', marginTop: '-8px' }}>
-                      Passwords do not match
-                    </div>
-                  )}
-                </>
-              )}
-
               {isLogin && (
                 <div style={{ textAlign: 'right', marginTop: '12px', paddingRight: '4px' }}>
                   <Link to="/creator/forgot-password" style={{ color: '#06b6d4', textDecoration: 'none', fontSize: '13px', fontWeight: '500' }}>
-                    Forgot Password?
+                    Forgot password?
                   </Link>
                 </div>
               )}
@@ -613,7 +615,7 @@ const CreatorAuth = () => {
                   color: '#ef4444',
                   fontFamily: 'var(--font-mono)',
                   fontSize: '11px',
-                  marginTop: '10px',
+                  marginTop: '16px',
                   textAlign: 'center'
                 }}>
                   ⚠️ {error}
@@ -626,118 +628,51 @@ const CreatorAuth = () => {
                 className="gradient-action-btn"
                 style={{
                   width: '100%',
-                  maxWidth: '280px',
-                  padding: '12px 24px',
+                  padding: '14px 24px',
                   borderRadius: '9999px',
                   background: 'linear-gradient(90deg, #7c3aed 0%, #06b6d4 100%)',
                   color: '#ffffff',
-                  fontWeight: '700',
-                  fontSize: '14px',
+                  fontWeight: '600',
+                  fontSize: '15px',
                   border: 'none',
-                  cursor: 'pointer',
+                  cursor: (isInvalid || loading) ? 'not-allowed' : 'pointer',
                   transition: 'all 0.25s ease',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  margin: '12px auto 0',
+                  marginTop: '24px',
                   boxShadow: '0 4px 12px rgba(124, 58, 237, 0.2)'
                 }}
               >
-                {loading ? (isLogin ? 'Logging in...' : 'Registering...') : (isLogin ? 'Login →' : 'Register →')}
+                {loading ? (isLogin ? 'Logging in...' : 'Registering...') : (isLogin ? 'Log In' : 'Sign Up')}
               </button>
 
-              <div style={{ textAlign: 'center', marginTop: '12px', fontSize: '13px' }}>
+              <div style={{ textAlign: 'center', marginTop: '24px', fontSize: '14px' }}>
                 <span style={{ color: '#94a3b8' }}>{isLogin ? "Don't have an account? " : "Already have an account? "}</span>
-                <span 
-                  onClick={toggleMode}
-                  style={{ color: '#06b6d4', textDecoration: 'none', fontWeight: '600', cursor: 'pointer' }}
-                >
-                  {isLogin ? "Register here" : "Log in here"}
+                <span onClick={toggleMode} style={{ color: '#06b6d4', textDecoration: 'none', fontWeight: '500', cursor: 'pointer' }}>
+                  {isLogin ? "Sign up" : "Log in"}
                 </span>
               </div>
-            </div>
-
-            <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <div style={{ textAlign: 'center', color: '#94a3b8', fontSize: '12px', marginBottom: '8px' }}>
-                or {isLogin ? 'continue' : 'sign up'} with
-              </div>
-              
-              <a href={`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/auth/google${new URLSearchParams(location.search).get('ref') ? `?ref=${new URLSearchParams(location.search).get('ref')}` : ''}`}
-                 className="social-btn"
-                 style={{
-                   display: 'flex',
-                   alignItems: 'center',
-                   justifyContent: 'center',
-                   gap: '10px',
-                   padding: '10px 20px',
-                   background: 'rgba(255, 255, 255, 0.03)',
-                   border: '1px solid rgba(255, 255, 255, 0.08)',
-                   borderRadius: '9999px',
-                   color: '#ffffff',
-                   textDecoration: 'none',
-                   fontSize: '14px',
-                   fontWeight: '600',
-                   maxWidth: '280px',
-                   width: '100%',
-                   margin: '0 auto',
-                   transition: 'all 0.25s ease'
-                 }}
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                  <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.16v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                  <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.16C1.43 8.55 1 10.22 1 12s.43 3.45 1.16 4.93l3.68-2.84z" fill="#FBBC05"/>
-                  <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.16 7.07l3.68 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-                </svg>
-                Continue with Google
-              </a>
-
-              <a href={`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/auth/facebook${new URLSearchParams(location.search).get('ref') ? `?ref=${new URLSearchParams(location.search).get('ref')}` : ''}`}
-                 className="social-btn"
-                 style={{
-                   display: 'flex',
-                   alignItems: 'center',
-                   justifyContent: 'center',
-                   gap: '10px',
-                   padding: '10px 20px',
-                   background: 'rgba(24, 119, 242, 0.1)',
-                   border: '1px solid rgba(24, 119, 242, 0.2)',
-                   borderRadius: '9999px',
-                   color: '#ffffff',
-                   textDecoration: 'none',
-                   fontSize: '14px',
-                   fontWeight: '600',
-                   maxWidth: '280px',
-                   width: '100%',
-                   margin: '0 auto',
-                   transition: 'all 0.25s ease'
-                 }}
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047v-2.66c0-3.025 1.792-4.697 4.533-4.697 1.312 0 2.686.236 2.686.236v2.98h-1.514c-1.49 0-1.956.935-1.956 1.895v2.246h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z" fill="white"/>
-                </svg>
-                Continue with Meta
-              </a>
             </div>
           </div>
 
           <div style={{
             textAlign: 'center',
-            marginTop: '16px',
+            marginTop: '24px',
             color: '#94a3b8',
             fontSize: '11px',
             fontFamily: 'var(--font-mono)',
             lineHeight: '1.6'
           }}>
-            By logging in and using Skriibe, you agree to our<br />
-            <Link to="/terms" style={{ color: '#06b6d4', textDecoration: 'none' }}>Terms of Service</Link> and <Link to="/privacy" style={{ color: '#06b6d4', textDecoration: 'none' }}>Privacy Policy</Link>.
-            <div style={{ marginTop: '8px', opacity: 0.5, fontSize: '9px', textTransform: 'uppercase', letterSpacing: '1px' }}>
-              Made with 🤍 From Skriibe
+            {isLogin ? 'by logging and using skriibe, you agree to our' : 'by signing up and using skriibe, you agree to our'} <br />
+            <Link to="/terms" style={{ color: '#06b6d4', textDecoration: 'none' }}>Terms of Service</Link> and <Link to="/privacy" style={{ color: '#06b6d4', textDecoration: 'none' }}>Privacy policy</Link>
+            <div style={{ marginTop: '12px', opacity: 0.6, fontSize: '10px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+              MADE WITH 🤍 FROM SKRIIBE
             </div>
           </div>
         </div>
       </div>
-      
+
       {showRoleConflictModal && (
         <div style={{
           position: 'fixed',
@@ -764,7 +699,7 @@ const CreatorAuth = () => {
             <button
               onClick={() => {
                 setShowRoleConflictModal(false);
-                navigate('/creator/login', { replace: true });
+                navigate('/fan/login', { replace: true });
               }}
               style={{
                 marginTop: '16px',

@@ -24,7 +24,9 @@ const CreatorSchema = new mongoose.Schema({
   dailyCap: { type: Number, default: 50 },
   weeklyGoal: { type: Number, default: 1500 },
   autoPause: { type: Boolean, default: true },
-  isLive: { type: Boolean, default: false },
+  isLive: { type: Boolean, default: false }, // Legacy field, might still be used temporarily
+  manualLiveOverride: { type: String, enum: ['online', 'offline', null], default: null },
+  manualLiveOverrideUpdatedAt: { type: Date, default: null },
   isPaused: { type: Boolean, default: false },
   ama_enabled: { type: Boolean, default: false },
   liveChatEnabled: { type: Boolean, default: true }, // New field for Live Chat feature

@@ -106,7 +106,7 @@ const NewFansOnly = ({ theme = 'dark' }) => {
             {/* Claim Free Chat Button */}
             <div className="mt-6 sm:mt-8">
               <Link
-                to="/fan/login"
+                to="/explore"
                 className={`inline-flex items-center justify-center px-7 sm:px-8 py-3.5 sm:py-4 rounded-full font-bold text-sm sm:text-base transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 ${
                   isLight
                     ? 'bg-[#3BA8D8] hover:bg-[#2d8ab8] text-white shadow-md hover:shadow-lg'

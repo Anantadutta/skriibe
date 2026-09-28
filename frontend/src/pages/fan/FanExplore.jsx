@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import CreatorCard from '../../components/discovery/CreatorCard';
-import FanNavbar from '../../components/fan/layout/FanNavbar';
+import Navbar from '../../components/Navbar';
 import FanBottomNav from '../../components/fan/layout/FanBottomNav';
 import { getLiveCreators } from '../../services/discoveryApi';
 import { getFanMe } from '../../services/fanApi';
@@ -334,7 +334,7 @@ const FanExplore = () => {
         }
       `}</style>
 
-      <FanNavbar />
+      <Navbar theme="dark" toggleTheme={() => {}} />
       <main ref={gridRef} className="fan-explore-main">
         <div style={{ maxWidth: '768px', margin: '0 0 28px' }}>
           <h1 style={{

@@ -699,7 +699,11 @@ router.patch('/live-status', verifyCreatorToken, async (req, res) => {
 
     const updatedCreator = await Creator.findByIdAndUpdate(
       req.creator.creatorId,
-      { isLive },
+      { 
+        isLive,
+        manualLiveOverride: isLive ? 'online' : 'offline',
+        manualLiveOverrideUpdatedAt: new Date()
+      },
       { new: true }
     );
 
@@ -707,15 +711,18 @@ router.patch('/live-status', verifyCreatorToken, async (req, res) => {
       return res.status(404).json({ message: 'Creator not found' });
     }
 
+    const { calculateLiveStatus } = require('../utils/liveStatus');
+    const calculatedLive = calculateLiveStatus(updatedCreator);
+
     // Emit Socket.IO event if io is attached to req
     if (req.io) {
       req.io.emit('creator-status-changed', {
         creatorId: updatedCreator._id,
-        isLive: updatedCreator.isLive
+        isLive: calculatedLive
       });
     }
 
-    res.json({ success: true, isLive: updatedCreator.isLive });
+    res.json({ success: true, isLive: calculatedLive });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });

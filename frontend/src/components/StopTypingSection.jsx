@@ -166,7 +166,7 @@ const StopTypingSection = ({ theme = 'dark' }) => {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5 sm:gap-4 w-full sm:w-auto mb-6 sm:mb-8">
             {/* Start my free chat */}
               <Link
-                to="/fan/login"
+                to="/explore"
                 className={`w-full sm:w-auto px-7 sm:px-9 py-3.5 sm:py-4 rounded-full font-bold text-base sm:text-lg transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 text-center ${
                 isLight
                   ? 'bg-[#3BA8D8] hover:bg-[#2d8ab8] text-white shadow-md hover:shadow-lg'

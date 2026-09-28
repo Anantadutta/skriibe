@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { BottomNav } from '../../components/ama/layout/BottomNav';
 import { getMe } from '../../services/creatorApi';
 import { QRCodeCanvas } from 'qrcode.react';
@@ -771,7 +771,9 @@ const CreatorSharePage = () => {
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px', position: 'relative' }}>
             {/* Skriibe Logo Heading */}
             <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'center', width: '100%' }}>
-              <TransparentLogo src="/logo.png" alt="skriibe logo" style={{ height: '90px', width: 'auto', transform: 'scale(2.2)', transformOrigin: 'center center' }} />
+              <Link to="/creator/dashboard">
+                <TransparentLogo src="/logo.png" alt="skriibe logo" style={{ height: '90px', width: 'auto', transform: 'scale(2.2)', transformOrigin: 'center center' }} />
+              </Link>
             </div>
 
             {/* White Box containing QR Code */}

@@ -3,7 +3,7 @@ import api from '../../services/api';
 import { useNavigate } from 'react-router-dom';
 import WalletPaymentButton from './WalletPaymentButton';
 
-const ChatEndScreen = ({ creator, sessionId, totalMinutes, totalCost, error, messages = [], isFreeChat, rate, walletBalance: initialWalletBalance, onBack, onContinueChat, onDone, endedByCreator }) => {
+const ChatEndScreen = ({ creator, sessionId, totalMinutes, totalCost, error, messages = [], isFreeChat, rate, walletBalance: initialWalletBalance, onBack, onContinueChat, onDone, endedByCreator, endReason }) => {
   const [rating, setRating] = useState(5);
   const [hoverRating, setHoverRating] = useState(0);
   const [selectedTags, setSelectedTags] = useState([]);
@@ -25,9 +25,17 @@ const ChatEndScreen = ({ creator, sessionId, totalMinutes, totalCost, error, mes
   const navigate = useNavigate();
 
   // Calculate detailed duration
-  const mins = Math.floor(totalMinutes);
-  const secs = Math.round((totalMinutes - mins) * 60);
-  const durationText = `${mins} min ${secs} s`;
+  let mins = Math.floor(totalMinutes);
+  let secs = Math.round((totalMinutes - mins) * 60);
+  if (secs === 60) {
+    mins += 1;
+    secs = 0;
+  }
+  
+  let durationText = `${mins} min ${secs} s`;
+  if (isFreeChat && (endReason === 'FREE_TRIAL_ENDED' || totalMinutes >= 2)) {
+    durationText = '2 minutes';
+  }
 
   const tags = ['Helpful', 'Fast', 'Friendly'];
 

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { PhoneFrame } from '../../components/ama/layout/PhoneFrame';
 import { BottomNav } from '../../components/ama/layout/BottomNav';
 import api from '../../services/api';
@@ -309,7 +309,9 @@ const CreatorPayouts = () => {
               </svg>
             </button>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <TransparentLogo src="/logo.png" alt="skriibe logo" style={{ height: '22px', width: 'auto', transform: 'scale(4)', transformOrigin: 'center' }} />
+              <Link to="/creator/dashboard">
+                <TransparentLogo src="/logo.png" alt="skriibe logo" style={{ height: '22px', width: 'auto', transform: 'scale(4)', transformOrigin: 'center' }} />
+              </Link>
             </div>
             <div style={{ width: '38px' }} />
           </div>

@@ -62,13 +62,15 @@ const ForCreatorsSection = ({ theme }) => {
             <div className="mt-6 sm:mt-8 w-full sm:w-auto flex justify-center">
               <Link
                 to={isAuthenticated ? (roles?.includes('creator') ? "/creator/dashboard" : "/creator/signup") : "/creator/signup"}
+                target="_blank"
+                rel="noopener noreferrer"
                 className={`inline-flex items-center justify-center w-full sm:w-auto px-8 sm:px-10 py-3.5 sm:py-4 rounded-full font-bold text-base sm:text-lg transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 shadow-sm ${
                   isLight
                     ? 'bg-[#3BA8D8] hover:bg-[#2d8ab8] text-white shadow-md hover:shadow-lg'
                     : 'bg-[#3BA8D8] hover:bg-[#4ab8d6] text-black shadow-[0_0_25px_rgba(59,168,216,0.35)] hover:shadow-[0_0_35px_rgba(59,168,216,0.5)]'
                 }`}
               >
-                Join as a creator
+                {(isAuthenticated && roles?.includes('creator')) ? 'Go to Dashboard' : 'Join as a creator'}
               </Link>
             </div>
           </div>
@@ -156,6 +158,8 @@ const ForCreatorsSection = ({ theme }) => {
 
               <Link
                 to={isAuthenticated ? "/creator/dashboard" : "/creator/signup"}
+                target="_blank"
+                rel="noopener noreferrer"
                 onClick={() => setShowPayoutModal(false)}
                 className={`flex-1 py-3 px-4 rounded-full text-center text-sm font-bold transition-all ${
                   isLight
@@ -163,7 +167,7 @@ const ForCreatorsSection = ({ theme }) => {
                     : 'bg-[#3BA8D8] text-black hover:bg-[#4ab8d6]'
                 }`}
               >
-                Start Earning Now
+                {(isAuthenticated && roles?.includes('creator')) ? 'Go to Dashboard' : 'Start Earning Now'}
               </Link>
             </div>
           </div>

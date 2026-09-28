@@ -7,6 +7,7 @@ const mongoose = require('mongoose');
 const Creator = require('../models/Creator');
 const Question = require('../models/Question');
 const { normalizeExpertiseList, EXPERTISE_MAPPING } = require('../utils/expertiseConstants');
+const { calculateLiveStatus } = require('../utils/liveStatus');
 
 router.get('/debug-questions', async (req, res) => {
   try {
@@ -57,7 +58,7 @@ router.get('/creator/:handle', async (req, res) => {
         responseTime: creator.responseTime || '48 hours',
         questionsAnswered: answeredCount,
         instagramLinked: creator.instagramConnected,
-        isLive: creator.isLive,
+        isLive: calculateLiveStatus(creator),
         isPaused: creator.isPaused || false,
         liveChatEnabled: creator.liveChatEnabled || false,
         liveChatPrice: creator.liveChatPrice || 5,
@@ -92,7 +93,7 @@ router.get('/creators', async (req, res) => {
       'Food', 'Travel', 'Music', 'Gaming', 'Comedy'
     ];
     
-    if (live === 'true') query.isLive = true;
+    // if (live === 'true') query.isLive = true; // Handled in-memory later
     if (category === 'Others') {
       const allKnown = new Set([
         ...PREDEFINED_CATEGORIES.map(c => c.toLowerCase()),
@@ -175,7 +176,7 @@ router.get('/creators', async (req, res) => {
     }
 
     const creators = await Creator.find(query).select(
-      'name handle avatarUrl profileUrl bio expertise price pricePerQuestion responseTime stats verified instagramFollowers instagramConnected isLive isPaused liveChatEnabled liveChatPrice liveChatTimeSlots ama_enabled'
+      'name handle avatarUrl profileUrl bio expertise price pricePerQuestion responseTime stats verified instagramFollowers instagramConnected isLive isPaused liveChatEnabled liveChatPrice liveChatTimeSlots ama_enabled manualLiveOverride manualLiveOverrideUpdatedAt suspensionUntil'
     ).lean();
 
     // Creators currently mid-chat. Mirrors the "live session" shape used elsewhere:
@@ -189,15 +190,24 @@ router.get('/creators', async (req, res) => {
     });
     const busyCreatorSet = new Set(busyCreatorIds.map(String));
     
+    creators.forEach(c => {
+      c.isLive = calculateLiveStatus(c);
+    });
+
+    let filteredCreators = creators;
+    if (live === 'true') {
+      filteredCreators = filteredCreators.filter(c => c.isLive);
+    }
+
     // Sort: Live creators first, then by replyRate descending
-    creators.sort((a, b) => {
+    filteredCreators.sort((a, b) => {
       if (a.isLive === b.isLive) {
         return (b.stats?.replyRate || 0) - (a.stats?.replyRate || 0);
       }
       return a.isLive ? -1 : 1;
     });
     
-    const formattedCreators = creators.map(c => ({
+    const formattedCreators = filteredCreators.map(c => ({
       id: c._id,
       name: c.name || 'Anonymous',
       handle: c.handle || 'unknown',

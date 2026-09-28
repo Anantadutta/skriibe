@@ -666,11 +666,12 @@ router.get('/status', async (req, res) => {
         const creator = await Creator.findOne({ email: fan.email }).lean();
         
         if (creator) {
+          const { calculateLiveStatus } = require('../utils/liveStatus');
           return res.json({
             authenticated: true,
             isCreator: true,
             creator: {
-              isLive: creator.isLive,
+              isLive: calculateLiveStatus(creator),
               handle: creator.handle,
               ama_enabled: creator.ama_enabled,
               expertise: creator.expertise || []
@@ -695,11 +696,12 @@ router.get('/status', async (req, res) => {
       }
       
       if (creator) {
+        const { calculateLiveStatus } = require('../utils/liveStatus');
         return res.json({
           authenticated: true,
           isCreator: true,
           creator: {
-            isLive: creator.isLive,
+            isLive: calculateLiveStatus(creator),
             handle: creator.handle,
             ama_enabled: creator.ama_enabled,
             expertise: creator.expertise || []

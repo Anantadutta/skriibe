@@ -863,7 +863,20 @@ const CreatorInbox = () => {
                     <div style={{ flex: 1 }}>
                       <div style={{ color: '#94a3b8', fontSize: '0.75rem', marginBottom: '4px' }}>DURATION</div>
                       <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.9rem' }}>
-                        {Math.floor(chat.totalMinutes || 0)}m {Math.round(((chat.totalMinutes || 0) % 1) * 60)}s
+                        {(() => {
+                          let mins = Math.floor(chat.totalMinutes || 0);
+                          let secs = Math.round(((chat.totalMinutes || 0) - mins) * 60);
+                          if (secs === 60) {
+                            mins += 1;
+                            secs = 0;
+                          }
+                          let durationText = `${mins} min ${secs} s`;
+                          const isFreeChat = chat.rate === 0 || chat.isFreeChat || chat.ratePerMinute === 0;
+                          if (isFreeChat && ((chat.endReason && chat.endReason === 'FREE_TRIAL_ENDED') || (chat.totalMinutes || 0) >= 2)) {
+                            durationText = '2 minutes';
+                          }
+                          return durationText;
+                        })()}
                       </div>
                     </div>
                     <div style={{ width: '1px', background: '#1F2937' }}></div>

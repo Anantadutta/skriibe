@@ -49,7 +49,7 @@ const PastChatView = () => {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: '#f9fafb' }}>
         <p style={{ color: '#ef4444', fontSize: '18px', marginBottom: '16px' }}>{error || 'Chat session not found.'}</p>
-        <button onClick={() => navigate(-1)} style={{ background: '#3b82f6', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer' }}>
+        <button onClick={() => navigate('/fan/history')} style={{ background: '#3b82f6', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer' }}>
           Go Back
         </button>
       </div>
@@ -73,7 +73,7 @@ const PastChatView = () => {
       
       {/* Header */}
       <div style={{ background: theme.headerBackground, position: 'sticky', top: 0, zIndex: 10, padding: '12px 24px', display: 'flex', alignItems: 'center', gap: '16px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
-        <button onClick={() => navigate(-1)} style={{ background: 'transparent', border: 'none', color: theme.headerColor, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <button onClick={() => navigate('/fan/history')} style={{ background: 'transparent', border: 'none', color: theme.headerColor, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <ArrowLeft size={24} />
         </button>
         <div style={{ width: '48px', height: '48px', background: '#fff', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: theme.headerBackground, fontWeight: 'bold', overflow: 'hidden' }}>
@@ -89,7 +89,20 @@ const PastChatView = () => {
             {creator?.expertise && <span style={{ fontSize: '0.9rem', fontWeight: 'normal', opacity: 0.85 }}>• {Array.isArray(creator.expertise) ? creator.expertise.join(' • ') : creator.expertise}</span>}
           </h2>
           <div style={{ color: '#bbf7d0', fontSize: '0.85rem', fontWeight: '600' }}>
-            Duration: {session.totalMinutes?.toFixed(1) || 0} mins | Spent: ₹{session.totalCost?.toFixed(2) || 0}
+            Duration: {(() => {
+              let mins = Math.floor(session.totalMinutes || 0);
+              let secs = Math.round(((session.totalMinutes || 0) - mins) * 60);
+              if (secs === 60) {
+                mins += 1;
+                secs = 0;
+              }
+              let durationText = `${mins} min ${secs} s`;
+              const isFreeChat = session.rate === 0 || session.isFreeChat || session.ratePerMinute === 0;
+              if (isFreeChat && ((session.endReason && session.endReason === 'FREE_TRIAL_ENDED') || (session.totalMinutes || 0) >= 2)) {
+                durationText = '2 minutes';
+              }
+              return durationText;
+            })()} | Spent: {session.isFreeChat || session.ratePerMinute === 0 ? 'FREE' : `₹${session.totalCost?.toFixed(2) || 0}`}
           </div>
         </div>
       </div>
@@ -146,6 +159,26 @@ const PastChatView = () => {
                     )
                   )}
                 </div>
+                {m.reactions && m.reactions.length > 0 && (
+                  <div style={{
+                    position: 'absolute',
+                    bottom: '-12px',
+                    [isFan ? 'right' : 'left']: '16px',
+                    background: '#202020',
+                    border: '1px solid #333',
+                    borderRadius: '12px',
+                    padding: '2px 6px',
+                    fontSize: '12px',
+                    display: 'flex',
+                    gap: '2px',
+                    boxShadow: '0 1px 4px rgba(0,0,0,0.1)',
+                    zIndex: 2
+                  }}>
+                    {Array.from(new Set(m.reactions.map(r => r.emoji))).map(emoji => (
+                      <span key={emoji}>{emoji}</span>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           );

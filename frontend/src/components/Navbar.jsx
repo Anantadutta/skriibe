@@ -188,7 +188,7 @@ const Navbar = ({ theme, toggleTheme, showBanner = true }) => {
       >
         {/* Left: Skriibe Logo */}
         <div className="flex items-center shrink-0">
-          <a href="/" className="flex items-center">
+          <Link to={location.pathname.startsWith('/creator') ? "/creator/dashboard" : "/"} className="flex items-center">
             <svg 
               xmlns="http://www.w3.org/2000/svg" 
               viewBox="0 0 2800 520.97" 
@@ -204,7 +204,7 @@ const Navbar = ({ theme, toggleTheme, showBanner = true }) => {
                 skr<tspan fill="#3BA8D8">ii</tspan>be
               </text>
             </svg>
-          </a>
+          </Link>
         </div>
 
         {/* Right: Nav items, CTAs, and theme toggle */}
@@ -283,6 +283,8 @@ const Navbar = ({ theme, toggleTheme, showBanner = true }) => {
                 </Link>
                 <Link
                   to="/creator/signup"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="text-xs sm:text-sm font-bold px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-[#3BA8D8] text-black hover:bg-[#3298c4] transition-all whitespace-nowrap shadow-[0_0_12px_rgba(59,168,216,0.3)] hover:shadow-[0_0_18px_rgba(59,168,216,0.5)]"
                 >
                   Join as a creator
@@ -297,10 +299,10 @@ const Navbar = ({ theme, toggleTheme, showBanner = true }) => {
                   Start free chat
                 </Link>
                 <Link
-                  to="/creator/signup"
+                  to="/creator/dashboard"
                   className="text-xs sm:text-sm font-bold px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-[#3BA8D8] text-black hover:bg-[#3298c4] transition-all whitespace-nowrap shadow-[0_0_12px_rgba(59,168,216,0.3)] hover:shadow-[0_0_18px_rgba(59,168,216,0.5)]"
                 >
-                  Join as a creator
+                  Dashboard
                 </Link>
               </>
             ) : (
@@ -327,7 +329,7 @@ const Navbar = ({ theme, toggleTheme, showBanner = true }) => {
                         : 'bg-[#12121a] border-white/10 text-gray-200'
                     }`}>
                       <div className="flex flex-col py-1">
-                        <Link to="/" className={`px-4 py-2 text-sm font-semibold transition-colors ${theme === 'light' ? 'hover:bg-gray-100' : 'hover:bg-white/10'}`}>
+                        <Link to="/discovery" className={`px-4 py-2 text-sm font-semibold transition-colors ${theme === 'light' ? 'hover:bg-gray-100' : 'hover:bg-white/10'}`}>
                           Home
                         </Link>
                         <Link to="/fan/history" className={`px-4 py-2 text-sm font-semibold transition-colors ${theme === 'light' ? 'hover:bg-gray-100' : 'hover:bg-white/10'}`}>
@@ -335,9 +337,6 @@ const Navbar = ({ theme, toggleTheme, showBanner = true }) => {
                         </Link>
                         <Link to="/fan/wallet" className={`px-4 py-2 text-sm font-semibold transition-colors ${theme === 'light' ? 'hover:bg-gray-100' : 'hover:bg-white/10'}`}>
                           Wallet
-                        </Link>
-                        <Link to="/fan/wallet" className={`px-4 py-2 text-sm font-semibold transition-colors ${theme === 'light' ? 'hover:bg-gray-100' : 'hover:bg-white/10'}`}>
-                          Transactions
                         </Link>
                         <Link to="/fan/profile" className={`px-4 py-2 text-sm font-semibold transition-colors ${theme === 'light' ? 'hover:bg-gray-100' : 'hover:bg-white/10'}`}>
                           Settings
@@ -486,7 +485,8 @@ const Navbar = ({ theme, toggleTheme, showBanner = true }) => {
                 </Link>
                 <Link
                   to="/creator/signup"
-                  onClick={() => setIsMobileMenuOpen(false)}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="w-full py-3 px-4 rounded-full bg-[#3BA8D8] text-black font-bold text-center text-sm hover:bg-[#3298c4] transition-all shadow-[0_0_12px_rgba(59,168,216,0.3)]"
                 >
                   Join as a creator
@@ -502,11 +502,11 @@ const Navbar = ({ theme, toggleTheme, showBanner = true }) => {
                   Start free chat
                 </Link>
                 <Link
-                  to="/creator/signup"
+                  to="/creator/dashboard"
                   onClick={() => setIsMobileMenuOpen(false)}
                   className="w-full py-3 px-4 rounded-full bg-[#3BA8D8] text-black font-bold text-center text-sm hover:bg-[#3298c4] transition-all shadow-[0_0_12px_rgba(59,168,216,0.3)]"
                 >
-                  Join as a creator
+                  Dashboard
                 </Link>
               </>
             ) : (
@@ -520,7 +520,7 @@ const Navbar = ({ theme, toggleTheme, showBanner = true }) => {
                   </div>
                   <div className={`h-px w-full ${theme === 'light' ? 'bg-gray-200' : 'bg-white/10'}`}></div>
                   <Link
-                    to="/"
+                    to="/discovery"
                     onClick={() => setIsMobileMenuOpen(false)}
                     className={`block w-full py-3 px-4 font-bold text-center text-sm transition-colors ${theme === 'light' ? 'hover:bg-gray-100 text-gray-800' : 'hover:bg-white/5 text-gray-200'}`}
                   >
@@ -539,13 +539,6 @@ const Navbar = ({ theme, toggleTheme, showBanner = true }) => {
                     className={`block w-full py-3 px-4 font-bold text-center text-sm transition-colors ${theme === 'light' ? 'hover:bg-gray-100 text-gray-800' : 'hover:bg-white/5 text-gray-200'}`}
                   >
                     Wallet
-                  </Link>
-                  <Link
-                    to="/fan/wallet"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className={`block w-full py-3 px-4 font-bold text-center text-sm transition-colors ${theme === 'light' ? 'hover:bg-gray-100 text-gray-800' : 'hover:bg-white/5 text-gray-200'}`}
-                  >
-                    Transactions
                   </Link>
                   <Link
                     to="/fan/profile"

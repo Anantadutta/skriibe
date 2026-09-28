@@ -1,8 +1,9 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import Navbar from '../components/Navbar';
 import TransparentLogo from '../components/TransparentLogo';
 
-const AffiliateProgram = ({ theme }) => {
+const AffiliateProgram = ({ theme, toggleTheme }) => {
   const navigate = useNavigate();
   
   const isDark = theme === 'dark';
@@ -20,34 +21,7 @@ const AffiliateProgram = ({ theme }) => {
       color: textMain,
       fontFamily: 'system-ui, -apple-system, sans-serif'
     }}>
-      {/* Header */}
-      <header style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: '16px 24px',
-        borderBottom: `1px solid ${cardBorder}`
-      }}>
-        <div onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>
-          <TransparentLogo src="/logo.png" alt="skriibe logo" style={{ height: '24px', width: 'auto', transform: 'scale(4)', transformOrigin: 'left center' }} />
-        </div>
-        <button 
-          onClick={() => navigate('/creator/login')}
-          style={{
-            background: 'transparent',
-            border: `1px solid ${cardBorder}`,
-            color: textMain,
-            padding: '8px 24px',
-            borderRadius: '6px',
-            fontWeight: '600',
-            cursor: 'pointer',
-            fontSize: '14px',
-            textTransform: 'uppercase'
-          }}
-        >
-          LOG IN / REGISTER
-        </button>
-      </header>
+      <Navbar theme={theme} toggleTheme={toggleTheme} />
 
       {/* Main Content */}
       <main style={{

@@ -19,9 +19,10 @@ router.post('/start', verifyFanToken, async (req, res) => {
     if (!fan) return res.status(404).json({ success: false, message: 'Fan not found' });
 
 
-    // We allow the chat to start if they are either manually live OR they have configured time slots
-    // Since the frontend performs precise IST calculations, we trust the frontend's initialization
-    if (!creator.isLive && (!creator.liveChatTimeSlots || creator.liveChatTimeSlots.length === 0)) {
+    // We allow the chat to start if they are dynamically live or have configured slots
+    const { calculateLiveStatus } = require('../utils/liveStatus');
+    const isLive = calculateLiveStatus(creator);
+    if (!isLive && (!creator.liveChatTimeSlots || creator.liveChatTimeSlots.length === 0)) {
       return res.status(400).json({ success: false, message: 'Creator is not live right now' });
     }
 
@@ -303,6 +304,8 @@ router.post('/end', async (req, res) => {
     }
     
     const fan = await Fan.findById(session.fanId);
+    let creatorEndedUnderOneMinute = false;
+    
     if (fan && session.startTime && !cancelBeforeStart) {
       const rate = session.ratePerMinute;
       const elapsedSeconds = (Date.now() - session.startTime.getTime()) / 1000;
@@ -310,8 +313,12 @@ router.post('/end', async (req, res) => {
       let amountToDeduct = expectedTotalCost - (session.totalCost || 0);
       
       if (session.isFreeChat) {
-        fan.hasUsedFreeChat = true;
-        await fan.save();
+        if (reason === 'CREATOR_ENDED' && elapsedSeconds < 60) {
+          creatorEndedUnderOneMinute = true;
+        } else {
+          fan.hasUsedFreeChat = true;
+          await fan.save();
+        }
       }
 
       if (amountToDeduct > 0) {
@@ -373,7 +380,8 @@ router.post('/end', async (req, res) => {
         creatorId: cidStr,
         totalMinutes: session.totalMinutes,
         totalCost: session.totalCost,
-        reason: reason || 'USER_ENDED'
+        reason: reason || 'USER_ENDED',
+        creatorEndedUnderOneMinute
       };
 
       req.io.to(sessionId.toString()).emit('chat_ended', endPayload);
@@ -387,7 +395,7 @@ router.post('/end', async (req, res) => {
       req.io.emit('chat_ended', endPayload);
     }
 
-    res.json({ success: true, totalMinutes: session.totalMinutes, totalCost: session.totalCost });
+    res.json({ success: true, totalMinutes: session.totalMinutes, totalCost: session.totalCost, creatorEndedUnderOneMinute });
   } catch (error) {
     console.error('Error ending chat:', error);
     res.status(500).json({ success: false, message: 'Internal server error' });
@@ -639,10 +647,15 @@ router.get('/pending', verifyCreatorToken, async (req, res) => {
 router.get('/:sessionId', async (req, res) => {
   try {
     const session = await ChatSession.findById(req.params.sessionId)
-      .populate('creatorId', 'name handle avatarUrl isLive')
+      .populate('creatorId', 'name handle avatarUrl isLive manualLiveOverride manualLiveOverrideUpdatedAt suspensionUntil liveChatTimeSlots')
       .populate('fanId', 'name avatarUrl walletBalance');
     
     if (!session) return res.status(404).json({ success: false, message: 'Session not found' });
+    
+    const { calculateLiveStatus } = require('../utils/liveStatus');
+    if (session.creatorId) {
+      session.creatorId.isLive = calculateLiveStatus(session.creatorId);
+    }
     
     // Fetch first page of messages (last 50)
     const Message = require('../models/Message');

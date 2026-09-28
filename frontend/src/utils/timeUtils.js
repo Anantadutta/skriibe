@@ -5,7 +5,7 @@
  */
 export const checkIfLiveNow = (timeSlots) => {
   if (!timeSlots || !Array.isArray(timeSlots) || timeSlots.length === 0) {
-    return false; // No slots means offline
+    return true; // No slots means LIVE per user request
   }
 
   const now = new Date();

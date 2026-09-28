@@ -178,7 +178,7 @@
     "pricePerQuestion": 10,
     "isLive": true,
     "liveChatPrice": 5,
-    "handle": "anan_tired"
+    "handle": "anan_tired_deleted_1790511036187"
   },
   {
     "_id": "6a86fbb5af8f208b91ee32a5",
@@ -313,5 +313,47 @@
     "isLive": true,
     "liveChatPrice": 5,
     "handle": "oneminuteaway_deleted_1789548237469"
+  },
+  {
+    "_id": "6ab90d599e18c6ad4473815a",
+    "name": "Ananta",
+    "profileUrl": "skriibe.com/ananta",
+    "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocKgUrOcvtIXiOWRwgsHcSysIqW48e-jsY8CwzwRFl44zZur3w=s96-c",
+    "price": 10,
+    "pricePerQuestion": 10,
+    "isLive": true,
+    "liveChatPrice": 5,
+    "handle": "ananta"
+  },
+  {
+    "_id": "6ab92764df463f4b5c55b3b5",
+    "name": "tarun singh",
+    "profileUrl": "skriibe.com/tarun",
+    "avatarUrl": "",
+    "price": 0,
+    "pricePerQuestion": 0,
+    "isLive": true,
+    "liveChatPrice": 5,
+    "handle": "tarun_deleted_1790559212476"
+  },
+  {
+    "_id": "6aba998ca94d003428d6eaa3",
+    "name": "",
+    "profileUrl": "",
+    "avatarUrl": "",
+    "price": 10,
+    "pricePerQuestion": 10,
+    "isLive": false,
+    "liveChatPrice": 5
+  },
+  {
+    "_id": "6aba9cab24d0e3b58176ba25",
+    "name": "",
+    "profileUrl": "",
+    "avatarUrl": "",
+    "price": 10,
+    "pricePerQuestion": 10,
+    "isLive": false,
+    "liveChatPrice": 5
   }
 ]
