@@ -32,7 +32,7 @@ router.get('/creator/:handle', async (req, res) => {
       handle = handle.substring(1);
     }
     const creator = await Creator.findOne({ handle: new RegExp(`^${handle}$`, 'i') }).select(
-      'name handle avatarUrl bio expertise stats instagramHandle instagramFollowers price pricePerQuestion responseTime questionsAnswered instagramConnected isLive isPaused liveChatEnabled liveChatPrice liveChatTimeSlots ama_enabled'
+      'name handle avatarUrl bio expertise stats instagramHandle instagramFollowers price pricePerQuestion responseTime questionsAnswered instagramConnected isLive isPaused liveChatEnabled liveChatPrice liveChatTimeSlots ama_enabled manualLiveOverride manualLiveOverrideUpdatedAt suspensionUntil'
     );
     if (!creator) {
       return res.status(404).json({ success: false, message: 'Creator not found' });
