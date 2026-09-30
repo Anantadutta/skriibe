@@ -7,6 +7,7 @@ import { getFanMe } from '../../services/fanApi';
 import { io } from 'socket.io-client';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAuth } from '../../context/AuthContext';
 
 const PREDEFINED_CATEGORIES = [
   'Lifestyle', 'Beauty', 'Fitness', 'Finance', 'Tech', 
@@ -41,7 +42,7 @@ const FanExplore = () => {
   const [selectedCustomCategory, setSelectedCustomCategory] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isFirstTimeUser, setIsFirstTimeUser] = useState(true);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { isAuthenticated: isLoggedIn } = useAuth();
   const [visibleCount, setVisibleCount] = useState(20);
   const [showRoleConflictModal, setShowRoleConflictModal] = useState(false);
   const navigate = useNavigate();
@@ -102,17 +103,14 @@ const FanExplore = () => {
       try {
         const res = await getFanMe();
         if (res.success && res.fan) {
-          setIsLoggedIn(true);
           if (res.fan.creatorHandle) {
             setFanCreatorHandle(res.fan.creatorHandle);
           }
           setIsFirstTimeUser(!res.fan.hasUsedFreeChat);
         } else {
-          setIsLoggedIn(false);
           setIsFirstTimeUser(true);
         }
       } catch (err) {
-        setIsLoggedIn(false);
         setIsFirstTimeUser(true);
       }
     };
@@ -338,9 +336,10 @@ const FanExplore = () => {
         }
       `}</style>
 
-      <Navbar theme="dark" toggleTheme={() => {}} />
+      {!isLoggedIn && <Navbar theme="dark" toggleTheme={() => {}} />}
       <main ref={gridRef} className="fan-explore-main">
         {!isLoggedIn && (
+
           <div style={{ maxWidth: '768px', margin: '0 0 28px' }}>
             <h1 style={{
               fontFamily: "'Bebas Neue', sans-serif",
