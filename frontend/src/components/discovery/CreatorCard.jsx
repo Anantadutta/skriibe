@@ -62,7 +62,7 @@ const CreatorCard = ({ creator, isFirstTimeUser = false }) => {
     dynamicallyLive = checkIfLiveNow(liveChatTimeSlots);
   }
 
-  const shareUrl = `${window.location.origin}/creator/${handle}`;
+  const shareUrl = `${window.location.origin}/${handle}`;
   const shareText = `Check out ${name} on Skriibe!`;
 
   const handleShare = (platform, e) => {
@@ -336,7 +336,9 @@ const CreatorCard = ({ creator, isFirstTimeUser = false }) => {
         marginBottom: '24px',
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center'
+        alignItems: 'center',
+        width: '100%',
+        overflow: 'hidden'
       }}>
         <div style={{
           width: '76px',
@@ -378,9 +380,13 @@ const CreatorCard = ({ creator, isFirstTimeUser = false }) => {
           fontWeight: '700',
           display: 'flex',
           alignItems: 'center',
-          gap: '6px'
+          gap: '6px',
+          width: '100%',
+          justifyContent: 'center'
         }}>
-          {name}
+          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {name}
+          </span>
           {verified !== false && (
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M12 2L15 4.5L18.5 4L20 7L23 9L21.5 12L23 15L20 17L18.5 20L15 19.5L12 22L9 19.5L5.5 20L4 17L1 15L2.5 12L1 9L4 7L5.5 4L9 4.5L12 2Z" fill="#3B82F6"/>
@@ -453,7 +459,7 @@ const CreatorCard = ({ creator, isFirstTimeUser = false }) => {
 
             <span style={{ color: 'rgba(255, 255, 255, 0.2)', fontWeight: '300', flexShrink: 0 }}>|</span>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 1, minWidth: 0, overflow: 'hidden' }}>
               <svg 
                 width="15" 
                 height="15" 
@@ -479,7 +485,10 @@ const CreatorCard = ({ creator, isFirstTimeUser = false }) => {
               <span style={{
                 color: '#94A3B8',
                 fontWeight: '500',
-                flexShrink: 0,
+                flexShrink: 1,
+                minWidth: 0,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
                 whiteSpace: 'nowrap'
               }}>
                 {(() => {

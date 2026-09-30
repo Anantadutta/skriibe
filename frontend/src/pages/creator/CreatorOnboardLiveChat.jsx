@@ -301,10 +301,10 @@ const CreatorOnboardLiveChat = () => {
           flex: 1;
           background: rgba(255, 255, 255, 0.05);
           border: 1px solid rgba(255, 255, 255, 0.1);
-          border-radius: 8px;
-          padding: 12px;
+          border-radius: 6px;
+          padding: 8px 10px;
           color: #fff;
-          font-size: 16px;
+          font-size: 13px;
           font-family: monospace;
           outline: none;
           box-sizing: border-box;
@@ -318,6 +318,8 @@ const CreatorOnboardLiveChat = () => {
         .time-select option {
           background: #1a1a24;
           color: #fff;
+          font-size: 13px;
+          padding: 4px 8px;
         }
         .toggle-switch {
           position: relative;
@@ -467,16 +469,16 @@ const CreatorOnboardLiveChat = () => {
                   <label style={{ display: 'block', color: '#fff', fontSize: '14px', marginBottom: '12px' }}>
                     Select Time Range
                   </label>
-                  <div style={{ display: 'flex', gap: '16px', marginBottom: '4px' }}>
+                  <div style={{ display: 'flex', gap: '8px', marginBottom: '4px' }}>
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: '11px', color: '#94a3b8' }}>FROM</div>
+                      <div style={{ fontSize: '10px', color: '#94a3b8' }}>FROM</div>
                     </div>
                     <div style={{ fontSize: '14px', visibility: 'hidden' }}>to</div>
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: '11px', color: '#94a3b8' }}>TO</div>
+                      <div style={{ fontSize: '10px', color: '#94a3b8' }}>TO</div>
                     </div>
                   </div>
-                  <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                     <div style={{ flex: 1, position: 'relative' }}>
                       <select 
                         className="time-select"

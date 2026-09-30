@@ -45,12 +45,12 @@ const CreatorReplyScreen = () => {
             if (foundQ) {
               setQuestion(foundQ);
             } else {
-              navigate('/creator/dashboard');
+              navigate('/creator/inbox');
             }
           }
         } catch (e) {
           console.error("Failed to fetch question on direct navigation", e);
-          navigate('/creator/dashboard');
+          navigate('/creator/inbox');
         } finally {
           setLoading(false);
         }
@@ -187,7 +187,7 @@ const CreatorReplyScreen = () => {
             {/* Header Row */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
               <button
-                onClick={() => navigate('/creator/dashboard')}
+                onClick={() => navigate('/creator/inbox')}
                 style={{
                   background: '#1A1B23',
                   border: 'none',
@@ -707,7 +707,7 @@ complete.
             </div>
 
             <button
-              onClick={() => navigate('/creator/dashboard')}
+              onClick={() => navigate('/creator/inbox')}
               style={{
                 background: '#1A1A1A',
                 border: '1px solid #2A2A2A',
@@ -723,7 +723,7 @@ complete.
               onMouseEnter={(e) => e.target.style.background = '#2A2A2A'}
               onMouseLeave={(e) => e.target.style.background = '#1A1A1A'}
             >
-              Return to Dashboard
+              Return to Inbox
             </button>
           </div>
         )}
@@ -756,7 +756,7 @@ complete.
             </div>
 
             <button
-              onClick={() => navigate('/creator/dashboard')}
+              onClick={() => navigate('/creator/inbox')}
               style={{
                 background: '#1A1A1A',
                 border: '1px solid #2A2A2A',
@@ -772,7 +772,7 @@ complete.
               onMouseEnter={(e) => e.target.style.background = '#2A2A2A'}
               onMouseLeave={(e) => e.target.style.background = '#1A1A1A'}
             >
-              Return to Dashboard
+              Return to Inbox
             </button>
           </div>
         )}
@@ -805,7 +805,7 @@ complete.
             </div>
 
             <button
-              onClick={() => navigate('/creator/dashboard')}
+              onClick={() => navigate('/creator/inbox')}
               style={{
                 background: '#1A1A1A',
                 border: '1px solid #2A2A2A',
@@ -821,7 +821,7 @@ complete.
               onMouseEnter={(e) => e.target.style.background = '#2A2A2A'}
               onMouseLeave={(e) => e.target.style.background = '#1A1A1A'}
             >
-              Return to Dashboard
+              Return to Inbox
             </button>
           </div>
         )}

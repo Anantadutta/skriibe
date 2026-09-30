@@ -4,10 +4,12 @@ import { Mail, ArrowRight, CheckCircle2, AlertCircle } from 'lucide-react';
 import axios from 'axios';
 
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const EmailVerificationFlow = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { setAuthData } = useAuth();
   const [step, setStep] = useState(1);
   const [email, setEmail] = useState(location.state?.email || '');
   const [code, setCode] = useState(['', '', '', '', '', '']);
@@ -61,7 +63,14 @@ const EmailVerificationFlow = () => {
         setAttemptsRemaining(5);
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to send code. Please try again.');
+      if (err.response?.status === 429) {
+        setStep(2);
+        setResendCooldown(30);
+        setAttemptsRemaining(5);
+        setError('');
+      } else {
+        setError(err.response?.data?.message || 'Failed to send code. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -78,6 +87,10 @@ const EmailVerificationFlow = () => {
       });
       if (res.data.success) {
         setSuccess(true);
+        if (location.state?.token) {
+          const role = location.state.role || 'fan';
+          setAuthData([role], role, location.state.token);
+        }
         // Auto-continue after 2 seconds
         setTimeout(() => {
           navigate(nextRoute, { state: nextState });
@@ -143,11 +156,11 @@ const EmailVerificationFlow = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-950 flex items-center justify-center p-4 text-white">
+    <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4 text-white">
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="max-w-md w-full bg-gray-900 border border-gray-800 rounded-2xl p-8 shadow-2xl"
+        className="max-w-md w-full bg-gray-800 border border-gray-700 rounded-2xl p-8 shadow-2xl"
       >
         <AnimatePresence mode="wait">
           {success ? (
@@ -185,7 +198,7 @@ const EmailVerificationFlow = () => {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="name@example.com"
-                    className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    className="w-full bg-gray-900 border border-gray-700 text-white rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                     required
                   />
                 </div>
@@ -237,7 +250,7 @@ const EmailVerificationFlow = () => {
                     value={digit}
                     onChange={(e) => handleCodeChange(index, e.target.value)}
                     onKeyDown={(e) => handleKeyDown(index, e)}
-                    className="w-12 h-14 text-center text-xl font-bold bg-gray-950 border border-gray-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    className="w-12 h-14 text-center text-xl font-bold text-white bg-gray-900 border border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                   />
                 ))}
               </div>

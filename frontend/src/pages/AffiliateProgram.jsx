@@ -42,7 +42,7 @@ const AffiliateProgram = ({ theme, toggleTheme }) => {
         <p style={{
           fontSize: '18px',
           color: textSecondary,
-          maxWidth: '600px',
+          maxWidth: '800px',
           margin: '0 auto 40px',
           lineHeight: '1.6'
         }}>

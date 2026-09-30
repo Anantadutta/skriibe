@@ -188,7 +188,7 @@ const CreatorLiveChat = () => {
             if (currentSession.status === 'ended' && (Date.now() - pollStart > 3000)) {
               if (pollTimer) clearInterval(pollTimer);
               if (socketRef.current) socketRef.current.disconnect();
-              navigate('/creator/dashboard');
+              navigate('/creator/inbox');
               return;
             }
             if (currentSession.fanAccepted) {
@@ -531,7 +531,7 @@ const CreatorLiveChat = () => {
       }
     }
     if (!skipNavigation) {
-      navigate('/creator/dashboard');
+      navigate('/creator/inbox');
     }
   };
 
@@ -657,7 +657,7 @@ const CreatorLiveChat = () => {
           )}
           {session?.status !== 'active' && (
             <button 
-              onClick={() => navigate('/creator/dashboard')}
+              onClick={() => navigate('/creator/inbox')}
               style={{ background: '#374151', color: '#fff', border: 'none', padding: '6px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px' }}
             >
               BACK
@@ -711,7 +711,7 @@ const CreatorLiveChat = () => {
               Accept & Join
             </button>
             <button
-              onClick={() => navigate('/creator/dashboard')}
+              onClick={() => navigate('/creator/inbox')}
               style={{
                 background: 'transparent',
                 color: '#9ca3af',
@@ -722,9 +722,7 @@ const CreatorLiveChat = () => {
                 fontSize: '13px',
                 cursor: 'pointer'
               }}
-            >
-              Dashboard
-            </button>
+            >Inbox</button>
           </div>
         </div>
       )}
@@ -753,7 +751,7 @@ const CreatorLiveChat = () => {
                 </span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                   <button 
-                    onClick={() => navigate('/creator/dashboard')}
+                    onClick={() => navigate('/creator/inbox')}
                     style={{ background: '#fff', color: '#ef4444', border: 'none', padding: '6px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px' }}
                   >
                     BACK

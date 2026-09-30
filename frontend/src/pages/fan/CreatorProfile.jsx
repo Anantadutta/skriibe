@@ -464,16 +464,18 @@ const CreatorProfile = () => {
               </div>
 
               {/* Name & Handle */}
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                <h2 style={{ margin: 0, color: '#ffffff', fontSize: '24px', fontWeight: '800', letterSpacing: '-0.5px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', minWidth: 0 }}>
+                <h2 style={{ margin: 0, color: '#ffffff', fontSize: '24px', fontWeight: '800', letterSpacing: '-0.5px', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {creator.name}
                 </h2>
-                <div style={{ color: '#94a3b8', fontSize: '14px', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ color: '#94a3b8', fontSize: '14px', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '8px', width: '100%', overflow: 'hidden' }}>
                   <span style={{
                     color: '#F1F5F9',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap'
+                    whiteSpace: 'nowrap',
+                    flexShrink: 1,
+                    minWidth: 0
                   }}>
                     <span style={{ color: '#38BDF8', fontWeight: '700', marginRight: '3px' }}>@</span>{creator.handle}
                   </span>
@@ -481,7 +483,7 @@ const CreatorProfile = () => {
                   {creator.instagramFollowers != null && (
                     <>
                       <span style={{ color: 'rgba(255, 255, 255, 0.2)', fontWeight: '300' }}>|</span>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 1, minWidth: 0, overflow: 'hidden' }}>
                         <svg 
                           width="15" 
                           height="15" 
@@ -504,7 +506,7 @@ const CreatorProfile = () => {
                           <circle cx="12" cy="12" r="3.4" stroke="#ffffff" strokeWidth="1.8" fill="none" />
                           <circle cx="16" cy="8" r="1.1" fill="#ffffff" />
                         </svg>
-                        <span style={{ color: '#94A3B8', fontWeight: '500', fontSize: '14px' }}>
+                        <span style={{ color: '#94A3B8', fontWeight: '500', fontSize: '14px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flexShrink: 1, minWidth: 0 }}>
                           {(() => {
                             const raw = String(creator.instagramFollowers || '').trim();
                             

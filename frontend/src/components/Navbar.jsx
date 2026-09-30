@@ -30,6 +30,7 @@ const Navbar = ({ theme, toggleTheme, showBanner = true }) => {
       try {
         const res = await getFanMe();
         if (res.success && res.fan) {
+          localStorage.setItem('isReturningFan', 'true');
           if (res.fan.name) {
             const firstName = res.fan.name.split(' ')[0];
             setFanName(firstName);
@@ -159,6 +160,9 @@ const Navbar = ({ theme, toggleTheme, showBanner = true }) => {
     }
   };
 
+  const isReturningCreator = localStorage.getItem('isReturningCreator') === 'true';
+  const isReturningFan = localStorage.getItem('isReturningFan') === 'true';
+
   return (
     <header className="sticky top-0 z-50 w-full transition-colors">
       {/* Top Announcement Banner */}
@@ -275,20 +279,31 @@ const Navbar = ({ theme, toggleTheme, showBanner = true }) => {
 
             {!isAuthenticated ? (
               <>
-                <Link
-                  to="/explore"
-                  className="text-xs sm:text-sm font-bold px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-[#3BA8D8] text-black hover:bg-[#3298c4] transition-all whitespace-nowrap shadow-[0_0_12px_rgba(59,168,216,0.3)] hover:shadow-[0_0_18px_rgba(59,168,216,0.5)]"
-                >
-                  Start free chat
-                </Link>
-                <Link
-                  to="/creator/signup"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs sm:text-sm font-bold px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-[#3BA8D8] text-black hover:bg-[#3298c4] transition-all whitespace-nowrap shadow-[0_0_12px_rgba(59,168,216,0.3)] hover:shadow-[0_0_18px_rgba(59,168,216,0.5)]"
-                >
-                  Join as a creator
-                </Link>
+                {isReturningFan ? (
+                  <Link
+                    to="/fan/login"
+                    className="text-xs sm:text-sm font-bold px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-[#3BA8D8] text-black hover:bg-[#3298c4] transition-all whitespace-nowrap shadow-[0_0_12px_rgba(59,168,216,0.3)] hover:shadow-[0_0_18px_rgba(59,168,216,0.5)]"
+                  >
+                    Login
+                  </Link>
+                ) : (
+                  <Link
+                    to="/explore"
+                    className="text-xs sm:text-sm font-bold px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-[#3BA8D8] text-black hover:bg-[#3298c4] transition-all whitespace-nowrap shadow-[0_0_12px_rgba(59,168,216,0.3)] hover:shadow-[0_0_18px_rgba(59,168,216,0.5)]"
+                  >
+                    Start free chat
+                  </Link>
+                )}
+                {!isReturningCreator && !isReturningFan && (
+                  <Link
+                    to="/creator/signup"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs sm:text-sm font-bold px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-[#3BA8D8] text-black hover:bg-[#3298c4] transition-all whitespace-nowrap shadow-[0_0_12px_rgba(59,168,216,0.3)] hover:shadow-[0_0_18px_rgba(59,168,216,0.5)]"
+                  >
+                    Join as a creator
+                  </Link>
+                )}
               </>
             ) : roles?.includes('creator') ? (
               <>
@@ -297,12 +312,6 @@ const Navbar = ({ theme, toggleTheme, showBanner = true }) => {
                   className="text-xs sm:text-sm font-bold px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-[#3BA8D8] text-black hover:bg-[#3298c4] transition-all whitespace-nowrap shadow-[0_0_12px_rgba(59,168,216,0.3)] hover:shadow-[0_0_18px_rgba(59,168,216,0.5)]"
                 >
                   Start free chat
-                </Link>
-                <Link
-                  to="/creator/dashboard"
-                  className="text-xs sm:text-sm font-bold px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-[#3BA8D8] text-black hover:bg-[#3298c4] transition-all whitespace-nowrap shadow-[0_0_12px_rgba(59,168,216,0.3)] hover:shadow-[0_0_18px_rgba(59,168,216,0.5)]"
-                >
-                  Dashboard
                 </Link>
               </>
             ) : (
@@ -476,21 +485,33 @@ const Navbar = ({ theme, toggleTheme, showBanner = true }) => {
           <div className="flex flex-col gap-3 pt-4">
             {!isAuthenticated ? (
               <>
-                <Link
-                  to="/explore"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="w-full py-3 px-4 rounded-full bg-[#3BA8D8] text-black font-bold text-center text-sm hover:bg-[#3298c4] transition-all shadow-[0_0_12px_rgba(59,168,216,0.3)]"
-                >
-                  Start free chat
-                </Link>
-                <Link
-                  to="/creator/signup"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full py-3 px-4 rounded-full bg-[#3BA8D8] text-black font-bold text-center text-sm hover:bg-[#3298c4] transition-all shadow-[0_0_12px_rgba(59,168,216,0.3)]"
-                >
-                  Join as a creator
-                </Link>
+                {isReturningFan ? (
+                  <Link
+                    to="/fan/login"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="w-full py-3 px-4 rounded-full bg-[#3BA8D8] text-black font-bold text-center text-sm hover:bg-[#3298c4] transition-all shadow-[0_0_12px_rgba(59,168,216,0.3)]"
+                  >
+                    Login
+                  </Link>
+                ) : (
+                  <Link
+                    to="/explore"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="w-full py-3 px-4 rounded-full bg-[#3BA8D8] text-black font-bold text-center text-sm hover:bg-[#3298c4] transition-all shadow-[0_0_12px_rgba(59,168,216,0.3)]"
+                  >
+                    Start free chat
+                  </Link>
+                )}
+                {!isReturningCreator && !isReturningFan && (
+                  <Link
+                    to="/creator/signup"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full py-3 px-4 rounded-full bg-[#3BA8D8] text-black font-bold text-center text-sm hover:bg-[#3298c4] transition-all shadow-[0_0_12px_rgba(59,168,216,0.3)]"
+                  >
+                    Join as a creator
+                  </Link>
+                )}
               </>
             ) : roles?.includes('creator') ? (
               <>
@@ -500,13 +521,6 @@ const Navbar = ({ theme, toggleTheme, showBanner = true }) => {
                   className="w-full py-3 px-4 rounded-full bg-[#3BA8D8] text-black font-bold text-center text-sm hover:bg-[#3298c4] transition-all shadow-[0_0_12px_rgba(59,168,216,0.3)]"
                 >
                   Start free chat
-                </Link>
-                <Link
-                  to="/creator/dashboard"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="w-full py-3 px-4 rounded-full bg-[#3BA8D8] text-black font-bold text-center text-sm hover:bg-[#3298c4] transition-all shadow-[0_0_12px_rgba(59,168,216,0.3)]"
-                >
-                  Dashboard
                 </Link>
               </>
             ) : (

@@ -578,30 +578,7 @@ const ChatEndScreen = ({ creator, sessionId, totalMinutes, totalCost, error, mes
               </div>
             </div>
 
-            {/* Custom Amount input */}
-            <div style={{ position: 'relative', marginBottom: '20px' }}>
-              <span style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', fontSize: '14px' }}>₹</span>
-              <input
-                type="number"
-                min={continueRechargeData.shortfall}
-                value={continueRechargeAmount}
-                onChange={(e) => setContinueRechargeAmount(Math.max(1, Number(e.target.value)))}
-                placeholder="Custom recharge amount"
-                style={{
-                  width: '100%',
-                  background: '#0D0F14',
-                  border: '1px solid #1F2937',
-                  borderRadius: '12px',
-                  padding: '12px 14px 12px 30px',
-                  color: '#fff',
-                  fontSize: '14px',
-                  boxSizing: 'border-box',
-                  outline: 'none'
-                }}
-                onFocus={(e) => e.target.style.borderColor = '#3BA8D8'}
-                onBlur={(e) => e.target.style.borderColor = '#1F2937'}
-              />
-            </div>
+
 
             {/* Action buttons */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>

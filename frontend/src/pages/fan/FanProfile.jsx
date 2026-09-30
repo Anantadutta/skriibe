@@ -29,7 +29,9 @@ const FanProfile = () => {
   const [savingPhone, setSavingPhone] = useState(false);
 
   const [isEditingDob, setIsEditingDob] = useState(false);
-  const [newDob, setNewDob] = useState('');
+  const [dobDay, setDobDay] = useState('');
+  const [dobMonth, setDobMonth] = useState('');
+  const [dobYear, setDobYear] = useState('');
   const [savingDob, setSavingDob] = useState(false);
 
   const [isEditingGender, setIsEditingGender] = useState(false);
@@ -644,16 +646,52 @@ const FanProfile = () => {
                   <label style={{ fontSize: '12px', fontWeight: '700', color: '#94a3b8', textTransform: 'uppercase' }}>Date of Birth</label>
                   <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                     {isEditingDob ? (
-                      <input 
-                        type="date"
-                        value={newDob}
-                        onChange={(e) => setNewDob(e.target.value)}
-                        disabled={savingDob}
-                        style={{
-                          background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.2)',
-                          color: '#fff', padding: '10px 12px', borderRadius: '8px', fontSize: '14px', flex: 1, outline: 'none'
-                        }}
-                      />
+                      <div style={{ display: 'flex', gap: '8px', flex: 1, alignItems: 'center' }}>
+                        <input
+                          type="text"
+                          placeholder="DD"
+                          value={dobDay}
+                          onChange={(e) => {
+                            const val = e.target.value.replace(/\D/g, '');
+                            if (val.length <= 2) setDobDay(val);
+                          }}
+                          disabled={savingDob}
+                          style={{
+                            background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.2)',
+                            color: '#fff', padding: '10px 12px', borderRadius: '8px', fontSize: '14px', width: '60px', outline: 'none', textAlign: 'center'
+                          }}
+                        />
+                        <span style={{ color: '#94a3b8' }}>-</span>
+                        <input
+                          type="text"
+                          placeholder="MM"
+                          value={dobMonth}
+                          onChange={(e) => {
+                            const val = e.target.value.replace(/\D/g, '');
+                            if (val.length <= 2) setDobMonth(val);
+                          }}
+                          disabled={savingDob}
+                          style={{
+                            background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.2)',
+                            color: '#fff', padding: '10px 12px', borderRadius: '8px', fontSize: '14px', width: '60px', outline: 'none', textAlign: 'center'
+                          }}
+                        />
+                        <span style={{ color: '#94a3b8' }}>-</span>
+                        <input
+                          type="text"
+                          placeholder="YYYY"
+                          value={dobYear}
+                          onChange={(e) => {
+                            const val = e.target.value.replace(/\D/g, '');
+                            if (val.length <= 4) setDobYear(val);
+                          }}
+                          disabled={savingDob}
+                          style={{
+                            background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.2)',
+                            color: '#fff', padding: '10px 12px', borderRadius: '8px', fontSize: '14px', flex: 1, minWidth: '80px', outline: 'none', textAlign: 'center'
+                          }}
+                        />
+                      </div>
                     ) : (
                       <div style={{ flex: 1, color: '#fff', fontSize: '16px', fontWeight: '500', padding: '10px 12px', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', border: '1px solid transparent' }}>
                         {fanProfile?.dob || 'Not set'}
@@ -662,20 +700,70 @@ const FanProfile = () => {
                     <button 
                       onClick={async () => {
                         if (isEditingDob) {
+                          const d = parseInt(dobDay, 10);
+                          const m = parseInt(dobMonth, 10);
+                          const y = parseInt(dobYear, 10);
+                          
+                          if (!d || d < 1 || d > 31) {
+                            setErrorMessage('Day must be between 01 and 31');
+                            return;
+                          }
+                          if (!m || m < 1 || m > 12) {
+                            setErrorMessage('Month must be between 01 and 12');
+                            return;
+                          }
+                          if (!y || dobYear.length !== 4 || (!dobYear.startsWith('19') && !dobYear.startsWith('20'))) {
+                            setErrorMessage('Year must be in the format of 19xx or 20xx');
+                            return;
+                          }
+                          
+                          const today = new Date();
+                          const birthDate = new Date(y, m - 1, d);
+                          let age = today.getFullYear() - birthDate.getFullYear();
+                          const mDiff = today.getMonth() - birthDate.getMonth();
+                          if (mDiff < 0 || (mDiff === 0 && today.getDate() < birthDate.getDate())) {
+                            age--;
+                          }
+                          
+                          if (age < 18) {
+                            setErrorMessage('you must be 18 years of age');
+                            return;
+                          }
+
+                          const formattedDob = `${dobDay.padStart(2, '0')}-${dobMonth.padStart(2, '0')}-${dobYear}`;
+                          
                           setSavingDob(true);
                           try {
-                            const res = await updateFanProfile({ dob: newDob });
+                            const res = await updateFanProfile({ dob: formattedDob });
                             if (res.success) {
                               setFanProfile(res.fan);
                               setIsEditingDob(false);
                             }
                           } catch (err) {
-                            alert('Failed to update DOB');
+                            setErrorMessage(err.response?.data?.message || 'Failed to update DOB');
                           } finally {
                             setSavingDob(false);
                           }
                         } else {
-                          setNewDob(fanProfile?.dob || '');
+                          let currentDob = fanProfile?.dob || '';
+                          if (currentDob.includes('-')) {
+                            const parts = currentDob.split('-');
+                            if (parts[0].length === 4) {
+                                // Assume YYYY-MM-DD from previous saving format
+                                setDobYear(parts[0]);
+                                setDobMonth(parts[1]);
+                                setDobDay(parts[2]);
+                            } else {
+                                // Assume DD-MM-YYYY
+                                setDobDay(parts[0]);
+                                setDobMonth(parts[1]);
+                                setDobYear(parts[2]);
+                            }
+                          } else {
+                            setDobDay('');
+                            setDobMonth('');
+                            setDobYear('');
+                          }
                           setIsEditingDob(true);
                         }
                       }}

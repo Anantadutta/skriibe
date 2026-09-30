@@ -41,6 +41,7 @@ const FanExplore = () => {
   const [selectedCustomCategory, setSelectedCustomCategory] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isFirstTimeUser, setIsFirstTimeUser] = useState(true);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [visibleCount, setVisibleCount] = useState(20);
   const [showRoleConflictModal, setShowRoleConflictModal] = useState(false);
   const navigate = useNavigate();
@@ -100,15 +101,18 @@ const FanExplore = () => {
     const fetchFanProfile = async () => {
       try {
         const res = await getFanMe();
-        if (res.success && res.fan && res.fan.creatorHandle) {
-          setFanCreatorHandle(res.fan.creatorHandle);
-        }
         if (res.success && res.fan) {
+          setIsLoggedIn(true);
+          if (res.fan.creatorHandle) {
+            setFanCreatorHandle(res.fan.creatorHandle);
+          }
           setIsFirstTimeUser(!res.fan.hasUsedFreeChat);
         } else {
+          setIsLoggedIn(false);
           setIsFirstTimeUser(true);
         }
       } catch (err) {
+        setIsLoggedIn(false);
         setIsFirstTimeUser(true);
       }
     };
@@ -336,29 +340,31 @@ const FanExplore = () => {
 
       <Navbar theme="dark" toggleTheme={() => {}} />
       <main ref={gridRef} className="fan-explore-main">
-        <div style={{ maxWidth: '768px', margin: '0 0 28px' }}>
-          <h1 style={{
-            fontFamily: "'Bebas Neue', sans-serif",
-            fontSize: 'clamp(32px, 7vw, 56px)',
-            fontWeight: 400,
-            textTransform: 'uppercase',
-            letterSpacing: '-0.02em',
-            lineHeight: 0.92,
-            color: '#ffffff',
-            margin: 0
-          }}>
-            Direct 1-on-1 Access.<br />
-            Zero Subscription Hassle.
-          </h1>
-          <p style={{
-            fontSize: 'clamp(14px, 3.5vw, 18px)',
-            lineHeight: 1.6,
-            color: '#cbd5e1',
-            margin: '16px 0 0'
-          }}>
-            Connect directly with your favourite creators. No DMs left on unread, no expensive long-term plans — just pay-per-minute private conversations.
-          </p>
-        </div>
+        {!isLoggedIn && (
+          <div style={{ maxWidth: '768px', margin: '0 0 28px' }}>
+            <h1 style={{
+              fontFamily: "'Bebas Neue', sans-serif",
+              fontSize: 'clamp(32px, 7vw, 56px)',
+              fontWeight: 400,
+              textTransform: 'uppercase',
+              letterSpacing: '-0.02em',
+              lineHeight: 0.92,
+              color: '#ffffff',
+              margin: 0
+            }}>
+              Direct 1-on-1 Access.<br />
+              Zero Subscription Hassle.
+            </h1>
+            <p style={{
+              fontSize: 'clamp(14px, 3.5vw, 18px)',
+              lineHeight: 1.6,
+              color: '#cbd5e1',
+              margin: '16px 0 0'
+            }}>
+              Connect directly with your favourite creators. No DMs left on unread, no expensive long-term plans — just pay-per-minute private conversations.
+            </p>
+          </div>
+        )}
 
         {/* Search & Filters */}
         <div className="fan-explore-search-section">

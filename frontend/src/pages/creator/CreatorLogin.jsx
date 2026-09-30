@@ -104,6 +104,42 @@ const CreatorLogin = () => {
         }
       `}} />
 
+      <Link to="/" style={{
+        position: 'absolute',
+        top: '24px',
+        left: '24px',
+        color: '#94a3b8',
+        textDecoration: 'none',
+        fontSize: '24px',
+        transition: 'all 0.2s ease',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: '44px',
+        height: '44px',
+        borderRadius: '50%',
+        background: 'rgba(255, 255, 255, 0.05)',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
+        zIndex: 50,
+        backdropFilter: 'blur(8px)'
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.color = '#ffffff';
+        e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+        e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.color = '#94a3b8';
+        e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+        e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+      }}
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+      </Link>
+
       <div style={{
         width: '100%',
         maxWidth: '480px',
@@ -123,42 +159,6 @@ const CreatorLogin = () => {
           flexDirection: 'column',
           boxSizing: 'border-box'
         }}>
-          <div style={{
-            height: '40px',
-            display: 'flex',
-            alignItems: 'center',
-            position: 'relative',
-            marginBottom: '12px'
-          }}>
-            <Link to="/" style={{
-              position: 'absolute',
-              left: 0,
-              color: '#94a3b8',
-              textDecoration: 'none',
-              fontSize: '22px',
-              transition: 'color 0.2s',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: '32px',
-              height: '32px',
-              borderRadius: '50%',
-              background: 'rgba(255, 255, 255, 0.03)',
-              border: '1px solid rgba(255, 255, 255, 0.08)'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.color = '#06b6d4';
-              e.currentTarget.style.borderColor = 'rgba(6, 182, 212, 0.3)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.color = '#94a3b8';
-              e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.08)';
-            }}
-            >
-              ←
-            </Link>
-          </div>
-
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             <div style={{ textAlign: 'center', marginBottom: '32px' }}>
               <div style={{
@@ -224,8 +224,8 @@ const CreatorLogin = () => {
                    transition: 'all 0.25s ease'
                  }}
               >
-                <svg width="20" height="20" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M28.094 11.25c-2.313 0-4.469 1.094-5.875 3.031L22.188 14.344l-2.75 3.844-3.031-4.25c-1.406-1.938-3.563-3.031-5.875-3.031-4.125 0-7.5 3.375-7.5 7.5s3.375 7.5 7.5 7.5c2.313 0 4.469-1.094 5.875-3.031l.031-.031 2.75-3.844 3.031 4.25c1.406 1.938 3.563 3.031 5.875 3.031 4.125 0 7.5-3.375 7.5-7.5s-3.375-7.5-7.5-7.5zm0 11.25c-1.344 0-2.594-.656-3.375-1.781l-3.313-4.656 3.313-4.656c.781-1.125 2.031-1.781 3.375-1.781 2.469 0 4.5 2.031 4.5 4.5s-2.031 4.5-4.5 4.5zm-17.563 0c-2.469 0-4.5-2.031-4.5-4.5s2.031-4.5 4.5-4.5c1.344 0 2.594.656 3.375 1.781l3.313 4.656-3.313 4.656c-.781 1.125-2.031 1.781-3.375 1.781z" fill="#0668E1"/>
+                <svg width="20" height="20" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path fillRule="evenodd" clipRule="evenodd" d="M18.064 16.916C16.891 14.887 14.73 11.597 10.378 11.597C5.071 11.597 1 15.69 1 21.055C1 26.417 5.068 30.509 10.381 30.509C14.72 30.509 16.901 27.245 18.062 25.195C19.227 27.243 21.391 30.509 25.748 30.509C31.052 30.509 35.12 26.414 35.12 21.055C35.12 15.696 31.054 11.597 25.753 11.597C21.411 11.597 19.228 14.864 18.064 16.916ZM10.38 27.135C6.915 27.135 4.382 24.498 4.382 21.055C4.382 17.616 6.915 14.973 10.38 14.973C13.882 14.973 15.86 17.915 16.937 19.82C15.86 21.728 13.884 27.135 10.38 27.135ZM25.748 27.135C29.208 27.135 31.738 24.498 31.738 21.055C31.738 17.616 29.211 14.973 25.748 14.973C22.25 14.973 20.267 17.917 19.191 19.82C20.267 21.726 22.247 27.135 25.748 27.135Z" fill="#1877F2" />
                 </svg>
                 Meta
               </a>
@@ -408,7 +408,7 @@ const CreatorLogin = () => {
 
               <div style={{ textAlign: 'center', marginTop: '24px', fontSize: '14px' }}>
                 <span style={{ color: '#94a3b8' }}>Don't have an account? </span>
-                <Link to="/creator/signup" onClick={() => { localStorage.removeItem('isReturningCreator'); if (clearAuthData) clearAuthData(); }} style={{ color: '#06b6d4', textDecoration: 'none', fontWeight: '500' }}>Sign up</Link>
+                <Link to="/creator/signup" onClick={() => { localStorage.removeItem('isReturningCreator'); }} style={{ color: '#06b6d4', textDecoration: 'none', fontWeight: '500' }}>Sign up</Link>
               </div>
             </div>
           </div>

@@ -779,11 +779,11 @@ const CreatorSettings = () => {
                   overflow: 'hidden',
                   textOverflow: 'ellipsis'
                 }}>
-                  {window.location.origin.replace(/^https?:\/\//, '')}/creator/signup?ref={creator.referralCode}
+                  skriibe.com/creator/signup?ref={creator.referralCode}
                 </div>
                 <button 
                   onClick={() => {
-                    navigator.clipboard.writeText(`${window.location.origin}/creator/signup?ref=${creator.referralCode}`);
+                    navigator.clipboard.writeText(`https://skriibe.com/creator/signup?ref=${creator.referralCode}`);
                     const btn = document.getElementById('settings-copy-btn');
                     if (btn) {
                       btn.innerText = 'Copied!';

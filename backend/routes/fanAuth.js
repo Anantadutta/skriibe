@@ -75,7 +75,8 @@ passport.use('google-fan', new GoogleStrategy({
           email,
           name: profile.displayName || '',
           password: hashPassword(Math.random().toString(36).slice(-8)), // dummy password
-          authProvider: 'google'
+          authProvider: 'google',
+          isEmailVerified: true
         });
         await fan.save();
         
@@ -116,7 +117,8 @@ passport.use('facebook-fan', new FacebookStrategy({
           email,
           name: `${profile.name?.givenName || ''} ${profile.name?.familyName || ''}`.trim() || profile.displayName || '',
           password: hashPassword(Math.random().toString(36).slice(-8)),
-          authProvider: 'facebook'
+          authProvider: 'facebook',
+          isEmailVerified: true
         });
         await fan.save();
 
@@ -482,6 +484,15 @@ router.post('/login', async (req, res) => {
 
     const token = issueToken(fan);
     
+    if (!fan.isEmailVerified) {
+      return res.status(403).json({ 
+        message: 'Email not verified. Please verify your email first.',
+        isEmailUnverified: true,
+        email: fan.email,
+        token
+      });
+    }
+
     res.json({ success: true, fan: { id: fan._id, name: fan.name, email: fan.email, roles: fan.roles, activeRole: fan.activeRole }, token });
   } catch (err) {
     console.error(err);

@@ -1,4 +1,2 @@
 @echo off
-set "args=%*"
-set "args=%args:-Command =%"
-C:\Windows\System32\cmd.exe /c %args%
+C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe %*

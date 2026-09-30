@@ -1438,12 +1438,12 @@ const CreatorDashboard = () => {
                 overflow: 'hidden',
                 textOverflow: 'ellipsis'
               }}>
-                {window.location.host}/creator/signup?ref={creator.referralCode}
+                skriibe.com/creator/signup?ref={creator.referralCode}
               </div>
               <div style={{ display: 'flex', gap: '8px' }}>
                 <button 
                   onClick={() => {
-                    navigator.clipboard.writeText(`${window.location.origin}/creator/signup?ref=${creator.referralCode}`);
+                    navigator.clipboard.writeText(`https://skriibe.com/creator/signup?ref=${creator.referralCode}`);
                     const btn = document.getElementById('dash-copy-btn');
                     if (btn) {
                       btn.innerText = 'Copied!';
@@ -1475,7 +1475,7 @@ const CreatorDashboard = () => {
                       navigator.share({
                         title: 'Join Skriibe',
                         text: 'Join Skriibe using my referral link and start earning!',
-                        url: `${window.location.origin}/creator/signup?ref=${creator.referralCode}`
+                        url: `https://skriibe.com/creator/signup?ref=${creator.referralCode}`
                       }).catch(console.error);
                     }}
                     style={{

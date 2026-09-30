@@ -55,11 +55,11 @@ const FanSignup = () => {
     try {
       const res = await fanSignup(name, email, password, '', whatsappConsent);
       if (res.data.success) {
-        setAuthData(['fan'], 'fan', res.data.token);
-        // Redirect to email verification and let it redirect to explore/next path
+        localStorage.setItem('isReturningFan', 'true');
+        // Redirect to email verification and let it log in after success
         const queryParams = new URLSearchParams(window.location.search);
         const nextRoute = queryParams.get('redirect') || '/discovery';
-        navigate('/verify-email', { state: { email, nextRoute, nextState: {} } });
+        navigate('/verify-email', { state: { email, nextRoute, nextState: {}, token: res.data.token } });
       }
     } catch (err) {
       console.error("Signup error:", err);
@@ -143,6 +143,39 @@ const FanSignup = () => {
         }
       `}} />
 
+      {/* Back Button */}
+      <Link to="/" style={{
+        position: 'absolute',
+        top: '24px',
+        left: '24px',
+        color: '#94a3b8',
+        textDecoration: 'none',
+        fontSize: '24px',
+        transition: 'all 0.2s',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: '40px',
+        height: '40px',
+        borderRadius: '50%',
+        background: 'rgba(255, 255, 255, 0.03)',
+        border: '1px solid rgba(255, 255, 255, 0.08)',
+        zIndex: 10
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.color = '#06b6d4';
+        e.currentTarget.style.borderColor = 'rgba(6, 182, 212, 0.3)';
+        e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.color = '#94a3b8';
+        e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.08)';
+        e.currentTarget.style.background = 'rgba(255, 255, 255, 0.03)';
+      }}
+      >
+        ←
+      </Link>
+
       <div style={{
         width: '100%',
         maxWidth: '480px',
@@ -158,42 +191,6 @@ const FanSignup = () => {
           flexDirection: 'column',
           boxSizing: 'border-box'
         }}>
-          <div style={{
-            height: '40px',
-            display: 'flex',
-            alignItems: 'center',
-            position: 'relative',
-            marginBottom: '12px'
-          }}>
-            <Link to="/" style={{
-              position: 'absolute',
-              left: 0,
-              color: '#94a3b8',
-              textDecoration: 'none',
-              fontSize: '22px',
-              transition: 'color 0.2s',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: '32px',
-              height: '32px',
-              borderRadius: '50%',
-              background: 'rgba(255, 255, 255, 0.03)',
-              border: '1px solid rgba(255, 255, 255, 0.08)'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.color = '#06b6d4';
-              e.currentTarget.style.borderColor = 'rgba(6, 182, 212, 0.3)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.color = '#94a3b8';
-              e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.08)';
-            }}
-            >
-              ←
-            </Link>
-          </div>
-
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             <div style={{ textAlign: 'center', marginTop: '10px' }}>
               <div style={{
@@ -258,8 +255,8 @@ const FanSignup = () => {
                    boxShadow: '0 0 15px rgba(59, 130, 246, 0.15)'
                  }}
               >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047v-2.66c0-3.025 1.792-4.697 4.533-4.697 1.312 0 2.686.236 2.686.236v2.98h-1.514c-1.49 0-1.956.935-1.956 1.895v2.246h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z" fill="#0ea5e9"/>
+                <svg width="18" height="18" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path fillRule="evenodd" clipRule="evenodd" d="M18.064 16.916C16.891 14.887 14.73 11.597 10.378 11.597C5.071 11.597 1 15.69 1 21.055C1 26.417 5.068 30.509 10.381 30.509C14.72 30.509 16.901 27.245 18.062 25.195C19.227 27.243 21.391 30.509 25.748 30.509C31.052 30.509 35.12 26.414 35.12 21.055C35.12 15.696 31.054 11.597 25.753 11.597C21.411 11.597 19.228 14.864 18.064 16.916ZM10.38 27.135C6.915 27.135 4.382 24.498 4.382 21.055C4.382 17.616 6.915 14.973 10.38 14.973C13.882 14.973 15.86 17.915 16.937 19.82C15.86 21.728 13.884 27.135 10.38 27.135ZM25.748 27.135C29.208 27.135 31.738 24.498 31.738 21.055C31.738 17.616 29.211 14.973 25.748 14.973C22.25 14.973 20.267 17.917 19.191 19.82C20.267 21.726 22.247 27.135 25.748 27.135Z" fill="#1877F2" />
                 </svg>
                 Meta
               </a>

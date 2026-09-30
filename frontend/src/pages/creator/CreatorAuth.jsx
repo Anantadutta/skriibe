@@ -45,16 +45,8 @@ const CreatorAuth = () => {
         return;
       }
     } else if (isAuthenticated && roles && !roles.includes('creator')) {
-      if (typeof clearAuthData === 'function') {
-        clearAuthData();
-      } else {
-        localStorage.removeItem('skriibe_token');
-        localStorage.removeItem('auth_roles');
-        localStorage.removeItem('auth_activeRole');
-      }
-      document.cookie = 'skriibe_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-      document.cookie = 'creator_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-      document.cookie = 'fan_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+      // Do nothing, just let them stay on the page so they can sign up as a creator
+      // without wiping out their Fan session prematurely.
     }
   }, [navigate, roles, location.search, isAuthenticated, clearAuthData]);
 
@@ -135,11 +127,10 @@ const CreatorAuth = () => {
         
         const isExisting = res.data.isExisting;
         
-        if (res.data.token && res.data.creator) {
-          setAuthData(['creator'], 'creator', res.data.token);
-        }
-        
         if (isExisting) {
+          if (res.data.token && res.data.creator) {
+            setAuthData(['creator'], 'creator', res.data.token);
+          }
           if (res.data.creator.handle) {
             navigate('/creator/dashboard', { state: { creator: res.data.creator }, replace: true });
           } else {
@@ -148,7 +139,7 @@ const CreatorAuth = () => {
         } else {
           const nextRoute = (res.data.token && res.data.creator) ? '/onboard/profile' : '/creator/login';
           const nextState = (res.data.token && res.data.creator) ? { creator: res.data.creator } : { message: 'Registration successful! Please log in.' };
-          navigate('/verify-email', { state: { email, nextRoute, nextState } });
+          navigate('/verify-email', { state: { email, nextRoute, nextState, token: res.data.token, role: 'creator' } });
         }
       }
     } catch (err) {
@@ -361,7 +352,7 @@ const CreatorAuth = () => {
                     Welcome back
                   </h1>
                   <div style={{ color: '#94a3b8', fontSize: '14px', fontFamily: 'var(--font-body)' }}>
-                    Log into your Creator account
+                    Log into your <span style={{ color: '#3b82f6' }}>Creator</span> account
                   </div>
                 </>
               ) : (
@@ -421,8 +412,8 @@ const CreatorAuth = () => {
                    transition: 'all 0.25s ease'
                  }}
               >
-                <svg width="20" height="20" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M28.094 11.25c-2.313 0-4.469 1.094-5.875 3.031L22.188 14.344l-2.75 3.844-3.031-4.25c-1.406-1.938-3.563-3.031-5.875-3.031-4.125 0-7.5 3.375-7.5 7.5s3.375 7.5 7.5 7.5c2.313 0 4.469-1.094 5.875-3.031l.031-.031 2.75-3.844 3.031 4.25c1.406 1.938 3.563 3.031 5.875 3.031 4.125 0 7.5-3.375 7.5-7.5s-3.375-7.5-7.5-7.5zm0 11.25c-1.344 0-2.594-.656-3.375-1.781l-3.313-4.656 3.313-4.656c.781-1.125 2.031-1.781 3.375-1.781 2.469 0 4.5 2.031 4.5 4.5s-2.031 4.5-4.5 4.5zm-17.563 0c-2.469 0-4.5-2.031-4.5-4.5s2.031-4.5 4.5-4.5c1.344 0 2.594.656 3.375 1.781l3.313 4.656-3.313 4.656c-.781 1.125-2.031 1.781-3.375 1.781z" fill="#0668E1"/>
+                <svg width="20" height="20" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path fillRule="evenodd" clipRule="evenodd" d="M18.064 16.916C16.891 14.887 14.73 11.597 10.378 11.597C5.071 11.597 1 15.69 1 21.055C1 26.417 5.068 30.509 10.381 30.509C14.72 30.509 16.901 27.245 18.062 25.195C19.227 27.243 21.391 30.509 25.748 30.509C31.052 30.509 35.12 26.414 35.12 21.055C35.12 15.696 31.054 11.597 25.753 11.597C21.411 11.597 19.228 14.864 18.064 16.916ZM10.38 27.135C6.915 27.135 4.382 24.498 4.382 21.055C4.382 17.616 6.915 14.973 10.38 14.973C13.882 14.973 15.86 17.915 16.937 19.82C15.86 21.728 13.884 27.135 10.38 27.135ZM25.748 27.135C29.208 27.135 31.738 24.498 31.738 21.055C31.738 17.616 29.211 14.973 25.748 14.973C22.25 14.973 20.267 17.917 19.191 19.82C20.267 21.726 22.247 27.135 25.748 27.135Z" fill="#1877F2" />
                 </svg>
                 Meta
               </a>
@@ -699,7 +690,7 @@ const CreatorAuth = () => {
             <button
               onClick={() => {
                 setShowRoleConflictModal(false);
-                navigate('/fan/login', { replace: true });
+                navigate(location.pathname, { replace: true });
               }}
               style={{
                 marginTop: '16px',

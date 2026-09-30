@@ -68,7 +68,8 @@ passport.use(new GoogleStrategy({
             email,
             name: profile.displayName || '',
             password: 'oauth_dummy_pass',
-            authProvider: 'google'
+            authProvider: 'google',
+            isEmailVerified: true
           });
           await fan.save();
         }
@@ -189,7 +190,8 @@ passport.use(new FacebookStrategy({
             email,
             name: `${profile.name?.givenName || ''} ${profile.name?.familyName || ''}`.trim() || profile.displayName || '',
             password: 'oauth_dummy_pass',
-            authProvider: 'facebook'
+            authProvider: 'facebook',
+            isEmailVerified: true
           });
           await fan.save();
         }
