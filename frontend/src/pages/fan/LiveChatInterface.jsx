@@ -1075,10 +1075,22 @@ const LiveChatInterface = () => {
                     {QUICK_REACTIONS.map(emoji => (
                       <span 
                         key={emoji}
-                        onClick={(e) => {
+                        onClick={async (e) => {
                           e.stopPropagation();
-                          if (socketRef.current && session) {
-                            socketRef.current.emit('react_message', { messageId: m.messageId, sessionId: session.sessionId || session._id || session.id, emoji, senderRole: 'fan' });
+                          if (session) {
+                            const sId = session.sessionId || session._id || session.id;
+                            try {
+                              await api.post('/chat/react-message', {
+                                messageId: m.messageId,
+                                sessionId: sId,
+                                emoji,
+                                senderRole: 'fan'
+                              });
+                            } catch (err) {
+                              if (socketRef.current) {
+                                socketRef.current.emit('react_message', { messageId: m.messageId, sessionId: sId, emoji, senderRole: 'fan' });
+                              }
+                            }
                           }
                           setHoveredMessageId(null);
                         }}

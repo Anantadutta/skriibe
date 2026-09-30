@@ -802,6 +802,39 @@ router.post('/send-message', verifyFanOrCreatorToken, async (req, res) => {
   }
 });
 
+// POST /api/chat/react-message
+router.post('/react-message', verifyFanOrCreatorToken, async (req, res) => {
+  try {
+    const { sessionId, messageId, emoji, senderRole } = req.body;
+    const session = await ChatSession.findById(sessionId);
+    if (!session) {
+      return res.status(404).json({ success: false, message: 'Session not found' });
+    }
+
+    const Message = require('../models/Message');
+    const msg = await Message.findOne({ messageId });
+    if (!msg) return res.status(404).json({ success: false, message: 'Message not found' });
+
+    const existingReactionIndex = msg.reactions?.findIndex(r => r.senderRole === senderRole);
+    if (existingReactionIndex >= 0) {
+      msg.reactions[existingReactionIndex].emoji = emoji;
+    } else {
+      msg.reactions = msg.reactions || [];
+      msg.reactions.push({ emoji, senderRole });
+    }
+    await msg.save();
+
+    if (req.io) {
+      req.io.to(sessionId.toString()).emit('message_reacted', { messageId, emoji, senderRole });
+    }
+
+    res.json({ success: true, message: msg });
+  } catch (err) {
+    console.error('Error reacting to message:', err);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
 // POST /api/chat/status
 router.post('/status', verifyFanOrCreatorToken, async (req, res) => {
   try {

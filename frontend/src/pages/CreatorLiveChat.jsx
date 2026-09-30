@@ -867,10 +867,22 @@ const CreatorLiveChat = () => {
                     {QUICK_REACTIONS.map(emoji => (
                       <span 
                         key={emoji}
-                        onClick={(e) => {
+                        onClick={async (e) => {
                           e.stopPropagation();
-                          if (socketRef.current && session) {
-                            socketRef.current.emit('react_message', { messageId: m.messageId, sessionId: session._id || session.id || session.sessionId, emoji, senderRole: 'creator' });
+                          if (session) {
+                            const sId = session._id || session.id || session.sessionId;
+                            try {
+                              await api.post('/chat/react-message', {
+                                messageId: m.messageId,
+                                sessionId: sId,
+                                emoji,
+                                senderRole: 'creator'
+                              });
+                            } catch (err) {
+                              if (socketRef.current) {
+                                socketRef.current.emit('react_message', { messageId: m.messageId, sessionId: sId, emoji, senderRole: 'creator' });
+                              }
+                            }
                           }
                           setHoveredMessageId(null);
                         }}
