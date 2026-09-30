@@ -80,10 +80,6 @@ const CreatorDashboard = () => {
     }
 
     if (chat.creatorJoined || chat.fanAccepted || chat.status === 'ended') return false;
-    const chatTimeMs = chat.time ? new Date(chat.time).getTime() : 0;
-    if (!chatTimeMs || isNaN(chatTimeMs)) return false;
-    const timeDiff = now - chatTimeMs;
-    if (timeDiff >= 120000) return false;
     return true;
   });
   
