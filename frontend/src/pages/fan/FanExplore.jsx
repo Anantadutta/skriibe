@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import CreatorCard from '../../components/discovery/CreatorCard';
 import Navbar from '../../components/Navbar';
 import FanBottomNav from '../../components/fan/layout/FanBottomNav';
+import FanNavbar from '../../components/fan/layout/FanNavbar';
 import { getLiveCreators } from '../../services/discoveryApi';
 import { getFanMe } from '../../services/fanApi';
 import { io } from 'socket.io-client';
@@ -336,7 +337,11 @@ const FanExplore = () => {
         }
       `}</style>
 
-      {!isLoggedIn && <Navbar theme="dark" toggleTheme={() => {}} />}
+      {!isLoggedIn ? (
+        <Navbar theme="dark" toggleTheme={() => {}} />
+      ) : (
+        <FanNavbar />
+      )}
       <main ref={gridRef} className="fan-explore-main">
         {!isLoggedIn && (
 
