@@ -6,7 +6,23 @@ const api = axios.create({
 });
 
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('skriibe_token');
+  const url = config.url || '';
+  const path = window.location.pathname;
+  
+  let token = null;
+
+  // Determine token based on request URL or current page path
+  if (url.includes('/creator') || url.includes('/creators') || path.startsWith('/creator') || path.startsWith('/dashboard') || path.startsWith('/onboard')) {
+    token = localStorage.getItem('skriibe_creator_token');
+  } else if (url.includes('/fan-auth') || url.includes('/fan') || path.startsWith('/fan') || path.startsWith('/explore') || path.startsWith('/discovery')) {
+    token = localStorage.getItem('skriibe_fan_token');
+  }
+  
+  // Fallback to legacy active token if specific token not found
+  if (!token) {
+    token = localStorage.getItem('skriibe_token');
+  }
+
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -15,8 +31,8 @@ api.interceptors.request.use((config) => {
 
 api.interceptors.response.use(
   (response) => {
-    // Automatically save token if it's provided in the response payload
-    if (response.data && response.data.token) {
+    // Legacy token auto-save for simple API calls (AuthContext setAuthData handles the specific ones)
+    if (response.data && response.data.token && !response.config.url.includes('/login') && !response.config.url.includes('/signup')) {
       localStorage.setItem('skriibe_token', response.data.token);
       window.dispatchEvent(new Event('skriibe:auth'));
     }
@@ -24,9 +40,21 @@ api.interceptors.response.use(
   },
   (error) => {
     if (error.response && error.response.status === 401) {
-      // Clear expired/broken tokens to prevent infinite redirect loops in SmartLoginRedirect
-      localStorage.removeItem('skriibe_token');
-      localStorage.removeItem('isReturningCreator');
+      const url = error.config.url || '';
+      
+      // Selectively clear the failing token
+      if (url.includes('/creator') || url.includes('/creators')) {
+        localStorage.removeItem('skriibe_creator_token');
+        localStorage.removeItem('isReturningCreator');
+      } else if (url.includes('/fan-auth') || url.includes('/fan')) {
+        localStorage.removeItem('skriibe_fan_token');
+      } else {
+        localStorage.removeItem('skriibe_token');
+        localStorage.removeItem('skriibe_creator_token');
+        localStorage.removeItem('skriibe_fan_token');
+        localStorage.removeItem('isReturningCreator');
+      }
+      
       window.dispatchEvent(new Event('skriibe:auth'));
 
       // Only redirect if we're not already on a login page to avoid loops

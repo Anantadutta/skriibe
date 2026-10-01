@@ -120,11 +120,19 @@ const BlockFanRoute = ({ children }) => {
   return children ? children : <Outlet />;
 };
 
+const BlockCreatorRoute = ({ children }) => {
+  const { isAuthenticated, roles } = useAuth();
+  if (isAuthenticated && roles && roles.includes('creator')) {
+    return <Navigate to="/creator/dashboard" replace />;
+  }
+  return children ? children : <Outlet />;
+};
+
 const TOPICS = ['Fitness', 'Lifestyle', 'Finance', 'Education', 'Tech', 'Dating', 'Travel'];
 
 function LandingPage({ theme, toggleTheme }) {
   const location = useLocation();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, roles } = useAuth();
   const [showDeletedToast, setShowDeletedToast] = useState(false);
   const [topicIndex, setTopicIndex] = useState(0);
   const isReturningFan = localStorage.getItem('isReturningFan') === 'true';
@@ -249,7 +257,15 @@ function LandingPage({ theme, toggleTheme }) {
 
             {/* Start Free Chat CTA Button (Screenshot 2) */}
             <div className="mt-8 sm:mt-10">
-              {isReturningFan && !isAuthenticated ? (
+              {isAuthenticated && roles?.includes('fan') ? (
+                <Link
+                  to="/explore"
+                  className="inline-flex items-center justify-center gap-2.5 px-8 sm:px-10 py-3.5 sm:py-4 rounded-full font-bold text-base sm:text-lg text-black bg-[#c8f53c] hover:bg-[#b8e62f] shadow-[0_0_25px_rgba(200,245,60,0.35)] hover:shadow-[0_0_35px_rgba(200,245,60,0.5)] transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 select-none"
+                >
+                  <span>Explore Creators</span>
+                  <span className="text-xl sm:text-2xl leading-none">&rarr;</span>
+                </Link>
+              ) : isReturningFan && !isAuthenticated ? (
                 <Link
                   to="/fan/login"
                   className="inline-flex items-center justify-center gap-2.5 px-8 sm:px-10 py-3.5 sm:py-4 rounded-full font-bold text-base sm:text-lg text-black bg-[#c8f53c] hover:bg-[#b8e62f] shadow-[0_0_25px_rgba(200,245,60,0.35)] hover:shadow-[0_0_35px_rgba(200,245,60,0.5)] transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 select-none"
@@ -370,6 +386,7 @@ function App() {
       } else if (path.includes('/discovery') || path.includes('/explore') || path.includes('/fan')) {
         localStorage.setItem('auth_roles', JSON.stringify(['fan']));
         localStorage.setItem('auth_activeRole', 'fan');
+        localStorage.setItem('isReturningFan', 'true');
       }
       
       window.dispatchEvent(new Event('skriibe:auth'));

@@ -53,7 +53,7 @@ const FanProfile = () => {
   const emailContainerRef = useRef(null);
   const phoneContainerRef = useRef(null);
 
-  const { roles, setAuthData } = useAuth();
+  const { roles, setAuthData, clearAuthData } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -891,7 +891,7 @@ const FanProfile = () => {
 
                 <div style={{ height: '16px' }} />                <button 
                   onClick={() => {
-                    localStorage.clear();
+                    clearAuthData('fan');
                     window.location.href = '/fan/login';
                   }}
                   style={{
@@ -922,7 +922,7 @@ const FanProfile = () => {
                         try {
                           const res = await api.delete('/fan-auth/profile', { data: { reason } });
                           if (res.data.success) {
-                            localStorage.clear();
+                            clearAuthData('fan');
                             window.location.href = '/fan/login';
                           } else {
                             alert(res.data.message || 'Failed to delete account');

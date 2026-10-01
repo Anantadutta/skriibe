@@ -331,7 +331,7 @@
     "avatarUrl": "https://res.cloudinary.com/x4tw73kr/image/upload/v1790665816/avatars/yueniosulaswx4ilw84z.webp",
     "price": 0,
     "pricePerQuestion": 0,
-    "isLive": false,
+    "isLive": true,
     "liveChatPrice": 5,
     "handle": "tarun.gujral"
   },
@@ -345,5 +345,16 @@
     "isLive": false,
     "liveChatPrice": 5,
     "handle": "vasu"
+  },
+  {
+    "_id": "6abe0d361917b368b5b63051",
+    "name": "levin",
+    "profileUrl": "skriibe.com/kevin",
+    "avatarUrl": "",
+    "price": 10,
+    "pricePerQuestion": 10,
+    "isLive": false,
+    "liveChatPrice": 5,
+    "handle": "kevin"
   }
 ]

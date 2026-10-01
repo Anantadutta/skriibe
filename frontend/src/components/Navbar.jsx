@@ -24,7 +24,7 @@ const Navbar = ({ theme, toggleTheme, showBanner = true }) => {
   }, [location.pathname]);
 
   useEffect(() => {
-    if (!isAuthenticated || (roles && roles.includes('creator'))) return;
+    if (!isAuthenticated || !roles?.includes('fan')) return;
 
     const fetchFanProfile = async () => {
       try {
@@ -277,7 +277,7 @@ const Navbar = ({ theme, toggleTheme, showBanner = true }) => {
               <span>{loadingLive ? '... live' : `${liveCount.toLocaleString()} live`}</span>
             </Link>
 
-            {!isAuthenticated ? (
+            {!isAuthenticated || !roles?.includes('fan') ? (
               <>
                 {isReturningFan ? (
                   <Link
@@ -304,15 +304,6 @@ const Navbar = ({ theme, toggleTheme, showBanner = true }) => {
                     Join as a creator
                   </Link>
                 )}
-              </>
-            ) : roles?.includes('creator') ? (
-              <>
-                <Link
-                  to="/explore"
-                  className="text-xs sm:text-sm font-bold px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-[#3BA8D8] text-black hover:bg-[#3298c4] transition-all whitespace-nowrap shadow-[0_0_12px_rgba(59,168,216,0.3)] hover:shadow-[0_0_18px_rgba(59,168,216,0.5)]"
-                >
-                  Start free chat
-                </Link>
               </>
             ) : (
               <>
@@ -350,7 +341,7 @@ const Navbar = ({ theme, toggleTheme, showBanner = true }) => {
                         <Link to="/fan/profile" className={`px-4 py-2 text-sm font-semibold transition-colors ${theme === 'light' ? 'hover:bg-gray-100' : 'hover:bg-white/10'}`}>
                           Settings
                         </Link>
-                        <button onClick={() => { clearAuthData(); window.location.href = '/'; }} className={`w-full text-left px-4 py-2 text-sm font-semibold text-red-500 transition-colors ${theme === 'light' ? 'hover:bg-gray-100' : 'hover:bg-white/10'}`}>
+                        <button onClick={() => { clearAuthData('fan'); window.location.href = '/'; }} className={`w-full text-left px-4 py-2 text-sm font-semibold text-red-500 transition-colors ${theme === 'light' ? 'hover:bg-gray-100' : 'hover:bg-white/10'}`}>
                           Logout
                         </button>
                       </div>
@@ -483,7 +474,7 @@ const Navbar = ({ theme, toggleTheme, showBanner = true }) => {
 
           {/* Action Buttons */}
           <div className="flex flex-col gap-3 pt-4">
-            {!isAuthenticated ? (
+            {!isAuthenticated || !roles?.includes('fan') ? (
               <>
                 {isReturningFan ? (
                   <Link
@@ -512,16 +503,6 @@ const Navbar = ({ theme, toggleTheme, showBanner = true }) => {
                     Join as a creator
                   </Link>
                 )}
-              </>
-            ) : roles?.includes('creator') ? (
-              <>
-                <Link
-                  to="/explore"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="w-full py-3 px-4 rounded-full bg-[#3BA8D8] text-black font-bold text-center text-sm hover:bg-[#3298c4] transition-all shadow-[0_0_12px_rgba(59,168,216,0.3)]"
-                >
-                  Start free chat
-                </Link>
               </>
             ) : (
               <>
@@ -562,7 +543,7 @@ const Navbar = ({ theme, toggleTheme, showBanner = true }) => {
                     Settings
                   </Link>
                   <button
-                    onClick={() => { clearAuthData(); window.location.href = '/'; }}
+                    onClick={() => { clearAuthData('fan'); window.location.href = '/'; }}
                     className={`block w-full py-3 px-4 font-bold text-center text-sm text-red-500 transition-colors ${theme === 'light' ? 'hover:bg-gray-100' : 'hover:bg-white/5'}`}
                   >
                     Logout

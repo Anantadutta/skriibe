@@ -365,7 +365,7 @@ const CreatorAuth = () => {
             </div>
 
             <div style={{ display: 'flex', gap: '12px', marginBottom: '24px' }}>
-              <a href={`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/auth/google${new URLSearchParams(location.search).get('ref') ? `?ref=${new URLSearchParams(location.search).get('ref')}` : ''}`}
+              <a href={`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/auth/google?role=creator&action=${isLogin ? 'login' : 'signup'}${new URLSearchParams(location.search).get('ref') ? `&ref=${new URLSearchParams(location.search).get('ref')}` : ''}`}
                  className="social-btn"
                  style={{
                    flex: 1,
@@ -393,7 +393,7 @@ const CreatorAuth = () => {
                 Google
               </a>
 
-              <a href={`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/auth/facebook${new URLSearchParams(location.search).get('ref') ? `?ref=${new URLSearchParams(location.search).get('ref')}` : ''}`}
+              <a href={`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/auth/facebook?role=creator&action=${isLogin ? 'login' : 'signup'}${new URLSearchParams(location.search).get('ref') ? `&ref=${new URLSearchParams(location.search).get('ref')}` : ''}`}
                  className="social-btn"
                  style={{
                    flex: 1,

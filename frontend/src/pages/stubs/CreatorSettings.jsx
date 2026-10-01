@@ -66,7 +66,7 @@ const CreatorSettings = () => {
   const location = useLocation();
   const scrollRef = useRef(null);
   const avatarInputRef = useRef(null);
-  const { setAuthData, roles } = useAuth();
+  const { setAuthData, roles, clearAuthData } = useAuth();
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -1332,7 +1332,7 @@ const CreatorSettings = () => {
             background: 'transparent', border: 'none', color: '#f87171',
             fontSize: '0.9rem', fontWeight: 700, cursor: 'pointer', marginTop: '8px'
           }} onClick={() => {
-            localStorage.clear();
+            clearAuthData();
             window.location.href = '/';
           }}>
             Log out 
@@ -1513,7 +1513,7 @@ const CreatorSettings = () => {
                     } catch(err) {
                       console.error("Failed to delete account", err);
                     }
-                    localStorage.clear();
+                    clearAuthData();
                     setIsAccountDeleted(true);
                   }}>Delete forever</button>
                 </div>

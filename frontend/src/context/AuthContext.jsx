@@ -2,8 +2,45 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const AuthContext = createContext(null);
 
+const parseJwt = (token) => {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const pad = base64.length % 4;
+    const padded = pad ? base64 + '='.repeat(4 - pad) : base64;
+    return JSON.parse(atob(padded));
+  } catch (e) {
+    return null;
+  }
+};
+
 export const AuthProvider = ({ children }) => {
   const [roles, setRoles] = useState(() => {
+    let activeRoles = [];
+    const creatorToken = localStorage.getItem('skriibe_creator_token');
+    const fanToken = localStorage.getItem('skriibe_fan_token');
+    const legacyToken = localStorage.getItem('skriibe_token');
+
+    if (creatorToken) {
+      const decoded = parseJwt(creatorToken);
+      if (decoded && (decoded.roles?.includes('creator') || decoded.creatorId)) {
+        activeRoles.push('creator');
+      }
+    }
+    if (fanToken) {
+      const decoded = parseJwt(fanToken);
+      if (decoded && (decoded.roles?.includes('fan') || decoded.fanId)) {
+        activeRoles.push('fan');
+      }
+    }
+    
+    if (activeRoles.length > 0) return activeRoles;
+
+    if (legacyToken) {
+      const decoded = parseJwt(legacyToken);
+      if (decoded && decoded.roles) return decoded.roles;
+      if (decoded && decoded.creatorId) return ['creator'];
+    }
     const saved = localStorage.getItem('auth_roles');
     const parsed = saved ? JSON.parse(saved) : null;
     return (parsed && parsed.length > 0) ? parsed : ['fan'];
@@ -14,13 +51,41 @@ export const AuthProvider = ({ children }) => {
   });
 
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    return !!localStorage.getItem('skriibe_token');
+    return !!(localStorage.getItem('skriibe_creator_token') || localStorage.getItem('skriibe_fan_token') || localStorage.getItem('skriibe_token'));
   });
 
-  // The token is also written/cleared outside this provider (api.js interceptors,
-  // the OAuth hash handler), so mirror localStorage instead of trusting local state.
   useEffect(() => {
-    const sync = () => setIsAuthenticated(!!localStorage.getItem('skriibe_token'));
+    const sync = () => {
+      let activeRoles = [];
+      const creatorToken = localStorage.getItem('skriibe_creator_token');
+      const fanToken = localStorage.getItem('skriibe_fan_token');
+      const legacyToken = localStorage.getItem('skriibe_token');
+
+      if (creatorToken) {
+        const decoded = parseJwt(creatorToken);
+        if (decoded && (decoded.roles?.includes('creator') || decoded.creatorId)) activeRoles.push('creator');
+      }
+      if (fanToken) {
+        const decoded = parseJwt(fanToken);
+        if (decoded && (decoded.roles?.includes('fan') || decoded.fanId)) activeRoles.push('fan');
+      }
+      
+      if (activeRoles.length > 0) {
+        setRoles(activeRoles);
+        setIsAuthenticated(true);
+      } else if (legacyToken) {
+        const decoded = parseJwt(legacyToken);
+        if (decoded) {
+          if (decoded.roles) setRoles(decoded.roles);
+          else if (decoded.creatorId) setRoles(['creator']);
+        }
+        setIsAuthenticated(true);
+      } else {
+        setRoles(['fan']);
+        setActiveRole('fan');
+        setIsAuthenticated(false);
+      }
+    };
     window.addEventListener('storage', sync);
     window.addEventListener('skriibe:auth', sync);
     return () => {
@@ -40,29 +105,73 @@ export const AuthProvider = ({ children }) => {
       activeToSave = 'fan';
     }
     
-    setRoles(rolesToSave);
+    if (rolesToSave.includes('fan')) {
+      localStorage.setItem('isReturningFan', 'true');
+    }
+
+    if (token) {
+      if (rolesToSave.includes('creator')) {
+        localStorage.setItem('skriibe_creator_token', token);
+      } else if (rolesToSave.includes('fan')) {
+        localStorage.setItem('skriibe_fan_token', token);
+      }
+      localStorage.setItem('skriibe_token', token); // Keep as active token for legacy API support
+      setIsAuthenticated(true);
+    }
+
+    // Combine with existing roles if not overwriting completely
+    const currentRoles = [...roles];
+    rolesToSave.forEach(r => {
+      if (!currentRoles.includes(r)) currentRoles.push(r);
+    });
+    
+    setRoles(currentRoles);
     setActiveRole(activeToSave);
     
-    localStorage.setItem('auth_roles', JSON.stringify(rolesToSave));
+    localStorage.setItem('auth_roles', JSON.stringify(currentRoles));
     if (activeToSave) {
       localStorage.setItem('auth_activeRole', activeToSave);
     } else {
       localStorage.removeItem('auth_activeRole');
     }
-
-    if (token) {
-      localStorage.setItem('skriibe_token', token);
-      setIsAuthenticated(true);
-    }
   };
 
-  const clearAuthData = () => {
+  const clearAuthData = (roleToClear) => {
+    if (roleToClear === 'creator') {
+      localStorage.removeItem('skriibe_creator_token');
+      const fanToken = localStorage.getItem('skriibe_fan_token');
+      if (fanToken) {
+        setRoles(['fan']);
+        setActiveRole('fan');
+        localStorage.setItem('auth_roles', JSON.stringify(['fan']));
+        localStorage.setItem('auth_activeRole', 'fan');
+        localStorage.setItem('skriibe_token', fanToken); // switch legacy token to fan
+        setIsAuthenticated(true);
+        return;
+      }
+    } else if (roleToClear === 'fan') {
+      localStorage.removeItem('skriibe_fan_token');
+      const creatorToken = localStorage.getItem('skriibe_creator_token');
+      if (creatorToken) {
+        setRoles(['creator']);
+        setActiveRole('creator');
+        localStorage.setItem('auth_roles', JSON.stringify(['creator']));
+        localStorage.setItem('auth_activeRole', 'creator');
+        localStorage.setItem('skriibe_token', creatorToken); // switch legacy token to creator
+        setIsAuthenticated(true);
+        return;
+      }
+    }
+
+    // Default clear all
     setRoles(['fan']);
     setActiveRole('fan');
     setIsAuthenticated(false);
     localStorage.removeItem('auth_roles');
     localStorage.removeItem('auth_activeRole');
     localStorage.removeItem('skriibe_token');
+    localStorage.removeItem('skriibe_creator_token');
+    localStorage.removeItem('skriibe_fan_token');
   };
 
   return (

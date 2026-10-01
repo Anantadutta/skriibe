@@ -43,7 +43,7 @@ const FanExplore = () => {
   const [selectedCustomCategory, setSelectedCustomCategory] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isFirstTimeUser, setIsFirstTimeUser] = useState(true);
-  const { isAuthenticated: isLoggedIn } = useAuth();
+  const { isAuthenticated: isLoggedIn, roles } = useAuth();
   const [visibleCount, setVisibleCount] = useState(20);
   const [showRoleConflictModal, setShowRoleConflictModal] = useState(false);
   const navigate = useNavigate();
@@ -337,7 +337,7 @@ const FanExplore = () => {
         }
       `}</style>
 
-      {!isLoggedIn ? (
+      {!isLoggedIn || roles?.includes('creator') ? (
         <Navbar theme="dark" toggleTheme={() => {}} />
       ) : (
         <FanNavbar />
@@ -492,7 +492,7 @@ const FanExplore = () => {
           </div>
         )}
       </main>
-      <FanBottomNav />
+      {(!isLoggedIn || !roles?.includes('creator')) && <FanBottomNav />}
 
 
     </div>
