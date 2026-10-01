@@ -13,7 +13,8 @@ const mongoose = require('mongoose');
 const Creator = require('../models/Creator');
 const AdminAlert = require('../models/AdminAlert');
 const otpStore = require('../utils/otpStore');
-const { verifyCreatorToken } = require('../middleware/auth');
+const { verifyCreatorToken, verifyAdminToken } = require('../middleware/auth');
+const { hashPassword, verifyPassword, isPasswordHash, isPlaceholderPassword, safeEqual } = require('../utils/password');
 const { sendWelcomeEmail, sendProfileSubmittedEmail, sendPasswordResetEmail } = require('../utils/emailService');
 const { normalizeExpertiseList } = require('../utils/expertiseConstants');
 const { calculateLiveStatus } = require('../utils/liveStatus');
@@ -42,7 +43,7 @@ const upload = multer({
 });
 
 // Route to upload avatar
-router.get('/resolve-conflicts', async (req, res) => {
+router.get('/resolve-conflicts', verifyAdminToken, async (req, res) => {
   try {
     await connectDB();
     const Fan = require('../models/Fan');
@@ -157,6 +158,21 @@ const connectDB = async () => {
   } catch (err) {
     console.error('MongoDB Connection Error:', err.message);
   }
+};
+
+// Checks a creator's password. Older accounts still hold plain text; those are checked
+// once and replaced with a hash on the spot, so nobody is locked out.
+const checkCreatorPassword = async (creator, password) => {
+  const stored = creator.password;
+  if (typeof password !== 'string' || !stored || isPlaceholderPassword(stored)) return false;
+  if (isPasswordHash(stored)) return verifyPassword(password, stored);
+  if (!safeEqual(stored, password)) return false;
+  try {
+    await Creator.updateOne({ _id: creator._id }, { $set: { password: hashPassword(password) } });
+  } catch (err) {
+    console.error('Failed to upgrade legacy creator password:', err.message);
+  }
+  return true;
 };
 
 /**
@@ -277,7 +293,7 @@ router.post('/verify-otp', async (req, res) => {
 
   const token = jwt.sign(
     { creatorId: creator._id, phone: creator.phone },
-    process.env.JWT_SECRET || 'secret',
+    process.env.JWT_SECRET,
     { expiresIn: '7d' }
   );
 
@@ -315,11 +331,11 @@ router.post('/email-signup', async (req, res) => {
   let creator = await Creator.findOne({ email });
 
   if (creator) {
-    if (creator.password === password) {
+    if (await checkCreatorPassword(creator, password)) {
       // Passwords match! Automatically log them in instead of failing
       const token = jwt.sign(
         { creatorId: creator._id, email: creator.email },
-        process.env.JWT_SECRET || 'secret',
+        process.env.JWT_SECRET,
         { expiresIn: '7d' }
       );
       const onboardingComplete = !!creator.handle;
@@ -367,7 +383,7 @@ router.post('/email-signup', async (req, res) => {
     }
   }
 
-  const createData = { email, password };
+  const createData = { email, password: hashPassword(String(password)) };
   if (referredBy) createData.referredBy = referredBy;
   if (referredByName) createData.referredByName = referredByName;
 
@@ -400,7 +416,7 @@ router.post('/email-signup', async (req, res) => {
 
   const token = jwt.sign(
     { creatorId: creator._id, email: creator.email },
-    process.env.JWT_SECRET || 'secret',
+    process.env.JWT_SECRET,
     { expiresIn: '7d' }
   );
 
@@ -451,13 +467,13 @@ if (!creator) {
   return res.status(400).json({ message: 'No account found with this email.' });
 }
 
-if (creator.password !== password) {
+if (!(await checkCreatorPassword(creator, password))) {
   return res.status(400).json({ message: 'Invalid credentials.' });
 }
 
 const token = jwt.sign(
   { creatorId: creator._id, email: creator.email },
-  process.env.JWT_SECRET || 'secret',
+  process.env.JWT_SECRET,
   { expiresIn: '7d' }
 );
 
@@ -551,14 +567,14 @@ router.post('/reset-password', async (req, res) => {
     }
 
     if (creator) {
-      creator.password = password; // Creator's currently save raw passwords
+      creator.password = hashPassword(password);
       creator.resetPasswordToken = undefined;
       creator.resetPasswordExpires = undefined;
       await creator.save();
     }
 
     if (fan) {
-      fan.password = password;
+      fan.password = hashPassword(password);
       fan.resetPasswordToken = undefined;
       fan.resetPasswordExpires = undefined;
       await fan.save();

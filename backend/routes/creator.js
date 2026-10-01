@@ -27,7 +27,7 @@ const connectDB = async () => {
 const issueToken = (creator) => {
   return jwt.sign(
     { creatorId: creator._id, email: creator.email, handle: creator.handle },
-    process.env.JWT_SECRET || 'secret',
+    process.env.JWT_SECRET,
     { expiresIn: '7d' }
   );
 };
@@ -752,7 +752,7 @@ router.post('/delete-account', async (req, res) => {
     if (token) {
       try {
         const jwt = require('jsonwebtoken');
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret');
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
         creatorId = decoded.creatorId;
         
         if (!creatorId && decoded.email) {

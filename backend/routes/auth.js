@@ -274,7 +274,7 @@ passport.use(new FacebookStrategy({
 const issueToken = (creator) => {
   return jwt.sign(
     { creatorId: creator._id, email: creator.email },
-    process.env.JWT_SECRET || 'secret',
+    process.env.JWT_SECRET,
     { expiresIn: '7d' }
   );
 };
@@ -407,7 +407,7 @@ router.get('/google/callback', (req, res, next) => {
       if (req.user.isFanLogin) {
     const token = jwt.sign(
       { fanId: req.user._id, email: req.user.email, roles: ['fan'], activeRole: 'fan' },
-      process.env.JWT_SECRET || 'secret',
+      process.env.JWT_SECRET,
       { expiresIn: '7d' }
     );
     return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/discovery#token=${token}`);
@@ -500,7 +500,7 @@ router.get('/facebook/callback', async (req, res, next) => {
     if (user.isFanLogin) {
       generatedToken = jwt.sign(
         { fanId: user._id, email: user.email, roles: ['fan'], activeRole: 'fan' },
-        process.env.JWT_SECRET || 'secret',
+        process.env.JWT_SECRET,
         { expiresIn: '7d' }
       );
       if (resolveToken) resolveToken(generatedToken);
@@ -573,14 +573,14 @@ router.get('/instagram/callback', async (req, res) => {
     }
 
     // Encrypt token
-    const cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(process.env.ENCRYPTION_KEY || '12345678901234567890123456789012'), Buffer.alloc(16, 0));
+    const cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(process.env.ENCRYPTION_KEY), Buffer.alloc(16, 0));
     let encryptedToken = cipher.update(longLivedToken, 'utf8', 'hex');
     encryptedToken += cipher.final('hex');
 
     // Step 5 - Update DB if user is logged in
     const token = req.query.state || req.cookies?.creator_token;
     if (token) {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret');
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
       await connectDB();
       const existingCreator = await Creator.findById(decoded.creatorId);
       if (existingCreator) {
@@ -651,7 +651,7 @@ router.get('/status', async (req, res) => {
     const jwt = require('jsonwebtoken');
     let decoded;
     try {
-      decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret');
+      decoded = jwt.verify(token, process.env.JWT_SECRET);
     } catch (err) {
       return res.json({ authenticated: false });
     }

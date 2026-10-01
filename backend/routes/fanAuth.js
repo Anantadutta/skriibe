@@ -17,27 +17,7 @@ const connectDB = async () => {
   await mongoose.connect(process.env.MONGO_URI);
 };
 
-// Helper function to hash password
-const hashPassword = (password) => {
-  const salt = crypto.randomBytes(16).toString('hex');
-  const hash = crypto.scryptSync(password, salt, 64).toString('hex');
-  return `${salt}:${hash}`;
-};
-
-// Helper function to verify password
-const verifyPassword = (password, storedHash) => {
-  if (!storedHash || !storedHash.includes(':')) return false;
-  try {
-    const [salt, key] = storedHash.split(':');
-    if (!salt || !key) return false;
-    const hashedBuffer = crypto.scryptSync(password, salt, 64);
-    const keyBuffer = Buffer.from(key, 'hex');
-    return crypto.timingSafeEqual(hashedBuffer, keyBuffer);
-  } catch (err) {
-    console.error('Password verification error:', err);
-    return false;
-  }
-};
+const { hashPassword, verifyPassword } = require('../utils/password');
 
 const issueToken = (fan) => {
   let tokenRoles = ['fan'];
@@ -48,7 +28,7 @@ const issueToken = (fan) => {
 
   return jwt.sign(
     { fanId: fan._id, email: fan.email, roles: tokenRoles, activeRole: fan.activeRole || 'fan' },
-    process.env.JWT_SECRET || 'secret',
+    process.env.JWT_SECRET,
     { expiresIn: '7d' }
   );
 };

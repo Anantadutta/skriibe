@@ -1,5 +1,14 @@
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const { getClearCookieOptions } = require('../utils/cookieConfig');
+
+// Admin tokens are signed with their own key, derived from JWT_SECRET and the admin password hash.
+// A leaked or weak JWT_SECRET alone cannot forge one, and changing the admin password revokes them all.
+const getAdminTokenSecret = () => {
+  const { JWT_SECRET, ADMIN_PASSWORD_HASH } = process.env;
+  if (!JWT_SECRET || !ADMIN_PASSWORD_HASH) return null;
+  return crypto.createHmac('sha256', JWT_SECRET).update(`admin:${ADMIN_PASSWORD_HASH}`).digest('hex');
+};
 
 const verifyCreatorToken = async (req, res, next) => {
   let token = null;
@@ -12,7 +21,7 @@ const verifyCreatorToken = async (req, res, next) => {
 
   if (!token) return res.status(401).json({ success: false, message: 'Not authenticated' });
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret');
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
     if (!decoded.creatorId && decoded.email) {
       const Creator = require('../models/Creator');
@@ -40,8 +49,10 @@ const verifyAdminToken = (req, res, next) => {
   }
 
   if (!token) return res.status(401).json({ success: false, message: 'Not authenticated' });
+  const adminSecret = getAdminTokenSecret();
+  if (!adminSecret) return res.status(401).json({ success: false, message: 'Not authenticated' });
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret');
+    const decoded = jwt.verify(token, adminSecret, { algorithms: ['HS256'] });
     if (decoded.role !== 'admin') return res.status(403).json({ success: false, message: 'Forbidden' });
     req.admin = decoded;
     next();
@@ -59,7 +70,7 @@ const verifyFanToken = async (req, res, next) => {
 
   if (!token) return res.status(401).json({ success: false, message: 'Not authenticated. Please login as a Fan.' });
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret');
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
     if (!decoded.fanId && (decoded.email || decoded.creatorId)) {
       const Fan = require('../models/Fan');
@@ -111,7 +122,7 @@ const verifyFanOrCreatorToken = async (req, res, next) => {
 
   if (!token) return res.status(401).json({ success: false, message: 'Not authenticated' });
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret');
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     if (decoded.creatorId) {
       req.creator = decoded;
     }
@@ -125,5 +136,5 @@ const verifyFanOrCreatorToken = async (req, res, next) => {
   }
 };
 
-module.exports = { verifyCreatorToken, verifyAdminToken, verifyFanToken, verifyFanOrCreatorToken };
+module.exports = { verifyCreatorToken, verifyAdminToken, verifyFanToken, verifyFanOrCreatorToken, getAdminTokenSecret };
 

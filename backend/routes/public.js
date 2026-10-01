@@ -8,8 +8,9 @@ const Creator = require('../models/Creator');
 const Question = require('../models/Question');
 const { normalizeExpertiseList, EXPERTISE_MAPPING } = require('../utils/expertiseConstants');
 const { calculateLiveStatus } = require('../utils/liveStatus');
+const { verifyAdminToken } = require('../middleware/auth');
 
-router.get('/debug-questions', async (req, res) => {
+router.get('/debug-questions', verifyAdminToken, async (req, res) => {
   try {
     const questions = await Question.find({});
     res.json({ questions });
@@ -245,7 +246,7 @@ router.get('/creators', async (req, res) => {
 });
 
 // Temp route to fix legacy 0 reply rate
-router.get('/fix-stats', async (req, res) => {
+router.get('/fix-stats', verifyAdminToken, async (req, res) => {
   try {
     const result = await Creator.updateMany(
       { 'stats.replyRate': 0 },

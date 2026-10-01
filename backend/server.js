@@ -1,4 +1,5 @@
 require('dotenv').config();
+require('./utils/validateEnv')();
 console.log('FB APP ID:', process.env.FACEBOOK_APP_ID);
 console.log('FB SECRET exists:', !!process.env.FACEBOOK_APP_SECRET);
 console.log('FB CALLBACK URL:', process.env.FACEBOOK_CALLBACK_URL);
@@ -109,7 +110,7 @@ app.use(cookieParser());
 
 app.set('trust proxy', 1);
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'skriibe_session_secret',
+  secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
   cookie: { 
@@ -199,7 +200,27 @@ app.get('/health', async (req, res) => {
   res.json({ status: 'ok', dbConnected: isConnected });
 });
 
-app.get('/api/debug-refs', async (req, res) => {
+const { verifyAdminToken } = require('./middleware/auth');
+const { safeEqual } = require('./utils/password');
+
+// Cron triggers must present CRON_SECRET: x-cron-secret header, Bearer token, or ?secret= in the URL
+const verifyCronSecret = (req, res, next) => {
+  const expected = process.env.CRON_SECRET;
+  if (!expected) {
+    return res.status(503).json({ success: false, error: 'Cron trigger is not configured' });
+  }
+  const authHeader = req.headers.authorization || '';
+  const provided = req.headers['x-cron-secret']
+    || (authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '')
+    || req.query.secret
+    || '';
+  if (!safeEqual(provided, expected)) {
+    return res.status(401).json({ success: false, error: 'Unauthorized' });
+  }
+  next();
+};
+
+app.get('/api/debug-refs', verifyAdminToken, async (req, res) => {
   await connectDB();
   const Referral = require('./models/Referral');
   const Creator = require('./models/Creator');
@@ -209,7 +230,7 @@ app.get('/api/debug-refs', async (req, res) => {
 });
 
 // Endpoint for Uptime Robot to trigger SLA monitor
-app.get('/api/cron/sla-monitor', async (req, res) => {
+app.get('/api/cron/sla-monitor', verifyCronSecret, async (req, res) => {
   try {
     await connectDB();
     const { runSlaMonitor } = require('./cron/slaMonitor');
@@ -222,7 +243,7 @@ app.get('/api/cron/sla-monitor', async (req, res) => {
 });
 
 // Endpoint for Uptime Robot to trigger Weekly Sweep
-app.get('/api/cron/weekly-sweep', async (req, res) => {
+app.get('/api/cron/weekly-sweep', verifyCronSecret, async (req, res) => {
   try {
     await connectDB();
     const { runWeeklySweep } = require('./cron/weeklySweep');
@@ -281,9 +302,7 @@ app.post('/api/verify-payment', (req, res) => {
 const path = require('path');
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-app.get('/test-route-123', (req, res) => res.json({ hello: 'world' }));
-
-const { verifyAdminToken } = require('./middleware/auth');
+app.get('/test-route-123', verifyAdminToken, (req, res) => res.json({ hello: 'world' }));
 
 app.get('/api/admin/me', verifyAdminToken, (req, res) => {
   res.json({ success: true, admin: req.admin });

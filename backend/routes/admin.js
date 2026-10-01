@@ -1,6 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
+const jwt = require('jsonwebtoken');
+const rateLimit = require('express-rate-limit');
+const { verifyAdminToken, getAdminTokenSecret } = require('../middleware/auth');
+const { verifyPassword, isPasswordHash, safeEqual } = require('../utils/password');
 const Creator = require('../models/Creator');
 const Fan = require('../models/Fan');
 const Question = require('../models/Question');
@@ -13,6 +17,49 @@ const connectDB = async () => {
   if (mongoose.connection.readyState === 1) return;
   await mongoose.connect(process.env.MONGO_URI);
 };
+
+// Rate limiter for admin login (failed attempts only)
+const adminLoginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10,
+  skipSuccessfulRequests: true,
+  message: { success: false, message: 'Too many login attempts. Try again in 15 minutes.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+/**
+ * @route POST /api/admin/login
+ * @desc Check credentials against ADMIN_USERNAME / ADMIN_PASSWORD_HASH and issue an admin token
+ */
+router.post('/login', adminLoginLimiter, (req, res) => {
+  const adminUsername = process.env.ADMIN_USERNAME;
+  const adminPasswordHash = process.env.ADMIN_PASSWORD_HASH;
+  const tokenSecret = getAdminTokenSecret();
+
+  if (!adminUsername || !isPasswordHash(adminPasswordHash) || !tokenSecret) {
+    console.error('Admin login attempted but ADMIN_USERNAME / ADMIN_PASSWORD_HASH are not configured correctly.');
+    return res.status(503).json({ success: false, message: 'Admin login is not configured on the server.' });
+  }
+
+  const { username, password } = req.body || {};
+  if (typeof username !== 'string' || typeof password !== 'string') {
+    return res.status(400).json({ success: false, message: 'Username and password are required' });
+  }
+
+  // Run both checks so the response time does not reveal which one failed
+  const usernameMatches = safeEqual(username, adminUsername);
+  const passwordMatches = verifyPassword(password, adminPasswordHash);
+  if (!usernameMatches || !passwordMatches) {
+    return res.status(401).json({ success: false, message: 'Invalid admin credentials' });
+  }
+
+  const token = jwt.sign({ role: 'admin', username: adminUsername }, tokenSecret, { expiresIn: '12h' });
+  res.json({ success: true, token });
+});
+
+// Every route below this line requires a valid admin token
+router.use(verifyAdminToken);
 
 /**
  * @route GET /api/admin/dashboard

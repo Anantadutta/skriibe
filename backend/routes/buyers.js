@@ -54,7 +54,7 @@ router.post('/verify-otp', async (req, res) => {
     }
     delete otpStore[phone];
     // Issue a short-lived buyer verification token (not stored in cookie — just returned to frontend)
-    const buyerToken = jwt.sign({ phone, verified: true }, process.env.JWT_SECRET || 'secret', { expiresIn: '30m' });
+    const buyerToken = jwt.sign({ phone, verified: true }, process.env.JWT_SECRET, { expiresIn: '30m' });
     return res.json({ success: true, buyerToken });
   } catch (err) {
     return res.status(500).json({ success: false, message: 'Verification failed' });

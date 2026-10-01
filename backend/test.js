@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 
-const MONGO_URI = "mongodb://Ananta:Ananta3139@ac-9ykfn9e-shard-00-00.gmbikxr.mongodb.net:27017,ac-9ykfn9e-shard-00-01.gmbikxr.mongodb.net:27017,ac-9ykfn9e-shard-00-02.gmbikxr.mongodb.net:27017/?ssl=true&replicaSet=atlas-10vedy-shard-0&authSource=admin&appName=SkriibeDB";
+require('dotenv').config();
+const MONGO_URI = process.env.MONGO_URI;
 
 async function run() {
   try {

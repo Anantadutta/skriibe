@@ -6,6 +6,7 @@ const cloudinary = require('cloudinary').v2;
 
 const Query = require('../models/Query');
 const AdminAlert = require('../models/AdminAlert');
+const { verifyAdminToken } = require('../middleware/auth');
 
 // Configure Cloudinary if credentials are present
 if (process.env.CLOUDINARY_CLOUD_NAME) {
@@ -177,7 +178,7 @@ router.post('/', upload.single('evidence'), async (req, res) => {
  * @route GET /api/queries/admin/stats
  * @desc Get unread & pending query counts for admin badges
  */
-router.get('/admin/stats', async (req, res) => {
+router.get('/admin/stats', verifyAdminToken, async (req, res) => {
   try {
     await connectDB();
     const unreadCount = await Query.countDocuments({ isRead: false });
@@ -204,7 +205,7 @@ router.get('/admin/stats', async (req, res) => {
  * @route GET /api/queries/admin
  * @desc Get all queries for admin with filtering & search
  */
-router.get('/admin', async (req, res) => {
+router.get('/admin', verifyAdminToken, async (req, res) => {
   try {
     await connectDB();
     const { status, queryType, search } = req.query;
@@ -302,16 +303,16 @@ const updateQueryHandler = async (req, res) => {
  * @route PATCH /api/queries/admin/:id and /api/queries/:id
  * @desc Update status, notes, or read status of a query
  */
-router.patch('/admin/:id', updateQueryHandler);
-router.patch('/:id', updateQueryHandler);
-router.put('/admin/:id', updateQueryHandler);
-router.put('/:id', updateQueryHandler);
+router.patch('/admin/:id', verifyAdminToken, updateQueryHandler);
+router.patch('/:id', verifyAdminToken, updateQueryHandler);
+router.put('/admin/:id', verifyAdminToken, updateQueryHandler);
+router.put('/:id', verifyAdminToken, updateQueryHandler);
 
 /**
  * @route DELETE /api/queries/admin/:id
  * @desc Delete a query
  */
-router.delete('/admin/:id', async (req, res) => {
+router.delete('/admin/:id', verifyAdminToken, async (req, res) => {
   try {
     await connectDB();
     const { id } = req.params;

@@ -14,6 +14,15 @@ if (process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET) {
   });
 }
 
+// Fetch an order from Razorpay, retrying once so a brief network error does not lose a paid top-up
+const fetchRazorpayOrder = async (orderId) => {
+  try {
+    return await razorpay.orders.fetch(orderId);
+  } catch (err) {
+    return await razorpay.orders.fetch(orderId);
+  }
+};
+
 // GET /api/wallet/balance
 router.get('/balance', verifyFanToken, async (req, res) => {
   try {
@@ -45,7 +54,9 @@ router.post('/topup', verifyFanToken, async (req, res) => {
     const options = {
       amount: amount * 100, // amount in smallest currency unit (paise)
       currency: "INR",
-      receipt: `receipt_topup_${req.fan.fanId}_${Date.now()}`
+      receipt: `receipt_topup_${req.fan.fanId}_${Date.now()}`,
+      // Ties the order to this fan so verify-topup can reject orders created for anyone or anything else
+      notes: { fanId: String(req.fan.fanId), purpose: 'wallet_topup' }
     };
 
     const order = await razorpay.orders.create(options);
@@ -65,7 +76,7 @@ router.post('/topup', verifyFanToken, async (req, res) => {
 // POST /api/wallet/verify-topup
 router.post('/verify-topup', verifyFanToken, async (req, res) => {
   try {
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, amount } = req.body;
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
 
     if (!razorpay) {
       return res.status(500).json({ success: false, message: 'Razorpay is not configured' });
@@ -89,6 +100,19 @@ router.post('/verify-topup', verifyFanToken, async (req, res) => {
     const existingTx = await WalletTransaction.findOne({ reference: razorpay_payment_id, type: 'credit' });
     if (existingTx) {
       return res.json({ success: true, balance: fan.walletBalance });
+    }
+
+    // Credit the amount recorded on the Razorpay order, never an amount sent by the browser
+    const order = await fetchRazorpayOrder(razorpay_order_id);
+    const fanIdStr = fan._id.toString();
+    const isOwnTopupOrder = order.notes?.fanId === fanIdStr
+      || (order.receipt || '').startsWith(`receipt_topup_${fanIdStr}_`);
+    if (!isOwnTopupOrder) {
+      return res.status(400).json({ success: false, message: 'This payment is not a wallet top-up for your account' });
+    }
+    const amount = Number(order.amount) / 100;
+    if (!Number.isFinite(amount) || amount <= 0) {
+      return res.status(400).json({ success: false, message: 'Invalid order amount' });
     }
 
     // Add transaction

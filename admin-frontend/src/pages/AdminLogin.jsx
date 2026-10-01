@@ -1,21 +1,29 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
+import { loginAdmin } from '../adminAuth';
 
 const AdminLogin = ({ onLogin }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    if (username === 'secretadmin' && password === 'secret@123admin') {
+    if (submitting) return;
+    setSubmitting(true);
+    setError('');
+    try {
+      await loginAdmin(username, password);
       onLogin();
       navigate('/admin/dashboard');
-    } else {
-      setError('Invalid admin credentials');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Could not reach the server. Please try again.');
+    } finally {
+      setSubmitting(false);
     }
   };
 
