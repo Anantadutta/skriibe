@@ -380,16 +380,18 @@ function App() {
       localStorage.setItem('skriibe_token', token);
       
       const path = window.location.pathname;
+      const savedRoles = localStorage.getItem('auth_roles');
+      let currentRoles = savedRoles ? JSON.parse(savedRoles) : [];
       
       if (path.includes('/creator') || path.includes('/onboard') || path.includes('/dashboard') || path.includes('/settings')) {
-        localStorage.removeItem('skriibe_fan_token'); // Ensure entities don't mix
         localStorage.setItem('skriibe_creator_token', token);
-        localStorage.setItem('auth_roles', JSON.stringify(['creator']));
+        if (!currentRoles.includes('creator')) currentRoles.push('creator');
+        localStorage.setItem('auth_roles', JSON.stringify(currentRoles));
         localStorage.setItem('auth_activeRole', 'creator');
       } else if (path.includes('/discovery') || path.includes('/explore') || path.includes('/fan')) {
-        localStorage.removeItem('skriibe_creator_token'); // Ensure entities don't mix
         localStorage.setItem('skriibe_fan_token', token);
-        localStorage.setItem('auth_roles', JSON.stringify(['fan']));
+        if (!currentRoles.includes('fan')) currentRoles.push('fan');
+        localStorage.setItem('auth_roles', JSON.stringify(currentRoles));
         localStorage.setItem('auth_activeRole', 'fan');
         localStorage.setItem('isReturningFan', 'true');
       }

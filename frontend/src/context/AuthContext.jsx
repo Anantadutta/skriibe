@@ -24,16 +24,17 @@ export const AuthProvider = ({ children }) => {
     if (creatorToken) {
       const decoded = parseJwt(creatorToken);
       if (decoded && (decoded.roles?.includes('creator') || decoded.creatorId)) {
-        return ['creator'];
+        activeRoles.push('creator');
       }
     }
-    
     if (fanToken) {
       const decoded = parseJwt(fanToken);
       if (decoded && (decoded.roles?.includes('fan') || decoded.fanId)) {
-        return ['fan'];
+        activeRoles.push('fan');
       }
     }
+    
+    if (activeRoles.length > 0) return activeRoles;
 
     if (legacyToken) {
       const decoded = parseJwt(legacyToken);
@@ -62,23 +63,17 @@ export const AuthProvider = ({ children }) => {
 
       if (creatorToken) {
         const decoded = parseJwt(creatorToken);
-        if (decoded && (decoded.roles?.includes('creator') || decoded.creatorId)) {
-          setRoles(['creator']);
-          setIsAuthenticated(true);
-          return;
-        }
+        if (decoded && (decoded.roles?.includes('creator') || decoded.creatorId)) activeRoles.push('creator');
       }
-      
       if (fanToken) {
         const decoded = parseJwt(fanToken);
-        if (decoded && (decoded.roles?.includes('fan') || decoded.fanId)) {
-          setRoles(['fan']);
-          setIsAuthenticated(true);
-          return;
-        }
+        if (decoded && (decoded.roles?.includes('fan') || decoded.fanId)) activeRoles.push('fan');
       }
       
-      if (legacyToken) {
+      if (activeRoles.length > 0) {
+        setRoles(activeRoles);
+        setIsAuthenticated(true);
+      } else if (legacyToken) {
         const decoded = parseJwt(legacyToken);
         if (decoded) {
           if (decoded.roles) setRoles(decoded.roles);
@@ -116,20 +111,24 @@ export const AuthProvider = ({ children }) => {
 
     if (token) {
       if (rolesToSave.includes('creator')) {
-        localStorage.removeItem('skriibe_fan_token'); // Ensure entities don't mix
         localStorage.setItem('skriibe_creator_token', token);
       } else if (rolesToSave.includes('fan')) {
-        localStorage.removeItem('skriibe_creator_token'); // Ensure entities don't mix
         localStorage.setItem('skriibe_fan_token', token);
       }
       localStorage.setItem('skriibe_token', token); // Keep as active token for legacy API support
       setIsAuthenticated(true);
     }
 
-    setRoles(rolesToSave);
+    // Combine with existing roles if not overwriting completely
+    const currentRoles = [...roles];
+    rolesToSave.forEach(r => {
+      if (!currentRoles.includes(r)) currentRoles.push(r);
+    });
+    
+    setRoles(currentRoles);
     setActiveRole(activeToSave);
     
-    localStorage.setItem('auth_roles', JSON.stringify(rolesToSave));
+    localStorage.setItem('auth_roles', JSON.stringify(currentRoles));
     if (activeToSave) {
       localStorage.setItem('auth_activeRole', activeToSave);
     } else {
