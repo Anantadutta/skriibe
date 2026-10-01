@@ -50,12 +50,12 @@ const FanBottomNav = () => {
     { label: 'Profile', path: '/fan/profile', icon: (active) => <ProfileIcon active={active} /> }
   ];
 
-  const navItems = (isAuthenticated && !roles?.includes('creator')) 
+  const navItems = isAuthenticated 
     ? allNavItems 
     : allNavItems.filter(item => item.label === 'Explore');
 
   // Do not show the bottom nav if it's a first-time/unauthenticated user and they are already on the explore page.
-  if ((!isAuthenticated || roles?.includes('creator')) && currentPath === '/explore') {
+  if (!isAuthenticated && currentPath === '/explore') {
     return null;
   }
 

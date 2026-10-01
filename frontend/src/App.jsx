@@ -380,10 +380,15 @@ function App() {
       localStorage.setItem('skriibe_token', token);
       
       const path = window.location.pathname;
+      
       if (path.includes('/creator') || path.includes('/onboard') || path.includes('/dashboard') || path.includes('/settings')) {
+        localStorage.removeItem('skriibe_fan_token'); // Ensure entities don't mix
+        localStorage.setItem('skriibe_creator_token', token);
         localStorage.setItem('auth_roles', JSON.stringify(['creator']));
         localStorage.setItem('auth_activeRole', 'creator');
       } else if (path.includes('/discovery') || path.includes('/explore') || path.includes('/fan')) {
+        localStorage.removeItem('skriibe_creator_token'); // Ensure entities don't mix
+        localStorage.setItem('skriibe_fan_token', token);
         localStorage.setItem('auth_roles', JSON.stringify(['fan']));
         localStorage.setItem('auth_activeRole', 'fan');
         localStorage.setItem('isReturningFan', 'true');

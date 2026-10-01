@@ -492,7 +492,7 @@ const FanExplore = () => {
           </div>
         )}
       </main>
-      {(!isLoggedIn || !roles?.includes('creator')) && <FanBottomNav />}
+      <FanBottomNav />
 
 
     </div>
