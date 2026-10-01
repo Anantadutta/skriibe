@@ -84,9 +84,9 @@ const CreatorAuth = () => {
         }
         
         if (creator.handle) {
-          navigate('/creator/dashboard', { state: { creator }, replace: true });
+          window.location.href = '/creator/dashboard';
         } else {
-          navigate('/onboard/profile', { state: { creator }, replace: true });
+          window.location.href = '/onboard/profile';
         }
       } catch (err) {
         isSubmittingRef.current = false;
@@ -132,9 +132,9 @@ const CreatorAuth = () => {
             setAuthData(['creator'], 'creator', res.data.token);
           }
           if (res.data.creator.handle) {
-            navigate('/creator/dashboard', { state: { creator: res.data.creator }, replace: true });
+            window.location.href = '/creator/dashboard';
           } else {
-            navigate('/onboard/profile', { state: { creator: res.data.creator }, replace: true });
+            window.location.href = '/onboard/profile';
           }
         } else {
           const nextRoute = (res.data.token && res.data.creator) ? '/onboard/profile' : '/creator/login';
