@@ -337,7 +337,7 @@ const FanExplore = () => {
         }
       `}</style>
 
-      {!isLoggedIn || roles?.includes('creator') ? (
+      {!isLoggedIn ? (
         <Navbar theme="dark" toggleTheme={() => {}} />
       ) : (
         <FanNavbar />

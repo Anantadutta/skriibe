@@ -726,7 +726,7 @@ const CreatorDashboard = () => {
             
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center' }}>
-                <Link to="/creator/dashboard">
+                <Link to="/creator/dashboard" style={{ display: 'flex', alignItems: 'center', minWidth: '96px', height: '24px' }}>
                   <TransparentLogo src="/logo.png" alt="skriibe logo" style={{ height: '24px', width: 'auto', transform: 'scale(4)', transformOrigin: 'left center' }} />
                 </Link>
               </div>

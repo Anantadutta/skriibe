@@ -216,9 +216,13 @@ const LiveChatInterface = () => {
     }
   };
 
+  const hasStartedRef = useRef(false);
+
   // Initialize Data
   useEffect(() => {
     const initData = async () => {
+      if (hasStartedRef.current) return;
+      hasStartedRef.current = true;
       try {
         const cRes = await api.get(`/public/creator/${handle}`);
         if (!cRes.data.success) throw new Error('Creator not found');

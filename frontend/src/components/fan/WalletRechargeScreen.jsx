@@ -124,14 +124,15 @@ const WalletRechargeScreen = ({ rate, onCancel, onRechargeSuccess, balance = 0, 
                 top: 0,
                 background: '#38BDF8',
                 color: '#000',
-                fontSize: '10px',
+                fontSize: '9px',
                 fontWeight: '800',
-                padding: '4px 12px',
+                padding: '3px 6px',
                 borderBottomLeftRadius: '8px',
                 borderBottomRightRadius: '8px',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '4px'
+                gap: '2px',
+                whiteSpace: 'nowrap'
               }}>
                 <span>★</span> Most Popular
               </div>

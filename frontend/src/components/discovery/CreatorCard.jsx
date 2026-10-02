@@ -102,7 +102,7 @@ const CreatorCard = ({ creator, isFirstTimeUser = false }) => {
         boxSizing: 'border-box',
         cursor: 'pointer'
       }}
-      onClick={() => navigate(`/creator/${handle}`)}
+      onClick={() => navigate(`/creator/${handle}#start-chat-button`)}
       onMouseEnter={(e) => {
         e.currentTarget.style.transform = 'translateY(-4px)';
         e.currentTarget.style.boxShadow = '0 12px 40px rgba(0, 0, 0, 0.4)';

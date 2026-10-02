@@ -247,7 +247,7 @@ const StopTypingSection = ({ theme = 'dark' }) => {
                   return (
                     <Link
                       key={`${creator.id || creator._id || creator.handle}-${idx}`}
-                      to={handle ? `/creator/${handle}` : '/explore'}
+                      to={handle ? `/creator/${handle}#start-chat-button` : '/explore'}
                       className="flex flex-col items-center shrink-0 group/creator transition-transform duration-200 hover:-translate-y-1 cursor-pointer mx-3 sm:mx-4 md:mx-5"
                     >
                       {/* Circle Avatar with Cyan Glowing Border */}

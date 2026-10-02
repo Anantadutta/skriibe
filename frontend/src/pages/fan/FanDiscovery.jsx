@@ -305,7 +305,7 @@ const FanDiscovery = () => {
             </p>
             <div style={{ display: 'flex', gap: '12px' }}>
               <button 
-                onClick={() => recentCreatorHandle ? navigate(`/creator/${recentCreatorHandle}`) : null}
+                onClick={() => recentCreatorHandle ? navigate(`/creator/${recentCreatorHandle}#start-chat-button`) : null}
                 style={{
                   width: '100%',
                   background: '#1C1F26',

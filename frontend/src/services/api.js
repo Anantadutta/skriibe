@@ -12,10 +12,13 @@ api.interceptors.request.use((config) => {
   let token = null;
 
   // Determine token based on request URL or current page path
-  if (url.includes('/creator') || url.includes('/creators') || path.startsWith('/creator') || path.startsWith('/dashboard') || path.startsWith('/onboard')) {
-    token = localStorage.getItem('skriibe_creator_token');
-  } else if (url.includes('/fan-auth') || url.includes('/fan') || path.startsWith('/fan') || path.startsWith('/explore') || path.startsWith('/discovery')) {
+  const isCreatorProfilePage = /^\/creator\/(?!dashboard|inbox|analytics|payouts|setup-payouts|settings|scheduling|health|notifications|auth|signup|login|forgot-password|reset-password|verify-otp|connect-instagram)[^\/]+(\/.*)?$/.test(path);
+
+  // If the request explicitly asks for fan endpoints, or if we are on a fan page, OR if we are on a public creator profile page
+  if (url.includes('/fan-auth') || url.includes('/fan') || path.startsWith('/fan') || path.startsWith('/explore') || path.startsWith('/discovery') || isCreatorProfilePage) {
     token = localStorage.getItem('skriibe_fan_token');
+  } else if (url.includes('/creator') || url.includes('/creators') || path.startsWith('/creator') || path.startsWith('/dashboard') || path.startsWith('/onboard')) {
+    token = localStorage.getItem('skriibe_creator_token');
   }
   
   // Fallback to legacy active token if specific token not found
@@ -60,7 +63,12 @@ api.interceptors.response.use(
       // Only redirect if we're not already on a login page to avoid loops
       const path = window.location.pathname;
       if (!path.includes('/login') && !path.includes('/signup')) {
-        if (path.startsWith('/creator') || path.startsWith('/onboard') || path.startsWith('/dashboard')) {
+        const isCreatorProfilePage = /^\/creator\/(?!dashboard|inbox|analytics|payouts|setup-payouts|settings|scheduling|health|notifications|auth|signup|login|forgot-password|reset-password|verify-otp|connect-instagram)[^\/]+(\/.*)?$/.test(path);
+        
+        if (isCreatorProfilePage) {
+          // Do not force redirect on public creator profile pages. 
+          // The component will handle the 401 gracefully.
+        } else if (path.startsWith('/creator') || path.startsWith('/onboard') || path.startsWith('/dashboard')) {
           window.location.href = '/creator/login';
         } else if (path.startsWith('/fan')) {
           window.location.href = '/fan/login';

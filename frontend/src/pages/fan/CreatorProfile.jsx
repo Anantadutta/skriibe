@@ -149,6 +149,16 @@ const CreatorProfile = () => {
     fetchUser();
   }, []); // Only run once on mount
 
+  useEffect(() => {
+    if (!loading && creator && location.hash === '#start-chat-button') {
+      setTimeout(() => {
+        const el = document.getElementById('start-chat-button');
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 100);
+    }
+  }, [loading, creator, location.hash]);
 
   useEffect(() => {
     if (isFollowUp && parentQuestionId && isLoggedIn) {
@@ -659,6 +669,7 @@ const CreatorProfile = () => {
                   </div>
                 </div>
                 <button
+                  id="start-chat-button"
                   onClick={() => {
                     if (dynamicallyLive === false && !effectiveIsPreview) {
                       alert('Creator is offline. Try again later.');
@@ -1045,7 +1056,13 @@ const CreatorProfile = () => {
                 if (isFirstTimeUser) {
                   navigate(`/${handle}/live-chat`);
                 } else {
-                  navigate(`/${handle}/recharge`);
+                  const pricePerMin = creator.liveChatPrice || 5;
+                  const requiredBalance = pricePerMin * 5;
+                  if (walletBalance >= requiredBalance) {
+                    navigate(`/${handle}/live-chat`);
+                  } else {
+                    navigate(`/${handle}/recharge`);
+                  }
                 }
               }}
               style={{

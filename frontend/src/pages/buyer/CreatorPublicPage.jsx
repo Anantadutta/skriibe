@@ -219,7 +219,7 @@ const CreatorPublicPage = () => {
           >
             <span style={{ fontSize: '1.2rem', color: '#94a3b8', marginTop: '-2px' }}>‹</span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', minWidth: '80px', height: '20px' }}>
             <TransparentLogo src="/logo.png" alt="skriibe logo" style={{ height: '20px', width: 'auto', transform: 'scale(4)', transformOrigin: 'left center' }} />
           </div>
         </div>
