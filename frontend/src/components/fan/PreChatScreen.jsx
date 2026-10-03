@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 const PreChatScreen = ({ creator, walletBalance, rate, onRecharge, onRequestChat }) => {
   const navigate = useNavigate();
   const affordableMinutes = Math.floor(walletBalance / rate);
-  const canAfford = affordableMinutes > 0;
+  const canAfford = affordableMinutes >= 5;
 
   return (
     <div style={{ padding: '24px', maxWidth: '600px', margin: '0 auto' }}>
@@ -54,7 +54,7 @@ const PreChatScreen = ({ creator, walletBalance, rate, onRecharge, onRequestChat
           {canAfford ? (
             <div style={{ color: '#fff' }}>Your balance covers approx. <strong style={{ color: '#3BA8D8' }}>{affordableMinutes} minutes</strong> of live chat.</div>
           ) : (
-            <div style={{ color: '#ef4444' }}>You don't have enough balance to chat for even 1 minute. Please top up your wallet.</div>
+            <div style={{ color: '#ef4444' }}>You don't have enough balance to chat for even 5 minutes. Please top up your wallet.</div>
           )}
         </div>
 

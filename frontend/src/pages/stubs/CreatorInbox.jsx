@@ -17,6 +17,41 @@ const CreatorInbox = () => {
   const [loading, setLoading] = useState(true);
   const [expandedThreads, setExpandedThreads] = useState({});
   const [now, setNow] = useState(Date.now());
+  const [highlightedCardId, setHighlightedCardId] = useState(null);
+
+  useEffect(() => {
+    if (location.state?.highlightId) {
+      const id = location.state.highlightId;
+      setHighlightedCardId(id);
+      
+      // Auto-switch mode based on where the item is found
+      const isQuestion = questions.some(q => (q._id || q.id) === id);
+      const isChat = liveChats.some(c => (c._id || c.id || c.sessionId) === id);
+      
+      if (isQuestion && inboxMode !== 'messages') {
+         setInboxMode('messages');
+      } else if (isChat && inboxMode !== 'liveChat') {
+         setInboxMode('liveChat');
+      }
+
+      const timer = setTimeout(() => {
+        setHighlightedCardId(null);
+        navigate(location.pathname, { replace: true, state: {} });
+      }, 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [location.state, navigate, location.pathname, questions, liveChats]);
+
+  useEffect(() => {
+    if (highlightedCardId) {
+      setTimeout(() => {
+        const el = document.getElementById(`card-${highlightedCardId}`);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 300);
+    }
+  }, [highlightedCardId, activeTab, inboxMode, liveChatTab]);
 
   const validPendingChats = pendingChats.filter(chat => {
     if (!chat || !chat.sessionId) return false;
@@ -531,6 +566,7 @@ const CreatorInbox = () => {
               return (
               <div 
                 key={rootQuestion._id || rootQuestion.id} 
+                id={`card-${rootQuestion._id || rootQuestion.id}`}
                 onClick={(e) => {
                   if (children.length > 0) {
                     toggleThread(rootQuestion._id || rootQuestion.id);
@@ -539,7 +575,8 @@ const CreatorInbox = () => {
                   }
                 }}
                 style={{
-                  background: '#16161e',
+                  background: highlightedCardId === (rootQuestion._id || rootQuestion.id) ? '#2A3542' : '#16161e',
+                  boxShadow: highlightedCardId === (rootQuestion._id || rootQuestion.id) ? '0 0 12px rgba(56, 189, 248, 0.4)' : 'none',
                   border: '1px solid #2A2A2A',
                   borderLeft: `4px solid ${borderColor}`,
                   borderRadius: '16px',
@@ -548,6 +585,7 @@ const CreatorInbox = () => {
                   flexDirection: 'column',
                   gap: '12px',
                   position: 'relative',
+                  transition: 'all 0.3s ease',
                   cursor: (children.length > 0 || isFlagged || isRejected) ? 'pointer' : 'default'
                 }}>
                 <div style={{ position: 'absolute', top: '16px', right: '16px', display: 'flex', gap: '8px', alignItems: 'center' }}>
@@ -824,15 +862,18 @@ const CreatorInbox = () => {
               return (
                 <div 
                   key={chat._id || chat.id} 
+                  id={`card-${chat._id || chat.id || chat.sessionId}`}
                   onClick={() => navigate(`/creator/dashboard/live-chat/${chat.sessionId || chat._id}`)}
                   style={{ 
-                  background: '#13161C', 
+                  background: highlightedCardId === (chat._id || chat.id || chat.sessionId) ? '#2A3542' : '#13161C',
+                  boxShadow: highlightedCardId === (chat._id || chat.id || chat.sessionId) ? '0 0 12px rgba(56, 189, 248, 0.4)' : 'none',
                   border: '1px solid #1F2937', 
                   borderRadius: '16px', 
                   padding: '16px',
                   display: 'flex',
                   flexDirection: 'column',
                   gap: '12px',
+                  transition: 'all 0.3s ease',
                   cursor: 'pointer'
                 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

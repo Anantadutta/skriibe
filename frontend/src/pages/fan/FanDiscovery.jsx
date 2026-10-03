@@ -43,7 +43,7 @@ const FanDiscovery = () => {
   const [showRoleConflictModal, setShowRoleConflictModal] = useState(false);
   const debounceTimeout = useRef(null);
   const navigate = useNavigate();
-  const { roles, setAuthData } = useAuth();
+  const { roles, setAuthData, isAuthenticated } = useAuth();
 
   const handleSwitchToCreatorMode = async () => {
     if (roles.includes('creator')) {
@@ -204,125 +204,127 @@ const FanDiscovery = () => {
 
       <main style={{ flex: 1, padding: 'min(40px, 5vw) min(40px, 5vw) 90px', maxWidth: '1200px', margin: '0 auto', width: '100%', boxSizing: 'border-box', overflowX: 'hidden' }}>
         
-        <div style={{ marginBottom: '16px' }}>
-          
-          <div style={{
-            background: '#13161C',
-            border: '1px solid #1F2937',
-            borderRadius: '16px',
-            padding: '16px 20px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '16px',
-            marginBottom: '32px',
-            width: '100%',
-            maxWidth: '400px',
-            position: 'relative',
-            overflow: 'hidden',
-            boxShadow: '0 4px 20px rgba(0,0,0,0.2)'
-          }}>
+        {isAuthenticated && (
+          <div style={{ marginBottom: '16px' }}>
+            
             <div style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              width: '4px',
-              height: '100%',
-              background: '#8B5CF6',
-              boxShadow: '0 0 12px #8B5CF6'
-            }} />
-            <div style={{
-              position: 'absolute',
-              top: 0,
-              left: '4px',
-              width: '40px',
-              height: '100%',
-              background: 'linear-gradient(90deg, rgba(139, 92, 246, 0.1) 0%, transparent 100%)',
-              pointerEvents: 'none'
-            }} />
-
-            <div style={{
-              width: '48px',
-              height: '48px',
-              borderRadius: '12px',
-              background: 'linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%)',
+              background: '#13161C',
+              border: '1px solid #1F2937',
+              borderRadius: '16px',
+              padding: '16px 20px',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center',
-              fontWeight: 900,
-              fontSize: '1.4rem',
-              color: '#000',
-              zIndex: 1,
-              overflow: 'hidden'
+              gap: '16px',
+              marginBottom: '32px',
+              width: '100%',
+              maxWidth: '400px',
+              position: 'relative',
+              overflow: 'hidden',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.2)'
             }}>
-              {fanAvatar ? (
-                <img src={fanAvatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              ) : (
-                fanName.charAt(0).toUpperCase()
-              )}
-            </div>
+              <div style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '4px',
+                height: '100%',
+                background: '#8B5CF6',
+                boxShadow: '0 0 12px #8B5CF6'
+              }} />
+              <div style={{
+                position: 'absolute',
+                top: 0,
+                left: '4px',
+                width: '40px',
+                height: '100%',
+                background: 'linear-gradient(90deg, rgba(139, 92, 246, 0.1) 0%, transparent 100%)',
+                pointerEvents: 'none'
+              }} />
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', zIndex: 1 }}>
-              <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#fff', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                Hey {fanName && <span style={{ color: '#2DD4BF' }}>{fanName}</span>} <span style={{ fontSize: '1.1rem' }}>👋</span>
-              </div>
-              <div style={{ fontSize: '0.85rem' }}>
-                <span style={{ color: '#64748b' }}>{getThoughtOfTheDay()}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Free Chat Box */}
-          {isFirstTimeUser && (
-            <div style={{
-            background: 'linear-gradient(135deg, #a78bfa 0%, #f472b6 100%)',
-            borderRadius: '16px',
-            padding: '24px',
-            width: '100%',
-            maxWidth: '400px',
-            position: 'relative',
-            color: '#fff',
-            boxShadow: '0 4px 20px rgba(236, 72, 153, 0.2)',
-            marginBottom: '32px',
-            boxSizing: 'border-box'
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <div style={{ 
-                background: 'rgba(0, 0, 0, 0.25)', 
-                padding: '6px 14px', 
-                borderRadius: '20px', 
-                fontSize: '11px', 
-                fontWeight: '800', 
-                letterSpacing: '0.5px' 
+              <div style={{
+                width: '48px',
+                height: '48px',
+                borderRadius: '12px',
+                background: 'linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontWeight: 900,
+                fontSize: '1.4rem',
+                color: '#000',
+                zIndex: 1,
+                overflow: 'hidden'
               }}>
-                FREE CHAT AVAILABLE
+                {fanAvatar ? (
+                  <img src={fanAvatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : (
+                  (fanName || 'G').charAt(0).toUpperCase()
+                )}
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', zIndex: 1 }}>
+                <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#fff', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  Hey {fanName && <span style={{ color: '#2DD4BF' }}>{fanName}</span>} <span style={{ fontSize: '1.1rem' }}>👋</span>
+                </div>
+                <div style={{ fontSize: '0.85rem' }}>
+                  <span style={{ color: '#64748b' }}>{getThoughtOfTheDay()}</span>
+                </div>
               </div>
             </div>
-            <h3 style={{ margin: '0 0 8px 0', fontSize: '22px', fontWeight: '800', letterSpacing: '-0.5px' }}>
-              You have 1 free chat left today
-            </h3>
-            <p style={{ margin: '0 0 24px 0', fontSize: '14px', fontWeight: '500', opacity: 0.95, lineHeight: '1.4' }}>
-              {recentCreatorName} is online right now — it costs you nothing.
-            </p>
-            <div style={{ display: 'flex', gap: '12px' }}>
-              <button 
-                onClick={() => recentCreatorHandle ? navigate(`/creator/${recentCreatorHandle}#start-chat-button`) : null}
-                style={{
-                  width: '100%',
-                  background: '#1C1F26',
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: '12px',
-                  padding: '14px',
-                  fontWeight: '700',
-                  fontSize: '15px',
-                  cursor: 'pointer'
+
+            {/* Free Chat Box */}
+            {isFirstTimeUser && (
+              <div style={{
+              background: 'linear-gradient(135deg, #a78bfa 0%, #f472b6 100%)',
+              borderRadius: '16px',
+              padding: '24px',
+              width: '100%',
+              maxWidth: '400px',
+              position: 'relative',
+              color: '#fff',
+              boxShadow: '0 4px 20px rgba(236, 72, 153, 0.2)',
+              marginBottom: '32px',
+              boxSizing: 'border-box'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                <div style={{ 
+                  background: 'rgba(0, 0, 0, 0.25)', 
+                  padding: '6px 14px', 
+                  borderRadius: '20px', 
+                  fontSize: '11px', 
+                  fontWeight: '800', 
+                  letterSpacing: '0.5px' 
                 }}>
-                Start free chat
-              </button>
+                  FREE CHAT AVAILABLE
+                </div>
+              </div>
+              <h3 style={{ margin: '0 0 8px 0', fontSize: '22px', fontWeight: '800', letterSpacing: '-0.5px' }}>
+                You have 1 free chat left today
+              </h3>
+              <p style={{ margin: '0 0 24px 0', fontSize: '14px', fontWeight: '500', opacity: 0.95, lineHeight: '1.4' }}>
+                {recentCreatorName} is online right now — it costs you nothing.
+              </p>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <button 
+                  onClick={() => recentCreatorHandle ? navigate(`/creator/${recentCreatorHandle}#start-chat-button`) : null}
+                  style={{
+                    width: '100%',
+                    background: '#1C1F26',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: '12px',
+                    padding: '14px',
+                    fontWeight: '700',
+                    fontSize: '15px',
+                    cursor: 'pointer'
+                  }}>
+                  Start free chat
+                </button>
+              </div>
             </div>
+            )}
           </div>
-          )}
-        </div>
+        )}
 
 
 

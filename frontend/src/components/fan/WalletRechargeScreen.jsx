@@ -3,7 +3,18 @@ import WalletPaymentButton from './WalletPaymentButton';
 
 const WalletRechargeScreen = ({ rate, onCancel, onRechargeSuccess, balance = 0, transactions = [] }) => {
   const presets = [50, 100, 200, 500, 1000, 2000];
-  const [selectedAmount, setSelectedAmount] = useState(100);
+  const requiredAmount = rate && rate > 0 ? rate * 5 : 100;
+  const shortfall = Math.max(requiredAmount - balance, 0);
+  // Default to at least the shortfall, or 100 if they don't need much.
+  // Find the closest preset or just add it
+  const initialPreset = presets.find(p => p >= shortfall) || shortfall || 100;
+  
+  const [selectedAmount, setSelectedAmount] = useState(initialPreset);
+  
+  if (!presets.includes(initialPreset)) {
+    presets.push(initialPreset);
+    presets.sort((a,b) => a-b);
+  }
   const [showAllTransactions, setShowAllTransactions] = useState(false);
 
 

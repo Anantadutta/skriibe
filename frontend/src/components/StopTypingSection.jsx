@@ -158,7 +158,7 @@ const StopTypingSection = ({ theme = 'dark' }) => {
             style={{ fontFamily: "'Bebas Neue', sans-serif" }}
           >
             STOP TYPING<br />
-            "HEY, QUICK Q" —<br />
+            "HEY, QUICK Q" <br />
             JUST ASK THEM.
           </h2>
 

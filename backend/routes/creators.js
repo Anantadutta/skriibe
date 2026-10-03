@@ -683,9 +683,15 @@ router.get('/my-referrals', verifyCreatorToken, async (req, res) => {
     const lifetimeEarnings = affiliateEarnings.reduce((acc, curr) => acc + (curr.amount || 0), 0);
 
     const earningsPerCreator = {};
+    const ChatSession = require('../models/ChatSession');
     for (const e of affiliateEarnings) {
       if (!e.questionId) continue;
-      const q = await Question.findById(e.questionId).select('creatorId');
+      
+      let q = await Question.findById(e.questionId).select('creatorId');
+      if (!q) {
+          q = await ChatSession.findById(e.questionId).select('creatorId');
+      }
+      
       if (q) {
         const referredId = q.creatorId.toString();
         earningsPerCreator[referredId] = (earningsPerCreator[referredId] || 0) + (e.amount || 0);

@@ -447,7 +447,7 @@ const StepFour = ({ theme }) => {
                     Answer in your dashboard.<br /><span className="italic text-skriibe-blue">Earn <span className="text-white">Rs.99</span> per reply.</span>
                 </h3>
                 <p className="font-roboto text-gray-400 text-lg leading-relaxed mb-8">
-                    Open your skriibe dashboard. See the message. Type your reply — minimum 100 characters, so every reply is real. Hit send. The follower gets your reply instantly via email and skriibe inbox.
+                    Open your skriibe dashboard. See the message. Type your reply - minimum 100 characters, so every reply is real. Hit send. The follower gets your reply instantly via email and skriibe inbox.
                 </p>
                 <div className="font-roboto p-6 bg-skriibe-d3 rounded-2xl border-l-[4px] border-skriibe-blue text-sm md:text-base text-gray-400 leading-relaxed">
                     Rs.99 per message, batched and transferred to your bank account every Tuesday. No chasing. No invoicing. Automatic.

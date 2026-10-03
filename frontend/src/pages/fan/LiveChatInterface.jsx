@@ -47,6 +47,8 @@ const LiveChatInterface = () => {
   const [showChatInfo, setShowChatInfo] = useState(false);
   const [isContinueChat, setIsContinueChat] = useState(false);
   const [showCreatorEndedEarlyModal, setShowCreatorEndedEarlyModal] = useState(false);
+  const [replyingToMessage, setReplyingToMessage] = useState(null);
+  const [contextMenu, setContextMenu] = useState(null);
 
   const QUICK_REACTIONS = ['❤️', '😂', '😮', '👍', '👎'];
 
@@ -228,7 +230,7 @@ const LiveChatInterface = () => {
         if (!cRes.data.success) throw new Error('Creator not found');
         const foundCreator = cRes.data.creator;
         setCreator(foundCreator);
-        setRate(foundCreator.liveChatRate || 10);
+        setRate(foundCreator.liveChatPrice || 5);
         
         const savedTheme = localStorage.getItem(`chat_theme_${foundCreator._id || foundCreator.id}`);
         if (savedTheme && CHAT_THEMES[savedTheme]) {
@@ -574,13 +576,16 @@ const LiveChatInterface = () => {
       content: input,
       tempId,
       isOptimistic: true,
-      sentAt: new Date().toISOString()
+      sentAt: new Date().toISOString(),
+      replyToMessageId: replyingToMessage?.messageId
     };
     setMessages(prev => mergeAndSortMessages(prev, optimisticMsg));
 
     const sId = session.sessionId || session._id || session.id;
     const currentInput = input;
+    const replyToId = replyingToMessage?.messageId;
     setInput('');
+    setReplyingToMessage(null);
 
     if (socketRef.current) {
       socketRef.current.emit('stop_typing', { sessionId: sId, sender: 'fan' });
@@ -591,6 +596,7 @@ const LiveChatInterface = () => {
         sessionId: sId,
         sender: 'fan',
         content: currentInput,
+        replyToMessageId: replyToId,
         tempId
       });
       if (res.data?.success && res.data.message) {
@@ -604,6 +610,7 @@ const LiveChatInterface = () => {
           sessionId: sId,
           sender: 'fan',
           content: currentInput,
+          replyToMessageId: replyToId,
           tempId
         });
       }
@@ -1034,6 +1041,11 @@ const LiveChatInterface = () => {
             key={i} 
             onMouseEnter={() => setHoveredMessageId(m.messageId)}
             onMouseLeave={() => setHoveredMessageId(null)}
+            onContextMenu={(e) => {
+              if ((m.sender || m.senderRole) === 'system') return;
+              e.preventDefault();
+              setContextMenu({ x: e.clientX, y: e.clientY, message: m });
+            }}
             onClick={() => setHoveredMessageId(hoveredMessageId === m.messageId ? null : m.messageId)}
             style={{ display: 'flex', justifyContent: (m.sender || m.senderRole) === 'fan' ? 'flex-end' : ((m.sender || m.senderRole) === 'system' ? 'center' : 'flex-start'), position: 'relative' }}
           >
@@ -1107,6 +1119,27 @@ const LiveChatInterface = () => {
                     ))}
                   </div>
                 )}
+                {m.replyToMessageId && (() => {
+                  const repliedTo = messages.find(msg => msg.messageId === m.replyToMessageId);
+                  return (
+                    <div style={{
+                      background: 'rgba(0,0,0,0.1)',
+                      borderLeft: `4px solid ${(m.sender || m.senderRole) === 'fan' ? '#fff' : theme.senderBubble}`,
+                      padding: '4px 8px',
+                      borderRadius: '4px',
+                      marginBottom: '8px',
+                      fontSize: '12px',
+                      opacity: 0.8
+                    }}>
+                      <div style={{ fontWeight: 'bold', marginBottom: '2px' }}>
+                        {repliedTo ? ((repliedTo.sender || repliedTo.senderRole) === 'fan' ? 'You' : (creator?.name || 'Creator')) : 'Unknown'}
+                      </div>
+                      <div style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {repliedTo ? repliedTo.content : 'Message not found'}
+                      </div>
+                    </div>
+                  );
+                })()}
                 <span style={{ wordBreak: 'break-word' }}>{m.content}</span>
                 {(m.sender || m.senderRole) === 'fan' && (
                   <span style={{ marginLeft: '6px', display: 'inline-flex', alignItems: 'center' }}>
@@ -1160,8 +1193,80 @@ const LiveChatInterface = () => {
         <div ref={messagesEndRef} />
       </div>
 
+      {/* Context Menu */}
+      {contextMenu && (
+        <>
+          <div 
+            onClick={() => setContextMenu(null)}
+            onContextMenu={(e) => { e.preventDefault(); setContextMenu(null); }}
+            style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 999 }}
+          />
+          <div 
+            style={{
+              position: 'fixed',
+              top: contextMenu.y,
+              left: contextMenu.x,
+              background: '#202020',
+              border: '1px solid #333',
+              borderRadius: '8px',
+              padding: '4px 0',
+              zIndex: 1000,
+              boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+              minWidth: '120px'
+            }}
+          >
+            <div
+              onClick={() => {
+                setReplyingToMessage(contextMenu.message);
+                setContextMenu(null);
+                // focus input if possible
+              }}
+              style={{
+                padding: '8px 16px',
+                color: '#fff',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                fontSize: '14px'
+              }}
+              onMouseEnter={e => e.currentTarget.style.background = '#333'}
+              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 17 4 12 9 7"></polyline><path d="M20 18v-2a4 4 0 0 0-4-4H4"></path></svg>
+              Reply
+            </div>
+          </div>
+        </>
+      )}
+
       {/* Input Area */}
       <div style={{ display: 'flex', flexDirection: 'column', background: '#f0f0f0' }}>
+        {replyingToMessage && (
+          <div style={{ 
+            background: '#e5e7eb', 
+            padding: '8px 16px', 
+            display: 'flex', 
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            borderBottom: '1px solid #d1d5db'
+          }}>
+            <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', maxWidth: '85%' }}>
+              <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#374151' }}>
+                Replying to { (replyingToMessage.sender || replyingToMessage.senderRole) === 'fan' ? 'yourself' : (creator?.name || 'Creator') }
+              </span>
+              <span style={{ fontSize: '13px', color: '#6b7280', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {replyingToMessage.content}
+              </span>
+            </div>
+            <button 
+              onClick={() => setReplyingToMessage(null)}
+              style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '18px', color: '#6b7280', padding: '0 8px' }}
+            >
+              &times;
+            </button>
+          </div>
+        )}
         <div style={{ padding: '12px 16px', display: 'flex', gap: '12px', alignItems: 'center' }}>
           <div style={{ flex: 1, position: 'relative', display: 'flex', alignItems: 'center' }}>
             <button

@@ -342,7 +342,7 @@
     "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocLdYVh9Pjq38_z0bTklCxd3VewtfP40NyAxl7o55ah3VlcnNK3vXA=s96-c",
     "price": 10,
     "pricePerQuestion": 10,
-    "isLive": false,
+    "isLive": true,
     "liveChatPrice": 5,
     "handle": "vasu"
   },
@@ -353,8 +353,19 @@
     "avatarUrl": "",
     "price": 10,
     "pricePerQuestion": 10,
-    "isLive": false,
+    "isLive": true,
     "liveChatPrice": 5,
     "handle": "kevin"
+  },
+  {
+    "_id": "6ac0baaa322771e5ec51796f",
+    "name": "Ananvi",
+    "profileUrl": "skriibe.com/anavi2003",
+    "avatarUrl": "",
+    "price": 10,
+    "pricePerQuestion": 10,
+    "isLive": true,
+    "liveChatPrice": 5,
+    "handle": "anavi2003"
   }
 ]

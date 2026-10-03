@@ -319,7 +319,7 @@ const HeroChatSimulation = ({ theme = 'dark' }) => {
                     className="flex flex-col items-start max-w-[85%] self-start"
                   >
                     <div className="bg-[#191924] text-white/95 rounded-2xl rounded-tl-xs px-3.5 py-2.5 text-[12.5px] leading-relaxed border border-white/5 shadow-sm">
-                      okay so I shoot everything handheld and cut on the beat — sending you the exact preset I use 👇
+                      okay so I shoot everything handheld and cut on the beat-sending you the exact preset I use 👇
                     </div>
                   </motion.div>
                 )}

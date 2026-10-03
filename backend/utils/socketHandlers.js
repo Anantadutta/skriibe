@@ -1,4 +1,5 @@
 const ChatSession = require('../models/ChatSession');
+const { processAffiliateEarning } = require('./affiliateEarning');
 const Fan = require('../models/Fan');
 const Creator = require('../models/Creator');
 const WalletTransaction = require('../models/WalletTransaction');
@@ -190,7 +191,7 @@ module.exports = (io) => {
       }
     });
 
-    socket.on('send_message', async ({ sessionId, sender, content, tempId }) => {
+    socket.on('send_message', async ({ sessionId, sender, content, replyToMessageId, tempId }) => {
       try {
         const session = await ChatSession.findById(sessionId);
         if (!session || session.status !== 'active') {
@@ -207,6 +208,7 @@ module.exports = (io) => {
           fanId: session.fanId,
           senderRole: sender,
           content,
+          replyToMessageId,
           sentAt,
           deliveredAt: null,
           readAt: null

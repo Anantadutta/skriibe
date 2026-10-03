@@ -53,7 +53,7 @@ const CreatorNotifications = () => {
     if (notif.type === 'ama') {
       navigate(`/creator/dashboard/reply/${notif.id}`);
     } else if (notif.type === 'live_chat') {
-      navigate(`/creator/dashboard`);
+      navigate(`/creator/inbox`);
     }
   };
 

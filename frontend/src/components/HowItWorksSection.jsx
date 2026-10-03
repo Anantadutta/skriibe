@@ -17,7 +17,7 @@ const HowItWorksSection = ({ theme = 'dark' }) => {
       num: 2,
       icon: <Zap className="w-4 h-4 sm:w-5 sm:h-5 fill-current" />,
       iconBg: 'bg-amber-400/10 text-amber-400 border-amber-400/20',
-      title: 'Start the chat — online or not',
+      title: 'Start the chat - online or not',
       description:
         "If they're on, you're texting in about 8 seconds. If they're off, send it anyway: It waits in their inbox and they reply once they're back."
     },
@@ -27,7 +27,7 @@ const HowItWorksSection = ({ theme = 'dark' }) => {
       iconBg: 'bg-emerald-400/10 text-emerald-400 border-emerald-400/20',
       title: 'Pay only for minutes you use',
       description:
-        "Recharge your wallet. The meter runs while you're chatting and stops the second you leave — no plans, no auto-renew."
+        "Recharge your wallet. The meter runs while you're chatting and stops the second you leave - no plans, no auto-renew."
     }
   ];
 

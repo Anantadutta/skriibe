@@ -12,10 +12,12 @@ api.interceptors.request.use((config) => {
   let token = null;
 
   // Determine token based on request URL or current page path
-  const isCreatorProfilePage = /^\/creator\/(?!dashboard|inbox|analytics|payouts|setup-payouts|settings|scheduling|health|notifications|auth|signup|login|forgot-password|reset-password|verify-otp|connect-instagram)[^\/]+(\/.*)?$/.test(path);
+  const isCreatorProfilePage = /^\/creator\/(?!dashboard|inbox|analytics|payouts|setup-payouts|settings|scheduling|health|notifications|auth|signup|login|forgot-password|reset-password|verify-otp|connect-instagram)[^\/]+(\/.*)?$/.test(path) || 
+                               /^\/(?!creator|fan|explore|discovery|admin|api|dashboard|onboard)[^\/]+(\/.*)?$/.test(path);
+
 
   // If the request explicitly asks for fan endpoints, or if we are on a fan page, OR if we are on a public creator profile page
-  if (url.includes('/fan-auth') || url.includes('/fan') || path.startsWith('/fan') || path.startsWith('/explore') || path.startsWith('/discovery') || isCreatorProfilePage) {
+  if (url.includes('/fan-auth') || url.includes('/fan') || url.includes('/wallet') || path.startsWith('/fan') || path.startsWith('/explore') || path.startsWith('/discovery') || isCreatorProfilePage) {
     token = localStorage.getItem('skriibe_fan_token');
   } else if (url.includes('/creator') || url.includes('/creators') || path.startsWith('/creator') || path.startsWith('/dashboard') || path.startsWith('/onboard')) {
     token = localStorage.getItem('skriibe_creator_token');

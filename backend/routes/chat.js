@@ -5,6 +5,7 @@ const Fan = require('../models/Fan');
 const Creator = require('../models/Creator');
 const WalletTransaction = require('../models/WalletTransaction');
 const Counter = require('../models/Counter');
+const { processAffiliateEarning } = require('../utils/affiliateEarning');
 const { verifyFanToken, verifyCreatorToken, verifyFanOrCreatorToken } = require('../middleware/auth');
 
 // POST /api/chat/start
@@ -165,6 +166,7 @@ router.post('/start', verifyFanToken, async (req, res) => {
           fanId: fan._id,
           senderRole: m.senderRole,
           content: m.content,
+          replyToMessageId: m.replyToMessageId || null,
           sentAt: m.sentAt || new Date(),
           deliveredAt: m.deliveredAt || null,
           readAt: m.readAt || null,
@@ -369,6 +371,16 @@ router.post('/end', async (req, res) => {
     session.creatorJoined = true;
     session.cancelledByFan = true;
     session.endReason = reason || 'USER_ENDED';
+
+    if (session.totalCost > 0) {
+      await processAffiliateEarning(
+        session.creatorId,
+        session._id,
+        'CHAT-REF-' + session._id.toString().substring(0, 6),
+        session.totalCost,
+        'chat'
+      );
+    }
 
     const fanName = fan?.name || '';
 
@@ -768,7 +780,7 @@ router.post('/review', verifyFanToken, async (req, res) => {
 // POST /api/chat/send-message
 router.post('/send-message', verifyFanOrCreatorToken, async (req, res) => {
   try {
-    const { sessionId, sender, content, tempId } = req.body;
+    const { sessionId, sender, content, tempId, replyToMessageId } = req.body;
     const session = await ChatSession.findById(sessionId);
     if (!session || session.status !== 'active') {
       return res.status(400).json({ success: false, message: 'Chat session is not active' });
@@ -784,6 +796,7 @@ router.post('/send-message', verifyFanOrCreatorToken, async (req, res) => {
       fanId: session.fanId,
       senderRole: sender,
       content,
+      replyToMessageId,
       sentAt,
       deliveredAt: null,
       readAt: null

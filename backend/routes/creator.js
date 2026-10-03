@@ -266,7 +266,7 @@ router.get('/notifications', verifyCreatorToken, async (req, res) => {
       notifications.push({
         id: t._id.toString(),
         type: 'tip',
-        title: `You received a tip from ${t.fanId?.name || 'a fan'}!`,
+        title: `You received a tip of Rs. ${t.amount} from ${t.fanId?.name || 'a fan'}!`,
         data: t,
         timestamp: t.createdAt
       });
@@ -1057,17 +1057,16 @@ router.get('/payouts', verifyCreatorToken, async (req, res) => {
 
     const freeLiveChats = await ChatSession.countDocuments({
       creatorId: req.creator.creatorId,
-      status: 'ended',
-      cancelledByFan: { $ne: true },
-      $or: [{ isFreeChat: true }, { totalCost: 0 }]
+      creatorJoined: true,
+      endReason: { $ne: 'CREATOR_DECLINED' },
+      isFreeChat: true
     });
 
     const paidLiveChats = await ChatSession.countDocuments({
       creatorId: req.creator.creatorId,
-      status: 'ended',
-      cancelledByFan: { $ne: true },
-      isFreeChat: { $ne: true },
-      totalCost: { $gt: 0 }
+      creatorJoined: true,
+      endReason: { $ne: 'CREATOR_DECLINED' },
+      isFreeChat: { $ne: true }
     });
 
     const liveChatsIncomplete = await ChatSession.countDocuments({
