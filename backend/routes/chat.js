@@ -28,28 +28,20 @@ router.post('/start', verifyFanToken, async (req, res) => {
     }
 
 
-    // Check minimum balance (must have at least 5 minutes worth)
-    let rate = creator.liveChatPrice || 5;
-    let isFreeChat = false;
-
-    // Continue chat is always a paid continuation requiring 5 mins balance
-    if (!fan.hasUsedFreeChat && !isContinueChat) {
-      isFreeChat = true;
-      rate = 0; // It's free!
-    }
-
-    if (!isFreeChat && fan.walletBalance < rate * 5) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Insufficient balance to start a chat. You need at least 5 minutes worth of balance.',
-        required: rate * 5,
-        balance: fan.walletBalance
-      });
-    }
-
     // Cleanly terminate any prior active sessions between this creator and fan
     const priorSessions = await ChatSession.find({ creatorId: creator._id, fanId: fan._id, status: 'active' });
     if (priorSessions.length > 0) {
+      let shouldUpdateFan = false;
+      for (const prior of priorSessions) {
+        if (prior.isFreeChat && prior.startTime) {
+          fan.hasUsedFreeChat = true;
+          shouldUpdateFan = true;
+        }
+      }
+      if (shouldUpdateFan) {
+        await fan.save();
+      }
+
       await ChatSession.updateMany(
         { creatorId: creator._id, fanId: fan._id, status: 'active' },
         { $set: { status: 'ended', endTime: new Date(), cancelledByFan: true, endReason: 'USER_CANCEL' } }
@@ -74,6 +66,25 @@ router.post('/start', verifyFanToken, async (req, res) => {
           req.io.emit('chat_ended', endPayload);
         });
       }
+    }
+
+    // Check minimum balance (must have at least 5 minutes worth)
+    let rate = creator.liveChatPrice || 5;
+    let isFreeChat = false;
+
+    // Continue chat is always a paid continuation requiring 5 mins balance
+    if (!fan.hasUsedFreeChat && !isContinueChat) {
+      isFreeChat = true;
+      rate = 0; // It's free!
+    }
+
+    if (!isFreeChat && fan.walletBalance < rate * 5) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Insufficient balance to start a chat. You need at least 5 minutes worth of balance.',
+        required: rate * 5,
+        balance: fan.walletBalance
+      });
     }
 
     const counter = await Counter.findOneAndUpdate(
@@ -659,7 +670,7 @@ router.get('/pending', verifyCreatorToken, async (req, res) => {
 router.get('/:sessionId', async (req, res) => {
   try {
     const session = await ChatSession.findById(req.params.sessionId)
-      .populate('creatorId', 'name handle avatarUrl isLive manualLiveOverride manualLiveOverrideUpdatedAt suspensionUntil liveChatTimeSlots')
+      .populate('creatorId', 'name handle avatarUrl isLive manualLiveOverride manualLiveOverrideUpdatedAt suspensionUntil liveChatTimeSlots liveChatPrice')
       .populate('fanId', 'name avatarUrl walletBalance');
     
     if (!session) return res.status(404).json({ success: false, message: 'Session not found' });

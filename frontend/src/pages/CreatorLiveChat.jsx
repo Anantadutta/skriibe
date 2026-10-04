@@ -64,6 +64,8 @@ const CreatorLiveChat = () => {
   const socketRef = useRef(null);
   const messagesEndRef = useRef(null);
   const typingTimeoutRef = useRef(null);
+  const localStartRef = useRef(null);
+  const initialWaitRef = useRef(120);
 
   // Initialize Chat
   useEffect(() => {
@@ -98,9 +100,11 @@ const CreatorLiveChat = () => {
 
           // Calculate synchronized waiting time from creatorJoinedAt
           const joinedTime = currentSession.creatorJoinedAt || acceptRes?.data?.creatorJoinedAt || currentSession.startTime || new Date().toISOString();
-          const elapsedWait = Math.floor((Date.now() - new Date(joinedTime).getTime()) / 1000);
-          const remainingWait = Math.max(0, 120 - elapsedWait);
-          setWaitingTimeLeft(remainingWait);
+          let elapsedWait = Math.floor((Date.now() - new Date(joinedTime).getTime()) / 1000);
+          if (elapsedWait < 0 || elapsedWait > 120) elapsedWait = 0;
+          initialWaitRef.current = Math.max(0, 120 - elapsedWait);
+          setWaitingTimeLeft(initialWaitRef.current);
+          localStartRef.current = Date.now();
 
           if (currentSession.status === 'ended' || currentSession.fanAccepted) {
             setViewState('active');
@@ -157,10 +161,13 @@ const CreatorLiveChat = () => {
   useEffect(() => {
     let timer;
     if (viewState === 'waiting_for_fan' && !error && !loading && session) {
-      const joinedTime = session.creatorJoinedAt || session.startTime || new Date().toISOString();
+      if (!localStartRef.current) {
+        localStartRef.current = Date.now();
+        initialWaitRef.current = waitingTimeLeft;
+      }
       const tick = () => {
-        const elapsedWait = Math.floor((Date.now() - new Date(joinedTime).getTime()) / 1000);
-        const remainingWait = Math.max(0, 120 - elapsedWait);
+        const localElapsed = Math.floor((Date.now() - localStartRef.current) / 1000);
+        const remainingWait = Math.max(0, initialWaitRef.current - localElapsed);
         setWaitingTimeLeft(remainingWait);
         if (remainingWait <= 0) {
           if (timer) clearInterval(timer);
@@ -349,6 +356,14 @@ const CreatorLiveChat = () => {
       newSocket.disconnect();
     });
 
+    newSocket.on('chat_transitioned_to_paid', (data) => {
+      setSession(prev => {
+        if (!prev) return prev;
+        return { ...prev, isFreeChat: false, startTime: data.startTime, ratePerMinute: data.rate };
+      });
+      setElapsedSeconds(0);
+    });
+
     newSocket.on('fan_accepted', (data) => {
       setSession(prev => prev ? { ...prev, status: 'active', startTime: data?.startTime || prev.startTime } : prev);
       setViewState('active');
@@ -358,8 +373,16 @@ const CreatorLiveChat = () => {
       setFanPaused(true);
     });
 
-    newSocket.on('wallet_recharged', () => {
+    newSocket.on('wallet_recharged', async () => {
       setFanPaused(false);
+      try {
+        const res = await api.get(`/chat/${id}`);
+        if (res.data?.success && res.data?.session) {
+          setSession(prev => ({ ...prev, fanId: res.data.session.fanId }));
+        }
+      } catch (err) {
+        console.error('Failed to refetch session on wallet recharge:', err);
+      }
     });
 
     newSocket.on('fan_profile_updated', (data) => {
@@ -532,9 +555,9 @@ const CreatorLiveChat = () => {
         console.error('Failed to end chat via API:', err);
       }
       if (socketRef.current) {
-        socketRef.current.emit('end_chat', { sessionId: sId });
+        socketRef.current.emit('end_chat', { sessionId: sId, reason: 'CREATOR_ENDED' });
       } else if (socket) {
-        socket.emit('end_chat', { sessionId: sId });
+        socket.emit('end_chat', { sessionId: sId, reason: 'CREATOR_ENDED' });
       }
     }
     if (!skipNavigation) {
@@ -739,17 +762,25 @@ const CreatorLiveChat = () => {
         const rate = session?.ratePerMinute || 0;
         const bal = session?.fanId?.walletBalance || 0;
         const isFreeChat = session?.isFreeChat || rate === 0;
-        const isFreeChatOver = isFreeChat && elapsedSeconds >= 120;
         
         let remainingSeconds, isWarning, barBg, innerBg, progressWidth;
         
         if (isFreeChat) {
           remainingSeconds = Math.max(0, 120 - elapsedSeconds);
+          let totalSeconds = 120;
+          let effectiveRate = Number(rate) > 0 ? Number(rate) : (session?.creatorId?.liveChatPrice || 5);
+          if (Number(bal) > 0 && effectiveRate > 0) {
+            const paidSeconds = (Number(bal) / effectiveRate) * 60;
+            const overTime = Math.max(0, elapsedSeconds - 120);
+            remainingSeconds += Math.max(0, paidSeconds - overTime);
+            totalSeconds += paidSeconds;
+          }
           isWarning = remainingSeconds <= 30; // warning at 30 seconds
           barBg = isWarning ? '#ef4444' : '#3BA8D8';
           innerBg = isWarning ? '#b91c1c' : '#0284c7';
-          progressWidth = `${Math.max(0, Math.min(100, (remainingSeconds / 120) * 100))}%`;
+          progressWidth = `${Math.max(0, Math.min(100, (remainingSeconds / totalSeconds) * 100))}%`;
 
+          const isFreeChatOver = remainingSeconds <= 0;
           if (isFreeChatOver) {
             return (
               <div style={{ background: '#ef4444', padding: '12px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', transition: 'background 0.3s' }}>
@@ -973,8 +1004,11 @@ const CreatorLiveChat = () => {
         ))}
         {isTyping && (
           <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
-            <div style={{ background: theme.receiverBubble, color: theme.receiverText, padding: '10px 14px', borderRadius: '16px', fontSize: '13px', fontStyle: 'italic', boxShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
-              typing...
+            <div style={{ background: theme.receiverBubble, color: theme.receiverText, padding: '12px 16px', borderRadius: '16px', borderBottomLeftRadius: '4px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '4px', boxShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
+              <span style={{ fontStyle: 'italic', marginRight: '4px' }}>typing</span>
+              <span className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ background: theme.receiverText, animationDelay: '0ms' }}></span>
+              <span className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ background: theme.receiverText, animationDelay: '150ms' }}></span>
+              <span className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ background: theme.receiverText, animationDelay: '300ms' }}></span>
             </div>
           </div>
         )}

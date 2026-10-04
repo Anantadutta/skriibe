@@ -28,6 +28,8 @@ const LiveChatInterface = () => {
   const [socket, setSocket] = useState(null);
   const [freeChatEnded, setFreeChatEnded] = useState(false);
   const [error, setError] = useState('');
+  const [hasRechargedMidChat, setHasRechargedMidChat] = useState(false);
+  const [startedAsFreeChat, setStartedAsFreeChat] = useState(false);
   const [endStats, setEndStats] = useState({ minutes: 0, cost: 0 });
   const [isTyping, setIsTyping] = useState(false);
   
@@ -35,6 +37,7 @@ const LiveChatInterface = () => {
   const [rate, setRate] = useState(10);
   const [lowBalanceWarning, setLowBalanceWarning] = useState(false);
   const [showRechargeOverlay, setShowRechargeOverlay] = useState(false);
+  const [showTopUpSuccessModal, setShowTopUpSuccessModal] = useState(false);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [showSettings, setShowSettings] = useState(false);
   const [activeThemeId, setActiveThemeId] = useState('default');
@@ -84,29 +87,32 @@ const LiveChatInterface = () => {
   useEffect(() => {
     if (viewState === 'active') {
       const isFreeChat = session?.isFreeChat || rate === 0;
+      let totalSeconds = 0;
+      let effectiveRate = Number(rate) > 0 ? Number(rate) : (creator?.liveChatPrice || 5);
       
       if (isFreeChat) {
-        if (elapsedSeconds >= 120) {
-          setFreeChatEnded(true);
-          setShowRechargeOverlay(true);
-        } else if (120 - elapsedSeconds <= 30) {
-          setLowBalanceWarning(true);
-        } else {
-          setLowBalanceWarning(false);
+        totalSeconds = 120;
+        if (walletBalance > 0 && effectiveRate > 0) {
+           totalSeconds += (walletBalance / effectiveRate) * 60;
         }
-      } else if (rate > 0 && walletBalance > 0) {
-        const totalSeconds = (walletBalance / rate) * 60;
-        if (elapsedSeconds >= totalSeconds) {
-          setShowRechargeOverlay(true);
-        } else if (totalSeconds - elapsedSeconds <= 60) {
-          // Show low balance warning when 1 minute is left
-          setLowBalanceWarning(true);
-        } else {
-          setLowBalanceWarning(false);
+      } else if (rate > 0) {
+        totalSeconds = (walletBalance / rate) * 60;
+      }
+      
+      if (elapsedSeconds >= totalSeconds) {
+        if (isFreeChat && (walletBalance === 0 || effectiveRate === 0)) {
+           setFreeChatEnded(true);
         }
+        if (!showTopUpSuccessModal) {
+          // Do nothing, wait for backend chat_ended event to trigger ChatEndScreen
+        }
+      } else if (totalSeconds - elapsedSeconds <= (isFreeChat && (walletBalance === 0 || effectiveRate === 0) ? 30 : 60)) {
+        setLowBalanceWarning(true);
+      } else {
+        setLowBalanceWarning(false);
       }
     }
-  }, [elapsedSeconds, viewState, walletBalance, rate, session?.isFreeChat]);
+  }, [elapsedSeconds, viewState, walletBalance, rate, session?.isFreeChat, showTopUpSuccessModal, creator?.liveChatPrice, startedAsFreeChat, hasRechargedMidChat]);
   
   const socketRef = useRef(null);
   const messagesEndRef = useRef(null);
@@ -116,6 +122,12 @@ const LiveChatInterface = () => {
 
   const viewStateRef = useRef(viewState);
   useEffect(() => { viewStateRef.current = viewState; }, [viewState]);
+
+  const hasRechargedMidChatRef = useRef(hasRechargedMidChat);
+  useEffect(() => { hasRechargedMidChatRef.current = hasRechargedMidChat; }, [hasRechargedMidChat]);
+
+  const startedAsFreeChatRef = useRef(startedAsFreeChat);
+  useEffect(() => { startedAsFreeChatRef.current = startedAsFreeChat; }, [startedAsFreeChat]);
 
   const creatorJoinedRef = useRef(creatorJoined);
   useEffect(() => { creatorJoinedRef.current = creatorJoined; }, [creatorJoined]);
@@ -152,6 +164,16 @@ const LiveChatInterface = () => {
         previousSessionId: isContinueChatParam ? prevId : undefined
       });
       
+      // Fetch latest wallet balance to ensure the timer is accurate (especially after a continue-chat recharge)
+      try {
+        const wRes = await api.get('/wallet/balance');
+        if (wRes.data?.success) {
+          setWalletBalance(wRes.data.balance);
+        }
+      } catch (e) {
+        console.error('Failed to fetch wallet balance after chat start', e);
+      }
+      
       // If user clicked cancel while this network request was inflight
       if (cancelIntentRef.current) {
         const sId = sRes.data.sessionId || sRes.data._id || sRes.data.id;
@@ -166,6 +188,7 @@ const LiveChatInterface = () => {
 
       if (sRes.data.success) {
         setSession(sRes.data);
+        if (sRes.data.isFreeChat) setStartedAsFreeChat(true);
         if (sRes.data.rate !== undefined) setRate(sRes.data.rate);
         if (sRes.data.time) setChatStartTime(sRes.data.time);
         if (isContinueChatParam) {
@@ -324,10 +347,10 @@ const LiveChatInterface = () => {
                 } else if (viewState === 'active') {
                   setEndStats({ minutes: currentSession.totalMinutes, cost: currentSession.totalCost, reason: currentSession.endReason });
                   if (currentSession.endReason === 'INSUFFICIENT_BALANCE') {
-                    setShowRechargeOverlay(true);
+                    setViewState('ended');
                   } else if (currentSession.endReason === 'FREE_TRIAL_ENDED') {
                     setFreeChatEnded(true);
-                    setShowRechargeOverlay(true);
+                    setViewState('ended');
                   } else {
                     if (currentSession.endReason === 'CREATOR_ENDED' && currentSession.isFreeChat && (currentSession.totalMinutes * 60) < 60) {
                       setShowCreatorEndedEarlyModal(true);
@@ -488,7 +511,7 @@ const LiveChatInterface = () => {
       const sid = (data?.sessionId || '').toString();
       const currentSessionId = (sessionId || sessionRef.current?.sessionId || sessionRef.current?._id || sessionRef.current?.id || '').toString();
       if (!sid || !currentSessionId || sid !== currentSessionId) {
-        return; // Event is not for this specific chat session
+        return;
       }
       if (cancelIntentRef.current || data?.reason === 'USER_CANCEL' || data?.reason === 'TIMEOUT' || viewStateRef.current === 'waiting') {
         newSocket.disconnect();
@@ -496,19 +519,19 @@ const LiveChatInterface = () => {
         return;
       }
       setEndStats({ minutes: data.totalMinutes, cost: data.totalCost, reason: data.reason });
+      
       if (data.reason === 'INSUFFICIENT_BALANCE') {
-        setShowRechargeOverlay(true);
+        setViewState('ended');
+        newSocket.disconnect();
       } else if (data.reason === 'FREE_TRIAL_ENDED') {
         setFreeChatEnded(true);
-        setShowRechargeOverlay(true);
+        setViewState('ended');
+        newSocket.disconnect();
       } else {
         if (data.creatorEndedUnderOneMinute) {
           setShowCreatorEndedEarlyModal(true);
         }
         setViewState('ended');
-      }
-      // Only disconnect if it's not a pausable state
-      if (data.reason !== 'INSUFFICIENT_BALANCE' && data.reason !== 'FREE_TRIAL_ENDED') {
         newSocket.disconnect();
       }
     });
@@ -531,6 +554,12 @@ const LiveChatInterface = () => {
       alert('The creator is currently unavailable and declined the chat request.');
       newSocket.disconnect();
       navigate(`/${handle}`);
+    });
+
+    newSocket.on('chat_transitioned_to_paid', (data) => {
+      setSession(prev => prev ? { ...prev, isFreeChat: false, startTime: data.startTime, ratePerMinute: data.rate } : prev);
+      setRate(data.rate);
+      setElapsedSeconds(0);
     });
 
     setSocket(newSocket);
@@ -716,7 +745,7 @@ const LiveChatInterface = () => {
           totalCost={endStats?.cost || 0} 
           error={endStats?.error || error}
           messages={messages}
-          isFreeChat={session?.isFreeChat || freeChatEnded}
+          isFreeChat={startedAsFreeChat || session?.isFreeChat || freeChatEnded}
           rate={rate}
           walletBalance={walletBalance}
           onBack={() => navigate(`/${handle}`)}
@@ -848,8 +877,46 @@ const LiveChatInterface = () => {
         </div>
       )}
       
+      {/* Top Up Success Modal */}
+      {showTopUpSuccessModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ background: '#13161C', borderRadius: '16px', border: '1px solid #3BA8D8', padding: '32px', maxWidth: '400px', width: '90%', textAlign: 'center', boxShadow: '0 10px 40px rgba(59, 168, 216, 0.2)' }}>
+            <div style={{ fontSize: '48px', margin: '0 auto 16px', display: 'inline-block' }}>🎉</div>
+            <h3 style={{ color: '#fff', margin: '0 0 16px 0', fontSize: '1.25rem' }}>Top Up Successful!</h3>
+            <p style={{ color: '#94a3b8', margin: '0 0 24px 0', fontSize: '0.95rem', lineHeight: '1.5' }}>
+              Your wallet has been recharged. What would you like to do next?
+            </p>
+            <div style={{ display: 'flex', gap: '12px', flexDirection: 'column' }}>
+              <button 
+                onClick={async () => {
+                  setShowTopUpSuccessModal(false);
+                  if (freeChatEnded || viewState === 'ended') {
+                    // start a new continued chat
+                    const currentSessionId = session?.sessionId || session?._id || session?.id;
+                    await startChat(creator, true, currentSessionId);
+                  }
+                  // if active, they simply return to the ongoing chat
+                }}
+                style={{ background: '#3BA8D8', color: '#fff', border: 'none', borderRadius: '12px', padding: '12px 24px', cursor: 'pointer', fontWeight: 'bold', width: '100%' }}
+              >
+                Continue chat
+              </button>
+              <button 
+                onClick={() => {
+                  setShowTopUpSuccessModal(false);
+                  handleEndChat();
+                }}
+                style={{ background: 'transparent', color: '#fff', border: '1px solid #374151', borderRadius: '12px', padding: '12px 24px', cursor: 'pointer', fontWeight: 'bold', width: '100%' }}
+              >
+                End chat
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
       {/* Recharge Overlay (Mid-Chat) */}
-      {showRechargeOverlay && (() => {
+      {!showTopUpSuccessModal && showRechargeOverlay && (() => {
         const isFreeChat = session?.isFreeChat || rate === 0;
         const remainingSeconds = isFreeChat ? 1 : Math.max(0, (walletBalance / rate) * 60 - elapsedSeconds);
         const isManual = remainingSeconds > 0;
@@ -878,12 +945,11 @@ const LiveChatInterface = () => {
                   setWalletBalance(newBal);
                   setLowBalanceWarning(false);
                   setShowRechargeOverlay(false);
-                  if (freeChatEnded) {
-                    setViewState('ended');
-                    if (socketRef.current) socketRef.current.disconnect();
-                  } else {
+                  setShowTopUpSuccessModal(true);
+                  setHasRechargedMidChat(true);
+                  if (!freeChatEnded) {
                     if (socketRef.current) {
-                      socketRef.current.emit('wallet_recharged', { sessionId: session?._id || session?.sessionId || session?.id });
+                      socketRef.current.emit('wallet_recharged', { sessionId: session?._id || session?.sessionId || session?.id, newBalance: newBal });
                     }
                   }
                 }}
@@ -923,7 +989,8 @@ const LiveChatInterface = () => {
               )}
             </h2>
             <div style={{ color: '#bbf7d0', fontSize: '0.85rem', fontWeight: '600' }}>
-              {(rate > 0 || !session?.isFreeChat) && `Balance: ${walletBalance > 0 && rate > 0 ? `(${Math.floor(Math.max(0, (walletBalance / rate) * 60 - elapsedSeconds) / 60)} mins)` : ''}`}
+              Balance: ₹{Math.floor(walletBalance || 0)}
+              {!session?.isFreeChat && rate > 0 && walletBalance > 0 ? " (" + Math.floor(Math.max(0, (walletBalance / rate) * 60 - Math.max(0, elapsedSeconds)) / 60) + " mins left)" : ""}
             </div>
             <div style={{ color: '#fff', fontSize: '0.85rem', fontWeight: 'bold' }}>
               Chat in progress.
@@ -948,10 +1015,18 @@ const LiveChatInterface = () => {
 
         if (isFreeChat) {
           remainingSeconds = Math.max(0, 120 - elapsedSeconds);
+          let totalSeconds = 120;
+          let effectiveRate = Number(rate) > 0 ? Number(rate) : (creator?.liveChatPrice || 5);
+          if (Number(walletBalance) > 0 && effectiveRate > 0) {
+            const paidSeconds = (Number(walletBalance) / effectiveRate) * 60;
+            const overTime = Math.max(0, elapsedSeconds - 120);
+            remainingSeconds += Math.max(0, paidSeconds - overTime);
+            totalSeconds += paidSeconds;
+          }
           isWarning = remainingSeconds <= 30; // warning at 30 seconds
           barBg = isWarning ? '#ef4444' : '#3BA8D8';
           innerBg = isWarning ? '#b91c1c' : '#0284c7';
-          progressWidth = `${Math.max(0, Math.min(100, (remainingSeconds / 120) * 100))}%`;
+          progressWidth = `${Math.max(0, Math.min(100, (remainingSeconds / totalSeconds) * 100))}%`;
         } else {
           remainingSeconds = Math.max(0, (walletBalance / rate) * 60 - elapsedSeconds);
           isWarning = remainingSeconds / 60 <= 2; // warning at 2 minutes
@@ -987,8 +1062,10 @@ const LiveChatInterface = () => {
                         onSuccess={async (newBal) => {
                           setWalletBalance(newBal);
                           setLowBalanceWarning(false);
+                          setShowTopUpSuccessModal(true);
+                          setHasRechargedMidChat(true);
                           if (socketRef.current) {
-                            socketRef.current.emit('wallet_recharged', { sessionId: session?._id || session?.sessionId || session?.id });
+                            socketRef.current.emit('wallet_recharged', { sessionId: session?._id || session?.sessionId || session?.id, newBalance: newBal });
                           }
                         }}
                         customStyle={{ background: '#fff', color: '#f59e0b', border: 'none', padding: '4px 8px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}
@@ -1185,8 +1262,11 @@ const LiveChatInterface = () => {
         ))}
         {isTyping && (
           <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
-            <div style={{ background: '#fff', color: '#6b7280', padding: '10px 14px', borderRadius: '8px', fontSize: '13px', fontStyle: 'italic', boxShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
-              typing...
+            <div style={{ background: '#fff', color: '#6b7280', padding: '12px 16px', borderRadius: '16px', borderBottomLeftRadius: '4px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '4px', boxShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
+              <span style={{ fontStyle: 'italic', marginRight: '4px' }}>typing</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-[#6b7280] animate-bounce" style={{ animationDelay: '0ms' }}></span>
+              <span className="w-1.5 h-1.5 rounded-full bg-[#6b7280] animate-bounce" style={{ animationDelay: '150ms' }}></span>
+              <span className="w-1.5 h-1.5 rounded-full bg-[#6b7280] animate-bounce" style={{ animationDelay: '300ms' }}></span>
             </div>
           </div>
         )}
