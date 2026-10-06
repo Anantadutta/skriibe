@@ -642,7 +642,7 @@ const CreatorPublicPage = () => {
             Message sent!
           </h2>
           <p style={{ margin: '0 0 4px', fontSize: '1rem', color: '#64748b' }}>
-            {creator.name || creator.displayName} {isFollowUp ? 'has received your follow-up.' : 'will reply within 24 hours.'}
+            {creator.name || creator.displayName} {isFollowUp ? 'has received your follow-up.' : 'will reply.'}
           </p>
           <p style={{ margin: 0, fontSize: '1rem', color: '#64748b' }}>
             You'll be notified on both channels.

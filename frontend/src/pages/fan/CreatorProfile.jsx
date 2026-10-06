@@ -363,7 +363,7 @@ const CreatorProfile = () => {
               Message sent!
             </h2>
             <p style={{ color: '#94a3b8', margin: '0 0 32px', fontSize: '15px', lineHeight: '1.6', textAlign: 'center' }}>
-              <span style={{ color: '#fff', fontWeight: '600' }}>{creator.name}</span> {isFollowUp ? 'has received your follow-up.' : 'will reply within 24 hours.'} You'll be notified on both channels.
+              <span style={{ color: '#fff', fontWeight: '600' }}>{creator.name}</span> {isFollowUp ? 'has received your follow-up.' : 'will reply.'} You'll be notified on both channels.
             </p>
 
             {/* Delivery Channels Box */}
@@ -737,11 +737,7 @@ const CreatorProfile = () => {
                             )}
                           </div>
 
-                          {!isFollowUp && (
-                            <div style={{ color: '#94a3b8', fontSize: '14px', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                              <span style={{ color: '#fb923c' }}>⚡</span> I'll reply within 24 hrs
-                            </div>
-                          )}
+
 
                           <button
                             onClick={() => {
