@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import api from '../../services/api';
-import { io } from 'socket.io-client';
+import { createSocket } from '../../utils/socket';
 import { getCurrencySymbol } from '../../utils/phoneValidation';
 
 const CreatorAnalytics = () => {
@@ -83,8 +83,7 @@ const CreatorAnalytics = () => {
   useEffect(() => {
     fetchPayouts();
 
-    const socketUrl = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : 'http://localhost:5000';
-    const socket = io(socketUrl);
+    const socket = createSocket();
 
     const cId = creatorInfo?._id || creatorInfo?.id;
     if (cId) {

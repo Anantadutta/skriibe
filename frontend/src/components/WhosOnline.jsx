@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { io } from 'socket.io-client';
+import { createSocket } from '../utils/socket';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import CreatorCard from './discovery/CreatorCard';
 import { getLiveCreators } from '../services/discoveryApi';
@@ -110,10 +110,7 @@ const WhosOnline = ({ theme = 'dark' }) => {
     fetchFanProfile();
 
     // Real-time socket updates when a creator's live status changes
-    const socketUrl = import.meta.env.VITE_API_URL 
-      ? import.meta.env.VITE_API_URL.replace('/api', '') 
-      : 'http://localhost:5000';
-    const socket = io(socketUrl);
+    const socket = createSocket();
 
     socket.on('creator-status-changed', ({ creatorId, isLive }) => {
       setCreators((prev) =>

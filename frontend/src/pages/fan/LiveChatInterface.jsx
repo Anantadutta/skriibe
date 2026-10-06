@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { io } from 'socket.io-client';
+import { createSocket } from '../../utils/socket';
 import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import PreChatScreen from '../../components/fan/PreChatScreen';
@@ -374,8 +374,7 @@ const LiveChatInterface = () => {
     if (socketRef.current) {
       socketRef.current.disconnect();
     }
-    const apiUrl = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : 'http://localhost:5000';
-    const newSocket = io(apiUrl, { transports: ['websocket', 'polling'] });
+    const newSocket = createSocket({ transports: ['websocket', 'polling'] });
     socketRef.current = newSocket;
     
     newSocket.on('connect', () => {

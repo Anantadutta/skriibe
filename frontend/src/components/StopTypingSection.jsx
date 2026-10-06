@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { io } from 'socket.io-client';
+import { createSocket } from '../utils/socket';
 import { getLiveCreators } from '../services/discoveryApi';
 import { checkIfLiveNow } from '../utils/timeUtils';
 import { getImageUrl } from '../utils/imageUtils';
@@ -53,10 +53,7 @@ const StopTypingSection = ({ theme = 'dark' }) => {
     loadCreators();
 
     // Listen to real-time socket updates when any creator's status changes
-    const socketUrl = import.meta.env.VITE_API_URL 
-      ? import.meta.env.VITE_API_URL.replace('/api', '') 
-      : 'http://localhost:5000';
-    const socket = io(socketUrl);
+    const socket = createSocket();
 
     socket.on('creator-status-changed', ({ creatorId, isLive }) => {
       if (!isMounted) return;

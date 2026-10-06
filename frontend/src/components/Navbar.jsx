@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Sun, Moon, Menu, X } from 'lucide-react';
-import { io } from 'socket.io-client';
+import { createSocket } from '../utils/socket';
 import { getLiveCreators } from '../services/discoveryApi';
 import { getFanMe } from '../services/fanApi';
 import { checkIfLiveNow } from '../utils/timeUtils';
@@ -119,10 +119,7 @@ const Navbar = ({ theme, toggleTheme, showBanner = true }) => {
     fetchCreators();
 
     // Listen to real-time socket updates when a creator's status changes
-    const socketUrl = import.meta.env.VITE_API_URL 
-      ? import.meta.env.VITE_API_URL.replace('/api', '') 
-      : 'http://localhost:5000';
-    const socket = io(socketUrl);
+    const socket = createSocket();
 
     socket.on('creator-status-changed', ({ creatorId, isLive }) => {
       creatorCache = creatorCache.map((c) =>

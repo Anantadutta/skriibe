@@ -13,7 +13,7 @@ import { switchRole } from '../services/fanApi';
 import { useAuth } from '../context/AuthContext';
 import { getCurrencySymbol } from '../utils/phoneValidation';
 import { getImageUrl } from '../utils/imageUtils';
-import { io } from 'socket.io-client';
+import { createSocket } from '../utils/socket';
 
 const CreatorDashboard = () => {
   const { username } = useParams();
@@ -236,8 +236,7 @@ const CreatorDashboard = () => {
     if (location.state?.creator || creator) {
       const currentCreator = location.state?.creator || creator;
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-      const socketUrl = apiUrl.replace('/api', '');
-      newSocket = io(socketUrl, { transports: ['websocket', 'polling'] });
+      newSocket = createSocket({ transports: ['websocket', 'polling'] });
 
       newSocket.on('connect', () => {
         newSocket.emit('join_creator_room', { creatorId: currentCreator._id || currentCreator.id });

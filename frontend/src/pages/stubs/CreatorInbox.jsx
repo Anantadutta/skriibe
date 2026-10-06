@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import api from '../../services/api';
 import { getImageUrl } from '../../utils/imageUtils';
-import { io } from 'socket.io-client';
+import { createSocket } from '../../utils/socket';
 
 const CreatorInbox = () => {
   const navigate = useNavigate();
@@ -77,8 +77,7 @@ const CreatorInbox = () => {
         }
         const cId = meRes.data?.creator?._id || meRes.data?.creator?.id;
         if (cId && !socket) {
-          const socketUrl = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : 'http://localhost:5000';
-          socket = io(socketUrl);
+          socket = createSocket();
           socket.emit('join_creator_room', { creatorId: cId });
           socket.on('connect', () => {
             socket.emit('join_creator_room', { creatorId: cId });

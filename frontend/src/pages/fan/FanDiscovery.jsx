@@ -6,7 +6,7 @@ import FanBottomNav from '../../components/fan/layout/FanBottomNav';
 import { getLiveCreators } from '../../services/discoveryApi';
 import { getFanMe, switchRole } from '../../services/fanApi';
 import { useAuth } from '../../context/AuthContext';
-import { io } from 'socket.io-client';
+import { createSocket } from '../../utils/socket';
 import { getThoughtOfTheDay } from '../../utils/dailyThoughts';
 import { checkIfLiveNow } from '../../utils/timeUtils';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -131,8 +131,7 @@ const FanDiscovery = () => {
     };
     fetchFanProfile();
 
-    const socketUrl = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : 'http://localhost:5000';
-    const socket = io(socketUrl);
+    const socket = createSocket();
     socket.on('creator-status-changed', ({ creatorId, isLive }) => {
       setCreators(prev => prev.map(c =>
         c.id === creatorId ? { ...c, isLive } : c

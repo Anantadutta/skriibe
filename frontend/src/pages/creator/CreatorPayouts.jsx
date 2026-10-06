@@ -4,7 +4,7 @@ import { PhoneFrame } from '../../components/ama/layout/PhoneFrame';
 import { BottomNav } from '../../components/ama/layout/BottomNav';
 import api from '../../services/api';
 import { getMe } from '../../services/creatorApi';
-import { io } from 'socket.io-client';
+import { createSocket } from '../../utils/socket';
 import TransparentLogo from '../../components/TransparentLogo';
 import { getCurrencySymbol } from '../../utils/phoneValidation';
 
@@ -162,8 +162,7 @@ const CreatorPayouts = () => {
       })
       .catch(() => {});
 
-    const socketUrl = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : 'http://localhost:5000';
-    const socket = io(socketUrl);
+    const socket = createSocket();
 
     socket.on('new-question', () => {
       fetchPayouts();

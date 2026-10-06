@@ -3,7 +3,7 @@ import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom'
 import TransparentLogo from '../../components/TransparentLogo';
 import { getCreatorProfile, sendBuyerOTP, verifyBuyerOTP, submitQuestion } from '../../api/buyerApi';
 import { mockQuestions } from '../../mock/questions';
-import { io } from 'socket.io-client';
+import { createSocket } from '../../utils/socket';
 import api from '../../services/api';
 
 const CreatorPublicPage = () => {
@@ -61,7 +61,7 @@ const CreatorPublicPage = () => {
     };
     fetchProfile();
 
-    const socket = io('http://localhost:5000');
+    const socket = createSocket();
     socket.on('creator-status-changed', ({ creatorId, isLive }) => {
       setCreator(prev => {
         if (!prev) return prev;

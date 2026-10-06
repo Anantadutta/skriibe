@@ -5,7 +5,7 @@ import FanBottomNav from '../../components/fan/layout/FanBottomNav';
 import FanNavbar from '../../components/fan/layout/FanNavbar';
 import { getLiveCreators } from '../../services/discoveryApi';
 import { getFanMe } from '../../services/fanApi';
-import { io } from 'socket.io-client';
+import { createSocket } from '../../utils/socket';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
@@ -84,8 +84,7 @@ const FanExplore = () => {
   useEffect(() => {
     fetchCreators(searchQuery, activeCategory);
 
-    const socketUrl = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : 'http://localhost:5000';
-    const socket = io(socketUrl);
+    const socket = createSocket();
     socket.on('creator-status-changed', ({ creatorId, isLive }) => {
       setCreators(prev => prev.map(c =>
         c.id === creatorId ? { ...c, isLive } : c
