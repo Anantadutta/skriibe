@@ -648,7 +648,7 @@ const CreatorInbox = () => {
                    new Map(
                      validPendingChats
                        .sort((a, b) => new Date(a.time) - new Date(b.time)) // Oldest first so newest overwrites in Map
-                       .map(chat => [chat.sessionId || (chat.fanId?._id || chat.fanId) || chat.fanName, chat])
+                       .map(chat => [(chat.fanId?._id || chat.fanId) || chat.fanName || chat.sessionId, chat])
                    ).values()
                  )
                  .sort((a, b) => new Date(b.time) - new Date(a.time)) // Sort descending again for display

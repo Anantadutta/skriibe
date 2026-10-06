@@ -458,6 +458,9 @@ function App() {
             {/* Creator Onboarding */}
             <Route element={<BlockFanRoute />}>
               <Route path="/creator/verify-otp" element={<CreatorVerifyOTP />} />
+            </Route>
+
+            <Route element={<CreatorRoute />}>
               <Route path="/creator/connect-instagram" element={<CreatorConnectInstagram />} />
               <Route path="/onboard/profile" element={<CreatorOnboardProfile />} />
               <Route path="/onboard/live-chat" element={<CreatorOnboardLiveChat />} />
