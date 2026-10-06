@@ -109,8 +109,21 @@ const PastChatView = () => {
 
       {/* Messages Area */}
       <div style={{ flex: 1, overflowY: 'auto', padding: '24px', display: 'flex', flexDirection: 'column', gap: '12px', zIndex: 1 }}>
+        
+        {/* Chat ID and Date Header */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '16px', gap: '8px' }}>
+          {(session?.chatId || session?.sessionId || session?._id) && (
+            <div style={{ background: '#2563eb', color: '#fff', padding: '4px 12px', borderRadius: '4px', fontSize: '13px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              Chat #{String(session?.chatId || session?.sessionId || session?._id).slice(-5)}
+            </div>
+          )}
+          <div style={{ background: 'rgba(0,0,0,0.1)', color: '#4b5563', padding: '4px 12px', borderRadius: '12px', fontSize: '12px', backdropFilter: 'blur(4px)' }}>
+            {new Date(session?.startTime || session?.createdAt || Date.now()).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+          </div>
+        </div>
+
         {messages.map((m, i) => {
-          if (m.sender === 'system') {
+          if (m.sender === 'system' || m.senderRole === 'system') {
             return (
               <div key={i} style={{ display: 'flex', justifyContent: 'center', margin: '8px 0' }}>
                 <div style={{ background: 'rgba(255, 255, 255, 0.9)', color: '#ef4444', padding: '6px 12px', borderRadius: '16px', fontSize: '0.8rem', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
