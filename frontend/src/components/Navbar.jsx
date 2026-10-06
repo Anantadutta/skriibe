@@ -237,6 +237,8 @@ const Navbar = ({ theme, toggleTheme, showBanner = true }) => {
             </Link>
             <Link
               to="/affiliate"
+              target="_blank"
+              rel="noopener noreferrer"
               className={`transition-colors ${
                 theme === 'light'
                   ? 'text-gray-600 hover:text-black hover:text-[#3BA8D8]'
@@ -443,6 +445,8 @@ const Navbar = ({ theme, toggleTheme, showBanner = true }) => {
             </Link>
             <Link
               to="/affiliate"
+              target="_blank"
+              rel="noopener noreferrer"
               onClick={() => setIsMobileMenuOpen(false)}
               className={`text-lg font-semibold px-3 py-2.5 rounded-xl transition-colors ${
                 theme === 'light'
