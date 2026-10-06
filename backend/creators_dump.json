@@ -367,5 +367,26 @@
     "isLive": true,
     "liveChatPrice": 5,
     "handle": "neelima"
+  },
+  {
+    "_id": "6ac3aacf922faaa9ae8b7698",
+    "name": "Jawand Singh",
+    "profileUrl": "skriibe.com/jdbhogal1",
+    "avatarUrl": "https://res.cloudinary.com/x4tw73kr/image/upload/v1791208360/avatars/ggu2mxddfqro4svknrhz.webp",
+    "price": 10,
+    "pricePerQuestion": 10,
+    "isLive": false,
+    "liveChatPrice": 10,
+    "handle": "jdbhogal1"
+  },
+  {
+    "_id": "6ac3c81e922faaa9ae8b76fe",
+    "name": "Niru Sharma",
+    "profileUrl": "",
+    "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocINXcfytQIjrLPnwGSgyY1vPtntFv9PaA9E1o-rx4vfLW909Q=s96-c",
+    "price": 10,
+    "pricePerQuestion": 10,
+    "isLive": false,
+    "liveChatPrice": 5
   }
 ]

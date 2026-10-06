@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import WalletPaymentButton from './WalletPaymentButton';
 
 const WalletRechargeScreen = ({ rate, onCancel, onRechargeSuccess, balance = 0, transactions = [] }) => {
-  const presets = [50, 100, 200, 500, 1000, 2000];
+  const presets = [25, 50, 100, 200, 500, 1000, 2000];
   const requiredAmount = rate && rate > 0 ? rate * 5 : 100;
   const shortfall = Math.max(requiredAmount - balance, 0);
   // Default to at least the shortfall, or 100 if they don't need much.
