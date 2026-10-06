@@ -104,6 +104,41 @@ const calculateLiveStatus = (creator) => {
   return scheduledLive;
 };
 
+const syncLiveStatus = async (creator) => {
+  const now = new Date();
+  let dbUpdated = false;
+
+  if (creator.manualLiveOverride && creator.manualLiveOverrideUpdatedAt) {
+    const overrideDate = new Date(creator.manualLiveOverrideUpdatedAt);
+    
+    if (now.getTime() - overrideDate.getTime() > 24 * 60 * 60 * 1000) {
+      creator.manualLiveOverride = null;
+      creator.manualLiveOverrideUpdatedAt = null;
+      dbUpdated = true;
+    } else {
+      const mostRecentStart = getMostRecentScheduledStartTime(creator.liveChatTimeSlots, now);
+      if (mostRecentStart && mostRecentStart > overrideDate) {
+        creator.manualLiveOverride = null;
+        creator.manualLiveOverrideUpdatedAt = null;
+        dbUpdated = true;
+      }
+    }
+  }
+
+  const computedLive = calculateLiveStatus(creator);
+  if (creator.isLive !== computedLive) {
+    creator.isLive = computedLive;
+    dbUpdated = true;
+  }
+
+  if (dbUpdated && typeof creator.save === 'function') {
+    await creator.save();
+  }
+  
+  return creator;
+};
+
 module.exports = {
-  calculateLiveStatus
+  calculateLiveStatus,
+  syncLiveStatus
 };

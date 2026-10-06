@@ -145,9 +145,12 @@ router.post('/activate', verifyCreatorToken, async (req, res) => {
 router.get('/me', verifyCreatorToken, async (req, res) => {
   try {
     await connectDB();
-    const creator = await Creator.findById(req.creator.creatorId);
+    let creator = await Creator.findById(req.creator.creatorId);
     if (!creator) return res.status(404).json({ message: 'Not found' });
     if (creator.isBanned) return res.status(403).json({ message: 'Account permanently removed' });
+
+    const { syncLiveStatus } = require('../utils/liveStatus');
+    creator = await syncLiveStatus(creator);
 
     let activeStrikesCount = 0;
     if (creator.strikes && creator.strikes.length > 0) {
