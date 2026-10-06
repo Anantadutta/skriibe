@@ -3,7 +3,7 @@
  * @description Creator dashboard route showing mock data if username matches mockCreator.username, else 404.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useLocation, useNavigate, Link } from 'react-router-dom';
 import TransparentLogo from '../components/TransparentLogo';
 import { mockCreator, mockQuestions } from '../mock/questions';
@@ -20,6 +20,8 @@ const CreatorDashboard = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { roles, setAuthData, clearAuthData } = useAuth();
+  const dashboardInitializedRef = useRef(false);
+  const pollInProgressRef = useRef(false);
 
   const [creator, setCreator] = useState(location.state?.creator || null);
   const [loadingInitial, setLoadingInitial] = useState(!location.state?.creator);
@@ -66,7 +68,7 @@ const CreatorDashboard = () => {
   };
 
   // Filter out cancelled, accepted, or expired (> 120s) chats
-  const validPendingChats = pendingChats.filter(chat => {
+  const validPendingChats = useMemo(() => pendingChats.filter(chat => {
     if (!chat || !chat.sessionId) return false;
     const sid = String(chat.sessionId);
 
@@ -81,7 +83,7 @@ const CreatorDashboard = () => {
 
     if (chat.creatorJoined || chat.fanAccepted || chat.status === 'ended') return false;
     return true;
-  });
+  }), [pendingChats, cancelledSessions]);
   
   // Referrals Modal State
   const [showReferralsModal, setShowReferralsModal] = useState(false);
@@ -119,7 +121,11 @@ const CreatorDashboard = () => {
       }
     };
     // Always fetch latest data from backend on dashboard mount to ensure all stats (including weekly goal) are perfectly in sync
-    fetchCreator();
+    const shouldInitializeDashboard = !dashboardInitializedRef.current;
+    if (shouldInitializeDashboard) {
+      dashboardInitializedRef.current = true;
+      fetchCreator();
+    }
 
     const fetchQuestions = async () => {
       try {
@@ -218,24 +224,41 @@ const CreatorDashboard = () => {
       }
     };
 
-    fetchQuestions();
-    fetchNotifications();
-    fetchPayouts();
-    fetchPendingChats();
-    fetchMissedChats();
-
-    const interval = setInterval(() => {
+    if (shouldInitializeDashboard) {
       fetchQuestions();
       fetchNotifications();
       fetchPayouts();
       fetchPendingChats();
       fetchMissedChats();
-    }, 5000);
+    }
+
+    const refreshDashboard = async () => {
+      if (pollInProgressRef.current || document.visibilityState === 'hidden') return;
+      pollInProgressRef.current = true;
+      try {
+        await Promise.all([
+          fetchQuestions(),
+          fetchNotifications(),
+          fetchPayouts(),
+          fetchPendingChats(),
+          fetchMissedChats()
+        ]);
+      } finally {
+        pollInProgressRef.current = false;
+      }
+    };
+
+    const interval = setInterval(() => {
+      refreshDashboard();
+    }, 15000);
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === 'visible') refreshDashboard();
+    };
+    document.addEventListener('visibilitychange', refreshWhenVisible);
 
     let newSocket = null;
     if (location.state?.creator || creator) {
       const currentCreator = location.state?.creator || creator;
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
       newSocket = createSocket({ transports: ['websocket', 'polling'] });
 
       newSocket.on('connect', () => {
@@ -287,6 +310,12 @@ const CreatorDashboard = () => {
           fetchPendingChats();
           fetchQuestions();
         }, 300);
+      });
+
+      newSocket.on('question-status-changed', (data) => {
+        if (!data?.creatorId || String(data.creatorId) === String(currentCreator._id || currentCreator.id)) {
+          fetchQuestions();
+        }
       });
 
       newSocket.on('creator_joined', (data) => {
@@ -352,6 +381,7 @@ const CreatorDashboard = () => {
 
     return () => {
       clearInterval(interval);
+      document.removeEventListener('visibilitychange', refreshWhenVisible);
       if (newSocket) newSocket.disconnect();
     };
   }, [creator?._id, creator?.id]);

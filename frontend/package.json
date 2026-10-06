@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite --force",
-    "build": "vite build && npm --prefix ../admin-frontend install && npm --prefix ../admin-frontend run build && mkdir -p dist/admin && cp -R ../admin-frontend/dist/* dist/admin/",
+    "build:vite": "vite build",
+    "build": "npm run build:vite && npm --prefix ../admin-frontend ci && npm --prefix ../admin-frontend run build && mkdir -p dist/admin && cp -R ../admin-frontend/dist/* dist/admin/",
     "lint": "eslint .",
     "preview": "vite preview"
   },

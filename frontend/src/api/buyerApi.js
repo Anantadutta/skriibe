@@ -1,8 +1,7 @@
 /**
- * @module buyerApi — Buyer-facing API calls for skriibe (fully mocked for Phase 6)
+ * @module buyerApi — Buyer-facing API calls for public question flows.
  */
 import api from '../services/api';
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 export const getCreatorProfile = async (handle) => {
   const cleanHandle = handle?.replace('@', '') || 'anantadutta';

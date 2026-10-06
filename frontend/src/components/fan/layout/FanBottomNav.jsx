@@ -1,46 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import api from '../../../services/api';
 import { switchRole } from '../../../services/fanApi';
 import UpgradePromptModal from '../../UpgradePromptModal';
 import { useAuth } from '../../../context/AuthContext';
+import { useUnreadNotificationCount } from '../../../services/unreadNotificationStore';
 
 const FanBottomNav = () => {
   const location = useLocation();
   const currentPath = location.pathname;
   const navigate = useNavigate();
-  const [unreadCount, setUnreadCount] = useState(0);
   const { roles, setAuthData, isAuthenticated } = useAuth();
+  const unreadCount = useUnreadNotificationCount(isAuthenticated && roles?.includes('fan'));
 
-  useEffect(() => {
-    const fetchNotifications = async () => {
-      try {
-        const res = await api.get('/questions/unread-count');
-        if (res.data.success) {
-          setUnreadCount(res.data.count);
-        }
-      } catch (err) {}
-    };
 
-    const handleNotificationRead = () => {
-      fetchNotifications();
-    };
-
-    // Only fetch if authenticated
-    if (isAuthenticated) {
-      fetchNotifications();
-      
-      const interval = setInterval(() => {
-        fetchNotifications();
-      }, 15000);
-
-      window.addEventListener('notificationRead', handleNotificationRead);
-      return () => {
-        window.removeEventListener('notificationRead', handleNotificationRead);
-        clearInterval(interval);
-      };
-    }
-  }, [isAuthenticated]);
 
   const allNavItems = [
     { label: 'Home', path: '/discovery', icon: (active) => <HomeIcon active={active} /> },

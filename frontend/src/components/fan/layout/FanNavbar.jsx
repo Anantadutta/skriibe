@@ -4,11 +4,13 @@ import TransparentLogo from '../../TransparentLogo';
 import { getFanMe } from '../../../services/fanApi';
 import api from '../../../services/api';
 import { useAuth } from '../../../context/AuthContext';
+import { useUnreadNotificationCount } from '../../../services/unreadNotificationStore';
 
 const FanNavbar = () => {
   const location = useLocation();
   const currentPath = location.pathname;
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, roles } = useAuth();
+  const isFanAccount = isAuthenticated && roles?.includes('fan');
 
   const navItems = [
     { label: 'Notifications', path: '/fan/notifications', icon: '🔔' }
@@ -20,86 +22,77 @@ const FanNavbar = () => {
   const [fanAvatar, setFanAvatar] = useState(() => {
     return localStorage.getItem('skriibe_fan_avatar') || null;
   });
-  const [unreadCount, setUnreadCount] = useState(0);
+  const unreadCount = useUnreadNotificationCount(isFanAccount);
   const [walletBalance, setWalletBalance] = useState(0);
 
   useEffect(() => {
+    if (!isFanAccount) return undefined;
+
+    let active = true;
     const fetchFanProfile = async () => {
       try {
         const res = await getFanMe();
-        if (res.success && res.fan) {
-          if (res.fan.name) {
-            const firstName = res.fan.name.split(' ')[0];
-            setFanName(firstName);
-            localStorage.setItem('cachedFanName', firstName);
-          } else {
-            setFanName('Fan');
-            localStorage.setItem('cachedFanName', 'Fan');
-          }
-          if (res.fan.avatarUrl) {
-            setFanAvatar(res.fan.avatarUrl);
-            localStorage.setItem('skriibe_fan_avatar', res.fan.avatarUrl);
-          } else {
-            setFanAvatar(null);
-            localStorage.removeItem('skriibe_fan_avatar');
-          }
+        if (!active || !res.success || !res.fan) return;
+
+        const firstName = res.fan.name ? res.fan.name.split(' ')[0] : 'Fan';
+        setFanName(firstName);
+        localStorage.setItem('cachedFanName', firstName);
+        if (res.fan.avatarUrl) {
+          setFanAvatar(res.fan.avatarUrl);
+          localStorage.setItem('skriibe_fan_avatar', res.fan.avatarUrl);
+        } else {
+          setFanAvatar(null);
+          localStorage.removeItem('skriibe_fan_avatar');
         }
       } catch (err) {
         console.error('Failed to fetch fan profile in navbar', err);
       }
     };
-    
-    const fetchNotifications = async () => {
-      try {
-        const res = await api.get('/questions/unread-count');
-        if (res.data.success) {
-          setUnreadCount(res.data.count);
-        }
-      } catch (err) {}
-    };
-
-    const handleNotificationRead = () => {
-      fetchNotifications();
-    };
-
-    const fetchWallet = async () => {
-      try {
-        const res = await api.get('/wallet/balance');
-        if (res.data.success) {
-          setWalletBalance(res.data.balance || 0);
-        }
-      } catch (err) {}
-    };
-
-    if (!isAuthenticated) return;
-
-    fetchFanProfile();
-    fetchNotifications();
-    fetchWallet();
-
-    const interval = setInterval(() => {
-      fetchNotifications();
-      fetchWallet();
-    }, 15000);
 
     const handleProfileUpdate = (e) => {
       const updatedName = e?.detail?.name || localStorage.getItem('cachedFanName') || 'Fan';
-      const firstName = updatedName.split(' ')[0];
-      setFanName(firstName);
+      setFanName(updatedName.split(' ')[0]);
       const updatedAvatar = e?.detail?.avatarUrl || localStorage.getItem('skriibe_fan_avatar');
       if (updatedAvatar) setFanAvatar(updatedAvatar);
     };
 
-    window.addEventListener('notificationRead', handleNotificationRead);
+    fetchFanProfile();
     window.addEventListener('fanProfileUpdated', handleProfileUpdate);
     window.addEventListener('storage', handleProfileUpdate);
     return () => {
-      window.removeEventListener('notificationRead', handleNotificationRead);
+      active = false;
       window.removeEventListener('fanProfileUpdated', handleProfileUpdate);
       window.removeEventListener('storage', handleProfileUpdate);
-      clearInterval(interval);
     };
-  }, [location.pathname, isAuthenticated]);
+  }, [isFanAccount]);
+
+  useEffect(() => {
+    if (!isFanAccount) return undefined;
+
+    let active = true;
+    const fetchWallet = async () => {
+      if (document.visibilityState === 'hidden') return;
+      try {
+        const res = await api.get('/wallet/balance');
+        if (active && res.data.success) setWalletBalance(res.data.balance || 0);
+      } catch {
+        // Keep the last known wallet balance when temporarily offline.
+      }
+    };
+
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === 'visible') fetchWallet();
+    };
+
+    fetchWallet();
+    const interval = setInterval(fetchWallet, 30000);
+    document.addEventListener('visibilitychange', refreshWhenVisible);
+    return () => {
+      active = false;
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', refreshWhenVisible);
+    };
+  }, [isFanAccount, currentPath]);
 
   return (
     <>

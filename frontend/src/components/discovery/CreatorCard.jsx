@@ -767,4 +767,4 @@ const CreatorCard = ({ creator, isFirstTimeUser = false }) => {
   );
 };
 
-export default CreatorCard;
+export default React.memo(CreatorCard);

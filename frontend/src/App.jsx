@@ -1,94 +1,89 @@
-import React, { useState, useEffect } from 'react';
+import React, { lazy, Suspense, useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, Outlet, Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import Navbar from './components/Navbar';
-import Hero from './components/Hero';
-import DMCounter from './components/DMCounter';
-import StorySteps from './components/StorySteps';
-import FlowGraphic from './components/FlowGraphic';
-import FAQ from './components/FAQ';
-import Footer from './components/Footer';
-import WhosOnline from './components/WhosOnline';
-import HowItWorksSection from './components/HowItWorksSection';
-import InsideChatSection from './components/InsideChatSection';
-import NewFansOnly from './components/NewFansOnly';
-import StopTypingSection from './components/StopTypingSection';
-import HeroChatSimulation from './components/HeroChatSimulation';
-import ForCreatorsSection from './components/ForCreatorsSection';
+const Navbar = lazy(() => import('./components/Navbar'));
+const FAQ = lazy(() => import('./components/FAQ'));
+const Footer = lazy(() => import('./components/Footer'));
+const WhosOnline = lazy(() => import('./components/WhosOnline'));
+const HowItWorksSection = lazy(() => import('./components/HowItWorksSection'));
+const InsideChatSection = lazy(() => import('./components/InsideChatSection'));
+const NewFansOnly = lazy(() => import('./components/NewFansOnly'));
+const StopTypingSection = lazy(() => import('./components/StopTypingSection'));
+const HeroChatSimulation = lazy(() => import('./components/HeroChatSimulation'));
+const ForCreatorsSection = lazy(() => import('./components/ForCreatorsSection'));
 
 // Context
 import { CreatorOnboardingProvider } from './context/CreatorOnboardingContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import SmartLoginRedirect from './components/SmartLoginRedirect';
 
 // Pages
-import About from './pages/About';
-import Mission from './pages/Mission';
-import Vision from './pages/Vision';
-import Terms from './pages/Terms';
-import Privacy from './pages/Privacy';
-import Refunds from './pages/Refunds';
-import ComponentShowcase from './pages/dev/ComponentShowcase';
-import Agreement from './pages/Agreement';
-import Guidelines from './pages/Guidelines';
-import Cookies from './pages/Cookies';
-import FAQPage from './pages/FAQPage';
-import HowItWorksPage from './pages/HowItWorksPage';
-import ContactUs from './pages/ContactUs';
-import RaiseQuery from './pages/RaiseQuery';
-import CreatorAuth from './pages/creator/CreatorAuth';
-import CreatorForgotPassword from './pages/creator/CreatorForgotPassword';
-import CreatorResetPassword from './pages/creator/CreatorResetPassword';
-import CreatorVerifyOTP from './pages/creator/CreatorVerifyOTP';
-import CreatorConnectInstagram from './pages/creator/CreatorConnectInstagram';
-import CreatorOnboardProfile from './pages/creator/CreatorOnboardProfile';
-import CreatorOnboardPricing from './pages/creator/CreatorOnboardPricing';
-import CreatorOnboardLiveChat from './pages/creator/CreatorOnboardLiveChat';
-import CreatorGoLive from './pages/creator/CreatorGoLive';
-import CreatorDashboard from './pages/CreatorDashboard';
-import CreatorReplyScreen from './pages/CreatorReplyScreen';
-import CreatorInbox from './pages/stubs/CreatorInbox';
-import CreatorAnalytics from './pages/stubs/CreatorAnalytics';
-import CreatorPayouts from './pages/creator/CreatorPayouts';
-import CreatorSetupPayouts from './pages/stubs/CreatorPayouts';
-import CreatorSettings from './pages/stubs/CreatorSettings';
-import CreatorNotifications from './pages/CreatorNotifications';
-import CreatorAccountHealth from './pages/stubs/CreatorAccountHealth';
-import CreatorDeleteQuestion from './pages/stubs/CreatorDeleteQuestion';
-import CreatorSharePage from './pages/creator/CreatorSharePage';
-import CreatorScheduling from './pages/creator/CreatorScheduling';
-import AdminLogin from './pages/admin/AdminLogin';
-import AdminDashboard from './pages/admin/AdminDashboard';
-import AdminCreators from './pages/admin/AdminCreators';
-import AdminDisputes from './pages/admin/AdminDisputes';
-import AdminAnalytics from './pages/admin/AdminAnalytics';
-import AdminQueries from './pages/admin/AdminQueries';
-import BuyerHistoryPage from './pages/buyer/BuyerHistoryPage';
-import BuyerQuestionPage from './pages/buyer/BuyerQuestionPage';
-import DemoAnswerPage from './pages/buyer/DemoAnswerPage';
-import FlagSubmittedPage from './pages/buyer/FlagSubmittedPage';
-import AffiliateProgram from './pages/AffiliateProgram';
+const About = lazy(() => import('./pages/About'));
+const Mission = lazy(() => import('./pages/Mission'));
+const Vision = lazy(() => import('./pages/Vision'));
+const Terms = lazy(() => import('./pages/Terms'));
+const Privacy = lazy(() => import('./pages/Privacy'));
+const Refunds = lazy(() => import('./pages/Refunds'));
+const ComponentShowcase = lazy(() => import('./pages/dev/ComponentShowcase'));
+const Agreement = lazy(() => import('./pages/Agreement'));
+const Guidelines = lazy(() => import('./pages/Guidelines'));
+const Cookies = lazy(() => import('./pages/Cookies'));
+const FAQPage = lazy(() => import('./pages/FAQPage'));
+const HowItWorksPage = lazy(() => import('./pages/HowItWorksPage'));
+const ContactUs = lazy(() => import('./pages/ContactUs'));
+const RaiseQuery = lazy(() => import('./pages/RaiseQuery'));
+const CreatorAuth = lazy(() => import('./pages/creator/CreatorAuth'));
+const CreatorForgotPassword = lazy(() => import('./pages/creator/CreatorForgotPassword'));
+const CreatorResetPassword = lazy(() => import('./pages/creator/CreatorResetPassword'));
+const CreatorVerifyOTP = lazy(() => import('./pages/creator/CreatorVerifyOTP'));
+const CreatorConnectInstagram = lazy(() => import('./pages/creator/CreatorConnectInstagram'));
+const CreatorOnboardProfile = lazy(() => import('./pages/creator/CreatorOnboardProfile'));
+const CreatorOnboardPricing = lazy(() => import('./pages/creator/CreatorOnboardPricing'));
+const CreatorOnboardLiveChat = lazy(() => import('./pages/creator/CreatorOnboardLiveChat'));
+const CreatorDashboard = lazy(() => import('./pages/CreatorDashboard'));
+const CreatorReplyScreen = lazy(() => import('./pages/CreatorReplyScreen'));
+const CreatorInbox = lazy(() => import('./pages/stubs/CreatorInbox'));
+const CreatorAnalytics = lazy(() => import('./pages/stubs/CreatorAnalytics'));
+const CreatorPayouts = lazy(() => import('./pages/creator/CreatorPayouts'));
+const CreatorSetupPayouts = lazy(() => import('./pages/stubs/CreatorPayouts'));
+const CreatorSettings = lazy(() => import('./pages/stubs/CreatorSettings'));
+const CreatorNotifications = lazy(() => import('./pages/CreatorNotifications'));
+const CreatorAccountHealth = lazy(() => import('./pages/stubs/CreatorAccountHealth'));
+const CreatorDeleteQuestion = lazy(() => import('./pages/stubs/CreatorDeleteQuestion'));
+const CreatorSharePage = lazy(() => import('./pages/creator/CreatorSharePage'));
+const CreatorScheduling = lazy(() => import('./pages/creator/CreatorScheduling'));
+const AdminLogin = lazy(() => import('./pages/admin/AdminLogin'));
+const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
+const AdminCreators = lazy(() => import('./pages/admin/AdminCreators'));
+const AdminDisputes = lazy(() => import('./pages/admin/AdminDisputes'));
+const AdminAnalytics = lazy(() => import('./pages/admin/AdminAnalytics'));
+const AdminQueries = lazy(() => import('./pages/admin/AdminQueries'));
+const BuyerHistoryPage = lazy(() => import('./pages/buyer/BuyerHistoryPage'));
+const BuyerQuestionPage = lazy(() => import('./pages/buyer/BuyerQuestionPage'));
+const DemoAnswerPage = lazy(() => import('./pages/buyer/DemoAnswerPage'));
+const FlagSubmittedPage = lazy(() => import('./pages/buyer/FlagSubmittedPage'));
+const AffiliateProgram = lazy(() => import('./pages/AffiliateProgram'));
 // Fan Flow
-import FanSignup from './pages/fan/FanSignup';
-import FanLogin from './pages/fan/FanLogin';
-import FanForgotPassword from './pages/fan/FanForgotPassword';
-import FanResetPassword from './pages/fan/FanResetPassword';
-import ChooseRole from './pages/fan/ChooseRole';
-import FanDiscovery from './pages/fan/FanDiscovery';
-import FanExplore from './pages/fan/FanExplore';
-import FanHistory from './pages/fan/FanHistory';
-import PastChatView from './pages/fan/PastChatView';
-import FanNotifications from './pages/fan/FanNotifications';
-import FanProfile from './pages/fan/FanProfile';
-import FanToCreatorUpgrade from './pages/fan/FanToCreatorUpgrade';
-import CreatorProfile from './pages/fan/CreatorProfile';
-import FanWalletRechargePage from './pages/fan/FanWalletRechargePage';
-import FanWallet from './pages/fan/FanWallet';
-import LiveChatInterface from './pages/fan/LiveChatInterface';
-import EmailVerificationFlow from './pages/EmailVerificationFlow';
+const FanSignup = lazy(() => import('./pages/fan/FanSignup'));
+const FanLogin = lazy(() => import('./pages/fan/FanLogin'));
+const FanForgotPassword = lazy(() => import('./pages/fan/FanForgotPassword'));
+const FanResetPassword = lazy(() => import('./pages/fan/FanResetPassword'));
+const ChooseRole = lazy(() => import('./pages/fan/ChooseRole'));
+const FanDiscovery = lazy(() => import('./pages/fan/FanDiscovery'));
+const FanExplore = lazy(() => import('./pages/fan/FanExplore'));
+const FanHistory = lazy(() => import('./pages/fan/FanHistory'));
+const PastChatView = lazy(() => import('./pages/fan/PastChatView'));
+const FanNotifications = lazy(() => import('./pages/fan/FanNotifications'));
+const FanProfile = lazy(() => import('./pages/fan/FanProfile'));
+const FanToCreatorUpgrade = lazy(() => import('./pages/fan/FanToCreatorUpgrade'));
+const CreatorProfile = lazy(() => import('./pages/fan/CreatorProfile'));
+const FanWalletRechargePage = lazy(() => import('./pages/fan/FanWalletRechargePage'));
+const FanWallet = lazy(() => import('./pages/fan/FanWallet'));
+const LiveChatInterface = lazy(() => import('./pages/fan/LiveChatInterface'));
+const EmailVerificationFlow = lazy(() => import('./pages/EmailVerificationFlow'));
 import ErrorBoundary from './components/ErrorBoundary';
+import api from './services/api';
 
-import CreatorLiveChat from './pages/CreatorLiveChat';
+const CreatorLiveChat = lazy(() => import('./pages/CreatorLiveChat'));
 
 const CreatorRoute = () => {
   const { isAuthenticated, roles } = useAuth();
@@ -104,26 +99,31 @@ const CreatorRoute = () => {
   return <Outlet />;
 };
 
-const ProtectedRoute = ({ children, allowedRole }) => {
-  return <Outlet />;
-};
-
 const AdminRoute = () => {
-  return <Outlet />;
+  const [status, setStatus] = useState('checking');
+
+  useEffect(() => {
+    if (!localStorage.getItem('skriibe_admin_token')) {
+      setStatus('unauthenticated');
+      return undefined;
+    }
+
+    let active = true;
+    api.get('/admin/me')
+      .then(() => { if (active) setStatus('authenticated'); })
+      .catch(() => { if (active) setStatus('unauthenticated'); });
+
+    return () => { active = false; };
+  }, []);
+
+  if (status === 'checking') return null;
+  return status === 'authenticated' ? <Outlet /> : <Navigate to="/admin/login" replace />;
 };
 
 const BlockFanRoute = ({ children }) => {
   const { isAuthenticated, roles } = useAuth();
   if (isAuthenticated && roles && !roles.includes('creator')) {
     return <Navigate to="/explore" replace />;
-  }
-  return children ? children : <Outlet />;
-};
-
-const BlockCreatorRoute = ({ children }) => {
-  const { isAuthenticated, roles } = useAuth();
-  if (isAuthenticated && roles && roles.includes('creator')) {
-    return <Navigate to="/creator/dashboard" replace />;
   }
   return children ? children : <Outlet />;
 };
@@ -418,6 +418,7 @@ function App() {
     <AuthProvider>
       <CreatorOnboardingProvider>
         <BrowserRouter>
+          <Suspense fallback={null}>
           <Routes>
             <Route path="/" element={
               <ErrorBoundary>
@@ -528,6 +529,7 @@ function App() {
             {/* Fan Flow (Catch-All) */}
             <Route path="/:handle" element={<CreatorProfile />} />
           </Routes>
+          </Suspense>
         </BrowserRouter>
       </CreatorOnboardingProvider>
     </AuthProvider>

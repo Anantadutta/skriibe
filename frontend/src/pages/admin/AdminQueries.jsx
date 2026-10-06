@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../services/api';
 import TransparentLogo from '../../components/TransparentLogo';
 
 const AdminQueries = () => {
@@ -25,18 +25,11 @@ const AdminQueries = () => {
   const fetchQueries = async () => {
     setLoading(true);
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-      const token = localStorage.getItem('skriibe_admin_token') || localStorage.getItem('skriibe_token');
-      const headers = token ? { Authorization: `Bearer ${token}` } : {};
       const params = {};
       if (activeFilter !== 'all') params.status = activeFilter;
       if (searchQuery.trim()) params.search = searchQuery.trim();
 
-      const res = await axios.get(`${apiUrl}/queries/admin`, { 
-        params, 
-        headers,
-        withCredentials: true 
-      });
+      const res = await api.get('/queries/admin', { params });
 
       if (res.data?.success) {
         setQueries(res.data.queries || []);
@@ -46,16 +39,6 @@ const AdminQueries = () => {
       }
     } catch (err) {
       console.error('Error fetching queries:', err);
-      try {
-        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-        const token = localStorage.getItem('skriibe_admin_token') || localStorage.getItem('skriibe_token');
-        const headers = token ? { Authorization: `Bearer ${token}` } : {};
-        const res = await axios.get(`${apiUrl}/admin/queries`, { headers, withCredentials: true });
-        if (res.data?.queries) {
-          setQueries(res.data.queries);
-          if (res.data.stats) setStats(res.data.stats);
-        }
-      } catch (e) {}
     } finally {
       setLoading(false);
     }
@@ -73,10 +56,7 @@ const AdminQueries = () => {
     if (!query.isRead) {
       try {
         const qId = query._id || query.id || query.ticketId;
-        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-        const token = localStorage.getItem('skriibe_admin_token') || localStorage.getItem('skriibe_token');
-        const headers = token ? { Authorization: `Bearer ${token}` } : {};
-        await axios.patch(`${apiUrl}/queries/admin/${qId}`, { isRead: true }, { headers, withCredentials: true });
+        await api.patch(`/queries/admin/${qId}`, { isRead: true });
         setQueries(prev => prev.map(q => (q._id === qId || q.ticketId === qId) ? { ...q, isRead: true } : q));
         setStats(prev => ({ ...prev, unreadCount: Math.max(0, prev.unreadCount - 1) }));
       } catch (e) {
@@ -90,23 +70,27 @@ const AdminQueries = () => {
     setUpdating(true);
     try {
       const qId = selectedQuery._id || selectedQuery.id || selectedQuery.ticketId;
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-      const token = localStorage.getItem('skriibe_admin_token') || localStorage.getItem('skriibe_token');
-      const headers = {
-        'Content-Type': 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {})
-      };
-      const res = await axios.patch(
-        `${apiUrl}/queries/admin/${qId}`,
-        { status: newStatus, adminNotes },
-        { headers, withCredentials: true }
-      );
+      const res = await api.patch(`/queries/admin/${qId}`, { status: newStatus, adminNotes });
 
       if (res.data?.success) {
         const updated = res.data.query || { ...selectedQuery, status: newStatus, adminNotes };
         setSelectedQuery(updated);
-        setQueries(prev => prev.map(q => (q._id === updated._id || q.ticketId === updated.ticketId || q._id === qId || q.ticketId === qId) ? updated : q));
-        fetchQueries();
+        setQueries(prev => prev.flatMap(q => {
+          const matchesUpdatedQuery = q._id === updated._id || q.ticketId === updated.ticketId || q._id === qId || q.ticketId === qId;
+          if (!matchesUpdatedQuery) return [q];
+          return activeFilter === 'all' || newStatus === activeFilter ? [updated] : [];
+        }));
+        if (selectedQuery.status !== newStatus) {
+          const countKeyByStatus = { pending: 'pendingCount', 'in-review': 'inReviewCount', resolved: 'resolvedCount' };
+          setStats((current) => {
+            const next = { ...current };
+            const previousKey = countKeyByStatus[selectedQuery.status];
+            const nextKey = countKeyByStatus[newStatus];
+            if (previousKey) next[previousKey] = Math.max(0, next[previousKey] - 1);
+            if (nextKey) next[nextKey] += 1;
+            return next;
+          });
+        }
       }
     } catch (err) {
       console.error('Error updating query status:', err);
@@ -120,36 +104,10 @@ const AdminQueries = () => {
     setUpdating(true);
     setNotesSaved(false);
     const qId = selectedQuery._id || selectedQuery.id || selectedQuery.ticketId;
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-    const token = localStorage.getItem('skriibe_admin_token') || localStorage.getItem('skriibe_token');
-    const headers = {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {})
-    };
+
 
     try {
-      let res;
-      try {
-        res = await axios.patch(
-          `${apiUrl}/queries/admin/${qId}`,
-          { adminNotes },
-          { headers, withCredentials: true }
-        );
-      } catch (firstErr) {
-        try {
-          res = await axios.patch(
-            `${apiUrl}/admin/queries/${qId}`,
-            { adminNotes },
-            { headers, withCredentials: true }
-          );
-        } catch (secondErr) {
-          res = await axios.patch(
-            `${apiUrl}/queries/${qId}`,
-            { adminNotes },
-            { headers, withCredentials: true }
-          );
-        }
-      }
+      const res = await api.patch(`/queries/admin/${qId}`, { adminNotes });
 
       if (res && res.data?.success) {
         const updated = res.data.query || { ...selectedQuery, adminNotes };
@@ -167,10 +125,7 @@ const AdminQueries = () => {
       setTimeout(() => setNotesSaved(false), 3000);
     } catch (err) {
       console.error('Error saving notes:', err);
-      setSelectedQuery(prev => ({ ...prev, adminNotes }));
-      setQueries(prev => prev.map(q => (q._id === qId || q.ticketId === qId) ? { ...q, adminNotes } : q));
-      setNotesSaved(true);
-      setTimeout(() => setNotesSaved(false), 3000);
+      setNotesSaved(false);
     } finally {
       setUpdating(false);
     }

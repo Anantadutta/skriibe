@@ -22,6 +22,7 @@ const CreatorNotifications = () => {
 
   useEffect(() => {
     const fetchNotifications = async (isBackground = false) => {
+      if (isBackground && document.visibilityState === 'hidden') return;
       if (!isBackground) setLoading(true);
       try {
         const res = await api.get(`/creator/notifications?t=${Date.now()}`);
@@ -38,7 +39,14 @@ const CreatorNotifications = () => {
     const interval = setInterval(() => {
       fetchNotifications(true);
     }, 15000);
-    return () => clearInterval(interval);
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === 'visible') fetchNotifications(true);
+    };
+    document.addEventListener('visibilitychange', refreshWhenVisible);
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', refreshWhenVisible);
+    };
   }, []);
 
   const [readIds, setReadIds] = useState(() => JSON.parse(localStorage.getItem('creatorReadNotifications') || '[]'));

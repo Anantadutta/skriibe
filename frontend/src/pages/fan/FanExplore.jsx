@@ -146,16 +146,16 @@ const FanExplore = () => {
     return [...new Set(custom)];
   }, [creators, activeCategory]);
 
-  const filteredCreators = creators.filter(c => {
+  const filteredCreators = React.useMemo(() => creators.filter(c => {
     if (fanCreatorHandle && c.handle && c.handle.toLowerCase() === fanCreatorHandle.toLowerCase()) return false;
     if (activeCategory === 'Others' && selectedCustomCategory) {
       return (c.expertise || []).includes(selectedCustomCategory);
     }
     return true;
-  });
+  }), [creators, fanCreatorHandle, activeCategory, selectedCustomCategory]);
 
   const hasMore = visibleCount < filteredCreators.length;
-  const paginatedCreators = filteredCreators.slice(0, visibleCount);
+  const paginatedCreators = React.useMemo(() => filteredCreators.slice(0, visibleCount), [filteredCreators, visibleCount]);
 
   return (
     <div className="fan-explore-root">

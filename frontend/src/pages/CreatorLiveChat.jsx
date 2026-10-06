@@ -177,10 +177,13 @@ const CreatorLiveChat = () => {
   // and immediately removes the waiting screen if the session ends or times out
   useEffect(() => {
     let pollTimer;
+    let pollInProgress = false;
     const sId = session?._id || session?.id || session?.sessionId || sessionId;
     const pollStart = Date.now();
     if (viewState === 'waiting_for_fan' && sId) {
       const checkStatus = async () => {
+        if (pollInProgress || document.visibilityState === 'hidden') return;
+        pollInProgress = true;
         try {
           const res = await api.get(`/chat/${sId}`);
           if (res.data?.success && res.data?.session) {
@@ -199,10 +202,12 @@ const CreatorLiveChat = () => {
           }
         } catch (err) {
           console.error('Polling error checking chat session:', err);
+        } finally {
+          pollInProgress = false;
         }
       };
       // Initial delay before polling to allow socket events a chance
-      pollTimer = setInterval(checkStatus, 2000);
+      pollTimer = setInterval(checkStatus, 5000);
     }
     return () => {
       if (pollTimer) clearInterval(pollTimer);
@@ -234,9 +239,12 @@ const CreatorLiveChat = () => {
   // Robust polling fallback for production environments (Vercel/Serverless/Multi-instance)
   useEffect(() => {
     let pollTimer;
+    let pollInProgress = false;
     const sId = session?._id || session?.id || session?.sessionId;
     if (viewState === 'active' && sId && !error) {
       pollTimer = setInterval(async () => {
+        if (pollInProgress || document.visibilityState === 'hidden') return;
+        pollInProgress = true;
         try {
           const res = await api.get(`/chat/${sId}`);
           if (res.data?.success) {
@@ -280,8 +288,10 @@ const CreatorLiveChat = () => {
           }
         } catch (e) {
           console.error("Polling fallback error", e);
+        } finally {
+          pollInProgress = false;
         }
-      }, 2500);
+      }, 5000);
     }
     return () => clearInterval(pollTimer);
   }, [viewState, session?._id, session?.id, session?.sessionId, error]);

@@ -8,7 +8,9 @@ const parseJwt = (token) => {
     const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
     const pad = base64.length % 4;
     const padded = pad ? base64 + '='.repeat(4 - pad) : base64;
-    return JSON.parse(atob(padded));
+    const payload = JSON.parse(atob(padded));
+    if (typeof payload.exp === 'number' && payload.exp * 1000 <= Date.now()) return null;
+    return payload;
   } catch (e) {
     return null;
   }
@@ -42,7 +44,12 @@ export const AuthProvider = ({ children }) => {
       if (decoded && decoded.creatorId) return ['creator'];
     }
     const saved = localStorage.getItem('auth_roles');
-    const parsed = saved ? JSON.parse(saved) : null;
+    let parsed = null;
+    try {
+      parsed = saved ? JSON.parse(saved) : null;
+    } catch {
+      localStorage.removeItem('auth_roles');
+    }
     return (parsed && parsed.length > 0) ? parsed : ['fan'];
   });
   
@@ -51,7 +58,11 @@ export const AuthProvider = ({ children }) => {
   });
 
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    return !!(localStorage.getItem('skriibe_creator_token') || localStorage.getItem('skriibe_fan_token') || localStorage.getItem('skriibe_token'));
+    return [
+      localStorage.getItem('skriibe_creator_token'),
+      localStorage.getItem('skriibe_fan_token'),
+      localStorage.getItem('skriibe_token')
+    ].some((token) => Boolean(token && parseJwt(token)));
   });
 
   useEffect(() => {
@@ -78,8 +89,13 @@ export const AuthProvider = ({ children }) => {
         if (decoded) {
           if (decoded.roles) setRoles(decoded.roles);
           else if (decoded.creatorId) setRoles(['creator']);
+          setIsAuthenticated(true);
+        } else {
+          localStorage.removeItem('skriibe_token');
+          setRoles(['fan']);
+          setActiveRole('fan');
+          setIsAuthenticated(false);
         }
-        setIsAuthenticated(true);
       } else {
         setRoles(['fan']);
         setActiveRole('fan');

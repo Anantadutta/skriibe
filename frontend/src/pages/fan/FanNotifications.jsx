@@ -10,12 +10,12 @@ const FanNotifications = () => {
 
   useEffect(() => {
     const fetchNotifications = async (isBackground = false) => {
+      if (isBackground && document.visibilityState === 'hidden') return;
       if (!isBackground) setLoading(true);
       try {
         const res = await api.get('/questions/notifications');
         if (res.data.success) {
           setNotifications(res.data.notifications);
-          window.dispatchEvent(new Event('notificationRead'));
         }
       } catch (err) {
         console.error('Failed to fetch notifications', err);
@@ -27,7 +27,14 @@ const FanNotifications = () => {
     const interval = setInterval(() => {
       fetchNotifications(true);
     }, 15000);
-    return () => clearInterval(interval);
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === 'visible') fetchNotifications(true);
+    };
+    document.addEventListener('visibilitychange', refreshWhenVisible);
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', refreshWhenVisible);
+    };
   }, []);
 
   const handleNotificationClick = async (notif) => {

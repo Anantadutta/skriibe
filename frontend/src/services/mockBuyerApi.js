@@ -1,6 +1,6 @@
 /**
- * @file buyerApi.js
- * @description Mock service for public buyer flow API calls (Phase 6).
+ * @file mockBuyerApi.js
+ * @description Local mock data used by the disclaimer question prototype.
  */
 
 export const getCreatorProfile = (handle) => {

@@ -293,12 +293,15 @@ const LiveChatInterface = () => {
   // Robust auto-poll for fallback messaging and waiting state
   useEffect(() => {
     let pollTimer;
+    let pollInProgress = false;
     const sId = session?.sessionId || session?._id || session?.id;
     const cId = creator?._id || creator?.id;
     const pollStart = Date.now();
     
     if ((viewState === 'waiting' || viewState === 'active') && (sId || cId)) {
       const checkStatus = async () => {
+        if (pollInProgress || document.visibilityState === 'hidden') return;
+        pollInProgress = true;
         try {
           if (sId) {
             const res = await api.get(`/chat/${sId}`);
@@ -358,11 +361,13 @@ const LiveChatInterface = () => {
           }
         } catch (err) {
           console.error('Polling error checking chat session:', err);
+        } finally {
+          pollInProgress = false;
         }
       };
       
       checkStatus();
-      pollTimer = setInterval(checkStatus, viewState === 'active' ? 2500 : 1000);
+      pollTimer = setInterval(checkStatus, viewState === 'active' ? 5000 : 3000);
     }
     
     return () => {

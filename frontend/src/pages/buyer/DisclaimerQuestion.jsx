@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { getCreatorProfile, validateQuestion } from '../../services/buyerApi';
+import { getCreatorProfile, validateQuestion } from '../../services/mockBuyerApi';
 import { Button } from '../../components/ama/ui/Button';
 import { Field } from '../../components/ama/ui/Field';
 import { CharCounter } from '../../components/ama/ui/CharCounter';

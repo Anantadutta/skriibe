@@ -13,8 +13,8 @@ try {
     throw new Error('Admin directory not found at: ' + adminDir);
   }
   
-  // Force installing devDependencies in case NODE_ENV=production is set
-  execSync('npm install --include=dev', { 
+  // Reinstall the exact locked dependencies, including build tools.
+  execSync('npm ci --include=dev', {
     cwd: adminDir, 
     stdio: 'inherit',
     env: { ...process.env, NODE_ENV: 'development' }
