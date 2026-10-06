@@ -145,6 +145,11 @@ const CreatorLiveChat = () => {
   useEffect(() => {
     if (!session || !session.startTime || error) return;
     
+    if (!session.fanAccepted) {
+      setElapsedSeconds(0);
+      return;
+    }
+
     // Calculate initial elapsed time
     const initialElapsed = Math.floor((Date.now() - new Date(session.startTime).getTime()) / 1000);
     setElapsedSeconds(Math.max(0, initialElapsed));
@@ -611,6 +616,14 @@ const CreatorLiveChat = () => {
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <button
+                onClick={() => setShowWarningModal(false)}
+                style={{ background: '#374151', color: '#fff', border: 'none', padding: '12px 24px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '15px', transition: 'background 0.2s' }}
+                onMouseEnter={e => e.currentTarget.style.background = '#4b5563'}
+                onMouseLeave={e => e.currentTarget.style.background = '#374151'}
+              >
+                Back to chat interface
+              </button>
+              <button
                 onClick={() => {
                   setShowWarningModal(false);
                   handleEndChat(false); // end chat and navigate dashboard
@@ -620,14 +633,6 @@ const CreatorLiveChat = () => {
                 onMouseLeave={e => e.currentTarget.style.background = '#ef4444'}
               >
                 Yes, I want to end
-              </button>
-              <button
-                onClick={() => setShowWarningModal(false)}
-                style={{ background: '#374151', color: '#fff', border: 'none', padding: '12px 24px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '15px', transition: 'background 0.2s' }}
-                onMouseEnter={e => e.currentTarget.style.background = '#4b5563'}
-                onMouseLeave={e => e.currentTarget.style.background = '#374151'}
-              >
-                Back to chat interface
               </button>
             </div>
           </div>
@@ -758,7 +763,7 @@ const CreatorLiveChat = () => {
       )}
 
       {/* Active Chat Timer Bar */}
-      {!error && session?.status === 'active' && (() => {
+      {!error && session?.status === 'active' && session?.fanAccepted && (() => {
         const rate = session?.ratePerMinute || 0;
         const bal = session?.fanId?.walletBalance || 0;
         const isFreeChat = session?.isFreeChat || rate === 0;
@@ -894,7 +899,7 @@ const CreatorLiveChat = () => {
                 position: 'relative',
                 display: 'inline-block'
               }}>
-                {hoveredMessageId === m.messageId && (
+                {hoveredMessageId === m.messageId && !isChatEnded && (
                   <div style={{
                     position: 'absolute',
                     top: '-36px',

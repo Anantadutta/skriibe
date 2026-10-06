@@ -71,6 +71,11 @@ const LiveChatInterface = () => {
   useEffect(() => {
     if (!session || !session.startTime || error) return;
     
+    if (!session.fanAccepted) {
+      setElapsedSeconds(0);
+      return;
+    }
+
     // Calculate initial elapsed time securely from the backend's recorded start time
     const initialElapsed = Math.floor((Date.now() - new Date(session.startTime).getTime()) / 1000);
     setElapsedSeconds(Math.max(0, initialElapsed));
@@ -1152,7 +1157,7 @@ const LiveChatInterface = () => {
                 position: 'relative',
                 display: 'inline-block'
               }}>
-                {hoveredMessageId === m.messageId && (
+                {hoveredMessageId === m.messageId && viewState === 'active' && (
                   <div style={{
                     position: 'absolute',
                     top: '-36px',
