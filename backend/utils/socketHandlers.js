@@ -380,7 +380,7 @@ module.exports = (io) => {
         const rate = session.ratePerMinute;
         
         // Calculate exact total cost that SHOULD have been paid by now
-        const elapsedSeconds = (Date.now() - session.startTime.getTime()) / 1000;
+        const elapsedSeconds = Math.round((Date.now() - session.startTime.getTime()) / 1000);
         
         const expectedTotalCost = (elapsedSeconds / 60) * rate;
         
@@ -447,9 +447,9 @@ module.exports = (io) => {
           activeChatTimers.delete(sessionId);
         }
         const fan = await Fan.findById(session.fanId);
-        if (fan && session.startTime) {
+        if (fan && session.startTime && session.fanAccepted) {
+          const elapsedSeconds = Math.round((Date.now() - session.startTime.getTime()) / 1000);
           if (session.isFreeChat) {
-            const elapsedSeconds = (Date.now() - session.startTime.getTime()) / 1000;
             if (reason === 'CREATOR_ENDED' && elapsedSeconds < 60) {
               // fan keeps free chat
             } else {
@@ -459,7 +459,6 @@ module.exports = (io) => {
           }
           
           const rate = session.ratePerMinute;
-          const elapsedSeconds = (Date.now() - session.startTime.getTime()) / 1000;
           const expectedTotalCost = (elapsedSeconds / 60) * rate;
           let amountToDeduct = expectedTotalCost - session.totalCost;
           

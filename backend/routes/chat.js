@@ -319,9 +319,9 @@ router.post('/end', async (req, res) => {
     const fan = await Fan.findById(session.fanId);
     let creatorEndedUnderOneMinute = false;
     
-    if (fan && session.startTime && !cancelBeforeStart) {
+    if (fan && session.startTime && !cancelBeforeStart && session.fanAccepted) {
       const rate = session.ratePerMinute;
-      const elapsedSeconds = (Date.now() - session.startTime.getTime()) / 1000;
+      const elapsedSeconds = Math.round((Date.now() - session.startTime.getTime()) / 1000);
       const expectedTotalCost = (elapsedSeconds / 60) * rate;
       let amountToDeduct = expectedTotalCost - (session.totalCost || 0);
       
