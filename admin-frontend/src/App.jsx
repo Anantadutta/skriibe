@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import Dashboard from './pages/Dashboard';
 import ApproveCreator from './pages/ApproveCreator';
@@ -26,6 +26,7 @@ import Affiliators from './pages/Affiliators';
 import AdminLayout from './components/AdminLayout';
 import Tips from './pages/Tips';
 import Queries from './pages/Queries';
+import { validateAdminSession } from './adminAuth';
 
 // Authentication guard
 const ProtectedRoute = ({ isAdmin }) => {
@@ -38,9 +39,22 @@ const ProtectedRoute = ({ isAdmin }) => {
 
 function App() {
   const [isAdmin, setIsAdmin] = useState(false);
+  const [authChecked, setAuthChecked] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    validateAdminSession().then((valid) => {
+      if (active) {
+        setIsAdmin(valid);
+        setAuthChecked(true);
+      }
+    });
+    return () => { active = false; };
+  }, []);
 
   return (
     <BrowserRouter>
+      {!authChecked ? <div style={{ minHeight: '100vh', background: '#0a0a0f' }} /> :
       <Routes>
         <Route path="/admin/login" element={<AdminLogin onLogin={() => setIsAdmin(true)} />} />
         
@@ -75,6 +89,7 @@ function App() {
         </Route>
         <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
       </Routes>
+      }
     </BrowserRouter>
   );
 }

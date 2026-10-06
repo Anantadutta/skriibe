@@ -23,13 +23,7 @@ const AdminLayout = () => {
           setUnreadQueriesCount(queryRes.data.unreadCount);
         }
       } catch (err) {
-        // Fallback check
-        try {
-          const fallbackRes = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/admin/queries/stats`, { withCredentials: true });
-          if (fallbackRes.data?.unreadCount !== undefined) {
-            setUnreadQueriesCount(fallbackRes.data.unreadCount);
-          }
-        } catch (e) {}
+        console.error('Failed to fetch unread query count:', err);
       }
     };
     fetchUnread();

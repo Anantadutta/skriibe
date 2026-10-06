@@ -23,15 +23,12 @@ const Queries = () => {
     setLoading(true);
     try {
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-      const token = localStorage.getItem('skriibe_admin_token') || localStorage.getItem('skriibe_token');
-      const headers = token ? { Authorization: `Bearer ${token}` } : {};
       const params = {};
       if (activeFilter !== 'all') params.status = activeFilter;
       if (searchQuery.trim()) params.search = searchQuery.trim();
 
       const res = await axios.get(`${apiUrl}/queries/admin`, { 
         params, 
-        headers,
         withCredentials: true 
       });
 
@@ -43,17 +40,6 @@ const Queries = () => {
       }
     } catch (err) {
       console.error('Error fetching queries:', err);
-      // Fallback try /admin/queries
-      try {
-        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-        const token = localStorage.getItem('skriibe_admin_token') || localStorage.getItem('skriibe_token');
-        const headers = token ? { Authorization: `Bearer ${token}` } : {};
-        const res = await axios.get(`${apiUrl}/admin/queries`, { headers, withCredentials: true });
-        if (res.data?.queries) {
-          setQueries(res.data.queries);
-          if (res.data.stats) setStats(res.data.stats);
-        }
-      } catch (e) {}
     } finally {
       setLoading(false);
     }
@@ -78,9 +64,7 @@ const Queries = () => {
       try {
         const qId = query._id || query.id || query.ticketId;
         const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-        const token = localStorage.getItem('skriibe_admin_token') || localStorage.getItem('skriibe_token');
-        const headers = token ? { Authorization: `Bearer ${token}` } : {};
-        await axios.patch(`${apiUrl}/queries/admin/${qId}`, { isRead: true }, { headers, withCredentials: true });
+        await axios.patch(`${apiUrl}/queries/admin/${qId}`, { isRead: true }, { withCredentials: true });
         // Update local state
         setQueries(prev => prev.map(q => (q._id === qId || q.ticketId === qId) ? { ...q, isRead: true } : q));
         setStats(prev => ({ ...prev, unreadCount: Math.max(0, prev.unreadCount - 1) }));
@@ -96,15 +80,10 @@ const Queries = () => {
     try {
       const qId = selectedQuery._id || selectedQuery.id || selectedQuery.ticketId;
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-      const token = localStorage.getItem('skriibe_admin_token') || localStorage.getItem('skriibe_token');
-      const headers = {
-        'Content-Type': 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {})
-      };
       const res = await axios.patch(
         `${apiUrl}/queries/admin/${qId}`,
         { status: newStatus, adminNotes },
-        { headers, withCredentials: true }
+        { withCredentials: true }
       );
 
       if (res.data?.success) {
@@ -126,35 +105,13 @@ const Queries = () => {
     setNotesSaved(false);
     const qId = selectedQuery._id || selectedQuery.id || selectedQuery.ticketId;
     const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-    const token = localStorage.getItem('skriibe_admin_token') || localStorage.getItem('skriibe_token');
-    const headers = {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {})
-    };
 
     try {
-      let res;
-      try {
-        res = await axios.patch(
-          `${apiUrl}/queries/admin/${qId}`,
-          { adminNotes },
-          { headers, withCredentials: true }
-        );
-      } catch (firstErr) {
-        try {
-          res = await axios.patch(
-            `${apiUrl}/admin/queries/${qId}`,
-            { adminNotes },
-            { headers, withCredentials: true }
-          );
-        } catch (secondErr) {
-          res = await axios.patch(
-            `${apiUrl}/queries/${qId}`,
-            { adminNotes },
-            { headers, withCredentials: true }
-          );
-        }
-      }
+      const res = await axios.patch(
+        `${apiUrl}/queries/admin/${qId}`,
+        { adminNotes },
+        { withCredentials: true }
+      );
 
       if (res && res.data?.success) {
         const updated = res.data.query || { ...selectedQuery, adminNotes };

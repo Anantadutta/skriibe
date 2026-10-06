@@ -320,7 +320,6 @@ app.use('/api/email-verification', require('./routes/emailVerification'));
 app.use('/api/chat', require('./routes/chat'));
 app.use('/api/wallet', require('./routes/wallet'));
 app.use('/api/queries', require('./routes/queries'));
-app.use('/api/admin/queries', require('./routes/queries'));
 
 const errorHandler = require('./middleware/errorHandler');
 app.use(errorHandler);
