@@ -206,7 +206,9 @@ router.get('/transactions', async (req, res) => {
     });
 
     const chats = await ChatSession.find({
-      chatId: { $exists: true, $ne: null }
+      chatId: { $exists: true, $ne: null },
+      creatorJoined: true,
+      fanAccepted: true
     })
       .populate('creatorId', 'name handle avatarUrl')
       .populate('fanId', 'name')
