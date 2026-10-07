@@ -408,7 +408,7 @@ const LiveChatInterface = () => {
     if (socketRef.current) {
       socketRef.current.disconnect();
     }
-    const apiUrl = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : 'http://localhost:5000';
+    const apiUrl = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace(/\/api$/, '') : 'http://localhost:5000';
     const newSocket = io(apiUrl, { transports: ['websocket', 'polling'] });
     socketRef.current = newSocket;
     
@@ -1157,7 +1157,7 @@ const LiveChatInterface = () => {
                 position: 'relative',
                 display: 'inline-block'
               }}>
-                {hoveredMessageId === m.messageId && viewState === 'active' && (
+                {hoveredMessageId === m.messageId && viewState === 'active' && !freeChatEnded && !error && session?.status !== 'ended' && (
                   <div style={{
                     position: 'absolute',
                     top: '-36px',

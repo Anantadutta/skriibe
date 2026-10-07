@@ -207,7 +207,7 @@
     "avatarUrl": "https://res.cloudinary.com/x4tw73kr/image/upload/v1789906772/avatars/xp6rgljbxen11qwphzx7.png",
     "price": 50,
     "pricePerQuestion": 50,
-    "isLive": true,
+    "isLive": false,
     "handle": "theanaayaroy.10",
     "liveChatPrice": 15
   },
@@ -220,15 +220,6 @@
     "pricePerQuestion": 49,
     "isLive": true,
     "handle": "official_shreyadubey23"
-  },
-  {
-    "_id": "6a9a92e3af8f208b91ee587e",
-    "name": "ananta ananta",
-    "profileUrl": "",
-    "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocK-jM-p7SxzZSH8MjY0zNNEZsT9cmRuAJXxug_BRD24Ye6xug=s96-c",
-    "price": 99,
-    "pricePerQuestion": 99,
-    "isLive": false
   },
   {
     "_id": "6a9ef40664b04c2f7d50537f",
@@ -318,8 +309,8 @@
     "name": "Tarundeep Singh",
     "profileUrl": "skriibe.com/tarun.gujral",
     "avatarUrl": "https://res.cloudinary.com/x4tw73kr/image/upload/v1790665816/avatars/yueniosulaswx4ilw84z.webp",
-    "price": 0,
-    "pricePerQuestion": 0,
+    "price": 10,
+    "pricePerQuestion": 10,
     "isLive": true,
     "liveChatPrice": 5,
     "handle": "tarun.gujral"
@@ -344,7 +335,7 @@
     "pricePerQuestion": 10,
     "isLive": true,
     "liveChatPrice": 5,
-    "handle": "kevin"
+    "handle": "kevin_deleted_1791309412958"
   },
   {
     "_id": "6ac0baaa322771e5ec51796f",
@@ -388,5 +379,69 @@
     "pricePerQuestion": 10,
     "isLive": false,
     "liveChatPrice": 5
+  },
+  {
+    "_id": "6ac4fe43d5e8164c3e5e87ad",
+    "name": "Jawand Singh",
+    "profileUrl": "skriibe.com/jdbhogal17",
+    "avatarUrl": "https://res.cloudinary.com/x4tw73kr/image/upload/v1791295207/avatars/fbyj7ldc8ej3dlwdfu3j.webp",
+    "price": 0,
+    "pricePerQuestion": 0,
+    "isLive": true,
+    "liveChatPrice": 10,
+    "handle": "jdbhogal17"
+  },
+  {
+    "_id": "6ac5328cf2a41dfc45534a1d",
+    "name": "",
+    "profileUrl": "",
+    "avatarUrl": "",
+    "price": 10,
+    "pricePerQuestion": 10,
+    "isLive": false,
+    "liveChatPrice": 5
+  },
+  {
+    "_id": "6ac53389f2a41dfc45534a21",
+    "name": "",
+    "profileUrl": "",
+    "avatarUrl": "",
+    "price": 10,
+    "pricePerQuestion": 10,
+    "isLive": false,
+    "liveChatPrice": 5
+  },
+  {
+    "_id": "6ac53672f2a41dfc45534a2d",
+    "name": "kevin",
+    "profileUrl": "skriibe.com/ugu",
+    "avatarUrl": "",
+    "price": 20,
+    "pricePerQuestion": 20,
+    "isLive": true,
+    "liveChatPrice": 5,
+    "handle": "ugu"
+  },
+  {
+    "_id": "6ac5c3640bac6f70d16a7c32",
+    "name": "Sakshi Kushwaha",
+    "profileUrl": "skriibe.com/uhhh",
+    "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocKJrYEjjnSIrH6K26HcyIPWoEQztBbfFHGEHlzbUz0qoqCfAQ=s96-c",
+    "price": 10,
+    "pricePerQuestion": 10,
+    "isLive": false,
+    "liveChatPrice": 5,
+    "handle": "uhhh_deleted_1791345580691"
+  },
+  {
+    "_id": "6ac5c3c30bac6f70d16a7c36",
+    "name": "ewcf",
+    "profileUrl": "skriibe.com/ewfc",
+    "avatarUrl": "",
+    "price": 10,
+    "pricePerQuestion": 10,
+    "isLive": false,
+    "liveChatPrice": 5,
+    "handle": "ewfc_deleted_1791345665185"
   }
 ]

@@ -101,6 +101,10 @@ const FanExplore = () => {
     socket.on('chat-session-ended', ({ creatorId }) => setInSession(creatorId, false));
 
     const fetchFanProfile = async () => {
+      if (!isLoggedIn) {
+        setIsFirstTimeUser(true);
+        return;
+      }
       try {
         const res = await getFanMe();
         if (res.success && res.fan) {

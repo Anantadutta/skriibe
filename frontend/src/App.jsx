@@ -493,7 +493,11 @@ function App() {
                 </ErrorBoundary>
               } />
               <Route path="/creator/dashboard/reply/:id" element={<CreatorReplyScreen />} />
-              <Route path="/creator/dashboard/live-chat/:sessionId" element={<CreatorLiveChat />} />
+              <Route path="/creator/dashboard/live-chat/:sessionId" element={
+                <ErrorBoundary>
+                  <CreatorLiveChat />
+                </ErrorBoundary>
+              } />
               <Route path="/creator/inbox/delete/:id" element={<CreatorDeleteQuestion />} />
               <Route path="/creator/inbox" element={<CreatorInbox />} />
               <Route path="/creator/analytics" element={<CreatorAnalytics />} />

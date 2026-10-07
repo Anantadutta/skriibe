@@ -7,6 +7,7 @@ import { getLiveCreators } from '../services/discoveryApi';
 import { getFanMe } from '../services/fanApi';
 import { checkIfLiveNow } from '../utils/timeUtils';
 import { normalizeExpertiseList } from '../utils/expertiseConstants';
+import { useAuth } from '../context/AuthContext';
 
 const CATEGORIES = [
   'All',
@@ -27,6 +28,7 @@ const CATEGORIES = [
 ];
 
 const WhosOnline = ({ theme = 'dark' }) => {
+  const { isAuthenticated } = useAuth();
   const [creators, setCreators] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isFirstTimeUser, setIsFirstTimeUser] = useState(true);
@@ -96,6 +98,10 @@ const WhosOnline = ({ theme = 'dark' }) => {
     fetchCreators();
 
     const fetchFanProfile = async () => {
+      if (!isAuthenticated) {
+        setIsFirstTimeUser(true);
+        return;
+      }
       try {
         const res = await getFanMe();
         if (res.success && res.fan) {

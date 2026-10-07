@@ -304,7 +304,7 @@ const CreatorLiveChat = () => {
     if (socketRef.current) {
       socketRef.current.disconnect();
     }
-    const apiUrl = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : 'http://localhost:5000';
+    const apiUrl = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace(/\/api$/, '') : 'http://localhost:5000';
     const newSocket = io(apiUrl, { transports: ['websocket', 'polling'] });
     socketRef.current = newSocket;
     
@@ -474,10 +474,10 @@ const CreatorLiveChat = () => {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     
-    if (session?.fanAccepted && viewState !== 'active') {
+    if (session?.fanAccepted && viewState !== 'active' && session?.status !== 'ended') {
       setViewState('active');
     }
-  }, [messages, session?.fanAccepted, viewState]);
+  }, [messages, session?.fanAccepted, viewState, session?.status]);
 
   const handleAcceptContinueChat = async (newSessionId) => {
     if (!newSessionId) return;
@@ -899,7 +899,7 @@ const CreatorLiveChat = () => {
                 position: 'relative',
                 display: 'inline-block'
               }}>
-                {hoveredMessageId === m.messageId && !isChatEnded && (
+                {hoveredMessageId === m.messageId && session?.status === 'active' && !error && !isFreeChatOver && viewState === 'active' && (
                   <div style={{
                     position: 'absolute',
                     top: '-36px',
