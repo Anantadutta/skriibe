@@ -211,9 +211,7 @@ const QuestionModal = ({ creator, onClose }) => {
                 <span style={{ color: '#fff', fontSize: '56px', fontWeight: '800', lineHeight: '1' }}>{price}</span>
               </div>
 
-              <div style={{ color: '#94a3b8', fontSize: '14px', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span style={{ color: '#fb923c' }}>⚡</span> I'll reply within 24 hrs
-              </div>
+
 
               <button
                 onClick={() => setStep('ask')}

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import StartChatModal from './StartChatModal';
 import { checkIfLiveNow } from '../../utils/timeUtils';
 
-const LiveChatEntryPoint = ({ creator, isBanned, effectiveIsPreview, isLoggedIn }) => {
+const LiveChatEntryPoint = ({ creator, isBanned, effectiveIsPreview, isLoggedIn, walletBalance }) => {
   const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
   
@@ -57,14 +57,20 @@ const LiveChatEntryPoint = ({ creator, isBanned, effectiveIsPreview, isLoggedIn 
         boxShadow: '0 0 8px #22c55e',
         animation: 'pulse 2s infinite'
       }}></span>
-      {effectiveIsPreview ? 'Live Chat Preview' : `Live Chat (₹${creator.liveChatRate || 10}/min) →`}
+      {effectiveIsPreview ? 'Live Chat Preview' : `Live Chat (₹${creator.liveChatPrice || 5}/min) →`}
     </button>
     {showModal && (
       <StartChatModal 
         creatorName={creator.name || creator.handle}
         onConfirm={() => {
           setShowModal(false);
-          navigate(`/${creator.handle}/recharge`);
+          const pricePerMin = creator.liveChatPrice || 5;
+          const requiredBalance = pricePerMin * 5;
+          if (typeof walletBalance !== 'undefined' && walletBalance >= requiredBalance) {
+            navigate(`/${creator.handle}/live-chat`);
+          } else {
+            navigate(`/${creator.handle}/recharge`);
+          }
         }}
         onClose={() => setShowModal(false)}
       />

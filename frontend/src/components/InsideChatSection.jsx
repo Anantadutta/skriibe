@@ -74,7 +74,7 @@ const InsideChatSection = ({ theme = 'dark' }) => {
                   isLight ? 'text-gray-600' : 'text-gray-300'
                 }`}
               >
-                A private thread that stays yours. Ask the question you've typed and deleted a hundred times — they reply themselves, verified, no manager, no bot. The meter starts when they join and stops the second the chat ends.
+                A private thread that stays yours. Ask the question you've typed and deleted a hundred times - they reply themselves, verified, no manager, no bot. The meter starts when they join and stops the second the chat ends.
               </p>
             </div>
 

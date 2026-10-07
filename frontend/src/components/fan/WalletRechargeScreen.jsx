@@ -2,8 +2,19 @@ import React, { useState } from 'react';
 import WalletPaymentButton from './WalletPaymentButton';
 
 const WalletRechargeScreen = ({ rate, onCancel, onRechargeSuccess, balance = 0, transactions = [] }) => {
-  const presets = [50, 100, 200, 500, 1000, 2000];
-  const [selectedAmount, setSelectedAmount] = useState(100);
+  const presets = [25, 50, 100, 200, 500, 1000, 2000];
+  const requiredAmount = rate && rate > 0 ? rate * 5 : 100;
+  const shortfall = Math.max(requiredAmount - balance, 0);
+  // Default to at least the shortfall, or 100 if they don't need much.
+  // Find the closest preset or just add it
+  const initialPreset = presets.find(p => p >= shortfall) || shortfall || 100;
+  
+  const [selectedAmount, setSelectedAmount] = useState(initialPreset);
+  
+  if (!presets.includes(initialPreset)) {
+    presets.push(initialPreset);
+    presets.sort((a,b) => a-b);
+  }
   const [showAllTransactions, setShowAllTransactions] = useState(false);
 
 
@@ -124,14 +135,15 @@ const WalletRechargeScreen = ({ rate, onCancel, onRechargeSuccess, balance = 0, 
                 top: 0,
                 background: '#38BDF8',
                 color: '#000',
-                fontSize: '10px',
+                fontSize: '9px',
                 fontWeight: '800',
-                padding: '4px 12px',
+                padding: '3px 6px',
                 borderBottomLeftRadius: '8px',
                 borderBottomRightRadius: '8px',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '4px'
+                gap: '2px',
+                whiteSpace: 'nowrap'
               }}>
                 <span>★</span> Most Popular
               </div>

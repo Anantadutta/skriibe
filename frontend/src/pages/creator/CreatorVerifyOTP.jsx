@@ -84,9 +84,9 @@ const CreatorVerifyOTP = () => {
         setAuthData(['creator'], 'creator', token);
       }
       if (creator.handle) {
-        navigate('/creator/dashboard', { state: { creator }, replace: true });
+        window.location.href = '/creator/dashboard';
       } else {
-        navigate('/onboard/profile', { state: { creator }, replace: true });
+        window.location.href = '/onboard/profile';
       }
     } catch (err) {
       setError(err.response?.data?.message || 'Invalid OTP');

@@ -131,7 +131,7 @@ const AdminAlerts = () => {
           <h1 className="font-wide" style={{ margin: 0, fontSize: '1.75rem', letterSpacing: '-0.03em', color: '#ffffff' }}>
             Admin alerts/notifications
           </h1>
-          <div style={{ fontSize: '0.85rem', color: '#94a3b8', marginTop: '4px' }}>Your inbox — flagged questions, disputes, payouts & signups land here</div>
+          <div style={{ fontSize: '0.85rem', color: '#94a3b8', marginTop: '4px' }}>Your inbox -flagged questions, disputes, payouts & signups land here</div>
         </div>
         {unreadCount > 0 && (
           <button onClick={handleMarkAllRead} style={{ background: 'transparent', color: '#38BDF8', border: 'none', fontSize: '0.85rem', cursor: 'pointer', fontWeight: 'bold' }}>

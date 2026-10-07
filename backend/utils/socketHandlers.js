@@ -1,4 +1,5 @@
 const ChatSession = require('../models/ChatSession');
+const { processAffiliateEarning } = require('./affiliateEarning');
 const Fan = require('../models/Fan');
 const Creator = require('../models/Creator');
 const WalletTransaction = require('../models/WalletTransaction');
@@ -190,7 +191,7 @@ module.exports = (io) => {
       }
     });
 
-    socket.on('send_message', async ({ sessionId, sender, content, tempId }) => {
+    socket.on('send_message', async ({ sessionId, sender, content, replyToMessageId, tempId }) => {
       try {
         const session = await ChatSession.findById(sessionId);
         if (!session || session.status !== 'active') {
@@ -207,6 +208,7 @@ module.exports = (io) => {
           fanId: session.fanId,
           senderRole: sender,
           content,
+          replyToMessageId,
           sentAt,
           deliveredAt: null,
           readAt: null
@@ -288,11 +290,11 @@ module.exports = (io) => {
       socket.to(sessionId.toString()).emit('presence_update', { sender, status });
     });
 
-    socket.on('end_chat', async ({ sessionId }) => {
-      await endChatSession(sessionId, io);
+    socket.on('end_chat', async ({ sessionId, reason }) => {
+      await endChatSession(sessionId, io, reason);
     });
 
-    socket.on('wallet_recharged', ({ sessionId }) => {
+    socket.on('wallet_recharged', async ({ sessionId, newBalance }) => {
       console.log(`Wallet recharged for session ${sessionId}, resuming chat...`);
       if (pausedChatTimers.has(sessionId)) {
         clearTimeout(pausedChatTimers.get(sessionId));
@@ -302,6 +304,13 @@ module.exports = (io) => {
       // Update session status back if needed, though it should still be 'active'
       startWalletDeductionTimer(sessionId, io);
       io.to(sessionId.toString()).emit('wallet_recharged');
+      const currentSession = await ChatSession.findById(sessionId);
+      if (currentSession) {
+        const fan = await Fan.findById(currentSession.fanId);
+        if (fan) {
+          io.to(sessionId.toString()).emit('wallet_update', { balance: fan.walletBalance });
+        }
+      }
     });
 
     socket.on('disconnect', () => {
@@ -311,17 +320,45 @@ module.exports = (io) => {
   });
 
   async function startWalletDeductionTimer(sessionId, io) {
-    console.log(`Starting wallet deduction timer for session: ${sessionId}`);
+    console.log('Starting wallet deduction timer for session: ' + sessionId);
     
-    // Check if it's a free chat first
+    // Clear any existing timer to prevent duplicates/orphans
+    if (activeChatTimers.has(sessionId)) {
+      const existingTimer = activeChatTimers.get(sessionId);
+      clearTimeout(existingTimer);
+      clearInterval(existingTimer);
+      activeChatTimers.delete(sessionId);
+    }
+
     const initSession = await ChatSession.findById(sessionId);
     if (initSession && initSession.isFreeChat) {
-      console.log(`Setting 2-minute strict timeout for free chat ${sessionId}`);
+      const elapsedMs = initSession.startTime ? Date.now() - initSession.startTime.getTime() : 0;
+      const remainingFreeMs = Math.max(0, 120000 - elapsedMs);
+
+      console.log('Setting timeout for free chat ' + sessionId + ' remaining ms: ' + remainingFreeMs);
       const timeout = setTimeout(async () => {
-        console.log(`Free chat session ${sessionId} reached 2 minute limit, ending automatically.`);
-        await endChatSession(sessionId, io, 'FREE_TRIAL_ENDED');
-        activeChatTimers.delete(sessionId);
-      }, 120000); // exactly 2 minutes
+        console.log('Free chat session ' + sessionId + ' reached 2 minute limit, checking wallet...');
+        const fan = await Fan.findById(initSession.fanId);
+        if (fan && fan.walletBalance > 0) {
+          console.log('Fan has balance ' + fan.walletBalance + ', transitioning free chat to paid for session ' + sessionId);
+          const currentSession = await ChatSession.findById(sessionId);
+          fan.hasUsedFreeChat = true;
+          await fan.save();
+          currentSession.isFreeChat = false;
+          currentSession.startTime = new Date();
+          const CreatorModel = require('../models/Creator');
+          const creatorData = await CreatorModel.findById(currentSession.creatorId);
+          if (creatorData) currentSession.ratePerMinute = creatorData.liveChatPrice || 5;
+          await currentSession.save();
+          activeChatTimers.delete(sessionId);
+          io.to(sessionId.toString()).emit('chat_transitioned_to_paid', { startTime: currentSession.startTime, rate: currentSession.ratePerMinute });
+          startWalletDeductionTimer(sessionId, io);
+        } else {
+          console.log('Ending free chat session ' + sessionId);
+          await endChatSession(sessionId, io, 'FREE_TRIAL_ENDED');
+          activeChatTimers.delete(sessionId);
+        }
+      }, remainingFreeMs);
       activeChatTimers.set(sessionId, timeout);
       return; // Skip the interval completely for free chats
     }
@@ -343,7 +380,7 @@ module.exports = (io) => {
         const rate = session.ratePerMinute;
         
         // Calculate exact total cost that SHOULD have been paid by now
-        const elapsedSeconds = (Date.now() - session.startTime.getTime()) / 1000;
+        const elapsedSeconds = Math.round((Date.now() - session.startTime.getTime()) / 1000);
         
         const expectedTotalCost = (elapsedSeconds / 60) * rate;
         
@@ -410,14 +447,18 @@ module.exports = (io) => {
           activeChatTimers.delete(sessionId);
         }
         const fan = await Fan.findById(session.fanId);
-        if (fan && session.startTime) {
+        if (fan && session.startTime && session.fanAccepted) {
+          const elapsedSeconds = Math.round((Date.now() - session.startTime.getTime()) / 1000);
           if (session.isFreeChat) {
-            fan.hasUsedFreeChat = true;
-            await fan.save();
+            if (reason === 'CREATOR_ENDED' && elapsedSeconds < 60) {
+              // fan keeps free chat
+            } else {
+              fan.hasUsedFreeChat = true;
+              await fan.save();
+            }
           }
           
           const rate = session.ratePerMinute;
-          const elapsedSeconds = (Date.now() - session.startTime.getTime()) / 1000;
           const expectedTotalCost = (elapsedSeconds / 60) * rate;
           let amountToDeduct = expectedTotalCost - session.totalCost;
           

@@ -7,6 +7,7 @@ const MessageSchema = new mongoose.Schema({
   fanId: { type: mongoose.Schema.Types.ObjectId, ref: 'Fan', required: true },
   senderRole: { type: String, enum: ['creator', 'fan', 'system'], required: true },
   content: { type: String, required: true },
+  replyToMessageId: { type: String, default: null },
   sentAt: { type: Date, required: true, index: true },
   deliveredAt: { type: Date, default: null },
   readAt: { type: Date, default: null },

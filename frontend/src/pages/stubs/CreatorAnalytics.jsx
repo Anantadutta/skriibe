@@ -112,6 +112,14 @@ const CreatorAnalytics = () => {
       fetchPayouts();
     });
 
+    socket.on('creator_joined', () => {
+      fetchPayouts();
+    });
+
+    socket.on('fan_accepted', () => {
+      fetchPayouts();
+    });
+
     socket.on('chat_cancelled_by_fan', () => {
       fetchPayouts();
     });
@@ -974,7 +982,7 @@ const CreatorAnalytics = () => {
                       <span style={{ color: '#F87171', fontSize: '15px', fontWeight: '800' }}>{payoutStats?.liveChatsIncomplete || 0}</span>
                     </div>
                     <div style={{ color: '#64748B', fontSize: '8px', lineHeight: '1.2', fontWeight: '500', marginTop: '1px' }}>
-                      (chats manually ended by the fan)
+                      (chats manually ended)
                     </div>
                   </div>
                 </div>

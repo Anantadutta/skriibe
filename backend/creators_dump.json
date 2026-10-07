@@ -201,17 +201,6 @@
     "liveChatPrice": 5
   },
   {
-    "_id": "6a95276b0b8ddb40081d695a",
-    "name": "okay hai naam",
-    "profileUrl": "skriibe.com/ok_10",
-    "avatarUrl": "",
-    "price": 1,
-    "pricePerQuestion": 1,
-    "isLive": false,
-    "liveChatPrice": 5,
-    "handle": "ok_10"
-  },
-  {
     "_id": "6a95a275af8f208b91ee4b79",
     "name": "Anaaya P",
     "profileUrl": "skriibe.com/theanaayaroy.10",
@@ -342,7 +331,7 @@
     "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocLdYVh9Pjq38_z0bTklCxd3VewtfP40NyAxl7o55ah3VlcnNK3vXA=s96-c",
     "price": 10,
     "pricePerQuestion": 10,
-    "isLive": false,
+    "isLive": true,
     "liveChatPrice": 5,
     "handle": "vasu"
   },
@@ -353,8 +342,51 @@
     "avatarUrl": "",
     "price": 10,
     "pricePerQuestion": 10,
-    "isLive": false,
+    "isLive": true,
     "liveChatPrice": 5,
     "handle": "kevin"
+  },
+  {
+    "_id": "6ac0baaa322771e5ec51796f",
+    "name": "Ananvi",
+    "profileUrl": "skriibe.com/anavi2003",
+    "avatarUrl": "",
+    "price": 10,
+    "pricePerQuestion": 10,
+    "isLive": true,
+    "liveChatPrice": 5,
+    "handle": "anavi2003"
+  },
+  {
+    "_id": "6ac26ec1d6d7b23e27c28428",
+    "name": "neelima verma",
+    "profileUrl": "skriibe.com/neelima",
+    "avatarUrl": "https://res.cloudinary.com/x4tw73kr/image/upload/v1791127586/avatars/qhhp7i3q0kwu6fjtwz2a.webp",
+    "price": 10,
+    "pricePerQuestion": 10,
+    "isLive": true,
+    "liveChatPrice": 5,
+    "handle": "neelima"
+  },
+  {
+    "_id": "6ac3aacf922faaa9ae8b7698",
+    "name": "Jawand Singh",
+    "profileUrl": "skriibe.com/jdbhogal1",
+    "avatarUrl": "https://res.cloudinary.com/x4tw73kr/image/upload/v1791208360/avatars/ggu2mxddfqro4svknrhz.webp",
+    "price": 10,
+    "pricePerQuestion": 10,
+    "isLive": false,
+    "liveChatPrice": 10,
+    "handle": "jdbhogal1"
+  },
+  {
+    "_id": "6ac3c81e922faaa9ae8b76fe",
+    "name": "Niru Sharma",
+    "profileUrl": "",
+    "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocINXcfytQIjrLPnwGSgyY1vPtntFv9PaA9E1o-rx4vfLW909Q=s96-c",
+    "price": 10,
+    "pricePerQuestion": 10,
+    "isLive": false,
+    "liveChatPrice": 5
   }
 ]

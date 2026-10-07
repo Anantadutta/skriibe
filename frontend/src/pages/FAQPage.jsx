@@ -33,10 +33,10 @@ const FAQPage = () => {
   };
 
   return (
-    <div className={`min-h-screen transition-colors duration-300 ${theme === 'light' ? 'bg-[#f8fafc] text-black' : 'bg-[#0a0a0f] text-white'} flex flex-col font-syne`}>
+    <div className={`min-h-screen transition-colors duration-300 ${theme === 'light' ? 'bg-[#f8fafc] text-black' : 'bg-[#0a0a0f] text-white'} flex flex-col`}>
       <Navbar theme={theme} toggleTheme={toggleTheme} />
       
-      <main className="flex-grow flex flex-col items-center p-6 sm:p-12 relative overflow-hidden">
+      <main className="flex-grow flex flex-col items-center p-6 sm:p-12 relative overflow-hidden font-syne">
         {/* Background effects */}
         <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
           <div style={{

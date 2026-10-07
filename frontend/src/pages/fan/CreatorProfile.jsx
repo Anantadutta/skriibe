@@ -43,6 +43,7 @@ const CreatorProfile = () => {
   const [paymentTab, setPaymentTab] = useState('UPI');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showChatModal, setShowChatModal] = useState(false);
+  const [chatError, setChatError] = useState('');
   const [showStuckModal, setShowStuckModal] = useState(location.state?.showStuckModal || false);
   const [isFirstTimeUser, setIsFirstTimeUser] = useState(false);
   const [walletBalance, setWalletBalance] = useState(0);
@@ -149,6 +150,16 @@ const CreatorProfile = () => {
     fetchUser();
   }, []); // Only run once on mount
 
+  useEffect(() => {
+    if (!loading && creator && location.hash === '#start-chat-button') {
+      setTimeout(() => {
+        const el = document.getElementById('start-chat-button');
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 100);
+    }
+  }, [loading, creator, location.hash]);
 
   useEffect(() => {
     if (isFollowUp && parentQuestionId && isLoggedIn) {
@@ -352,7 +363,7 @@ const CreatorProfile = () => {
               Message sent!
             </h2>
             <p style={{ color: '#94a3b8', margin: '0 0 32px', fontSize: '15px', lineHeight: '1.6', textAlign: 'center' }}>
-              <span style={{ color: '#fff', fontWeight: '600' }}>{creator.name}</span> {isFollowUp ? 'has received your follow-up.' : 'will reply within 24 hours.'} You'll be notified on both channels.
+              <span style={{ color: '#fff', fontWeight: '600' }}>{creator.name}</span> {isFollowUp ? 'has received your follow-up.' : 'will reply.'} You'll be notified on both channels.
             </p>
 
             {/* Delivery Channels Box */}
@@ -659,6 +670,7 @@ const CreatorProfile = () => {
                   </div>
                 </div>
                 <button
+                  id="start-chat-button"
                   onClick={() => {
                     if (dynamicallyLive === false && !effectiveIsPreview) {
                       alert('Creator is offline. Try again later.');
@@ -672,6 +684,7 @@ const CreatorProfile = () => {
                       if (isFirstTimeUser) {
                         navigate(`/${handle}/live-chat`);
                       } else {
+                        setChatError('');
                         setShowChatModal(true);
                       }
                     }
@@ -724,11 +737,7 @@ const CreatorProfile = () => {
                             )}
                           </div>
 
-                          {!isFollowUp && (
-                            <div style={{ color: '#94a3b8', fontSize: '14px', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                              <span style={{ color: '#fb923c' }}>⚡</span> I'll reply within 24 hrs
-                            </div>
-                          )}
+
 
                           <button
                             onClick={() => {
@@ -1038,18 +1047,43 @@ const CreatorProfile = () => {
               Start chat with {creator.name}
             </h2>
             <p style={{ color: '#94a3b8', fontSize: '14px', marginBottom: '24px', lineHeight: '1.5' }}>
-              {isFirstTimeUser ? 'This is your first live chat, so it is completely FREE!' : `You will be charged ₹${creator.liveChatPrice || 5} per minute for this live session.`}
+              {isFirstTimeUser ? 'This is your first live chat, so it is completely FREE!' : `You will be charged ₹${creator.liveChatPrice || 5} per minute for this live session. (Minimum 5 mins required)`}
             </p>
+            {chatError && (
+              <div style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid #ef4444', borderRadius: '8px', padding: '12px', marginBottom: '20px', color: '#f87171', fontSize: '14px' }}>
+                {chatError}
+              </div>
+            )}
             <button
-              onClick={() => {
+              onClick={async () => {
                 if (isFirstTimeUser) {
                   navigate(`/${handle}/live-chat`);
                 } else {
-                  navigate(`/${handle}/recharge`);
+                  let currentBalance = walletBalance;
+                  try {
+                    const walletRes = await api.get('/wallet/balance');
+                    if (walletRes.data.success) {
+                      currentBalance = walletRes.data.balance || 0;
+                      setWalletBalance(currentBalance);
+                    }
+                  } catch (e) {
+                    console.error('Failed to fetch fresh balance before chat', e);
+                  }
+
+                  const pricePerMin = creator.liveChatPrice || 5;
+                  const requiredBalance = pricePerMin * 5;
+                  if (currentBalance >= requiredBalance) {
+                    navigate(`/${handle}/live-chat`);
+                  } else if (chatError) {
+                    // If error is already shown, this acts as the recharge button
+                    navigate(`/${handle}/recharge`);
+                  } else {
+                    setChatError(`Your balance is ₹${currentBalance}. You need at least ₹${requiredBalance} (5 mins) to start this chat.`);
+                  }
                 }
               }}
               style={{
-                background: '#3BA8D8',
+                background: chatError ? '#10b981' : '#3BA8D8',
                 color: '#fff',
                 border: 'none',
                 borderRadius: '100px',
@@ -1061,10 +1095,13 @@ const CreatorProfile = () => {
                 marginBottom: '12px'
               }}
             >
-              Confirm & Start
+              {chatError ? 'Recharge Wallet' : 'Confirm & Start'}
             </button>
             <button
-              onClick={() => setShowChatModal(false)}
+              onClick={() => {
+                setShowChatModal(false);
+                setChatError('');
+              }}
               style={{
                 background: 'transparent',
                 color: '#94a3b8',

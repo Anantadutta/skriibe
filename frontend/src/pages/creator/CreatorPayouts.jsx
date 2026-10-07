@@ -484,7 +484,7 @@ const CreatorPayouts = () => {
                       <div style={{ fontSize: '10px', fontWeight: '700', color: '#686860', letterSpacing: '1.2px', marginBottom: '10px' }}>{group.month}</div>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                         {group.items.map(item => (
-                          <div key={item.id} onClick={() => navigate('/creator/inbox')} style={{ backgroundColor: '#0f0f1c', borderRadius: '14px', padding: '14px 16px', display: 'flex', alignItems: 'center', gap: '12px', border: '1px solid rgba(255,255,255,0.07)', cursor: 'pointer' }}>
+                          <div key={item.id} onClick={() => navigate('/creator/inbox', { state: { highlightId: item.id } })} style={{ backgroundColor: '#0f0f1c', borderRadius: '14px', padding: '14px 16px', display: 'flex', alignItems: 'center', gap: '12px', border: '1px solid rgba(255,255,255,0.07)', cursor: 'pointer' }}>
                             <StatusIcon status={item.status} bank={item.bank} />
                             <div style={{ flex: 1, minWidth: 0 }}>
                               <div style={{ fontSize: '14px', fontWeight: '700', marginBottom: '3px' }}>{item.date}</div>

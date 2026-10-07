@@ -699,9 +699,15 @@ router.get('/my-referrals', verifyCreatorToken, async (req, res) => {
     const lifetimeEarnings = affiliateEarnings.reduce((acc, curr) => acc + (curr.amount || 0), 0);
 
     const earningsPerCreator = {};
+    const ChatSession = require('../models/ChatSession');
     for (const e of affiliateEarnings) {
       if (!e.questionId) continue;
-      const q = await Question.findById(e.questionId).select('creatorId');
+      
+      let q = await Question.findById(e.questionId).select('creatorId');
+      if (!q) {
+          q = await ChatSession.findById(e.questionId).select('creatorId');
+      }
+      
       if (q) {
         const referredId = q.creatorId.toString();
         earningsPerCreator[referredId] = (earningsPerCreator[referredId] || 0) + (e.amount || 0);
@@ -804,7 +810,7 @@ router.post('/onboarding/profile', verifyCreatorToken, async (req, res) => {
  * @desc Save pricing data and enable AMA
  */
 router.post('/onboarding/pricing', verifyCreatorToken, async (req, res) => {
-  const { price, dailyCap, weeklyGoal } = req.body;
+  const { price, dailyCap, weeklyGoal, isSettings } = req.body;
 
   if (typeof price !== 'number' || (price !== 0 && (price < 10 || price > 9999))) return res.status(400).json({ message: 'Invalid price' });
   if (typeof dailyCap !== 'number' || dailyCap < 5 || dailyCap > 100) return res.status(400).json({ message: 'Invalid daily cap' });
@@ -824,9 +830,11 @@ router.post('/onboarding/pricing', verifyCreatorToken, async (req, res) => {
     return res.status(401).json({ message: 'Session expired or user deleted. Please log in again.' });
   }
 
-  sendWelcomeEmail(updatedCreator.email, updatedCreator.name, updatedCreator.handle).catch(err => {
-    console.error('Failed to send onboarding welcome email:', err);
-  });
+  if (!isSettings) {
+    sendWelcomeEmail(updatedCreator.email, updatedCreator.name, updatedCreator.handle).catch(err => {
+      console.error('Failed to send onboarding welcome email:', err);
+    });
+  }
 
   res.json({ 
     success: true, 

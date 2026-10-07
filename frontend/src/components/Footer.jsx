@@ -19,7 +19,15 @@ const Footer = ({ theme, showTalkDirectly = true }) => {
   const [showHowItWorks, setShowHowItWorks] = useState(false);
   const [showCreatorFaqs, setShowCreatorFaqs] = useState(false);
   const [openFaqIndex, setOpenFaqIndex] = useState(null);
+  const [copied, setCopied] = useState(false);
   const { isAuthenticated, roles } = useAuth();
+
+  const handleCopy = (e) => {
+    e.preventDefault();
+    navigator.clipboard.writeText('support@skriibe.com');
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   return (
     <footer className={`${theme === 'light' ? 'bg-[#f8fafc] text-black border-gray-200' : 'bg-[#0b0b0b] text-white border-[#1a1a1a]'} pt-10 sm:pt-14 pb-8 px-6 md:px-12 font-syne border-t relative`}>
@@ -191,12 +199,20 @@ const Footer = ({ theme, showTalkDirectly = true }) => {
             >
               Raise a Query
             </a>
-            <a
-              href="mailto:support@skriibe.com"
-              className={`${theme === 'light' ? 'text-gray-600 hover:text-black' : 'text-[#a3a3a3] hover:text-white'} transition-colors text-sm`}
-            >
-              Email : support@skriibe.com
-            </a>
+            <div className="flex flex-col gap-1 mt-1">
+              <span className={`${theme === 'light' ? 'text-gray-600' : 'text-[#a3a3a3]'} text-sm`}>Email :</span>
+              <div className="flex items-center gap-2">
+                <a
+                  href="mailto:support@skriibe.com"
+                  onContextMenu={handleCopy}
+                  className={`${theme === 'light' ? 'text-gray-600 hover:text-black' : 'text-[#a3a3a3] hover:text-white'} transition-colors text-sm`}
+                  title="Click to email, Right-click to copy"
+                >
+                  support@skriibe.com
+                </a>
+                {copied && <span className="text-xs text-green-500 font-medium">Copied!</span>}
+              </div>
+            </div>
           </div>
         </div>
 

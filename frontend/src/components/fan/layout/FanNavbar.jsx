@@ -167,7 +167,7 @@ const FanNavbar = () => {
       `}</style>
       <header className="fan-navbar">
         <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
-          <span className="fan-navbar-logo" style={{ display: 'flex', alignItems: 'center' }}>
+          <span className="fan-navbar-logo" style={{ display: 'flex', alignItems: 'center', minWidth: '96px', height: '24px' }}>
             <TransparentLogo src="/logo.png" alt="skriibe logo" style={{ height: '24px', width: 'auto', transform: 'scale(4)', transformOrigin: 'left center' }} />
           </span>
         </Link>

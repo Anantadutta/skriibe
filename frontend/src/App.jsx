@@ -380,11 +380,18 @@ function App() {
       localStorage.setItem('skriibe_token', token);
       
       const path = window.location.pathname;
+      const savedRoles = localStorage.getItem('auth_roles');
+      let currentRoles = savedRoles ? JSON.parse(savedRoles) : [];
+      
       if (path.includes('/creator') || path.includes('/onboard') || path.includes('/dashboard') || path.includes('/settings')) {
-        localStorage.setItem('auth_roles', JSON.stringify(['creator']));
+        localStorage.setItem('skriibe_creator_token', token);
+        if (!currentRoles.includes('creator')) currentRoles.push('creator');
+        localStorage.setItem('auth_roles', JSON.stringify(currentRoles));
         localStorage.setItem('auth_activeRole', 'creator');
       } else if (path.includes('/discovery') || path.includes('/explore') || path.includes('/fan')) {
-        localStorage.setItem('auth_roles', JSON.stringify(['fan']));
+        localStorage.setItem('skriibe_fan_token', token);
+        if (!currentRoles.includes('fan')) currentRoles.push('fan');
+        localStorage.setItem('auth_roles', JSON.stringify(currentRoles));
         localStorage.setItem('auth_activeRole', 'fan');
         localStorage.setItem('isReturningFan', 'true');
       }
@@ -452,6 +459,9 @@ function App() {
             {/* Creator Onboarding */}
             <Route element={<BlockFanRoute />}>
               <Route path="/creator/verify-otp" element={<CreatorVerifyOTP />} />
+            </Route>
+
+            <Route element={<CreatorRoute />}>
               <Route path="/creator/connect-instagram" element={<CreatorConnectInstagram />} />
               <Route path="/onboard/profile" element={<CreatorOnboardProfile />} />
               <Route path="/onboard/live-chat" element={<CreatorOnboardLiveChat />} />

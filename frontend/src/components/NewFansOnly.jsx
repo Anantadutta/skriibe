@@ -43,7 +43,7 @@ const NewFansOnly = ({ theme = 'dark' }) => {
           <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5 fill-current" />
         </div>
       ),
-      text: 'Chat only — no calls to schedule',
+      text: 'Chat only - no calls to schedule',
     },
   ];
 

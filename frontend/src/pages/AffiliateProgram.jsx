@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
-import TransparentLogo from '../components/TransparentLogo';
+
 
 const AffiliateProgram = ({ theme, toggleTheme }) => {
   const navigate = useNavigate();
@@ -140,7 +140,21 @@ const AffiliateProgram = ({ theme, toggleTheme }) => {
               alignItems: 'center',
               justifyContent: 'center'
             }}>
-              <TransparentLogo src="/logo.png" alt="skriibe logo" style={{ height: '24px', width: 'auto', transform: 'scale(4)', transformOrigin: 'center center' }} />
+              <svg 
+                xmlns="http://www.w3.org/2000/svg" 
+                viewBox="0 0 2800 520.97" 
+                style={{ height: '36px', width: 'auto', color: isDark ? '#ffffff' : '#000000' }}
+              >
+                <text 
+                  transform="translate(33.52 457.72)" 
+                  fontSize="566.36px" 
+                  fontFamily="Garet, sans-serif" 
+                  fontWeight="400" 
+                  fill="currentColor"
+                >
+                  skr<tspan fill="#3BA8D8">ii</tspan>be
+                </text>
+              </svg>
               <div style={{ fontWeight: '700', marginTop: '16px', marginBottom: '8px' }}>Create your Skriibe account</div>
               <div style={{ fontSize: '13px', color: textSecondary }}>
                 You were referred by <strong>Skriibe Team</strong>

@@ -166,29 +166,14 @@ const FanLogin = () => {
           Log in to your <span style={{ color: '#06b6d4' }}>fan</span> account
         </p>
 
-        {/* Social Buttons */}
-        <div style={{
-          display: 'flex',
-          gap: '12px',
-          width: '100%',
-          marginBottom: '28px'
-        }}>
-          <a href={`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/auth/google?role=fan`}
+        <div style={{ width: '100%', display: 'flex', gap: '12px', marginBottom: '24px' }}>
+          <a href={`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/auth/google?role=fan&action=login`}
+             className="social-btn"
              style={{
-               flex: 1,
-               display: 'flex',
-               alignItems: 'center',
-               justifyContent: 'center',
-               gap: '8px',
-               padding: '12px',
-               background: 'rgba(255, 255, 255, 0.04)',
-               border: '1px solid rgba(255, 255, 255, 0.08)',
-               borderRadius: '9999px',
-               color: '#e2e8f0',
-               textDecoration: 'none',
-               fontSize: '14px',
-               fontWeight: '500',
-               transition: 'all 0.2s ease'
+               flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+               padding: '14px', background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(59, 130, 246, 0.5)',
+               borderRadius: '9999px', color: '#ffffff', textDecoration: 'none', fontSize: '13px', fontWeight: '600',
+               transition: 'all 0.25s ease', boxShadow: '0 0 15px rgba(59, 130, 246, 0.15)'
              }}
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -199,22 +184,13 @@ const FanLogin = () => {
             </svg>
             Google
           </a>
-          <a href={`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/auth/facebook?role=fan`}
+          <a href={`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/auth/facebook?role=fan&action=login`}
+             className="social-btn"
              style={{
-               flex: 1,
-               display: 'flex',
-               alignItems: 'center',
-               justifyContent: 'center',
-               gap: '8px',
-               padding: '12px',
-               background: 'rgba(255, 255, 255, 0.04)',
-               border: '1px solid rgba(255, 255, 255, 0.08)',
-               borderRadius: '9999px',
-               color: '#e2e8f0',
-               textDecoration: 'none',
-               fontSize: '14px',
-               fontWeight: '500',
-               transition: 'all 0.2s ease'
+               flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+               padding: '14px', background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(59, 130, 246, 0.5)',
+               borderRadius: '9999px', color: '#ffffff', textDecoration: 'none', fontSize: '13px', fontWeight: '600',
+               transition: 'all 0.25s ease', boxShadow: '0 0 15px rgba(59, 130, 246, 0.15)'
              }}
           >
             <svg width="18" height="18" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -224,119 +200,75 @@ const FanLogin = () => {
           </a>
         </div>
 
-        {/* Divider */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          width: '100%',
-          marginBottom: '28px'
-        }}>
-          <div style={{ flex: 1, height: '1px', background: 'rgba(255, 255, 255, 0.1)' }}></div>
-          <span style={{ padding: '0 16px', color: '#64748b', fontSize: '13px' }}>or</span>
-          <div style={{ flex: 1, height: '1px', background: 'rgba(255, 255, 255, 0.1)' }}></div>
+        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '24px', width: '100%' }}>
+          <div style={{ flex: 1, height: '1px', background: 'rgba(255, 255, 255, 0.08)' }} />
+          <div style={{ padding: '0 16px', color: '#94a3b8', fontSize: '13px' }}>or</div>
+          <div style={{ flex: 1, height: '1px', background: 'rgba(255, 255, 255, 0.08)' }} />
         </div>
 
-        {message && (
+        <div style={{ width: '100%', display: 'flex', flexDirection: 'column' }}>
           <div style={{
-            background: 'rgba(16, 185, 129, 0.1)',
-            border: '1px solid rgba(16, 185, 129, 0.2)',
-            color: '#10b981',
-            padding: '12px',
-            borderRadius: '8px',
-            marginBottom: '16px',
-            width: '100%',
-            textAlign: 'center',
-            fontSize: '13px'
+            display: 'flex', alignItems: 'center', background: 'rgba(255, 255, 255, 0.03)',
+            border: focusedEmail ? '1px solid #7c3aed' : '1px solid rgba(255, 255, 255, 0.08)',
+            borderRadius: '12px', boxShadow: focusedEmail ? '0 0 15px rgba(124, 58, 237, 0.3)' : 'none',
+            transition: 'all 0.25s ease', overflow: 'hidden', marginBottom: '16px'
           }}>
-            {message}
-          </div>
-        )}
-
-        <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {/* Email Input */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            background: 'rgba(255, 255, 255, 0.03)',
-            border: focusedEmail ? '1px solid rgba(255, 255, 255, 0.2)' : '1px solid rgba(255, 255, 255, 0.08)',
-            borderRadius: '9999px',
-            transition: 'all 0.2s ease',
-            padding: '4px 20px'
-          }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-              <polyline points="22,6 12,13 2,6"></polyline>
-            </svg>
+            <div style={{ padding: '0 0 0 16px', display: 'flex', alignItems: 'center', color: '#94a3b8' }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                <polyline points="22,6 12,13 2,6"></polyline>
+              </svg>
+            </div>
             <input
               type="email"
               placeholder="Email address"
               value={email}
-              onChange={(e) => {
-                setEmail(e.target.value);
-                if (error) setError('');
-              }}
+              onChange={(e) => { setEmail(e.target.value); if (error) setError(''); }}
               onFocus={() => setFocusedEmail(true)}
               onBlur={() => setFocusedEmail(false)}
               style={{
-                flex: 1,
-                background: 'transparent',
-                border: 'none',
-                outline: 'none',
-                padding: '12px',
-                fontSize: '15px',
-                color: '#ffffff'
+                flex: 1, background: 'transparent', border: 'none', outline: 'none',
+                padding: '16px 16px 16px 12px', fontSize: '14px', color: '#ffffff',
+                fontFamily: 'var(--font-mono)', letterSpacing: '0.5px'
               }}
             />
           </div>
 
-          {/* Password Input */}
           <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            background: 'rgba(255, 255, 255, 0.03)',
-            border: focusedPassword ? '1px solid rgba(255, 255, 255, 0.2)' : '1px solid rgba(255, 255, 255, 0.08)',
-            borderRadius: '9999px',
-            transition: 'all 0.2s ease',
-            padding: '4px 20px'
+            display: 'flex', alignItems: 'center', background: 'rgba(255, 255, 255, 0.03)',
+            border: focusedPassword ? '1px solid #7c3aed' : '1px solid rgba(255, 255, 255, 0.08)',
+            borderRadius: '12px', boxShadow: focusedPassword ? '0 0 15px rgba(124, 58, 237, 0.3)' : 'none',
+            transition: 'all 0.25s ease', overflow: 'hidden', marginBottom: '16px'
           }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-            </svg>
+            <div style={{ padding: '0 0 0 16px', display: 'flex', alignItems: 'center', color: '#94a3b8' }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+            </div>
             <input
               type={showPassword ? "text" : "password"}
               placeholder="Password"
               value={password}
-              onChange={(e) => {
-                setPassword(e.target.value);
-                if (error) setError('');
-              }}
+              onChange={(e) => { setPassword(e.target.value); if (error) setError(''); }}
               onFocus={() => setFocusedPassword(true)}
               onBlur={() => setFocusedPassword(false)}
               style={{
-                flex: 1,
-                background: 'transparent',
-                border: 'none',
-                outline: 'none',
-                padding: '12px',
-                fontSize: '15px',
-                color: '#ffffff'
+                flex: 1, background: 'transparent', border: 'none', outline: 'none',
+                padding: '16px 16px 16px 12px', fontSize: '14px', color: '#ffffff',
+                fontFamily: 'var(--font-mono)', letterSpacing: '0.5px'
               }}
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
               style={{
-                background: 'transparent',
-                border: 'none',
-                outline: 'none',
-                padding: '8px 0 8px 8px',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#64748b'
+                background: 'transparent', border: 'none', outline: 'none', padding: '0 16px',
+                cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: '#94a3b8', transition: 'color 0.2s'
               }}
+              onMouseEnter={(e) => e.currentTarget.style.color = '#ffffff'}
+              onMouseLeave={(e) => e.currentTarget.style.color = '#94a3b8'}
             >
               {showPassword ? (
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -351,78 +283,41 @@ const FanLogin = () => {
               )}
             </button>
           </div>
-        </div>
 
-        {/* Forgot Password Link */}
-        <div style={{ width: '100%', textAlign: 'right', marginTop: '12px' }}>
-          <Link to="/fan/forgot-password" style={{ color: '#06b6d4', textDecoration: 'none', fontSize: '13px', fontWeight: '500' }}>
-            Forgot password?
-          </Link>
-        </div>
-
-        {error && (
-          <div style={{
-            color: '#ef4444',
-            fontSize: '13px',
-            marginTop: '16px',
-            textAlign: 'center',
-            width: '100%'
-          }}>
-            {error}
+          <div style={{ textAlign: 'right', marginTop: '8px', paddingRight: '4px' }}>
+            <Link to="/fan/forgot-password" style={{ color: '#06b6d4', textDecoration: 'none', fontSize: '13px', fontWeight: '500' }}>
+              Forgot password?
+            </Link>
           </div>
-        )}
 
-        <button
-          disabled={!email || !password || loading}
-          onClick={handleLogin}
-          style={{
-            width: '100%',
-            padding: '14px',
-            borderRadius: '9999px',
-            background: 'linear-gradient(90deg, #7c3aed 0%, #06b6d4 100%)',
-            color: '#ffffff',
-            fontWeight: '600',
-            fontSize: '15px',
-            border: 'none',
-            cursor: (!email || !password || loading) ? 'not-allowed' : 'pointer',
-            transition: 'all 0.2s ease',
-            marginTop: '24px',
-            opacity: (!email || !password || loading) ? 0.7 : 1,
-            boxShadow: '0 4px 15px rgba(124, 58, 237, 0.3)'
-          }}
-        >
-          {loading ? 'Logging in...' : 'Log In'}
-        </button>
+          {error && (
+            <div style={{
+              color: '#ef4444', fontFamily: 'var(--font-mono)', fontSize: '11px',
+              marginTop: '16px', textAlign: 'center'
+            }}>
+              ⚠️ {error}
+            </div>
+          )}
 
-        {/* LINK TO SIGNUP */}
-        <div style={{ textAlign: 'center', marginTop: '32px', fontSize: '14px' }}>
-          <span style={{ color: '#64748b' }}>Don't have an account? </span>
-          <Link to={`/fan/signup${location.search || ''}`} onClick={() => { if (clearAuthData) clearAuthData(); }} style={{ color: '#06b6d4', textDecoration: 'none', fontWeight: '500' }}>
-            Sign up
-          </Link>
+          <button
+            disabled={!email || !password || loading}
+            onClick={handleLogin}
+            className="gradient-action-btn"
+            style={{
+              width: '100%', padding: '16px', borderRadius: '9999px',
+              background: 'linear-gradient(90deg, #7c3aed 0%, #06b6d4 100%)', color: '#ffffff',
+              fontWeight: '600', fontSize: '15px', border: 'none', cursor: 'pointer',
+              transition: 'all 0.25s ease', display: 'flex', alignItems: 'center',
+              justifyContent: 'center', margin: '24px 0 0', boxShadow: '0 4px 12px rgba(124, 58, 237, 0.2)'
+            }}
+          >
+            {loading ? 'Logging in...' : 'Log in →'}
+          </button>
         </div>
 
-        {/* Terms and Privacy */}
-        <div style={{
-          textAlign: 'center',
-          marginTop: '32px',
-          color: '#94a3b8',
-          fontSize: '12px',
-          lineHeight: '1.6'
-        }}>
-          By logging in and using Skriibe, you agree to our<br />
-          <Link to="/terms" style={{ color: '#06b6d4', textDecoration: 'none', fontWeight: '500' }}>Terms of Service</Link> and <Link to="/privacy" style={{ color: '#06b6d4', textDecoration: 'none', fontWeight: '500' }}>Privacy Policy</Link>.
-          
-          <div style={{ 
-            marginTop: '16px', 
-            color: '#64748b', 
-            fontSize: '10px', 
-            textTransform: 'uppercase', 
-            letterSpacing: '1px',
-            fontWeight: '600'
-          }}>
-            Made with 🤍 from skriibe
-          </div>
+        <div style={{ textAlign: 'center', marginTop: '24px', fontSize: '14px' }}>
+          <span style={{ color: '#94a3b8' }}>Don't have an account? </span>
+          <Link to="/fan/signup" style={{ color: '#06b6d4', textDecoration: 'none', fontWeight: '500' }}>Sign up</Link>
         </div>
       </div>
 

@@ -24,6 +24,8 @@ const CreatorLiveChat = () => {
   const [fanPaused, setFanPaused] = useState(false);
   const [hoveredMessageId, setHoveredMessageId] = useState(null);
   const [incomingContinueRequest, setIncomingContinueRequest] = useState(null);
+  const [replyingToMessage, setReplyingToMessage] = useState(null);
+  const [contextMenu, setContextMenu] = useState(null);
   
   const isFreeChatOver = (session?.isFreeChat || session?.ratePerMinute === 0) && elapsedSeconds >= 120;
   
@@ -62,6 +64,8 @@ const CreatorLiveChat = () => {
   const socketRef = useRef(null);
   const messagesEndRef = useRef(null);
   const typingTimeoutRef = useRef(null);
+  const localStartRef = useRef(null);
+  const initialWaitRef = useRef(120);
 
   // Initialize Chat
   useEffect(() => {
@@ -96,9 +100,11 @@ const CreatorLiveChat = () => {
 
           // Calculate synchronized waiting time from creatorJoinedAt
           const joinedTime = currentSession.creatorJoinedAt || acceptRes?.data?.creatorJoinedAt || currentSession.startTime || new Date().toISOString();
-          const elapsedWait = Math.floor((Date.now() - new Date(joinedTime).getTime()) / 1000);
-          const remainingWait = Math.max(0, 120 - elapsedWait);
-          setWaitingTimeLeft(remainingWait);
+          let elapsedWait = Math.floor((Date.now() - new Date(joinedTime).getTime()) / 1000);
+          if (elapsedWait < 0 || elapsedWait > 120) elapsedWait = 0;
+          initialWaitRef.current = Math.max(0, 120 - elapsedWait);
+          setWaitingTimeLeft(initialWaitRef.current);
+          localStartRef.current = Date.now();
 
           if (currentSession.status === 'ended' || currentSession.fanAccepted) {
             setViewState('active');
@@ -139,6 +145,11 @@ const CreatorLiveChat = () => {
   useEffect(() => {
     if (!session || !session.startTime || error) return;
     
+    if (!session.fanAccepted) {
+      setElapsedSeconds(0);
+      return;
+    }
+
     // Calculate initial elapsed time
     const initialElapsed = Math.floor((Date.now() - new Date(session.startTime).getTime()) / 1000);
     setElapsedSeconds(Math.max(0, initialElapsed));
@@ -155,10 +166,13 @@ const CreatorLiveChat = () => {
   useEffect(() => {
     let timer;
     if (viewState === 'waiting_for_fan' && !error && !loading && session) {
-      const joinedTime = session.creatorJoinedAt || session.startTime || new Date().toISOString();
+      if (!localStartRef.current) {
+        localStartRef.current = Date.now();
+        initialWaitRef.current = waitingTimeLeft;
+      }
       const tick = () => {
-        const elapsedWait = Math.floor((Date.now() - new Date(joinedTime).getTime()) / 1000);
-        const remainingWait = Math.max(0, 120 - elapsedWait);
+        const localElapsed = Math.floor((Date.now() - localStartRef.current) / 1000);
+        const remainingWait = Math.max(0, initialWaitRef.current - localElapsed);
         setWaitingTimeLeft(remainingWait);
         if (remainingWait <= 0) {
           if (timer) clearInterval(timer);
@@ -356,6 +370,14 @@ const CreatorLiveChat = () => {
       newSocket.disconnect();
     });
 
+    newSocket.on('chat_transitioned_to_paid', (data) => {
+      setSession(prev => {
+        if (!prev) return prev;
+        return { ...prev, isFreeChat: false, startTime: data.startTime, ratePerMinute: data.rate };
+      });
+      setElapsedSeconds(0);
+    });
+
     newSocket.on('fan_accepted', (data) => {
       setSession(prev => prev ? { ...prev, status: 'active', startTime: data?.startTime || prev.startTime } : prev);
       setViewState('active');
@@ -365,8 +387,16 @@ const CreatorLiveChat = () => {
       setFanPaused(true);
     });
 
-    newSocket.on('wallet_recharged', () => {
+    newSocket.on('wallet_recharged', async () => {
       setFanPaused(false);
+      try {
+        const res = await api.get(`/chat/${id}`);
+        if (res.data?.success && res.data?.session) {
+          setSession(prev => ({ ...prev, fanId: res.data.session.fanId }));
+        }
+      } catch (err) {
+        console.error('Failed to refetch session on wallet recharge:', err);
+      }
     });
 
     newSocket.on('fan_profile_updated', (data) => {
@@ -477,13 +507,16 @@ const CreatorLiveChat = () => {
       content: input,
       tempId,
       isOptimistic: true,
-      sentAt: new Date().toISOString()
+      sentAt: new Date().toISOString(),
+      replyToMessageId: replyingToMessage?.messageId
     };
     setMessages(prev => mergeAndSortMessages(prev, optimisticMsg));
 
     const sId = session._id || session.id || session.sessionId;
     const currentInput = input;
+    const replyToId = replyingToMessage?.messageId;
     setInput('');
+    setReplyingToMessage(null);
 
     if (socketRef.current) {
       socketRef.current.emit('stop_typing', { sessionId: sId, sender: 'creator' });
@@ -494,6 +527,7 @@ const CreatorLiveChat = () => {
         sessionId: sId,
         sender: 'creator',
         content: currentInput,
+        replyToMessageId: replyToId,
         tempId
       });
       if (res.data?.success && res.data.message) {
@@ -506,6 +540,7 @@ const CreatorLiveChat = () => {
           sessionId: sId,
           sender: 'creator',
           content: currentInput,
+          replyToMessageId: replyToId,
           tempId
         });
       }
@@ -534,9 +569,9 @@ const CreatorLiveChat = () => {
         console.error('Failed to end chat via API:', err);
       }
       if (socketRef.current) {
-        socketRef.current.emit('end_chat', { sessionId: sId });
+        socketRef.current.emit('end_chat', { sessionId: sId, reason: 'CREATOR_ENDED' });
       } else if (socket) {
-        socket.emit('end_chat', { sessionId: sId });
+        socket.emit('end_chat', { sessionId: sId, reason: 'CREATOR_ENDED' });
       }
     }
     if (!skipNavigation) {
@@ -590,6 +625,14 @@ const CreatorLiveChat = () => {
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <button
+                onClick={() => setShowWarningModal(false)}
+                style={{ background: '#374151', color: '#fff', border: 'none', padding: '12px 24px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '15px', transition: 'background 0.2s' }}
+                onMouseEnter={e => e.currentTarget.style.background = '#4b5563'}
+                onMouseLeave={e => e.currentTarget.style.background = '#374151'}
+              >
+                Back to chat interface
+              </button>
+              <button
                 onClick={() => {
                   setShowWarningModal(false);
                   handleEndChat(false); // end chat and navigate dashboard
@@ -599,14 +642,6 @@ const CreatorLiveChat = () => {
                 onMouseLeave={e => e.currentTarget.style.background = '#ef4444'}
               >
                 Yes, I want to end
-              </button>
-              <button
-                onClick={() => setShowWarningModal(false)}
-                style={{ background: '#374151', color: '#fff', border: 'none', padding: '12px 24px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '15px', transition: 'background 0.2s' }}
-                onMouseEnter={e => e.currentTarget.style.background = '#4b5563'}
-                onMouseLeave={e => e.currentTarget.style.background = '#374151'}
-              >
-                Back to chat interface
               </button>
             </div>
           </div>
@@ -737,21 +772,29 @@ const CreatorLiveChat = () => {
       )}
 
       {/* Active Chat Timer Bar */}
-      {!error && session?.status === 'active' && (() => {
+      {!error && session?.status === 'active' && session?.fanAccepted && (() => {
         const rate = session?.ratePerMinute || 0;
         const bal = session?.fanId?.walletBalance || 0;
         const isFreeChat = session?.isFreeChat || rate === 0;
-        const isFreeChatOver = isFreeChat && elapsedSeconds >= 120;
         
         let remainingSeconds, isWarning, barBg, innerBg, progressWidth;
         
         if (isFreeChat) {
           remainingSeconds = Math.max(0, 120 - elapsedSeconds);
+          let totalSeconds = 120;
+          let effectiveRate = Number(rate) > 0 ? Number(rate) : (session?.creatorId?.liveChatPrice || 5);
+          if (Number(bal) > 0 && effectiveRate > 0) {
+            const paidSeconds = (Number(bal) / effectiveRate) * 60;
+            const overTime = Math.max(0, elapsedSeconds - 120);
+            remainingSeconds += Math.max(0, paidSeconds - overTime);
+            totalSeconds += paidSeconds;
+          }
           isWarning = remainingSeconds <= 30; // warning at 30 seconds
           barBg = isWarning ? '#ef4444' : '#3BA8D8';
           innerBg = isWarning ? '#b91c1c' : '#0284c7';
-          progressWidth = `${Math.max(0, Math.min(100, (remainingSeconds / 120) * 100))}%`;
+          progressWidth = `${Math.max(0, Math.min(100, (remainingSeconds / totalSeconds) * 100))}%`;
 
+          const isFreeChatOver = remainingSeconds <= 0;
           if (isFreeChatOver) {
             return (
               <div style={{ background: '#ef4444', padding: '12px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', transition: 'background 0.3s' }}>
@@ -831,6 +874,11 @@ const CreatorLiveChat = () => {
             key={i} 
             onMouseEnter={() => setHoveredMessageId(m.messageId)}
             onMouseLeave={() => setHoveredMessageId(null)}
+            onContextMenu={(e) => {
+              if ((m.sender || m.senderRole) === 'system') return;
+              e.preventDefault();
+              setContextMenu({ x: e.clientX, y: e.clientY, message: m });
+            }}
             onClick={() => setHoveredMessageId(hoveredMessageId === m.messageId ? null : m.messageId)}
             style={{ display: 'flex', justifyContent: (m.sender || m.senderRole) === 'creator' ? 'flex-end' : ((m.sender || m.senderRole) === 'system' ? 'center' : 'flex-start'), position: 'relative' }}
           >
@@ -860,7 +908,7 @@ const CreatorLiveChat = () => {
                 position: 'relative',
                 display: 'inline-block'
               }}>
-                {hoveredMessageId === m.messageId && (
+                {hoveredMessageId === m.messageId && !isChatEnded && (
                   <div style={{
                     position: 'absolute',
                     top: '-36px',
@@ -904,6 +952,27 @@ const CreatorLiveChat = () => {
                     ))}
                   </div>
                 )}
+                {m.replyToMessageId && (() => {
+                  const repliedTo = messages.find(msg => msg.messageId === m.replyToMessageId);
+                  return (
+                    <div style={{
+                      background: 'rgba(0,0,0,0.1)',
+                      borderLeft: `4px solid ${(m.sender || m.senderRole) === 'creator' ? '#fff' : theme.senderBubble}`,
+                      padding: '4px 8px',
+                      borderRadius: '4px',
+                      marginBottom: '8px',
+                      fontSize: '12px',
+                      opacity: 0.8
+                    }}>
+                      <div style={{ fontWeight: 'bold', marginBottom: '2px' }}>
+                        {repliedTo ? ((repliedTo.sender || repliedTo.senderRole) === 'creator' ? 'You' : (session?.fanId?.name || 'Fan')) : 'Unknown'}
+                      </div>
+                      <div style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {repliedTo ? repliedTo.content : 'Message not found'}
+                      </div>
+                    </div>
+                  );
+                })()}
                 <span style={{ wordBreak: 'break-word' }}>{m.content}</span>
                 {(m.sender || m.senderRole) === 'creator' && (
                   <span style={{ marginLeft: '6px', display: 'inline-flex', alignItems: 'center' }}>
@@ -949,16 +1018,90 @@ const CreatorLiveChat = () => {
         ))}
         {isTyping && (
           <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
-            <div style={{ background: theme.receiverBubble, color: theme.receiverText, padding: '10px 14px', borderRadius: '16px', fontSize: '13px', fontStyle: 'italic', boxShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
-              typing...
+            <div style={{ background: theme.receiverBubble, color: theme.receiverText, padding: '12px 16px', borderRadius: '16px', borderBottomLeftRadius: '4px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '4px', boxShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
+              <span style={{ fontStyle: 'italic', marginRight: '4px' }}>typing</span>
+              <span className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ background: theme.receiverText, animationDelay: '0ms' }}></span>
+              <span className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ background: theme.receiverText, animationDelay: '150ms' }}></span>
+              <span className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ background: theme.receiverText, animationDelay: '300ms' }}></span>
             </div>
           </div>
         )}
         <div ref={messagesEndRef} />
       </div>
 
+      {/* Context Menu */}
+      {contextMenu && (
+        <>
+          <div 
+            onClick={() => setContextMenu(null)}
+            onContextMenu={(e) => { e.preventDefault(); setContextMenu(null); }}
+            style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 999 }}
+          />
+          <div 
+            style={{
+              position: 'fixed',
+              top: contextMenu.y,
+              left: contextMenu.x,
+              background: '#202020',
+              border: '1px solid #333',
+              borderRadius: '8px',
+              padding: '4px 0',
+              zIndex: 1000,
+              boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+              minWidth: '120px'
+            }}
+          >
+            <div
+              onClick={() => {
+                setReplyingToMessage(contextMenu.message);
+                setContextMenu(null);
+              }}
+              style={{
+                padding: '8px 16px',
+                color: '#fff',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                fontSize: '14px'
+              }}
+              onMouseEnter={e => e.currentTarget.style.background = '#333'}
+              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 17 4 12 9 7"></polyline><path d="M20 18v-2a4 4 0 0 0-4-4H4"></path></svg>
+              Reply
+            </div>
+          </div>
+        </>
+      )}
+
       {/* Input Area */}
       <div style={{ display: 'flex', flexDirection: 'column', background: theme.headerBackground === '#fff' ? '#f8fafc' : '#111827' }}>
+        {replyingToMessage && (
+          <div style={{ 
+            background: '#e5e7eb', 
+            padding: '8px 16px', 
+            display: 'flex', 
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            borderBottom: '1px solid #d1d5db'
+          }}>
+            <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', maxWidth: '85%' }}>
+              <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#374151' }}>
+                Replying to { (replyingToMessage.sender || replyingToMessage.senderRole) === 'creator' ? 'yourself' : (session?.fanId?.name || 'Fan') }
+              </span>
+              <span style={{ fontSize: '13px', color: '#6b7280', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {replyingToMessage.content}
+              </span>
+            </div>
+            <button 
+              onClick={() => setReplyingToMessage(null)}
+              style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '18px', color: '#6b7280', padding: '0 8px' }}
+            >
+              &times;
+            </button>
+          </div>
+        )}
         <div style={{ padding: '12px 16px', display: 'flex', gap: '12px', alignItems: 'center' }}>
           <div style={{ position: 'relative', flex: 1 }}>
             <button

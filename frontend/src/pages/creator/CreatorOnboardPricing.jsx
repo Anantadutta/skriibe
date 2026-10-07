@@ -85,7 +85,7 @@ const CreatorOnboardPricing = () => {
   const handleActivate = async () => {
     setLoading(true);
     try {
-      await savePricing({ price: Number(price), dailyCap, weeklyGoal });
+      await savePricing({ price: Number(price), dailyCap, weeklyGoal, isSettings: !!location.state?.returnTo });
       if (location.state?.returnTo) {
         navigate(location.state.returnTo, {
           state: {

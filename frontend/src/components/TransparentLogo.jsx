@@ -9,7 +9,9 @@ const TransparentLogo = ({ src, alt, style, className }) => {
         ...style, 
         display: 'block'
       }} 
-      className={className} 
+      className={className}
+      fetchPriority="high"
+      loading="eager"
     />
   );
 };

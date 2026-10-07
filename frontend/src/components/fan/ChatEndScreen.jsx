@@ -110,7 +110,7 @@ const ChatEndScreen = ({ creator, sessionId, totalMinutes, totalCost, error, mes
         <div style={{ background: '#13161C', borderRadius: '24px', padding: '48px 24px', border: '1px solid #1F2937' }}>
           <div style={{ fontSize: '48px', marginBottom: '16px' }}>⚠️</div>
           <h3 style={{ margin: '0 0 12px 0', color: '#fff', fontSize: '1.4rem' }}>
-            {isFreeChat ? 'Free chat ended' : 'Chat Ended'}
+            {isFreeChat && Number(totalCost) === 0 ? 'Free chat ended' : 'Chat ended'}
           </h3>
           <p style={{ color: '#ef4444', marginBottom: '32px' }}>
             {error}
@@ -290,7 +290,7 @@ const ChatEndScreen = ({ creator, sessionId, totalMinutes, totalCost, error, mes
           ) : (
             <>
               <h2 style={{ margin: '0 0 4px 0', color: '#fff', fontSize: '1.5rem', fontWeight: '600' }}>
-                {isFreeChat ? 'Free chat ended' : 'Chat ended'}
+                {isFreeChat && Number(totalCost) === 0 ? 'Free chat ended' : 'Chat ended'}
               </h2>
               <p style={{ color: '#94a3b8', margin: '0 0 24px 0', fontSize: '0.95rem' }}>
                 with {creator?.name}

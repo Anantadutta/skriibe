@@ -62,8 +62,8 @@ const ForCreatorsSection = ({ theme }) => {
             <div className="mt-6 sm:mt-8 w-full sm:w-auto flex justify-center">
               <Link
                 to={isAuthenticated ? (roles?.includes('creator') ? "/creator/dashboard" : "/creator/signup") : "/creator/signup"}
-                target="_blank"
-                rel="noopener noreferrer"
+                target={(isAuthenticated && roles?.includes('creator')) ? "_blank" : undefined}
+                rel={(isAuthenticated && roles?.includes('creator')) ? "noopener noreferrer" : undefined}
                 className={`inline-flex items-center justify-center w-full sm:w-auto px-8 sm:px-10 py-3.5 sm:py-4 rounded-full font-bold text-base sm:text-lg transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 shadow-sm ${
                   isLight
                     ? 'bg-[#3BA8D8] hover:bg-[#2d8ab8] text-white shadow-md hover:shadow-lg'
@@ -158,8 +158,8 @@ const ForCreatorsSection = ({ theme }) => {
 
               <Link
                 to={isAuthenticated ? "/creator/dashboard" : "/creator/signup"}
-                target="_blank"
-                rel="noopener noreferrer"
+                target={(isAuthenticated && roles?.includes('creator')) ? "_blank" : undefined}
+                rel={(isAuthenticated && roles?.includes('creator')) ? "noopener noreferrer" : undefined}
                 onClick={() => setShowPayoutModal(false)}
                 className={`flex-1 py-3 px-4 rounded-full text-center text-sm font-bold transition-all ${
                   isLight

@@ -35,13 +35,24 @@ api.get = (url, config = {}) => {
 api.interceptors.request.use((config) => {
   const url = new URL(config.url || '', config.baseURL || api.defaults.baseURL).pathname;
   const path = window.location.pathname;
-  const isPublicPath = url.startsWith('/public/') || url === '/waitlist' ||
-    url.startsWith('/auth/') || url.startsWith('/email-verification/') ||
-    url.startsWith('/buyers/history/') || url.startsWith('/buyers/question/') ||
-    /^\/(?:creators\/(?:email-signup|email-login|send-otp|verify-otp|check-handle|forgot-password|reset-password)|fan-auth\/(?:signup|login|forgot-password|reset-password)|buyers\/(?:send-otp|verify-otp|submit-question|create-order))\b/.test(url);
-  if (isPublicPath) {
-    if (config.headers) delete config.headers.Authorization;
-    return config;
+
+  let token = null;
+
+  // Determine token based on request URL or current page path
+  const isCreatorProfilePage = /^\/creator\/(?!dashboard|inbox|analytics|payouts|setup-payouts|settings|scheduling|health|notifications|auth|signup|login|forgot-password|reset-password|verify-otp|connect-instagram)[^\/]+(\/.*)?$/.test(path) ||
+    /^\/(?!creator|fan|explore|discovery|admin|api|dashboard|onboard)[^\/]+(\/.*)?$/.test(path);
+
+
+  // If the request explicitly asks for fan endpoints, or if we are on a fan page, OR if we are on a public creator profile page
+  if (url.includes('/fan-auth') || url.includes('/fan') || url.includes('/wallet') || path.startsWith('/fan') || path.startsWith('/explore') || path.startsWith('/discovery') || isCreatorProfilePage) {
+    token = localStorage.getItem('skriibe_fan_token');
+  } else if (url.includes('/creator') || url.includes('/creators') || path.startsWith('/creator') || path.startsWith('/dashboard') || path.startsWith('/onboard')) {
+    token = localStorage.getItem('skriibe_creator_token');
+  }
+
+  // Fallback to legacy active token if specific token not found
+  if (!token) {
+    token = localStorage.getItem('skriibe_token');
   }
 
   const isAdminRequest = url.startsWith('/admin/') || url.startsWith('/queries/admin');
@@ -134,7 +145,12 @@ api.interceptors.response.use(
       const isFanProtectedPath = ['/fan/history', '/fan/notifications', '/fan/profile', '/fan/wallet', '/fan/upgrade']
         .some((prefix) => path === prefix || path.startsWith(`${prefix}/`));
       if (!path.includes('/login') && !path.includes('/signup')) {
-        if (isCreatorProtectedPath) {
+        const isCreatorProfilePage = /^\/creator\/(?!dashboard|inbox|analytics|payouts|setup-payouts|settings|scheduling|health|notifications|auth|signup|login|forgot-password|reset-password|verify-otp|connect-instagram)[^\/]+(\/.*)?$/.test(path);
+
+        if (isCreatorProfilePage) {
+          // Do not force redirect on public creator profile pages. 
+          // The component will handle the 401 gracefully.
+        } else if (path.startsWith('/creator') || path.startsWith('/onboard') || path.startsWith('/dashboard')) {
           window.location.href = '/creator/login';
         } else if (isFanProtectedPath) {
           window.location.href = '/fan/login';

@@ -354,10 +354,10 @@ const RaiseQuery = () => {
   };
 
   return (
-    <div className={`min-h-screen transition-colors duration-300 ${theme === 'light' ? 'bg-[#f4f7fb] text-[#1e293b]' : 'bg-[#090a10] text-[#f1f5f9]'} flex flex-col font-syne`}>
+    <div className={`min-h-screen transition-colors duration-300 ${theme === 'light' ? 'bg-[#f4f7fb] text-[#1e293b]' : 'bg-[#090a10] text-[#f1f5f9]'} flex flex-col`}>
       <Navbar theme={theme} toggleTheme={toggleTheme} />
       
-      <main className="flex-grow flex flex-col items-center px-4 sm:px-6 md:px-8 py-10 md:py-16 relative overflow-hidden">
+      <main className="flex-grow flex flex-col items-center px-4 sm:px-6 md:px-8 py-10 md:py-16 relative overflow-hidden font-syne">
         {/* Ambient background glow */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
           <div 
