@@ -653,7 +653,12 @@ const CreatorInbox = () => {
                  )
                  .sort((a, b) => new Date(b.time) - new Date(a.time)) // Sort descending again for display
                  .map((chat) => {
-                  const chatTimeMs = new Date(chat.time).getTime();
+                  if (!window._chatArrivalTimes) window._chatArrivalTimes = {};
+                  if (!window._chatArrivalTimes[chat.sessionId]) {
+                    window._chatArrivalTimes[chat.sessionId] = Date.now();
+                  }
+                  
+                  const chatTimeMs = window._chatArrivalTimes[chat.sessionId];
                   const waitingMs = Math.max(0, now - chatTimeMs);
                   const remainingMs = Math.max(0, 120000 - waitingMs);
                   const remMins = Math.floor(remainingMs / 60000);

@@ -144,7 +144,9 @@ const FanDiscovery = () => {
         String(c.id) === String(creatorId) ? { ...c, inSession } : c
       ));
     };
-    socket.on('creator_joined', ({ creatorId }) => setInSession(creatorId, true));
+    socket.on('fan_accepted', ({ creatorId }) => {
+      if (creatorId) setInSession(creatorId, true);
+    });
     socket.on('chat-session-ended', ({ creatorId }) => setInSession(creatorId, false));
 
     const handleProfileUpdate = (e) => {

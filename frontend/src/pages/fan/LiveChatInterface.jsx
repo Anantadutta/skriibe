@@ -1223,8 +1223,11 @@ const LiveChatInterface = () => {
                   );
                 })()}
                 <span style={{ wordBreak: 'break-word' }}>{m.content}</span>
+                <span style={{ marginLeft: '8px', fontSize: '0.7rem', opacity: 0.7, position: 'relative', top: '2px', display: 'inline-block' }}>
+                  {new Date(m.sentAt || Date.now()).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Kolkata' })}
+                </span>
                 {(m.sender || m.senderRole) === 'fan' && (
-                  <span style={{ marginLeft: '6px', display: 'inline-flex', alignItems: 'center' }}>
+                  <span style={{ marginLeft: '4px', display: 'inline-flex', alignItems: 'center', position: 'relative', top: '3px' }}>
                      {m.readAt ? (
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: '-3px' }}>
                           <path d="M18 6L7 17L2 12"></path>

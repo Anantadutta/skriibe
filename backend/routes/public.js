@@ -185,6 +185,7 @@ router.get('/creators', async (req, res) => {
     const busyCreatorIds = await ChatSession.distinct('creatorId', {
       status: 'active',
       creatorJoined: true,
+      fanAccepted: true,
       cancelledByFan: { $ne: true },
       $or: [{ endTime: null }, { endTime: { $exists: false } }]
     });

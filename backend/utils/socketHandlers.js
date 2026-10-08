@@ -160,7 +160,7 @@ module.exports = (io) => {
         session.fanAccepted = true;
         session.fanAcceptedAt = new Date();
         await session.save();
-        const payload = { startTime: session.startTime, sessionId: session._id.toString() };
+        const payload = { startTime: session.startTime, sessionId: session._id.toString(), creatorId: session.creatorId.toString() };
         io.to(room).emit('fan_accepted', payload);
         if (session.creatorId) {
           io.to(`creator_${session.creatorId.toString()}`).emit('fan_accepted', payload);

@@ -152,7 +152,7 @@ const PastChatView = () => {
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '4px', marginTop: '4px' }}>
                   <span style={{ fontSize: '0.7rem', opacity: 0.7 }}>
-                    {new Date(m.sentAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    {new Date(m.sentAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Kolkata' })}
                   </span>
                   {isFan && (
                     m.readAt ? (

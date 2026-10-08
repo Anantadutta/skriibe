@@ -246,11 +246,12 @@ router.post('/fan-accept', async (req, res) => {
 
     if (req.io) {
       const room = sessionId.toString();
-      req.io.to(room).emit('fan_accepted', { startTime: session.startTime });
+      const payload = { startTime: session.startTime, sessionId: session._id.toString(), creatorId: session.creatorId.toString() };
+      req.io.to(room).emit('fan_accepted', payload);
       if (session.creatorId) {
-        req.io.to(`creator_${session.creatorId.toString()}`).emit('fan_accepted', { sessionId: session._id.toString(), startTime: session.startTime });
+        req.io.to(`creator_${session.creatorId.toString()}`).emit('fan_accepted', payload);
       }
-      req.io.emit('fan_accepted', { sessionId: session._id.toString(), startTime: session.startTime });
+      req.io.emit('fan_accepted', payload);
     }
 
     res.json({ success: true, startTime: session.startTime });

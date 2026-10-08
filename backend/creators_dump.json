@@ -443,5 +443,16 @@
     "isLive": false,
     "liveChatPrice": 5,
     "handle": "ewfc_deleted_1791345665185"
+  },
+  {
+    "_id": "6ac7826dcc5cb0da9fefc19b",
+    "name": "Ira Sehgal",
+    "profileUrl": "skriibe.com/itsmeirasehgal",
+    "avatarUrl": "https://res.cloudinary.com/x4tw73kr/image/upload/v1791460379/avatars/ahgzrn7ezhjr2kxvwigr.webp",
+    "price": 0,
+    "pricePerQuestion": 0,
+    "isLive": false,
+    "liveChatPrice": 5,
+    "handle": "itsmeirasehgal"
   }
 ]

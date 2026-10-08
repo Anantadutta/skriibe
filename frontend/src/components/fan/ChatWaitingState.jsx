@@ -28,9 +28,7 @@ const ChatWaitingState = ({ creator, onCancel, creatorJoined, onAccept, chatStar
     ? (creatorJoinedAt && (Date.now() - new Date(creatorJoinedAt).getTime() < 120000) 
         ? new Date(creatorJoinedAt).getTime() 
         : (creatorJoinedTime || now))
-    : (chatStartTime && (Date.now() - new Date(chatStartTime).getTime() < 120000) 
-        ? new Date(chatStartTime).getTime() 
-        : mountTime);
+    : mountTime;
 
   const elapsedMs = Math.max(0, now - effectiveStartTime);
   

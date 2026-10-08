@@ -155,7 +155,7 @@ const CreatorLiveChat = () => {
     setElapsedSeconds(Math.max(0, initialElapsed));
 
     let timer;
-    if (session.status === 'active' && !fanPaused && viewState === 'active') {
+    if (viewState === 'active' && !fanPaused) {
       timer = setInterval(() => {
         setElapsedSeconds(prev => prev + 1);
       }, 1000);
@@ -207,7 +207,7 @@ const CreatorLiveChat = () => {
             }
             if (currentSession.fanAccepted) {
               if (pollTimer) clearInterval(pollTimer);
-              setSession(prev => prev ? { ...prev, status: 'active', startTime: currentSession.startTime || prev.startTime } : prev);
+              setSession(prev => prev ? { ...prev, status: 'active', fanAccepted: true, startTime: currentSession.startTime || prev.startTime } : prev);
               setViewState('active');
             }
           }
@@ -370,7 +370,7 @@ const CreatorLiveChat = () => {
     });
 
     newSocket.on('fan_accepted', (data) => {
-      setSession(prev => prev ? { ...prev, status: 'active', startTime: data?.startTime || prev.startTime } : prev);
+      setSession(prev => prev ? { ...prev, status: 'active', fanAccepted: true, startTime: data?.startTime || prev.startTime } : prev);
       setViewState('active');
     });
 
@@ -617,9 +617,9 @@ const CreatorLiveChat = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <button
                 onClick={() => setShowWarningModal(false)}
-                style={{ background: '#374151', color: '#fff', border: 'none', padding: '12px 24px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '15px', transition: 'background 0.2s' }}
-                onMouseEnter={e => e.currentTarget.style.background = '#4b5563'}
-                onMouseLeave={e => e.currentTarget.style.background = '#374151'}
+                style={{ background: '#ef4444', color: '#fff', border: 'none', padding: '12px 24px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '15px', transition: 'background 0.2s' }}
+                onMouseEnter={e => e.currentTarget.style.background = '#dc2626'}
+                onMouseLeave={e => e.currentTarget.style.background = '#ef4444'}
               >
                 Back to chat interface
               </button>
@@ -628,9 +628,9 @@ const CreatorLiveChat = () => {
                   setShowWarningModal(false);
                   handleEndChat(false); // end chat and navigate dashboard
                 }}
-                style={{ background: '#ef4444', color: '#fff', border: 'none', padding: '12px 24px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '15px', transition: 'background 0.2s' }}
-                onMouseEnter={e => e.currentTarget.style.background = '#dc2626'}
-                onMouseLeave={e => e.currentTarget.style.background = '#ef4444'}
+                style={{ background: '#374151', color: '#fff', border: 'none', padding: '12px 24px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '15px', transition: 'background 0.2s' }}
+                onMouseEnter={e => e.currentTarget.style.background = '#4b5563'}
+                onMouseLeave={e => e.currentTarget.style.background = '#374151'}
               >
                 Yes, I want to end
               </button>
@@ -763,7 +763,7 @@ const CreatorLiveChat = () => {
       )}
 
       {/* Active Chat Timer Bar */}
-      {!error && session?.status === 'active' && session?.fanAccepted && (() => {
+      {!error && viewState === 'active' && (() => {
         const rate = session?.ratePerMinute || 0;
         const bal = session?.fanId?.walletBalance || 0;
         const isFreeChat = session?.isFreeChat || rate === 0;
@@ -965,8 +965,11 @@ const CreatorLiveChat = () => {
                   );
                 })()}
                 <span style={{ wordBreak: 'break-word' }}>{m.content}</span>
+                <span style={{ marginLeft: '8px', fontSize: '0.7rem', opacity: 0.7, position: 'relative', top: '2px', display: 'inline-block' }}>
+                  {new Date(m.sentAt || Date.now()).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Kolkata' })}
+                </span>
                 {(m.sender || m.senderRole) === 'creator' && (
-                  <span style={{ marginLeft: '6px', display: 'inline-flex', alignItems: 'center' }}>
+                  <span style={{ marginLeft: '4px', display: 'inline-flex', alignItems: 'center', position: 'relative', top: '3px' }}>
                      {m.readAt ? (
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: '-3px' }}>
                           <path d="M18 6L7 17L2 12"></path>
